@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -37,7 +37,7 @@ func TestContext_ParentChildRequestIDs(t *testing.T) {
 		Type: schemas.ChatToolTypeFunction,
 		Function: &schemas.ChatToolFunction{
 			Name:        "inspect_context",
-			Description: schemas.Ptr("Inspects context values"),
+			Description: new("Inspects context values"),
 		},
 	}
 
@@ -53,10 +53,10 @@ func TestContext_ParentChildRequestIDs(t *testing.T) {
 	ctx.SetValue(schemas.BifrostContextKeyRequestID, originalRequestID)
 
 	toolCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-inspect"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-inspect"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("bifrostInternal-inspect_context"),
+			Name:      new("bifrostInternal-inspect_context"),
 			Arguments: "{}",
 		},
 	}
@@ -90,7 +90,7 @@ func TestContext_CancellationPropagation(t *testing.T) {
 		Type: schemas.ChatToolTypeFunction,
 		Function: &schemas.ChatToolFunction{
 			Name:        "long_running",
-			Description: schemas.Ptr("Long running tool"),
+			Description: new("Long running tool"),
 		},
 	}
 
@@ -105,10 +105,10 @@ func TestContext_CancellationPropagation(t *testing.T) {
 	defer cancel()
 
 	toolCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-cancel"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-cancel"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("long_running"),
+			Name:      new("long_running"),
 			Arguments: "{}",
 		},
 	}
@@ -145,7 +145,7 @@ func TestContext_DeadlineInheritance(t *testing.T) {
 		Type: schemas.ChatToolTypeFunction,
 		Function: &schemas.ChatToolFunction{
 			Name:        "deadline_check",
-			Description: schemas.Ptr("Checks deadline"),
+			Description: new("Checks deadline"),
 		},
 	}
 
@@ -160,10 +160,10 @@ func TestContext_DeadlineInheritance(t *testing.T) {
 	defer cancel()
 
 	toolCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-deadline"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-deadline"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("bifrostInternal-deadline_check"),
+			Name:      new("bifrostInternal-deadline_check"),
 			Arguments: "{}",
 		},
 	}
@@ -184,7 +184,7 @@ func TestContext_ValueIsolation(t *testing.T) {
 
 	// Register tool that sets/gets context values
 	valueHandler := func(args any) (string, error) {
-		argsMap, ok := args.(map[string]interface{})
+		argsMap, ok := args.(map[string]any)
 		if !ok {
 			return "", fmt.Errorf("invalid args")
 		}
@@ -197,11 +197,11 @@ func TestContext_ValueIsolation(t *testing.T) {
 		Type: schemas.ChatToolTypeFunction,
 		Function: &schemas.ChatToolFunction{
 			Name:        "value_tool",
-			Description: schemas.Ptr("Handles context values"),
+			Description: new("Handles context values"),
 			Parameters: &schemas.ToolFunctionParameters{
 				Type: "object",
 				Properties: schemas.NewOrderedMapFromPairs(
-					schemas.KV("value", map[string]interface{}{"type": "string"}),
+					schemas.KV("value", map[string]any{"type": "string"}),
 				),
 			},
 		},
@@ -217,15 +217,15 @@ func TestContext_ValueIsolation(t *testing.T) {
 
 	// Execute multiple sibling tool calls in parallel
 	toolCalls := []schemas.ChatAssistantMessageToolCall{}
-	for i := 0; i < 3; i++ {
-		args := map[string]interface{}{"value": fmt.Sprintf("value_%d", i)}
+	for i := range 3 {
+		args := map[string]any{"value": fmt.Sprintf("value_%d", i)}
 		argsJSON, _ := json.Marshal(args)
 
 		toolCalls = append(toolCalls, schemas.ChatAssistantMessageToolCall{
-			ID:   schemas.Ptr(fmt.Sprintf("call-%d", i)),
-			Type: schemas.Ptr("function"),
+			ID:   new(fmt.Sprintf("call-%d", i)),
+			Type: new("function"),
 			Function: schemas.ChatAssistantMessageToolCallFunction{
-				Name:      schemas.Ptr("bifrostInternal-value_tool"),
+				Name:      new("bifrostInternal-value_tool"),
 				Arguments: string(argsJSON),
 			},
 		})
@@ -248,7 +248,7 @@ func TestContext_ValueIsolation(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Test isolation"),
+					ContentStr: new("Test isolation"),
 				},
 			},
 		},
@@ -286,7 +286,7 @@ func TestContext_NestedToolCalls(t *testing.T) {
 		Type: schemas.ChatToolTypeFunction,
 		Function: &schemas.ChatToolFunction{
 			Name:        "outer_tool",
-			Description: schemas.Ptr("Makes nested call"),
+			Description: new("Makes nested call"),
 		},
 	}
 
@@ -300,10 +300,10 @@ func TestContext_NestedToolCalls(t *testing.T) {
 	ctx.SetValue(schemas.BifrostContextKeyRequestID, "root_request_001")
 
 	toolCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-outer"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-outer"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("bifrostInternal-outer_tool"),
+			Name:      new("bifrostInternal-outer_tool"),
 			Arguments: "{}",
 		},
 	}
@@ -338,7 +338,7 @@ func TestContext_TimeoutPropagation(t *testing.T) {
 			Type: schemas.ChatToolTypeFunction,
 			Function: &schemas.ChatToolFunction{
 				Name:        toolName,
-				Description: schemas.Ptr(fmt.Sprintf("Delays %dms", delayMs)),
+				Description: new(fmt.Sprintf("Delays %dms", delayMs)),
 			},
 		}
 
@@ -358,10 +358,10 @@ func TestContext_TimeoutPropagation(t *testing.T) {
 	toolCalls := []schemas.ChatAssistantMessageToolCall{}
 	for i := range delays {
 		toolCalls = append(toolCalls, schemas.ChatAssistantMessageToolCall{
-			ID:   schemas.Ptr(fmt.Sprintf("call-%d", i)),
-			Type: schemas.Ptr("function"),
+			ID:   new(fmt.Sprintf("call-%d", i)),
+			Type: new("function"),
 			Function: schemas.ChatAssistantMessageToolCallFunction{
-				Name:      schemas.Ptr(fmt.Sprintf("bifrostInternal-delay_tool_%d", i)),
+				Name:      new(fmt.Sprintf("bifrostInternal-delay_tool_%d", i)),
 				Arguments: "{}",
 			},
 		})
@@ -384,7 +384,7 @@ func TestContext_TimeoutPropagation(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Test timeout propagation"),
+					ContentStr: new("Test timeout propagation"),
 				},
 			},
 		},
@@ -428,7 +428,7 @@ func TestContext_RequestIDGeneration(t *testing.T) {
 		Type: schemas.ChatToolTypeFunction,
 		Function: &schemas.ChatToolFunction{
 			Name:        "id_tool",
-			Description: schemas.Ptr("Tracks request IDs"),
+			Description: new("Tracks request IDs"),
 		},
 	}
 
@@ -445,20 +445,20 @@ func TestContext_RequestIDGeneration(t *testing.T) {
 		chatResponses: []*schemas.BifrostChatResponse{
 			CreateChatResponseWithToolCalls([]schemas.ChatAssistantMessageToolCall{
 				{
-					ID:   schemas.Ptr("call-1"),
-					Type: schemas.Ptr("function"),
+					ID:   new("call-1"),
+					Type: new("function"),
 					Function: schemas.ChatAssistantMessageToolCallFunction{
-						Name:      schemas.Ptr("bifrostInternal-id_tool"),
+						Name:      new("bifrostInternal-id_tool"),
 						Arguments: "{}",
 					},
 				},
 			}),
 			CreateChatResponseWithToolCalls([]schemas.ChatAssistantMessageToolCall{
 				{
-					ID:   schemas.Ptr("call-2"),
-					Type: schemas.Ptr("function"),
+					ID:   new("call-2"),
+					Type: new("function"),
 					Function: schemas.ChatAssistantMessageToolCallFunction{
-						Name:      schemas.Ptr("bifrostInternal-id_tool"),
+						Name:      new("bifrostInternal-id_tool"),
 						Arguments: "{}",
 					},
 				},
@@ -477,7 +477,7 @@ func TestContext_RequestIDGeneration(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Test request IDs"),
+					ContentStr: new("Test request IDs"),
 				},
 			},
 		},
@@ -515,7 +515,7 @@ func TestContext_CleanupOnCompletion(t *testing.T) {
 		Type: schemas.ChatToolTypeFunction,
 		Function: &schemas.ChatToolFunction{
 			Name:        "cleanup_tool",
-			Description: schemas.Ptr("Tests cleanup"),
+			Description: new("Tests cleanup"),
 		},
 	}
 
@@ -528,12 +528,12 @@ func TestContext_CleanupOnCompletion(t *testing.T) {
 	ctx := createTestContext()
 
 	// Execute tool multiple times
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		toolCall := schemas.ChatAssistantMessageToolCall{
-			ID:   schemas.Ptr(fmt.Sprintf("call-%d", i)),
-			Type: schemas.Ptr("function"),
+			ID:   new(fmt.Sprintf("call-%d", i)),
+			Type: new("function"),
 			Function: schemas.ChatAssistantMessageToolCallFunction{
-				Name:      schemas.Ptr("bifrostInternal-cleanup_tool"),
+				Name:      new("bifrostInternal-cleanup_tool"),
 				Arguments: "{}",
 			},
 		}
@@ -565,7 +565,7 @@ func TestContext_ConcurrentAccess(t *testing.T) {
 		Type: schemas.ChatToolTypeFunction,
 		Function: &schemas.ChatToolFunction{
 			Name:        "concurrent_tool",
-			Description: schemas.Ptr("Tests concurrent access"),
+			Description: new("Tests concurrent access"),
 		},
 	}
 
@@ -579,12 +579,12 @@ func TestContext_ConcurrentAccess(t *testing.T) {
 
 	// Execute multiple tools in parallel
 	toolCalls := []schemas.ChatAssistantMessageToolCall{}
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		toolCalls = append(toolCalls, schemas.ChatAssistantMessageToolCall{
-			ID:   schemas.Ptr(fmt.Sprintf("call-concurrent-%d", i)),
-			Type: schemas.Ptr("function"),
+			ID:   new(fmt.Sprintf("call-concurrent-%d", i)),
+			Type: new("function"),
 			Function: schemas.ChatAssistantMessageToolCallFunction{
-				Name:      schemas.Ptr("bifrostInternal-concurrent_tool"),
+				Name:      new("bifrostInternal-concurrent_tool"),
 				Arguments: "{}",
 			},
 		})
@@ -607,7 +607,7 @@ func TestContext_ConcurrentAccess(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Test concurrent access"),
+					ContentStr: new("Test concurrent access"),
 				},
 			},
 		},

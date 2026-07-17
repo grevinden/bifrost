@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/maximhq/bifrost/cli/internal/config"
+	"github.com/grevinden/bifrost/cli/internal/config"
 )
 
 const (
@@ -120,7 +120,7 @@ func isNewer(a, b string) bool {
 	if av == nil || bv == nil {
 		return false
 	}
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		if av.nums[i] > bv.nums[i] {
 			return true
 		}

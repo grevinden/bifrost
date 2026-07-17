@@ -7,7 +7,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/pinecone-io/go-pinecone/v5/pinecone"
 	"google.golang.org/protobuf/types/known/structpb"
 )
@@ -264,16 +264,16 @@ func (s *PineconeStore) GetNearest(ctx context.Context, namespace string, vector
 
 // convertMetadataForStructpb converts metadata map to be compatible with structpb.NewStruct.
 // Specifically, it converts []string to []interface{} since structpb doesn't handle []string directly.
-func convertMetadataForStructpb(metadata map[string]interface{}) map[string]interface{} {
+func convertMetadataForStructpb(metadata map[string]any) map[string]any {
 	if metadata == nil {
 		return nil
 	}
-	converted := make(map[string]interface{}, len(metadata))
+	converted := make(map[string]any, len(metadata))
 	for k, v := range metadata {
 		switch val := v.(type) {
 		case []string:
 			// Convert []string to []interface{}
-			interfaceSlice := make([]interface{}, len(val))
+			interfaceSlice := make([]any, len(val))
 			for i, s := range val {
 				interfaceSlice[i] = s
 			}
@@ -286,7 +286,7 @@ func convertMetadataForStructpb(metadata map[string]interface{}) map[string]inte
 }
 
 // Add stores a new vector in the Pinecone vector store.
-func (s *PineconeStore) Add(ctx context.Context, namespace string, id string, embedding []float32, metadata map[string]interface{}) error {
+func (s *PineconeStore) Add(ctx context.Context, namespace string, id string, embedding []float32, metadata map[string]any) error {
 	if strings.TrimSpace(id) == "" {
 		return fmt.Errorf("id is required")
 	}
@@ -536,19 +536,19 @@ func (s *PineconeStore) getNamespaceConnection(namespace string) (*pinecone.Inde
 }
 
 // metadataToMap converts protobuf Struct to map[string]interface{}.
-func metadataToMap(metadata *structpb.Struct) map[string]interface{} {
+func metadataToMap(metadata *structpb.Struct) map[string]any {
 	if metadata == nil {
-		return make(map[string]interface{})
+		return make(map[string]any)
 	}
 	return metadata.AsMap()
 }
 
 // filterPropertiesPinecone filters properties based on selected fields.
-func filterPropertiesPinecone(props map[string]interface{}, selectFields []string) map[string]interface{} {
+func filterPropertiesPinecone(props map[string]any, selectFields []string) map[string]any {
 	if len(selectFields) == 0 {
 		return props
 	}
-	filtered := make(map[string]interface{}, len(selectFields))
+	filtered := make(map[string]any, len(selectFields))
 	for _, field := range selectFields {
 		if val, ok := props[field]; ok {
 			filtered[field] = val
@@ -558,7 +558,7 @@ func filterPropertiesPinecone(props map[string]interface{}, selectFields []strin
 }
 
 // matchesQueries checks if properties match all query conditions.
-func matchesQueries(props map[string]interface{}, queries []Query) bool {
+func matchesQueries(props map[string]any, queries []Query) bool {
 	if len(queries) == 0 {
 		return true
 	}
@@ -572,7 +572,7 @@ func matchesQueries(props map[string]interface{}, queries []Query) bool {
 }
 
 // matchesQuery checks if a single value matches a query condition.
-func matchesQuery(val interface{}, exists bool, q Query) bool {
+func matchesQuery(val any, exists bool, q Query) bool {
 	switch q.Operator {
 	case QueryOperatorIsNull:
 		return !exists || val == nil
@@ -594,7 +594,7 @@ func buildPineconeFilter(queries []Query) (*structpb.Struct, error) {
 		return nil, nil
 	}
 
-	filterMap := make(map[string]interface{})
+	filterMap := make(map[string]any)
 
 	for _, q := range queries {
 		condition := buildPineconeCondition(q)
@@ -611,47 +611,47 @@ func buildPineconeFilter(queries []Query) (*structpb.Struct, error) {
 }
 
 // buildPineconeCondition builds a single Pinecone filter condition.
-func buildPineconeCondition(q Query) interface{} {
+func buildPineconeCondition(q Query) any {
 	switch q.Operator {
 	case QueryOperatorEqual:
-		return map[string]interface{}{"$eq": q.Value}
+		return map[string]any{"$eq": q.Value}
 	case QueryOperatorNotEqual:
-		return map[string]interface{}{"$ne": q.Value}
+		return map[string]any{"$ne": q.Value}
 	case QueryOperatorGreaterThan:
-		return map[string]interface{}{"$gt": q.Value}
+		return map[string]any{"$gt": q.Value}
 	case QueryOperatorGreaterThanOrEqual:
-		return map[string]interface{}{"$gte": q.Value}
+		return map[string]any{"$gte": q.Value}
 	case QueryOperatorLessThan:
-		return map[string]interface{}{"$lt": q.Value}
+		return map[string]any{"$lt": q.Value}
 	case QueryOperatorLessThanOrEqual:
-		return map[string]interface{}{"$lte": q.Value}
+		return map[string]any{"$lte": q.Value}
 	case QueryOperatorIsNull:
-		return map[string]interface{}{"$eq": nil}
+		return map[string]any{"$eq": nil}
 	case QueryOperatorIsNotNull:
-		return map[string]interface{}{"$ne": nil}
+		return map[string]any{"$ne": nil}
 	case QueryOperatorContainsAny:
-		return map[string]interface{}{"$in": q.Value}
+		return map[string]any{"$in": q.Value}
 	case QueryOperatorContainsAll:
 		// Build an $and array of equality checks so all values must match
-		values, ok := q.Value.([]interface{})
+		values, ok := q.Value.([]any)
 		if !ok {
 			// Try to convert []string to []interface{}
 			if strValues, ok := q.Value.([]string); ok {
-				values = make([]interface{}, len(strValues))
+				values = make([]any, len(strValues))
 				for i, v := range strValues {
 					values[i] = v
 				}
 			} else {
 				// Fallback to single value equality
-				return map[string]interface{}{"$eq": q.Value}
+				return map[string]any{"$eq": q.Value}
 			}
 		}
-		andConditions := make([]interface{}, len(values))
+		andConditions := make([]any, len(values))
 		for i, v := range values {
-			andConditions[i] = map[string]interface{}{"$eq": v}
+			andConditions[i] = map[string]any{"$eq": v}
 		}
-		return map[string]interface{}{"$and": andConditions}
+		return map[string]any{"$and": andConditions}
 	default:
-		return map[string]interface{}{"$eq": q.Value}
+		return map[string]any{"$eq": q.Value}
 	}
 }

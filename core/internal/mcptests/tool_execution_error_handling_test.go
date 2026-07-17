@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -34,13 +34,13 @@ func TestToolExecution_Timeout(t *testing.T) {
 	ctx := schemas.NewBifrostContext(baseCtx, schemas.NoDeadline)
 
 	// Try to delay for 5 seconds (should timeout)
-	argsMap := map[string]interface{}{"seconds": 5.0}
+	argsMap := map[string]any{"seconds": 5.0}
 	argsJSON, _ := json.Marshal(argsMap)
 	toolCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-timeout"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-timeout"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("bifrostInternal-delay"),
+			Name:      new("bifrostInternal-delay"),
 			Arguments: string(argsJSON),
 		},
 	}
@@ -72,13 +72,13 @@ func TestToolExecution_TimeoutChatAndResponses(t *testing.T) {
 		defer cancel()
 		ctx := schemas.NewBifrostContext(baseCtx, schemas.NoDeadline)
 
-		argsMap := map[string]interface{}{"seconds": 3.0}
+		argsMap := map[string]any{"seconds": 3.0}
 		argsJSON, _ := json.Marshal(argsMap)
 		toolCall := schemas.ChatAssistantMessageToolCall{
-			ID:   schemas.Ptr("call-timeout-chat"),
-			Type: schemas.Ptr("function"),
+			ID:   new("call-timeout-chat"),
+			Type: new("function"),
 			Function: schemas.ChatAssistantMessageToolCallFunction{
-				Name:      schemas.Ptr("bifrostInternal-delay"),
+				Name:      new("bifrostInternal-delay"),
 				Arguments: string(argsJSON),
 			},
 		}
@@ -94,12 +94,12 @@ func TestToolExecution_TimeoutChatAndResponses(t *testing.T) {
 		defer cancel()
 		ctx := schemas.NewBifrostContext(baseCtx, schemas.NoDeadline)
 
-		argsMap := map[string]interface{}{"seconds": 3.0}
+		argsMap := map[string]any{"seconds": 3.0}
 		argsJSON, _ := json.Marshal(argsMap)
 		responsesTool := schemas.ResponsesToolMessage{
-			CallID:    schemas.Ptr("call-timeout-responses"),
-			Name:      schemas.Ptr("bifrostInternal-delay"),
-			Arguments: schemas.Ptr(string(argsJSON)),
+			CallID:    new("call-timeout-responses"),
+			Name:      new("bifrostInternal-delay"),
+			Arguments: new(string(argsJSON)),
 		}
 
 		_, bifrostErr := bifrost.ExecuteResponsesMCPTool(ctx, &responsesTool)
@@ -135,13 +135,13 @@ func TestToolExecution_ToolReturnsError(t *testing.T) {
 
 	for i, errMsg := range errorMessages {
 		t.Run(fmt.Sprintf("error_%d", i), func(t *testing.T) {
-			argsMap := map[string]interface{}{"error_message": errMsg}
+			argsMap := map[string]any{"error_message": errMsg}
 			argsJSON, _ := json.Marshal(argsMap)
 			toolCall := schemas.ChatAssistantMessageToolCall{
-				ID:   schemas.Ptr(fmt.Sprintf("call-error-%d", i)),
-				Type: schemas.Ptr("function"),
+				ID:   new(fmt.Sprintf("call-error-%d", i)),
+				Type: new("function"),
 				Function: schemas.ChatAssistantMessageToolCallFunction{
-					Name:      schemas.Ptr("bifrostInternal-throw_error"),
+					Name:      new("bifrostInternal-throw_error"),
 					Arguments: string(argsJSON),
 				},
 			}
@@ -209,10 +209,10 @@ func TestToolExecution_MissingRequiredArguments(t *testing.T) {
 	for _, tc := range invalidArgTests {
 		t.Run(tc.name, func(t *testing.T) {
 			toolCall := schemas.ChatAssistantMessageToolCall{
-				ID:   schemas.Ptr("call-" + tc.name),
-				Type: schemas.Ptr("function"),
+				ID:   new("call-" + tc.name),
+				Type: new("function"),
 				Function: schemas.ChatAssistantMessageToolCallFunction{
-					Name:      schemas.Ptr("bifrostInternal-calculator"),
+					Name:      new("bifrostInternal-calculator"),
 					Arguments: tc.arguments,
 				},
 			}
@@ -255,10 +255,10 @@ func TestToolExecution_WrongArgumentTypes(t *testing.T) {
 	for _, tc := range wrongTypeTests {
 		t.Run(tc.name, func(t *testing.T) {
 			toolCall := schemas.ChatAssistantMessageToolCall{
-				ID:   schemas.Ptr("call-" + tc.name),
-				Type: schemas.Ptr("function"),
+				ID:   new("call-" + tc.name),
+				Type: new("function"),
 				Function: schemas.ChatAssistantMessageToolCallFunction{
-					Name:      schemas.Ptr("bifrostInternal-calculator"),
+					Name:      new("bifrostInternal-calculator"),
 					Arguments: tc.arguments,
 				},
 			}
@@ -289,10 +289,10 @@ func TestToolExecution_NonExistentTool(t *testing.T) {
 	ctx := createTestContext()
 
 	toolCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-nonexistent"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-nonexistent"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("nonexistent_tool"),
+			Name:      new("nonexistent_tool"),
 			Arguments: `{}`,
 		},
 	}
@@ -379,13 +379,13 @@ func TestToolExecution_ErrorInBothFormats(t *testing.T) {
 
 	t.Run("chat_format", func(t *testing.T) {
 		ctx := createTestContext()
-		argsMap := map[string]interface{}{"error_message": errorMsg}
+		argsMap := map[string]any{"error_message": errorMsg}
 		argsJSON, _ := json.Marshal(argsMap)
 		toolCall := schemas.ChatAssistantMessageToolCall{
-			ID:   schemas.Ptr("call-error-chat"),
-			Type: schemas.Ptr("function"),
+			ID:   new("call-error-chat"),
+			Type: new("function"),
 			Function: schemas.ChatAssistantMessageToolCallFunction{
-				Name:      schemas.Ptr("bifrostInternal-throw_error"),
+				Name:      new("bifrostInternal-throw_error"),
 				Arguments: string(argsJSON),
 			},
 		}
@@ -402,12 +402,12 @@ func TestToolExecution_ErrorInBothFormats(t *testing.T) {
 
 	t.Run("responses_format", func(t *testing.T) {
 		ctx := createTestContext()
-		argsMap := map[string]interface{}{"error_message": errorMsg}
+		argsMap := map[string]any{"error_message": errorMsg}
 		argsJSON, _ := json.Marshal(argsMap)
 		responsesTool := schemas.ResponsesToolMessage{
-			CallID:    schemas.Ptr("call-error-responses"),
-			Name:      schemas.Ptr("bifrostInternal-throw_error"),
-			Arguments: schemas.Ptr(string(argsJSON)),
+			CallID:    new("call-error-responses"),
+			Name:      new("bifrostInternal-throw_error"),
+			Arguments: new(string(argsJSON)),
 		}
 
 		result, bifrostErr := bifrost.ExecuteResponsesMCPTool(ctx, &responsesTool)
@@ -441,13 +441,13 @@ func TestToolExecution_MultipleErrorsInSequence(t *testing.T) {
 	errors := make([]error, 0)
 
 	// 1. Tool that throws error
-	argsMap1 := map[string]interface{}{"error_message": "First error"}
+	argsMap1 := map[string]any{"error_message": "First error"}
 	argsJSON1, _ := json.Marshal(argsMap1)
 	toolCall1 := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-1"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-1"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("bifrostInternal-throw_error"),
+			Name:      new("bifrostInternal-throw_error"),
 			Arguments: string(argsJSON1),
 		},
 	}
@@ -465,10 +465,10 @@ func TestToolExecution_MultipleErrorsInSequence(t *testing.T) {
 
 	// 3. Invalid arguments
 	toolCall3 := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-3"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-3"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("bifrostInternal-calculator"),
+			Name:      new("bifrostInternal-calculator"),
 			Arguments: `{"invalid": "arguments"}`,
 		},
 	}
@@ -507,13 +507,13 @@ func TestToolExecution_LargeErrorMessage(t *testing.T) {
 	// Create very large error message
 	largeErrorMsg := strings.Repeat("Error message repeated many times. ", 1000)
 
-	argsMap := map[string]interface{}{"error_message": largeErrorMsg}
+	argsMap := map[string]any{"error_message": largeErrorMsg}
 	argsJSON, _ := json.Marshal(argsMap)
 	toolCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-large-error"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-large-error"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("bifrostInternal-throw_error"),
+			Name:      new("bifrostInternal-throw_error"),
 			Arguments: string(argsJSON),
 		},
 	}
@@ -575,7 +575,7 @@ func TestExecuteToolCode_SyntaxError(t *testing.T) {
 					t.Logf("Got expected parsing error: %s", errorMsg)
 				} else {
 					// Has a return value - check if it's an object with error or a string
-					if returnObj, ok := returnValue.(map[string]interface{}); ok {
+					if returnObj, ok := returnValue.(map[string]any); ok {
 						errorField := returnObj["error"]
 						assert.NotNil(t, errorField, "execution result should have 'error' field")
 					} else {
@@ -626,7 +626,7 @@ func TestExecuteToolCode_RuntimeError(t *testing.T) {
 					t.Logf("Got expected runtime error: %s", errorMsg)
 				} else {
 					// Response was successfully parsed - check if it contains error information
-					if returnObj, ok := returnValue.(map[string]interface{}); ok {
+					if returnObj, ok := returnValue.(map[string]any); ok {
 						// Runtime errors should have an error field in the response
 						errorField := returnObj["error"]
 						assert.NotNil(t, errorField, "execution result should have 'error' field for runtime errors")

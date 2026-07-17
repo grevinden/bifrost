@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/configstore/tables"
-	"github.com/maximhq/bifrost/framework/logstore"
-	"github.com/maximhq/bifrost/framework/objectstore"
-	"github.com/maximhq/bifrost/framework/vectorstore"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/configstore/tables"
+	"github.com/grevinden/bifrost/framework/logstore"
+	"github.com/grevinden/bifrost/framework/objectstore"
+	"github.com/grevinden/bifrost/framework/vectorstore"
 	"gorm.io/gorm"
 )
 

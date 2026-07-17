@@ -116,8 +116,8 @@ func extractSSEDataPayload(frame []byte) []byte {
 		if len(line) == 0 || bytes.HasPrefix(line, []byte(":")) {
 			continue
 		}
-		if bytes.HasPrefix(line, []byte("data:")) {
-			data := bytes.TrimSpace(bytes.TrimPrefix(line, []byte("data:")))
+		if after, ok := bytes.CutPrefix(line, []byte("data:")); ok {
+			data := bytes.TrimSpace(after)
 			if len(data) == 0 {
 				continue
 			}
@@ -134,8 +134,8 @@ func extractSSEDataPayload(frame []byte) []byte {
 }
 
 func hasSSEDataLinePrefix(frame []byte) bool {
-	lines := bytes.Split(frame, []byte("\n"))
-	for _, line := range lines {
+	lines := bytes.SplitSeq(frame, []byte("\n"))
+	for line := range lines {
 		line = bytes.TrimSpace(line)
 		if len(line) == 0 || bytes.HasPrefix(line, []byte(":")) {
 			continue

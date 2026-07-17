@@ -13,8 +13,8 @@ import (
 	"testing"
 	"time"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -479,7 +479,7 @@ func readRESPCommand(reader *bufio.Reader) ([]string, error) {
 	}
 
 	command := make([]string, 0, count)
-	for i := 0; i < count; i++ {
+	for range count {
 		bulkHeader, err := reader.ReadString('\n')
 		if err != nil {
 			return nil, err
@@ -543,11 +543,11 @@ func TestRedisStore_ExecuteSearch_DisableScanFallbackOnQuerySyntaxError(t *testi
 
 func TestRedisStore_ParseSearchResults_RESP3Map(t *testing.T) {
 	store := &RedisStore{}
-	resp := map[interface{}]interface{}{
-		"results": []interface{}{
-			map[interface{}]interface{}{
+	resp := map[any]any{
+		"results": []any{
+			map[any]any{
 				"id": "TestRedis:doc-1",
-				"extra_attributes": map[interface{}]interface{}{
+				"extra_attributes": map[any]any{
 					"score":        "0.123",
 					"request_hash": "abc123",
 					"cache_key":    "session-1",
@@ -569,10 +569,10 @@ func TestRedisStore_ParseSearchResults_RESP3Map(t *testing.T) {
 
 func TestRedisStore_ParseSearchResults_RESP2Array(t *testing.T) {
 	store := &RedisStore{}
-	resp := []interface{}{
+	resp := []any{
 		int64(1),
 		"TestRedis:doc-2",
-		[]interface{}{
+		[]any{
 			"score", []byte("0.25"),
 			"request_hash", "def456",
 			"cache_key", "session-2",
@@ -592,11 +592,11 @@ func TestRedisStore_ParseSearchResults_RESP2Array(t *testing.T) {
 
 func TestRedisStore_ParseSearchResults_RESP3StringKeyMap(t *testing.T) {
 	store := &RedisStore{}
-	resp := map[string]interface{}{
-		"results": []interface{}{
-			map[string]interface{}{
+	resp := map[string]any{
+		"results": []any{
+			map[string]any{
 				"id": "TestRedis:doc-3",
-				"extra_attributes": map[string]interface{}{
+				"extra_attributes": map[string]any{
 					"score":        "0.456",
 					"request_hash": "ghi789",
 					"cache_key":    "session-3",
@@ -619,7 +619,7 @@ func TestRedisStore_ParseSearchResults_RESP3StringKeyMap(t *testing.T) {
 func TestRedisStore_ParseSearchResults_EmptyRESP2(t *testing.T) {
 	store := &RedisStore{}
 	// RESP2 array with total count 0 and no documents
-	resp := []interface{}{
+	resp := []any{
 		int64(0),
 	}
 
@@ -631,10 +631,10 @@ func TestRedisStore_ParseSearchResults_EmptyRESP2(t *testing.T) {
 func TestRedisStore_ParseSearchResults_ByteScore(t *testing.T) {
 	store := &RedisStore{}
 	// Simulates Valkey RESP2 returning score as []byte
-	resp := []interface{}{
+	resp := []any{
 		int64(1),
 		"TestRedis:doc-4",
-		[]interface{}{
+		[]any{
 			"score", []byte("0.75"),
 			"request_hash", "jkl012",
 		},
@@ -651,11 +651,11 @@ func TestRedisStore_ParseSearchResults_ByteScore(t *testing.T) {
 func TestRedisStore_ParseSearchResults_NamespaceWithColon(t *testing.T) {
 	store := &RedisStore{}
 	namespace := "ns:team"
-	resp := map[interface{}]interface{}{
-		"results": []interface{}{
-			map[interface{}]interface{}{
+	resp := map[any]any{
+		"results": []any{
+			map[any]any{
 				"id": namespace + ":doc-1",
-				"extra_attributes": map[interface{}]interface{}{
+				"extra_attributes": map[any]any{
 					"request_hash": "abc123",
 				},
 			},
@@ -671,10 +671,10 @@ func TestRedisStore_ParseSearchResults_NamespaceWithColon(t *testing.T) {
 func TestParseSearchResultIDs(t *testing.T) {
 	t.Run("RESP3 map parses namespace-trimmed ids", func(t *testing.T) {
 		namespace := "ns:team"
-		resp := map[interface{}]interface{}{
-			"results": []interface{}{
-				map[interface{}]interface{}{"id": namespace + ":doc-1"},
-				map[interface{}]interface{}{"id": "other:doc-2"},
+		resp := map[any]any{
+			"results": []any{
+				map[any]any{"id": namespace + ":doc-1"},
+				map[any]any{"id": "other:doc-2"},
 			},
 		}
 
@@ -684,7 +684,7 @@ func TestParseSearchResultIDs(t *testing.T) {
 
 	t.Run("RESP2 no-content parses ids", func(t *testing.T) {
 		namespace := "ns"
-		resp := []interface{}{
+		resp := []any{
 			int64(2),
 			"ns:doc-1",
 			"ns:doc-2",
@@ -696,10 +696,10 @@ func TestParseSearchResultIDs(t *testing.T) {
 
 	t.Run("RESP2 pair payload parses ids", func(t *testing.T) {
 		namespace := "ns"
-		resp := []interface{}{
+		resp := []any{
 			int64(2),
-			"ns:doc-1", []interface{}{"field", "value"},
-			"ns:doc-2", []interface{}{"field", "value"},
+			"ns:doc-1", []any{"field", "value"},
+			"ns:doc-2", []any{"field", "value"},
 		}
 
 		ids := parseSearchResultIDs(resp, namespace)
@@ -827,135 +827,135 @@ func TestBuildRedisQueryCondition_NumericEquality(t *testing.T) {
 }
 
 func ptr(v string) *string {
-	return bifrost.Ptr(v)
+	return new(v)
 }
 
 func TestMatchesQueriesForScan(t *testing.T) {
 	tests := []struct {
 		name       string
-		properties map[string]interface{}
+		properties map[string]any
 		queries    []Query
 		expected   bool
 	}{
 		// GreaterThan
 		{
 			name:       "GreaterThan true",
-			properties: map[string]interface{}{"size": "1024"},
+			properties: map[string]any{"size": "1024"},
 			queries:    []Query{{Field: "size", Operator: QueryOperatorGreaterThan, Value: 1000}},
 			expected:   true,
 		},
 		{
 			name:       "GreaterThan false",
-			properties: map[string]interface{}{"size": "500"},
+			properties: map[string]any{"size": "500"},
 			queries:    []Query{{Field: "size", Operator: QueryOperatorGreaterThan, Value: 1000}},
 			expected:   false,
 		},
 		{
 			name:       "GreaterThan equal value is false",
-			properties: map[string]interface{}{"size": "1000"},
+			properties: map[string]any{"size": "1000"},
 			queries:    []Query{{Field: "size", Operator: QueryOperatorGreaterThan, Value: 1000}},
 			expected:   false,
 		},
 		// LessThan
 		{
 			name:       "LessThan true",
-			properties: map[string]interface{}{"size": "500"},
+			properties: map[string]any{"size": "500"},
 			queries:    []Query{{Field: "size", Operator: QueryOperatorLessThan, Value: 1000}},
 			expected:   true,
 		},
 		{
 			name:       "LessThan false",
-			properties: map[string]interface{}{"size": "1024"},
+			properties: map[string]any{"size": "1024"},
 			queries:    []Query{{Field: "size", Operator: QueryOperatorLessThan, Value: 1000}},
 			expected:   false,
 		},
 		{
 			name:       "LessThan equal value is false",
-			properties: map[string]interface{}{"size": "1000"},
+			properties: map[string]any{"size": "1000"},
 			queries:    []Query{{Field: "size", Operator: QueryOperatorLessThan, Value: 1000}},
 			expected:   false,
 		},
 		// GreaterThanOrEqual
 		{
 			name:       "GreaterThanOrEqual boundary true",
-			properties: map[string]interface{}{"size": "1000"},
+			properties: map[string]any{"size": "1000"},
 			queries:    []Query{{Field: "size", Operator: QueryOperatorGreaterThanOrEqual, Value: 1000}},
 			expected:   true,
 		},
 		{
 			name:       "GreaterThanOrEqual above true",
-			properties: map[string]interface{}{"size": "1001"},
+			properties: map[string]any{"size": "1001"},
 			queries:    []Query{{Field: "size", Operator: QueryOperatorGreaterThanOrEqual, Value: 1000}},
 			expected:   true,
 		},
 		{
 			name:       "GreaterThanOrEqual below false",
-			properties: map[string]interface{}{"size": "999"},
+			properties: map[string]any{"size": "999"},
 			queries:    []Query{{Field: "size", Operator: QueryOperatorGreaterThanOrEqual, Value: 1000}},
 			expected:   false,
 		},
 		// LessThanOrEqual
 		{
 			name:       "LessThanOrEqual boundary true",
-			properties: map[string]interface{}{"size": "1000"},
+			properties: map[string]any{"size": "1000"},
 			queries:    []Query{{Field: "size", Operator: QueryOperatorLessThanOrEqual, Value: 1000}},
 			expected:   true,
 		},
 		{
 			name:       "LessThanOrEqual below true",
-			properties: map[string]interface{}{"size": "999"},
+			properties: map[string]any{"size": "999"},
 			queries:    []Query{{Field: "size", Operator: QueryOperatorLessThanOrEqual, Value: 1000}},
 			expected:   true,
 		},
 		{
 			name:       "LessThanOrEqual above false",
-			properties: map[string]interface{}{"size": "1001"},
+			properties: map[string]any{"size": "1001"},
 			queries:    []Query{{Field: "size", Operator: QueryOperatorLessThanOrEqual, Value: 1000}},
 			expected:   false,
 		},
 		// Non-numeric value
 		{
 			name:       "Non-numeric string returns false for GreaterThan",
-			properties: map[string]interface{}{"size": "not-a-number"},
+			properties: map[string]any{"size": "not-a-number"},
 			queries:    []Query{{Field: "size", Operator: QueryOperatorGreaterThan, Value: 1000}},
 			expected:   false,
 		},
 		{
 			name:       "Non-numeric string returns false for LessThan",
-			properties: map[string]interface{}{"size": "abc"},
+			properties: map[string]any{"size": "abc"},
 			queries:    []Query{{Field: "size", Operator: QueryOperatorLessThan, Value: 1000}},
 			expected:   false,
 		},
 		// Missing field
 		{
 			name:       "Missing field returns false for GreaterThan",
-			properties: map[string]interface{}{},
+			properties: map[string]any{},
 			queries:    []Query{{Field: "size", Operator: QueryOperatorGreaterThan, Value: 1000}},
 			expected:   false,
 		},
 		{
 			name:       "Missing field returns false for LessThanOrEqual",
-			properties: map[string]interface{}{},
+			properties: map[string]any{},
 			queries:    []Query{{Field: "size", Operator: QueryOperatorLessThanOrEqual, Value: 1000}},
 			expected:   false,
 		},
 		// Float values
 		{
 			name:       "Float GreaterThan",
-			properties: map[string]interface{}{"score": "0.95"},
+			properties: map[string]any{"score": "0.95"},
 			queries:    []Query{{Field: "score", Operator: QueryOperatorGreaterThan, Value: 0.5}},
 			expected:   true,
 		},
 		{
 			name:       "Float LessThan",
-			properties: map[string]interface{}{"score": "0.3"},
+			properties: map[string]any{"score": "0.3"},
 			queries:    []Query{{Field: "score", Operator: QueryOperatorLessThan, Value: 0.5}},
 			expected:   true,
 		},
 		// Multiple queries combined
 		{
 			name:       "Multiple numeric queries all match",
-			properties: map[string]interface{}{"size": "500", "count": "10"},
+			properties: map[string]any{"size": "500", "count": "10"},
 			queries: []Query{
 				{Field: "size", Operator: QueryOperatorGreaterThan, Value: 100},
 				{Field: "count", Operator: QueryOperatorLessThanOrEqual, Value: 10},
@@ -964,7 +964,7 @@ func TestMatchesQueriesForScan(t *testing.T) {
 		},
 		{
 			name:       "Multiple numeric queries one fails",
-			properties: map[string]interface{}{"size": "500", "count": "20"},
+			properties: map[string]any{"size": "500", "count": "20"},
 			queries: []Query{
 				{Field: "size", Operator: QueryOperatorGreaterThan, Value: 100},
 				{Field: "count", Operator: QueryOperatorLessThanOrEqual, Value: 10},
@@ -974,57 +974,57 @@ func TestMatchesQueriesForScan(t *testing.T) {
 		// Empty queries
 		{
 			name:       "No queries matches everything",
-			properties: map[string]interface{}{"size": "500"},
+			properties: map[string]any{"size": "500"},
 			queries:    []Query{},
 			expected:   true,
 		},
 		// ContainsAny / ContainsAll
 		{
 			name:       "ContainsAny true with JSON array property",
-			properties: map[string]interface{}{"tags": "[\"red\",\"blue\"]"},
-			queries:    []Query{{Field: "tags", Operator: QueryOperatorContainsAny, Value: []interface{}{"green", "blue"}}},
+			properties: map[string]any{"tags": "[\"red\",\"blue\"]"},
+			queries:    []Query{{Field: "tags", Operator: QueryOperatorContainsAny, Value: []any{"green", "blue"}}},
 			expected:   true,
 		},
 		{
 			name:       "ContainsAny false with JSON array property",
-			properties: map[string]interface{}{"tags": "[\"red\",\"blue\"]"},
-			queries:    []Query{{Field: "tags", Operator: QueryOperatorContainsAny, Value: []interface{}{"green", "yellow"}}},
+			properties: map[string]any{"tags": "[\"red\",\"blue\"]"},
+			queries:    []Query{{Field: "tags", Operator: QueryOperatorContainsAny, Value: []any{"green", "yellow"}}},
 			expected:   false,
 		},
 		{
 			name:       "ContainsAll true with JSON array property",
-			properties: map[string]interface{}{"tags": "[\"red\",\"blue\",\"green\"]"},
-			queries:    []Query{{Field: "tags", Operator: QueryOperatorContainsAll, Value: []interface{}{"red", "green"}}},
+			properties: map[string]any{"tags": "[\"red\",\"blue\",\"green\"]"},
+			queries:    []Query{{Field: "tags", Operator: QueryOperatorContainsAll, Value: []any{"red", "green"}}},
 			expected:   true,
 		},
 		{
 			name:       "ContainsAll false with JSON array property",
-			properties: map[string]interface{}{"tags": "[\"red\",\"blue\"]"},
-			queries:    []Query{{Field: "tags", Operator: QueryOperatorContainsAll, Value: []interface{}{"red", "green"}}},
+			properties: map[string]any{"tags": "[\"red\",\"blue\"]"},
+			queries:    []Query{{Field: "tags", Operator: QueryOperatorContainsAll, Value: []any{"red", "green"}}},
 			expected:   false,
 		},
 		{
 			name:       "ContainsAny true with scalar string property",
-			properties: map[string]interface{}{"tags": "red"},
-			queries:    []Query{{Field: "tags", Operator: QueryOperatorContainsAny, Value: []interface{}{"red", "green"}}},
+			properties: map[string]any{"tags": "red"},
+			queries:    []Query{{Field: "tags", Operator: QueryOperatorContainsAny, Value: []any{"red", "green"}}},
 			expected:   true,
 		},
 		{
 			name:       "ContainsAll false with scalar string property",
-			properties: map[string]interface{}{"tags": "red"},
-			queries:    []Query{{Field: "tags", Operator: QueryOperatorContainsAll, Value: []interface{}{"red", "green"}}},
+			properties: map[string]any{"tags": "red"},
+			queries:    []Query{{Field: "tags", Operator: QueryOperatorContainsAll, Value: []any{"red", "green"}}},
 			expected:   false,
 		},
 		{
 			name:       "ContainsAny malformed query value returns false",
-			properties: map[string]interface{}{"tags": "[\"red\",\"blue\"]"},
+			properties: map[string]any{"tags": "[\"red\",\"blue\"]"},
 			queries:    []Query{{Field: "tags", Operator: QueryOperatorContainsAny, Value: "red"}},
 			expected:   false,
 		},
 		{
 			name:       "ContainsAll missing field returns false",
-			properties: map[string]interface{}{},
-			queries:    []Query{{Field: "tags", Operator: QueryOperatorContainsAll, Value: []interface{}{"red"}}},
+			properties: map[string]any{},
+			queries:    []Query{{Field: "tags", Operator: QueryOperatorContainsAll, Value: []any{"red"}}},
 			expected:   false,
 		},
 	}
@@ -1052,7 +1052,7 @@ func TestRedisStore_Integration(t *testing.T) {
 	t.Run("Add and GetChunk", func(t *testing.T) {
 		testKey := generateUUID()
 		embedding := generateTestEmbedding(RedisTestDimension)
-		metadata := map[string]interface{}{
+		metadata := map[string]any{
 			"type":   "document",
 			"size":   1024,
 			"public": true,
@@ -1074,7 +1074,7 @@ func TestRedisStore_Integration(t *testing.T) {
 
 	t.Run("Add without embedding", func(t *testing.T) {
 		testKey := generateUUID()
-		metadata := map[string]interface{}{
+		metadata := map[string]any{
 			"type": "metadata-only",
 		}
 
@@ -1098,7 +1098,7 @@ func TestRedisStore_Integration(t *testing.T) {
 			generateTestEmbedding(RedisTestDimension),
 			nil,
 		}
-		metadata := []map[string]interface{}{
+		metadata := []map[string]any{
 			{"type": "doc1", "size": 100},
 			{"type": "doc2", "size": 200},
 			{"type": "doc3", "size": 300},
@@ -1136,11 +1136,11 @@ func TestRedisStore_FilteringScenarios(t *testing.T) {
 	// Setup test data for filtering scenarios
 	testData := []struct {
 		key      string
-		metadata map[string]interface{}
+		metadata map[string]any
 	}{
 		{
 			generateUUID(),
-			map[string]interface{}{
+			map[string]any{
 				"type":   "pdf",
 				"size":   1024,
 				"public": true,
@@ -1149,7 +1149,7 @@ func TestRedisStore_FilteringScenarios(t *testing.T) {
 		},
 		{
 			generateUUID(),
-			map[string]interface{}{
+			map[string]any{
 				"type":   "docx",
 				"size":   2048,
 				"public": false,
@@ -1158,7 +1158,7 @@ func TestRedisStore_FilteringScenarios(t *testing.T) {
 		},
 		{
 			generateUUID(),
-			map[string]interface{}{
+			map[string]any{
 				"type":   "pdf",
 				"size":   512,
 				"public": true,
@@ -1167,7 +1167,7 @@ func TestRedisStore_FilteringScenarios(t *testing.T) {
 		},
 		{
 			generateUUID(),
-			map[string]interface{}{
+			map[string]any{
 				"type":   "txt",
 				"size":   256,
 				"public": true,
@@ -1302,12 +1302,12 @@ func TestRedisStore_VectorSearch(t *testing.T) {
 	testDocs := []struct {
 		key       string
 		embedding []float32
-		metadata  map[string]interface{}
+		metadata  map[string]any
 	}{
 		{
 			generateUUID(),
 			generateTestEmbedding(RedisTestDimension),
-			map[string]interface{}{
+			map[string]any{
 				"type":     "tech",
 				"category": "programming",
 				"content":  "Go programming language",
@@ -1316,7 +1316,7 @@ func TestRedisStore_VectorSearch(t *testing.T) {
 		{
 			generateUUID(),
 			generateTestEmbedding(RedisTestDimension),
-			map[string]interface{}{
+			map[string]any{
 				"type":     "tech",
 				"category": "programming",
 				"content":  "Python programming language",
@@ -1325,7 +1325,7 @@ func TestRedisStore_VectorSearch(t *testing.T) {
 		{
 			generateUUID(),
 			generateTestEmbedding(RedisTestDimension),
-			map[string]interface{}{
+			map[string]any{
 				"type":     "sports",
 				"category": "football",
 				"content":  "Football match results",
@@ -1393,22 +1393,22 @@ func TestRedisStore_CompleteUseCases(t *testing.T) {
 		documents := []struct {
 			key       string
 			embedding []float32
-			metadata  map[string]interface{}
+			metadata  map[string]any
 		}{
 			{
 				generateUUID(),
 				generateTestEmbedding(RedisTestDimension),
-				map[string]interface{}{"type": "pdf", "size": 1024, "public": true},
+				map[string]any{"type": "pdf", "size": 1024, "public": true},
 			},
 			{
 				generateUUID(),
 				generateTestEmbedding(RedisTestDimension),
-				map[string]interface{}{"type": "docx", "size": 2048, "public": false},
+				map[string]any{"type": "docx", "size": 2048, "public": false},
 			},
 			{
 				generateUUID(),
 				generateTestEmbedding(RedisTestDimension),
-				map[string]interface{}{"type": "pdf", "size": 512, "public": true},
+				map[string]any{"type": "pdf", "size": 512, "public": true},
 			},
 		}
 
@@ -1456,12 +1456,12 @@ func TestRedisStore_CompleteUseCases(t *testing.T) {
 		cacheEntries := []struct {
 			key       string
 			embedding []float32
-			metadata  map[string]interface{}
+			metadata  map[string]any
 		}{
 			{
 				generateUUID(),
 				generateTestEmbedding(RedisTestDimension),
-				map[string]interface{}{
+				map[string]any{
 					"request_hash":                       "abc123",
 					"user":                               "u1",
 					"lang":                               "en",
@@ -1472,7 +1472,7 @@ func TestRedisStore_CompleteUseCases(t *testing.T) {
 			{
 				generateUUID(),
 				generateTestEmbedding(RedisTestDimension),
-				map[string]interface{}{
+				map[string]any{
 					"request_hash":                       "def456",
 					"user":                               "u1",
 					"lang":                               "es",
@@ -1521,7 +1521,7 @@ func TestRedisStore_DeleteOperations(t *testing.T) {
 		// Add an item
 		key := generateUUID()
 		embedding := generateTestEmbedding(RedisTestDimension)
-		metadata := map[string]interface{}{"type": "test", "value": "delete_me"}
+		metadata := map[string]any{"type": "test", "value": "delete_me"}
 
 		err := setup.Store.Add(setup.ctx, TestNamespace, key, embedding, metadata)
 		require.NoError(t, err)
@@ -1547,22 +1547,22 @@ func TestRedisStore_DeleteOperations(t *testing.T) {
 		testItems := []struct {
 			key       string
 			embedding []float32
-			metadata  map[string]interface{}
+			metadata  map[string]any
 		}{
 			{
 				generateUUID(),
 				generateTestEmbedding(RedisTestDimension),
-				map[string]interface{}{"type": "delete_me", "category": "test"},
+				map[string]any{"type": "delete_me", "category": "test"},
 			},
 			{
 				generateUUID(),
 				generateTestEmbedding(RedisTestDimension),
-				map[string]interface{}{"type": "delete_me", "category": "test"},
+				map[string]any{"type": "delete_me", "category": "test"},
 			},
 			{
 				generateUUID(),
 				generateTestEmbedding(RedisTestDimension),
-				map[string]interface{}{"type": "keep_me", "category": "test"},
+				map[string]any{"type": "keep_me", "category": "test"},
 			},
 		}
 
@@ -1591,13 +1591,13 @@ func TestRedisStore_DeleteOperations(t *testing.T) {
 
 	t.Run("DeleteAll with more than BatchLimit matches", func(t *testing.T) {
 		const deleteCount = BatchLimit + 23
-		for i := 0; i < deleteCount; i++ {
+		for range deleteCount {
 			err := setup.Store.Add(
 				setup.ctx,
 				TestNamespace,
 				generateUUID(),
 				generateTestEmbedding(RedisTestDimension),
-				map[string]interface{}{"type": "delete_me_large", "category": "test"},
+				map[string]any{"type": "delete_me_large", "category": "test"},
 			)
 			require.NoError(t, err)
 		}
@@ -1608,7 +1608,7 @@ func TestRedisStore_DeleteOperations(t *testing.T) {
 			TestNamespace,
 			keepID,
 			generateTestEmbedding(RedisTestDimension),
-			map[string]interface{}{"type": "keep_large", "category": "test"},
+			map[string]any{"type": "keep_large", "category": "test"},
 		)
 		require.NoError(t, err)
 
@@ -1636,13 +1636,13 @@ func TestRedisStore_DeleteOperations(t *testing.T) {
 
 	t.Run("getAllMatchingIDs returns matching ids", func(t *testing.T) {
 		targetType := "ids_only_target"
-		for i := 0; i < 3; i++ {
+		for range 3 {
 			err := setup.Store.Add(
 				setup.ctx,
 				TestNamespace,
 				generateUUID(),
 				generateTestEmbedding(RedisTestDimension),
-				map[string]interface{}{"type": targetType, "category": "test"},
+				map[string]any{"type": targetType, "category": "test"},
 			)
 			require.NoError(t, err)
 		}
@@ -1651,7 +1651,7 @@ func TestRedisStore_DeleteOperations(t *testing.T) {
 			TestNamespace,
 			generateUUID(),
 			generateTestEmbedding(RedisTestDimension),
-			map[string]interface{}{"type": "ids_only_other", "category": "test"},
+			map[string]any{"type": "ids_only_other", "category": "test"},
 		)
 		require.NoError(t, err)
 
@@ -1729,7 +1729,7 @@ func TestRedisStore_ErrorHandling(t *testing.T) {
 
 	t.Run("Add with empty ID", func(t *testing.T) {
 		embedding := generateTestEmbedding(RedisTestDimension)
-		metadata := map[string]interface{}{"type": "test"}
+		metadata := map[string]any{"type": "test"}
 
 		err := setup.Store.Add(setup.ctx, TestNamespace, "", embedding, metadata)
 		assert.Error(t, err)
@@ -1764,7 +1764,7 @@ func TestRedisStore_NamespaceDimensionHandling(t *testing.T) {
 
 		// Add a document with 512-dimensional embedding
 		embedding512 := generateTestEmbedding(512)
-		metadata := map[string]interface{}{
+		metadata := map[string]any{
 			"type": "test_doc",
 			"test": "dimension_512",
 		}
@@ -1788,7 +1788,7 @@ func TestRedisStore_NamespaceDimensionHandling(t *testing.T) {
 
 		// Add a document with 1024-dimensional embedding
 		embedding1024 := generateTestEmbedding(1024)
-		metadata1024 := map[string]interface{}{
+		metadata1024 := map[string]any{
 			"type": "test_doc",
 			"test": "dimension_1024",
 		}

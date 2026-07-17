@@ -9,10 +9,10 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/vectorstore"
-	mocker "github.com/maximhq/bifrost/plugins/mocker"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/vectorstore"
+	mocker "github.com/grevinden/bifrost/plugins/mocker"
 )
 
 // embeddingThrottle bounds the number of concurrent live embedding calls
@@ -199,7 +199,7 @@ func getPineconeConfigFromEnv() vectorstore.PineconeConfig {
 // store type. The bool is false for an unrecognized type. Shared by test setup
 // and the TestMain namespace sweep so both stay in lockstep when a new backend
 // is added.
-func storeConfigForType(storeType vectorstore.VectorStoreType) (interface{}, bool) {
+func storeConfigForType(storeType vectorstore.VectorStoreType) (any, bool) {
 	switch storeType {
 	case vectorstore.VectorStoreTypeWeaviate:
 		return getWeaviateConfigFromEnv(), true
@@ -253,7 +253,7 @@ func getMockRules() []mocker.MockRule {
 		{
 			Name:        "bifrost-definition",
 			Enabled:     true,
-			Conditions:  mocker.Conditions{MessageRegex: bifrost.Ptr("(?i)What is Bifrost.*")},
+			Conditions:  mocker.Conditions{MessageRegex: new("(?i)What is Bifrost.*")},
 			Probability: 1.0,
 			Responses: []mocker.Response{
 				{Type: mocker.ResponseTypeSuccess, Content: &mocker.SuccessResponse{Message: "Bifrost is a unified API for interacting with multiple AI providers."}},
@@ -262,7 +262,7 @@ func getMockRules() []mocker.MockRule {
 		{
 			Name:        "machine-learning-explanation",
 			Enabled:     true,
-			Conditions:  mocker.Conditions{MessageRegex: bifrost.Ptr("(?i)what is machine learning\\?|explain machine learning|machine learning concepts|can you explain machine learning|explain the basics of machine learning")},
+			Conditions:  mocker.Conditions{MessageRegex: new("(?i)what is machine learning\\?|explain machine learning|machine learning concepts|can you explain machine learning|explain the basics of machine learning")},
 			Probability: 1.0,
 			Responses: []mocker.Response{
 				{Type: mocker.ResponseTypeSuccess, Content: &mocker.SuccessResponse{Message: "Machine learning is a field of AI that uses statistical techniques to give computer systems the ability to learn from data."}},
@@ -271,7 +271,7 @@ func getMockRules() []mocker.MockRule {
 		{
 			Name:        "ai-explanation",
 			Enabled:     true,
-			Conditions:  mocker.Conditions{MessageRegex: bifrost.Ptr("(?i)what is artificial intelligence\\?|can you explain what ai is\\?|define artificial intelligence")},
+			Conditions:  mocker.Conditions{MessageRegex: new("(?i)what is artificial intelligence\\?|can you explain what ai is\\?|define artificial intelligence")},
 			Probability: 1.0,
 			Responses: []mocker.Response{
 				{Type: mocker.ResponseTypeSuccess, Content: &mocker.SuccessResponse{Message: "Artificial intelligence is the simulation of human intelligence in machines."}},
@@ -280,7 +280,7 @@ func getMockRules() []mocker.MockRule {
 		{
 			Name:        "capital-of-france",
 			Enabled:     true,
-			Conditions:  mocker.Conditions{MessageRegex: bifrost.Ptr("What is the capital of France\\?")},
+			Conditions:  mocker.Conditions{MessageRegex: new("What is the capital of France\\?")},
 			Probability: 1.0,
 			Responses: []mocker.Response{
 				{Type: mocker.ResponseTypeSuccess, Content: &mocker.SuccessResponse{Message: "The capital of France is Paris."}},
@@ -289,7 +289,7 @@ func getMockRules() []mocker.MockRule {
 		{
 			Name:        "newton-laws",
 			Enabled:     true,
-			Conditions:  mocker.Conditions{MessageRegex: bifrost.Ptr("(?i)describe.*newton.*three laws|describe.*three laws.*newton")},
+			Conditions:  mocker.Conditions{MessageRegex: new("(?i)describe.*newton.*three laws|describe.*three laws.*newton")},
 			Probability: 1.0,
 			Responses: []mocker.Response{
 				{Type: mocker.ResponseTypeSuccess, Content: &mocker.SuccessResponse{Message: "Newton's three laws of motion are: 1. An object at rest stays at rest and an object in motion stays in motion with the same speed and in the same direction unless acted upon by an unbalanced force. 2. The acceleration of an object as produced by a net force is directly proportional to the magnitude of the net force, in the same direction as the net force, and inversely proportional to the mass of the object. 3. For every action, there is an equal and opposite reaction."}},
@@ -299,7 +299,7 @@ func getMockRules() []mocker.MockRule {
 		{
 			Name:        "weather-question",
 			Enabled:     true,
-			Conditions:  mocker.Conditions{MessageRegex: bifrost.Ptr("(?i)what.*weather|weather.*like")},
+			Conditions:  mocker.Conditions{MessageRegex: new("(?i)what.*weather|weather.*like")},
 			Probability: 1.0,
 			Responses: []mocker.Response{
 				{Type: mocker.ResponseTypeSuccess, Content: &mocker.SuccessResponse{Message: "It's sunny today with a temperature of 72°F."}},
@@ -309,7 +309,7 @@ func getMockRules() []mocker.MockRule {
 		{
 			Name:        "blockchain-definition",
 			Enabled:     true,
-			Conditions:  mocker.Conditions{MessageRegex: bifrost.Ptr("(?i)define blockchain|blockchain technology")},
+			Conditions:  mocker.Conditions{MessageRegex: new("(?i)define blockchain|blockchain technology")},
 			Probability: 1.0,
 			Responses: []mocker.Response{
 				{Type: mocker.ResponseTypeSuccess, Content: &mocker.SuccessResponse{Message: "Blockchain is a distributed ledger technology that maintains a continuously growing list of records."}},
@@ -318,7 +318,7 @@ func getMockRules() []mocker.MockRule {
 		{
 			Name:        "deep-learning",
 			Enabled:     true,
-			Conditions:  mocker.Conditions{MessageRegex: bifrost.Ptr("(?i)what is deep learning")},
+			Conditions:  mocker.Conditions{MessageRegex: new("(?i)what is deep learning")},
 			Probability: 1.0,
 			Responses: []mocker.Response{
 				{Type: mocker.ResponseTypeSuccess, Content: &mocker.SuccessResponse{Message: "Deep learning is a subset of machine learning that uses neural networks with multiple layers."}},
@@ -328,7 +328,7 @@ func getMockRules() []mocker.MockRule {
 		{
 			Name:        "quantum-computing",
 			Enabled:     true,
-			Conditions:  mocker.Conditions{MessageRegex: bifrost.Ptr("(?i)quantum computing|explain quantum")},
+			Conditions:  mocker.Conditions{MessageRegex: new("(?i)quantum computing|explain quantum")},
 			Probability: 1.0,
 			Responses: []mocker.Response{
 				{Type: mocker.ResponseTypeSuccess, Content: &mocker.SuccessResponse{Message: "Quantum computing uses quantum mechanical phenomena to process information in ways that classical computers cannot."}},
@@ -338,7 +338,7 @@ func getMockRules() []mocker.MockRule {
 		{
 			Name:        "hello-greeting",
 			Enabled:     true,
-			Conditions:  mocker.Conditions{MessageRegex: bifrost.Ptr("(?i)^hello$|^hi$|hello.*world")},
+			Conditions:  mocker.Conditions{MessageRegex: new("(?i)^hello$|^hi$|hello.*world")},
 			Probability: 1.0,
 			Responses: []mocker.Response{
 				{Type: mocker.ResponseTypeSuccess, Content: &mocker.SuccessResponse{Message: "Hello! How can I help you today?"}},
@@ -347,7 +347,7 @@ func getMockRules() []mocker.MockRule {
 		{
 			Name:        "how-are-you",
 			Enabled:     true,
-			Conditions:  mocker.Conditions{MessageRegex: bifrost.Ptr("(?i)how are you")},
+			Conditions:  mocker.Conditions{MessageRegex: new("(?i)how are you")},
 			Probability: 1.0,
 			Responses: []mocker.Response{
 				{Type: mocker.ResponseTypeSuccess, Content: &mocker.SuccessResponse{Message: "I'm doing well, thank you for asking!"}},
@@ -356,7 +356,7 @@ func getMockRules() []mocker.MockRule {
 		{
 			Name:        "meaning-of-life",
 			Enabled:     true,
-			Conditions:  mocker.Conditions{MessageRegex: bifrost.Ptr("(?i)meaning of life")},
+			Conditions:  mocker.Conditions{MessageRegex: new("(?i)meaning of life")},
 			Probability: 1.0,
 			Responses: []mocker.Response{
 				{Type: mocker.ResponseTypeSuccess, Content: &mocker.SuccessResponse{Message: "The meaning of life is a philosophical question that has been pondered for centuries. Some say it's 42!"}},
@@ -365,7 +365,7 @@ func getMockRules() []mocker.MockRule {
 		{
 			Name:        "short-story",
 			Enabled:     true,
-			Conditions:  mocker.Conditions{MessageRegex: bifrost.Ptr("(?i)tell me.*short story")},
+			Conditions:  mocker.Conditions{MessageRegex: new("(?i)tell me.*short story")},
 			Probability: 1.0,
 			Responses: []mocker.Response{
 				{Type: mocker.ResponseTypeSuccess, Content: &mocker.SuccessResponse{Message: "Once upon a time, there was a brave knight who saved the day."}},
@@ -375,7 +375,7 @@ func getMockRules() []mocker.MockRule {
 		{
 			Name:        "test-configuration",
 			Enabled:     true,
-			Conditions:  mocker.Conditions{MessageRegex: bifrost.Ptr("(?i)test configuration")},
+			Conditions:  mocker.Conditions{MessageRegex: new("(?i)test configuration")},
 			Probability: 1.0,
 			Responses: []mocker.Response{
 				{Type: mocker.ResponseTypeSuccess, Content: &mocker.SuccessResponse{Message: "This is a test configuration response."}},
@@ -384,7 +384,7 @@ func getMockRules() []mocker.MockRule {
 		{
 			Name:        "test-messages",
 			Enabled:     true,
-			Conditions:  mocker.Conditions{MessageRegex: bifrost.Ptr("(?i)test.*message|test.*no-store|test.*cache|test.*error|ttl test|threshold test|provider.*test|edge case test")},
+			Conditions:  mocker.Conditions{MessageRegex: new("(?i)test.*message|test.*no-store|test.*cache|test.*error|ttl test|threshold test|provider.*test|edge case test")},
 			Probability: 1.0,
 			Responses: []mocker.Response{
 				{Type: mocker.ResponseTypeSuccess, Content: &mocker.SuccessResponse{Message: "This is a test response for various test scenarios."}},
@@ -393,7 +393,7 @@ func getMockRules() []mocker.MockRule {
 		{
 			Name:        "long-prompt",
 			Enabled:     true,
-			Conditions:  mocker.Conditions{MessageRegex: bifrost.Ptr("(?i)very long prompt")},
+			Conditions:  mocker.Conditions{MessageRegex: new("(?i)very long prompt")},
 			Probability: 1.0,
 			Responses: []mocker.Response{
 				{Type: mocker.ResponseTypeSuccess, Content: &mocker.SuccessResponse{Message: "This is a response to a very long prompt."}},
@@ -402,7 +402,7 @@ func getMockRules() []mocker.MockRule {
 		{
 			Name:        "parameter-tests",
 			Enabled:     true,
-			Conditions:  mocker.Conditions{MessageRegex: bifrost.Ptr("(?i)test.*parameters|performance test")},
+			Conditions:  mocker.Conditions{MessageRegex: new("(?i)test.*parameters|performance test")},
 			Probability: 1.0,
 			Responses: []mocker.Response{
 				{Type: mocker.ResponseTypeSuccess, Content: &mocker.SuccessResponse{Message: "Parameter test response with various settings."}},
@@ -412,7 +412,7 @@ func getMockRules() []mocker.MockRule {
 		{
 			Name:        "message-pattern",
 			Enabled:     true,
-			Conditions:  mocker.Conditions{MessageRegex: bifrost.Ptr("(?i)message \\d+")},
+			Conditions:  mocker.Conditions{MessageRegex: new("(?i)message \\d+")},
 			Probability: 1.0,
 			Responses: []mocker.Response{
 				{Type: mocker.ResponseTypeSuccess, Content: &mocker.SuccessResponse{Message: "Response to numbered message."}},
@@ -751,9 +751,9 @@ func CreateImageGenerationRequest(prompt string, size string, quality string) *s
 			Prompt: prompt,
 		},
 		Params: &schemas.ImageGenerationParameters{
-			Size:    bifrost.Ptr(size),
-			Quality: bifrost.Ptr(quality),
-			N:       bifrost.Ptr(1),
+			Size:    new(size),
+			Quality: new(quality),
+			N:       new(1),
 		},
 	}
 }

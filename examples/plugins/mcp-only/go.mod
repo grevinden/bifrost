@@ -1,8 +1,8 @@
-module github.com/maximhq/bifrost/examples/plugins/mcp-only
+module github.com/grevinden/bifrost/examples/plugins/mcp-only
 
 go 1.26.4
 
-require github.com/maximhq/bifrost/core v1.5.12
+require github.com/grevinden/bifrost/core v1.5.12
 
 require (
 	github.com/andybalholm/brotli v1.2.0 // indirect

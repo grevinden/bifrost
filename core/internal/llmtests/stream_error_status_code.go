@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // RunStreamErrorStatusCodeTest validates that pre-stream errors from providers carry
@@ -62,7 +62,7 @@ func RunStreamErrorStatusCodeTest(t *testing.T, client *bifrost.Bifrost, ctx con
 				Model:    invalidModel,
 				Input:    messages,
 				Params: &schemas.ChatParameters{
-					MaxCompletionTokens: bifrost.Ptr(10),
+					MaxCompletionTokens: new(10),
 				},
 			}
 
@@ -115,7 +115,7 @@ func RunStreamErrorStatusCodeTest(t *testing.T, client *bifrost.Bifrost, ctx con
 				Model:    invalidModel,
 				Input:    messages,
 				Params: &schemas.ResponsesParameters{
-					MaxOutputTokens: bifrost.Ptr(10),
+					MaxOutputTokens: new(10),
 				},
 			}
 

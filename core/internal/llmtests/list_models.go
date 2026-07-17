@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // listModelsBifrostContext returns a context for ListModels. For Replicate, pins the deployments-endpoint
@@ -42,11 +42,11 @@ func RunListModelsTest(t *testing.T, client *bifrost.Bifrost, ctx context.Contex
 		retryConfig := GetTestRetryConfigForScenario("ListModels", testConfig)
 		retryContext := TestRetryContext{
 			ScenarioName: "ListModels",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"should_return_models":  true,
 				"should_have_valid_ids": true,
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider": testConfig.Provider,
 			},
 		}
@@ -54,7 +54,7 @@ func RunListModelsTest(t *testing.T, client *bifrost.Bifrost, ctx context.Contex
 		// Create expectations for list models
 		expectations := ResponseExpectations{
 			ShouldHaveLatency: true,
-			ProviderSpecific: map[string]interface{}{
+			ProviderSpecific: map[string]any{
 				"expected_provider": string(testConfig.Provider),
 				"min_model_count":   1, // At least one model should be returned
 			},
@@ -140,17 +140,17 @@ func RunListModelsResponseMarshalTest(t *testing.T, client *bifrost.Bifrost, ctx
 		retryConfig := GetTestRetryConfigForScenario("ListModels", testConfig)
 		retryContext := TestRetryContext{
 			ScenarioName: "ListModelsResponseMarshal",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"should_marshal_response": true,
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider": testConfig.Provider,
 			},
 		}
 
 		expectations := ResponseExpectations{
 			ShouldHaveLatency: true,
-			ProviderSpecific: map[string]interface{}{
+			ProviderSpecific: map[string]any{
 				"expected_provider": string(testConfig.Provider),
 				"min_model_count":   1,
 			},
@@ -275,11 +275,11 @@ func RunListModelsPaginationTest(t *testing.T, client *bifrost.Bifrost, ctx cont
 		retryConfig := GetTestRetryConfigForScenario("ListModelsPagination", testConfig)
 		retryContext := TestRetryContext{
 			ScenarioName: "ListModelsPagination",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"should_return_paginated_models": true,
 				"should_respect_page_size":       true,
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider":  string(testConfig.Provider),
 				"page_size": pageSize,
 			},
@@ -288,7 +288,7 @@ func RunListModelsPaginationTest(t *testing.T, client *bifrost.Bifrost, ctx cont
 		// Create expectations for pagination test
 		expectations := ResponseExpectations{
 			ShouldHaveLatency: true,
-			ProviderSpecific: map[string]interface{}{
+			ProviderSpecific: map[string]any{
 				"expected_provider": string(testConfig.Provider),
 				"min_model_count":   0, // Pagination might return 0 models if page size is larger than total
 			},
@@ -337,10 +337,10 @@ func RunListModelsPaginationTest(t *testing.T, client *bifrost.Bifrost, ctx cont
 
 			nextPageRetryContext := TestRetryContext{
 				ScenarioName: "ListModelsPagination_NextPage",
-				ExpectedBehavior: map[string]interface{}{
+				ExpectedBehavior: map[string]any{
 					"should_return_next_page": true,
 				},
-				TestMetadata: map[string]interface{}{
+				TestMetadata: map[string]any{
 					"provider":   testConfig.Provider,
 					"page_size":  pageSize,
 					"page_token": response.NextPageToken,

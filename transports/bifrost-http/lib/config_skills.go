@@ -10,9 +10,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/maximhq/bifrost/framework/configstore"
-	configstoreTables "github.com/maximhq/bifrost/framework/configstore/tables"
-	"github.com/maximhq/bifrost/framework/objectstore"
+	"github.com/grevinden/bifrost/framework/configstore"
+	configstoreTables "github.com/grevinden/bifrost/framework/configstore/tables"
+	"github.com/grevinden/bifrost/framework/objectstore"
 )
 
 // loadSkillsRegistry reconciles config-defined skills with the database on startup.

@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"github.com/bytedance/sonic"
-	"github.com/maximhq/bifrost/core/providers/openai"
-	providerUtils "github.com/maximhq/bifrost/core/providers/utils"
-	schemas "github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/providers/openai"
+	providerUtils "github.com/grevinden/bifrost/core/providers/utils"
+	schemas "github.com/grevinden/bifrost/core/schemas"
 	"github.com/valyala/fasthttp"
 )
 
@@ -363,7 +363,7 @@ func (provider *MistralProvider) Transcription(ctx *schemas.BifrostContext, key 
 
 	// Set raw response if enabled
 	if providerUtils.ShouldSendBackRawResponse(ctx, provider.sendBackRawResponse) {
-		var rawResponse interface{}
+		var rawResponse any
 		if err := sonic.Unmarshal(copiedResponseBody, &rawResponse); err == nil {
 			response.ExtraFields.RawResponse = rawResponse
 		}
@@ -383,7 +383,7 @@ func (provider *MistralProvider) TranscriptionStream(ctx *schemas.BifrostContext
 	if mistralReq == nil {
 		return nil, providerUtils.NewBifrostOperationError("transcription input is not provided", nil)
 	}
-	mistralReq.Stream = schemas.Ptr(true)
+	mistralReq.Stream = new(true)
 
 	// Create multipart form body with stream=true
 	body, contentType, bifrostErr := createMistralTranscriptionMultipartBody(mistralReq, providerName)
@@ -443,7 +443,7 @@ func (provider *MistralProvider) TranscriptionStream(ctx *schemas.BifrostContext
 		// Request failed before the first response byte (server closed an idle/pooled connection,
 		// broken pipe, connection refused, DNS failure, etc.). Surface as a retriable upstream
 		// connection error (502) so executeRequestWithRetries honors max_retries, matching the
-		// non-streaming path - see https://github.com/maximhq/bifrost/issues/4496.
+		// non-streaming path - see https://github.com/grevinden/bifrost/issues/4496.
 		return nil, providerUtils.SetErrorLatency(providerUtils.NewBifrostUpstreamConnectionError(schemas.ErrProviderDoRequest, err), latency)
 	}
 
@@ -715,7 +715,7 @@ func (provider *MistralProvider) OCR(ctx *schemas.BifrostContext, key schemas.Ke
 
 	// Set raw response if enabled
 	if providerUtils.ShouldSendBackRawResponse(ctx, provider.sendBackRawResponse) {
-		var rawResponse interface{}
+		var rawResponse any
 		if err := sonic.Unmarshal(copiedResponseBody, &rawResponse); err == nil {
 			response.ExtraFields.RawResponse = rawResponse
 		}

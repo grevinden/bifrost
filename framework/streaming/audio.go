@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	schemas "github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/modelcatalog"
+	bifrost "github.com/grevinden/bifrost/core"
+	schemas "github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/modelcatalog"
 )
 
 // buildCompleteMessageFromAudioStreamChunks builds a complete message from accumulated audio chunks
@@ -128,7 +128,7 @@ func (a *Accumulator) processAudioStreamingResponse(ctx *schemas.BifrostContext,
 	chunk.Timestamp = time.Now()
 	chunk.ErrorDetails = bifrostErr
 	if bifrostErr != nil {
-		chunk.FinishReason = bifrost.Ptr("error")
+		chunk.FinishReason = new("error")
 	} else if result != nil && result.SpeechStreamResponse != nil {
 		// We create a deep copy of the delta to avoid pointing to stack memory
 		newDelta := &schemas.BifrostSpeechStreamResponse{
@@ -138,7 +138,7 @@ func (a *Accumulator) processAudioStreamingResponse(ctx *schemas.BifrostContext,
 		}
 		chunk.Delta = newDelta
 		if result.SpeechStreamResponse.ExtraFields.RawResponse != nil {
-			chunk.RawResponse = bifrost.Ptr(fmt.Sprintf("%v", result.SpeechStreamResponse.ExtraFields.RawResponse))
+			chunk.RawResponse = new(fmt.Sprintf("%v", result.SpeechStreamResponse.ExtraFields.RawResponse))
 		}
 		if result.SpeechStreamResponse.Usage != nil {
 			chunk.TokenUsage = result.SpeechStreamResponse.Usage
@@ -147,7 +147,7 @@ func (a *Accumulator) processAudioStreamingResponse(ctx *schemas.BifrostContext,
 		if isFinalChunk {
 			if a.pricingManager != nil {
 				cost := a.pricingManager.CalculateCost(result, modelcatalog.PricingLookupScopesFromContext(ctx, string(result.GetExtraFields().Provider)))
-				chunk.Cost = bifrost.Ptr(cost)
+				chunk.Cost = new(cost)
 			}
 			chunk.SemanticCacheDebug = result.GetExtraFields().CacheDebug
 		}
@@ -172,7 +172,7 @@ func (a *Accumulator) processAudioStreamingResponse(ctx *schemas.BifrostContext,
 			a.logger.Error("failed to process accumulated chunks for request %s: %v", requestID, processErr)
 			return nil, processErr
 		}
-		var rawRequest interface{}
+		var rawRequest any
 		if result != nil && result.SpeechStreamResponse != nil && result.SpeechStreamResponse.ExtraFields.RawRequest != nil {
 			rawRequest = result.SpeechStreamResponse.ExtraFields.RawRequest
 		}

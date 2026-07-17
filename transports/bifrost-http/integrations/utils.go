@@ -9,11 +9,11 @@ import (
 	"strings"
 
 	"github.com/bytedance/sonic"
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/providers/gemini"
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/kvstore"
-	"github.com/maximhq/bifrost/transports/bifrost-http/lib"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/providers/gemini"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/kvstore"
+	"github.com/grevinden/bifrost/transports/bifrost-http/lib"
 	"github.com/valyala/fasthttp"
 )
 

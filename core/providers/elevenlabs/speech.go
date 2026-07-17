@@ -1,7 +1,7 @@
 package elevenlabs
 
 import (
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 func ToElevenlabsSpeechRequest(bifrostReq *schemas.BifrostSpeechRequest) *ElevenlabsSpeechRequest {

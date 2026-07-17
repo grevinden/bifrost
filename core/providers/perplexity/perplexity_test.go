@@ -6,10 +6,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/maximhq/bifrost/core/internal/llmtests"
-	"github.com/maximhq/bifrost/core/providers/perplexity"
+	"github.com/grevinden/bifrost/core/internal/llmtests"
+	"github.com/grevinden/bifrost/core/providers/perplexity"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 func TestPerplexity(t *testing.T) {
@@ -79,11 +79,11 @@ func TestToBifrostChatResponse_Citations(t *testing.T) {
 			Choices: []schemas.BifrostResponseChoice{
 				{
 					Index:        0,
-					FinishReason: schemas.Ptr("stop"),
+					FinishReason: new("stop"),
 					ChatNonStreamResponseChoice: &schemas.ChatNonStreamResponseChoice{
 						Message: &schemas.ChatMessage{
 							Role:    "assistant",
-							Content: &schemas.ChatMessageContent{ContentStr: schemas.Ptr("Here is the answer with citations [1][2][3].")},
+							Content: &schemas.ChatMessageContent{ContentStr: new("Here is the answer with citations [1][2][3].")},
 						},
 					},
 				},
@@ -92,8 +92,8 @@ func TestToBifrostChatResponse_Citations(t *testing.T) {
 				PromptTokens:     10,
 				CompletionTokens: 20,
 				TotalTokens:      30,
-				CitationTokens:   schemas.Ptr(5),
-				NumSearchQueries: schemas.Ptr(2),
+				CitationTokens:   new(5),
+				NumSearchQueries: new(2),
 			},
 		}
 
@@ -190,9 +190,9 @@ func TestWebSearchOption_JSONSerialization(t *testing.T) {
 
 	t.Run("corrected field name serializes as image_results_enhanced_relevance", func(t *testing.T) {
 		option := perplexity.WebSearchOption{
-			SearchContextSize:             schemas.Ptr("high"),
-			ImageResultsEnhancedRelevance: schemas.Ptr(true),
-			SearchType:                    schemas.Ptr("news"),
+			SearchContextSize:             new("high"),
+			ImageResultsEnhancedRelevance: new(true),
+			SearchType:                    new("news"),
 		}
 
 		data, err := json.Marshal(option)
@@ -239,12 +239,12 @@ func TestWebSearchOption_JSONSerialization(t *testing.T) {
 		bifrostReq := &schemas.BifrostChatRequest{
 			Model: "sonar-pro",
 			Input: []schemas.ChatMessage{
-				{Role: "user", Content: &schemas.ChatMessageContent{ContentStr: schemas.Ptr("test")}},
+				{Role: "user", Content: &schemas.ChatMessageContent{ContentStr: new("test")}},
 			},
 			Params: &schemas.ChatParameters{
-				ExtraParams: map[string]interface{}{
-					"web_search_options": []interface{}{
-						map[string]interface{}{
+				ExtraParams: map[string]any{
+					"web_search_options": []any{
+						map[string]any{
 							"search_context_size":              "high",
 							"image_results_enhanced_relevance": true,
 							"search_type":                      "news",
@@ -366,7 +366,7 @@ func TestToPerplexityChatCompletionRequest_ToolCalling(t *testing.T) {
 		bifrostReq := &schemas.BifrostChatRequest{
 			Model: "sonar-pro",
 			Input: []schemas.ChatMessage{
-				{Role: "user", Content: &schemas.ChatMessageContent{ContentStr: schemas.Ptr("What's the weather?")}},
+				{Role: "user", Content: &schemas.ChatMessageContent{ContentStr: new("What's the weather?")}},
 			},
 			Params: &schemas.ChatParameters{
 				Tools: []schemas.ChatTool{
@@ -374,14 +374,14 @@ func TestToPerplexityChatCompletionRequest_ToolCalling(t *testing.T) {
 						Type: schemas.ChatToolTypeFunction,
 						Function: &schemas.ChatToolFunction{
 							Name:        "get_weather",
-							Description: schemas.Ptr("Get the weather for a location"),
+							Description: new("Get the weather for a location"),
 						},
 					},
 				},
 				ToolChoice: &schemas.ChatToolChoice{
-					ChatToolChoiceStr: schemas.Ptr("auto"),
+					ChatToolChoiceStr: new("auto"),
 				},
-				ParallelToolCalls: schemas.Ptr(true),
+				ParallelToolCalls: new(true),
 			},
 		}
 
@@ -420,7 +420,7 @@ func TestToPerplexityChatCompletionRequest_ToolCalling(t *testing.T) {
 		bifrostReq := &schemas.BifrostChatRequest{
 			Model: "sonar-pro",
 			Input: []schemas.ChatMessage{
-				{Role: "user", Content: &schemas.ChatMessageContent{ContentStr: schemas.Ptr("hello")}},
+				{Role: "user", Content: &schemas.ChatMessageContent{ContentStr: new("hello")}},
 			},
 			Params: &schemas.ChatParameters{},
 		}
@@ -449,12 +449,12 @@ func TestToPerplexityChatCompletionRequest_NewFields(t *testing.T) {
 		bifrostReq := &schemas.BifrostChatRequest{
 			Model: "sonar-pro",
 			Input: []schemas.ChatMessage{
-				{Role: "user", Content: &schemas.ChatMessageContent{ContentStr: schemas.Ptr("test")}},
+				{Role: "user", Content: &schemas.ChatMessageContent{ContentStr: new("test")}},
 			},
 			Params: &schemas.ChatParameters{
 				Stop:        []string{"END", "STOP"},
-				LogProbs:    schemas.Ptr(true),
-				TopLogProbs: schemas.Ptr(5),
+				LogProbs:    new(true),
+				TopLogProbs: new(5),
 			},
 		}
 
@@ -487,15 +487,15 @@ func TestToPerplexityChatCompletionRequest_NewFields(t *testing.T) {
 		bifrostReq := &schemas.BifrostChatRequest{
 			Model: "sonar-pro",
 			Input: []schemas.ChatMessage{
-				{Role: "user", Content: &schemas.ChatMessageContent{ContentStr: schemas.Ptr("test")}},
+				{Role: "user", Content: &schemas.ChatMessageContent{ContentStr: new("test")}},
 			},
 			Params: &schemas.ChatParameters{
-				ExtraParams: map[string]interface{}{
+				ExtraParams: map[string]any{
 					"num_search_results":     5,
 					"num_images":             3,
-					"search_language_filter": []interface{}{"en", "fr"},
-					"image_format_filter":    []interface{}{"png", "jpg"},
-					"image_domain_filter":    []interface{}{"example.com"},
+					"search_language_filter": []any{"en", "fr"},
+					"image_format_filter":    []any{"png", "jpg"},
+					"image_domain_filter":    []any{"example.com"},
 					"safe_search":            true,
 					"stream_mode":            "partial",
 				},
@@ -564,16 +564,16 @@ func TestToPerplexityChatCompletionRequest_NewFields(t *testing.T) {
 		req := perplexity.PerplexityChatRequest{
 			Model: "sonar-pro",
 			Messages: []schemas.ChatMessage{
-				{Role: "user", Content: &schemas.ChatMessageContent{ContentStr: schemas.Ptr("test")}},
+				{Role: "user", Content: &schemas.ChatMessageContent{ContentStr: new("test")}},
 			},
-			NumSearchResults:     schemas.Ptr(10),
-			NumImages:            schemas.Ptr(5),
+			NumSearchResults:     new(10),
+			NumImages:            new(5),
 			SearchLanguageFilter: []string{"en"},
-			SafeSearch:           schemas.Ptr(true),
-			StreamMode:           schemas.Ptr("partial"),
+			SafeSearch:           new(true),
+			StreamMode:           new("partial"),
 			Stop:                 []string{"END"},
-			LogProbs:             schemas.Ptr(true),
-			TopLogProbs:          schemas.Ptr(3),
+			LogProbs:             new(true),
+			TopLogProbs:          new(3),
 		}
 
 		data, err := json.Marshal(req)

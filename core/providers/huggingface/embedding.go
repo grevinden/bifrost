@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/bytedance/sonic"
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // ToHuggingFaceEmbeddingRequest converts a Bifrost embedding request to HuggingFace format
@@ -21,8 +21,8 @@ func ToHuggingFaceEmbeddingRequest(bifrostReq *schemas.BifrostEmbeddingRequest) 
 	var hfReq *HuggingFaceEmbeddingRequest
 	if inferenceProvider != hfInference {
 		hfReq = &HuggingFaceEmbeddingRequest{
-			Model:    schemas.Ptr(modelName),
-			Provider: schemas.Ptr(string(inferenceProvider)),
+			Model:    new(modelName),
+			Provider: new(string(inferenceProvider)),
 		}
 	} else {
 		hfReq = &HuggingFaceEmbeddingRequest{}

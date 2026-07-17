@@ -1,7 +1,7 @@
 package gemini
 
 import (
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // ToGeminiEmbeddingRequest converts a BifrostRequest with embedding input to Gemini's batch embedding request format
@@ -230,7 +230,7 @@ func (request *GeminiGenerationRequest) ToBifrostEmbeddingRequest(ctx *schemas.B
 
 			// Handle extra parameters
 			if embeddingRequest.TaskType != nil || embeddingRequest.Title != nil {
-				bifrostReq.Params.ExtraParams = make(map[string]interface{})
+				bifrostReq.Params.ExtraParams = make(map[string]any)
 				if embeddingRequest.TaskType != nil {
 					bifrostReq.Params.ExtraParams["taskType"] = embeddingRequest.TaskType
 				}

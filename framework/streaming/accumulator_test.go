@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // TestChatStreamingFinalChunkNoDeadlock tests that processing the final chunk doesn't deadlock
@@ -23,12 +23,12 @@ func TestChatStreamingFinalChunkNoDeadlock(t *testing.T) {
 	ctx.SetValue(schemas.BifrostContextKeyAccumulatorID, requestID)
 
 	// Create accumulator with some chunks
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		chunk := &ChatStreamChunk{
 			ChunkIndex: i,
 			Timestamp:  time.Now(),
 			Delta: &schemas.ChatStreamResponseChoiceDelta{
-				Content: bifrost.Ptr(fmt.Sprintf("chunk %d", i)),
+				Content: new(fmt.Sprintf("chunk %d", i)),
 			},
 		}
 		if i == 9 {
@@ -55,7 +55,7 @@ func TestChatStreamingFinalChunkNoDeadlock(t *testing.T) {
 					ChatStreamResponseChoice: &schemas.ChatStreamResponseChoice{
 						Delta: &schemas.ChatStreamResponseChoiceDelta{},
 					},
-					FinishReason: bifrost.Ptr("stop"),
+					FinishReason: new("stop"),
 				},
 			},
 			Usage: &schemas.BifrostLLMUsage{
@@ -104,7 +104,7 @@ func TestResponsesStreamingFinalChunkNoDeadlock(t *testing.T) {
 	ctx.SetValue(schemas.BifrostContextKeyAccumulatorID, requestID)
 
 	// Add some chunks
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		chunk := &ResponsesStreamChunk{
 			ChunkIndex: i,
 			Timestamp:  time.Now(),
@@ -134,7 +134,7 @@ func TestResponsesStreamingFinalChunkNoDeadlock(t *testing.T) {
 	// Create final chunk response
 	response := &schemas.BifrostResponse{
 		ResponsesResponse: &schemas.BifrostResponsesResponse{
-			ID: bifrost.Ptr("msg_456"),
+			ID: new("msg_456"),
 			Usage: &schemas.ResponsesResponseUsage{
 				InputTokens:  100,
 				OutputTokens: 50,
@@ -180,16 +180,16 @@ func TestConcurrentChunkAddition(t *testing.T) {
 	var wg sync.WaitGroup
 	errors := make(chan error, numGoroutines)
 
-	for g := 0; g < numGoroutines; g++ {
+	for g := range numGoroutines {
 		wg.Add(1)
 		go func(goroutineID int) {
 			defer wg.Done()
-			for i := 0; i < chunksPerGoroutine; i++ {
+			for i := range chunksPerGoroutine {
 				chunk := &ChatStreamChunk{
 					ChunkIndex: goroutineID*chunksPerGoroutine + i,
 					Timestamp:  time.Now(),
 					Delta: &schemas.ChatStreamResponseChoiceDelta{
-						Content: bifrost.Ptr(fmt.Sprintf("g%d-c%d", goroutineID, i)),
+						Content: new(fmt.Sprintf("g%d-c%d", goroutineID, i)),
 					},
 				}
 				err := accumulator.addChatStreamChunk(requestID, StreamTypeChat, chunk, false)
@@ -280,7 +280,7 @@ func TestAccumulateToolCallsInterleavedParallel(t *testing.T) {
 		return schemas.ChatAssistantMessageToolCall{
 			Index: index,
 			ID:    id,
-			Type:  schemas.Ptr("function"),
+			Type:  new("function"),
 			Function: schemas.ChatAssistantMessageToolCallFunction{
 				Name:      name,
 				Arguments: args,
@@ -456,7 +456,7 @@ func TestAudioStreamingFinalChunkNoDeadlock(t *testing.T) {
 	ctx.SetValue(schemas.BifrostContextKeyAccumulatorID, requestID)
 
 	// Add some audio chunks
-	for i := 0; i < 8; i++ {
+	for i := range 8 {
 		chunk := &AudioStreamChunk{
 			ChunkIndex: i,
 			Timestamp:  time.Now(),
@@ -526,7 +526,7 @@ func TestTranscriptionStreamingFinalChunkNoDeadlock(t *testing.T) {
 	ctx.SetValue(schemas.BifrostContextKeyAccumulatorID, requestID)
 
 	// Add some transcription chunks
-	for i := 0; i < 6; i++ {
+	for i := range 6 {
 		delta := fmt.Sprintf("transcribed text %d ", i)
 		chunk := &TranscriptionStreamChunk{
 			ChunkIndex: i,
@@ -675,7 +675,7 @@ func TestProcessStreamingResponsePreservesTerminalResponsesUsageWhenChunkIndexIs
 			StreamResponse: &schemas.BifrostResponsesStreamResponse{
 				Type: schemas.ResponsesStreamResponseTypeCreated,
 				Response: &schemas.BifrostResponsesResponse{
-					ID: bifrost.Ptr("resp_terminal_usage"),
+					ID: new("resp_terminal_usage"),
 				},
 			},
 		},
@@ -684,7 +684,7 @@ func TestProcessStreamingResponsePreservesTerminalResponsesUsageWhenChunkIndexIs
 			Timestamp:  time.Now(),
 			StreamResponse: &schemas.BifrostResponsesStreamResponse{
 				Type:  schemas.ResponsesStreamResponseTypeOutputTextDelta,
-				Delta: bifrost.Ptr("partial"),
+				Delta: new("partial"),
 			},
 		},
 		{
@@ -692,7 +692,7 @@ func TestProcessStreamingResponsePreservesTerminalResponsesUsageWhenChunkIndexIs
 			Timestamp:  time.Now(),
 			StreamResponse: &schemas.BifrostResponsesStreamResponse{
 				Type:  schemas.ResponsesStreamResponseTypeOutputTextDelta,
-				Delta: bifrost.Ptr("duplicate index ignored"),
+				Delta: new("duplicate index ignored"),
 			},
 		},
 	}
@@ -707,7 +707,7 @@ func TestProcessStreamingResponsePreservesTerminalResponsesUsageWhenChunkIndexIs
 			Type:           schemas.ResponsesStreamResponseTypeCompleted,
 			SequenceNumber: 0,
 			Response: &schemas.BifrostResponsesResponse{
-				ID: bifrost.Ptr("resp_terminal_usage"),
+				ID: new("resp_terminal_usage"),
 				Usage: &schemas.ResponsesResponseUsage{
 					InputTokens:  31,
 					OutputTokens: 17,
@@ -782,13 +782,13 @@ func TestProcessStreamingResponseDedupesDuplicateTerminalChunkWithUniqueIndex(t 
 	ctx := schemas.NewBifrostContext(context.Background(), time.Time{})
 	ctx.SetValue(schemas.BifrostContextKeyAccumulatorID, requestID)
 
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		chunk := &ResponsesStreamChunk{
 			ChunkIndex: i,
 			Timestamp:  time.Now(),
 			StreamResponse: &schemas.BifrostResponsesStreamResponse{
 				Type:  schemas.ResponsesStreamResponseTypeOutputTextDelta,
-				Delta: bifrost.Ptr("chunk"),
+				Delta: new("chunk"),
 			},
 		}
 		if err := accumulator.addResponsesStreamChunk(requestID, chunk, false); err != nil {
@@ -801,7 +801,7 @@ func TestProcessStreamingResponseDedupesDuplicateTerminalChunkWithUniqueIndex(t 
 			Type:           schemas.ResponsesStreamResponseTypeCompleted,
 			SequenceNumber: 3,
 			Response: &schemas.BifrostResponsesResponse{
-				ID: bifrost.Ptr("resp_monotonic_terminal"),
+				ID: new("resp_monotonic_terminal"),
 				Usage: &schemas.ResponsesResponseUsage{
 					InputTokens:  11,
 					OutputTokens: 7,
@@ -917,7 +917,7 @@ func TestProcessStreamingResponseSupportsWebSocketResponsesRequest(t *testing.T)
 func newChatChunkResponse(idx int, content string, finishReason *string, usage *schemas.BifrostLLMUsage) *schemas.BifrostResponse {
 	delta := &schemas.ChatStreamResponseChoiceDelta{}
 	if content != "" {
-		delta.Content = bifrost.Ptr(content)
+		delta.Content = new(content)
 	}
 	return &schemas.BifrostResponse{
 		ChatResponse: &schemas.BifrostChatResponse{

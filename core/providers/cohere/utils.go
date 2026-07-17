@@ -3,7 +3,7 @@ package cohere
 import (
 	"encoding/json"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/tidwall/sjson"
 )
 
@@ -27,13 +27,13 @@ func ConvertCohereFinishReasonToBifrost(providerReason CohereFinishReason) strin
 
 // convertInterfaceToToolFunctionParameters converts an interface{} to ToolFunctionParameters
 // This handles the conversion from Cohere's flexible parameter format to Bifrost's structured format
-func convertInterfaceToToolFunctionParameters(params interface{}) *schemas.ToolFunctionParameters {
+func convertInterfaceToToolFunctionParameters(params any) *schemas.ToolFunctionParameters {
 	if params == nil {
 		return nil
 	}
 
 	// Try to convert from map[string]interface{}
-	paramsMap, ok := params.(map[string]interface{})
+	paramsMap, ok := params.(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -51,7 +51,7 @@ func convertInterfaceToToolFunctionParameters(params interface{}) *schemas.ToolF
 	}
 
 	// Extract required
-	if requiredVal, ok := paramsMap["required"].([]interface{}); ok {
+	if requiredVal, ok := paramsMap["required"].([]any); ok {
 		required := make([]string, 0, len(requiredVal))
 		for _, v := range requiredVal {
 			if s, ok := v.(string); ok {
@@ -67,7 +67,7 @@ func convertInterfaceToToolFunctionParameters(params interface{}) *schemas.ToolF
 	}
 
 	// Extract enum
-	if enumVal, ok := paramsMap["enum"].([]interface{}); ok {
+	if enumVal, ok := paramsMap["enum"].([]any); ok {
 		enum := make([]string, 0, len(enumVal))
 		for _, v := range enumVal {
 			if s, ok := v.(string); ok {
@@ -121,7 +121,7 @@ func convertInterfaceToToolFunctionParameters(params interface{}) *schemas.ToolF
 	}
 
 	// Extract anyOf
-	if anyOfVal, ok := paramsMap["anyOf"].([]interface{}); ok {
+	if anyOfVal, ok := paramsMap["anyOf"].([]any); ok {
 		anyOf := make([]schemas.OrderedMap, 0, len(anyOfVal))
 		for _, v := range anyOfVal {
 			if m, ok := schemas.SafeExtractOrderedMap(v); ok {
@@ -132,7 +132,7 @@ func convertInterfaceToToolFunctionParameters(params interface{}) *schemas.ToolF
 	}
 
 	// Extract oneOf
-	if oneOfVal, ok := paramsMap["oneOf"].([]interface{}); ok {
+	if oneOfVal, ok := paramsMap["oneOf"].([]any); ok {
 		oneOf := make([]schemas.OrderedMap, 0, len(oneOfVal))
 		for _, v := range oneOfVal {
 			if m, ok := schemas.SafeExtractOrderedMap(v); ok {
@@ -143,7 +143,7 @@ func convertInterfaceToToolFunctionParameters(params interface{}) *schemas.ToolF
 	}
 
 	// Extract allOf
-	if allOfVal, ok := paramsMap["allOf"].([]interface{}); ok {
+	if allOfVal, ok := paramsMap["allOf"].([]any); ok {
 		allOf := make([]schemas.OrderedMap, 0, len(allOfVal))
 		for _, v := range allOfVal {
 			if m, ok := schemas.SafeExtractOrderedMap(v); ok {
@@ -202,7 +202,7 @@ func convertInterfaceToToolFunctionParameters(params interface{}) *schemas.ToolF
 }
 
 // extractInt64 extracts an int64 from various numeric types
-func extractInt64(v interface{}) (int64, bool) {
+func extractInt64(v any) (int64, bool) {
 	switch val := v.(type) {
 	case int:
 		return int64(val), true
@@ -218,7 +218,7 @@ func extractInt64(v interface{}) (int64, bool) {
 }
 
 // extractFloat64 extracts a float64 from various numeric types
-func extractFloat64(v interface{}) (float64, bool) {
+func extractFloat64(v any) (float64, bool) {
 	switch val := v.(type) {
 	case float64:
 		return val, true
@@ -236,13 +236,13 @@ func extractFloat64(v interface{}) (float64, bool) {
 // ConvertResponseFormatToCohere converts OpenAI-style response_format (interface{}) to Cohere's typed format
 // Input can be a map with structure: { type: "json_schema", json_schema: { schema: {...} } }
 // Output: CohereResponseFormat with flat structure: { type: "json_object", json_schema: {...} }
-func convertResponseFormatToCohere(responseFormat *interface{}) *CohereResponseFormat {
+func convertResponseFormatToCohere(responseFormat *any) *CohereResponseFormat {
 	if responseFormat == nil {
 		return nil
 	}
 
 	// Try to extract as map
-	formatMap, ok := (*responseFormat).(map[string]interface{})
+	formatMap, ok := (*responseFormat).(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -259,9 +259,9 @@ func convertResponseFormatToCohere(responseFormat *interface{}) *CohereResponseF
 
 		// Extract the nested schema
 		// OpenAI format: { type: "json_schema", json_schema: { name: "X", strict: true, schema: {...} } }
-		if jsonSchemaWrapper, ok := formatMap["json_schema"].(map[string]interface{}); ok {
-			if schema, ok := jsonSchemaWrapper["schema"].(map[string]interface{}); ok {
-				var schemaInterface interface{} = schema
+		if jsonSchemaWrapper, ok := formatMap["json_schema"].(map[string]any); ok {
+			if schema, ok := jsonSchemaWrapper["schema"].(map[string]any); ok {
+				var schemaInterface any = schema
 				cohereFormat.JSONSchema = &schemaInterface
 			}
 		}
@@ -273,7 +273,7 @@ func convertResponseFormatToCohere(responseFormat *interface{}) *CohereResponseF
 }
 
 // convertCohereResponseFormatToBifrost converts Cohere's typed response_format back to interface{}
-func convertCohereResponseFormatToBifrost(cohereFormat *CohereResponseFormat) *interface{} {
+func convertCohereResponseFormatToBifrost(cohereFormat *CohereResponseFormat) *any {
 	if cohereFormat == nil {
 		return nil
 	}
@@ -288,6 +288,6 @@ func convertCohereResponseFormatToBifrost(cohereFormat *CohereResponseFormat) *i
 		data, _ = sjson.SetBytes(data, "type", string(cohereFormat.Type))
 	}
 
-	var resultInterface interface{} = json.RawMessage(data)
+	var resultInterface any = json.RawMessage(data)
 	return &resultInterface
 }

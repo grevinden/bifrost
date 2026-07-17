@@ -52,7 +52,7 @@ func TestScrollbackPushKeepsConsecutiveNonBlankRepeats(t *testing.T) {
 func TestHandleWheelEventEntersScrollModeOnWheelUp(t *testing.T) {
 	tab := &Tab{sb: newScrollback(20)}
 	// Seed scrollback so the offset has somewhere to go.
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		tab.sb.push([][]vt10x.Glyph{glyphRow(string(rune('a'+i)), 1)}, false)
 	}
 	tm := &TabManager{
@@ -76,7 +76,7 @@ func TestHandleWheelEventEntersScrollModeOnWheelUp(t *testing.T) {
 
 func TestHandleWheelEventExitsScrollModeAtBottom(t *testing.T) {
 	tab := &Tab{sb: newScrollback(20)}
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		tab.sb.push([][]vt10x.Glyph{glyphRow(string(rune('a'+i)), 1)}, false)
 	}
 	tm := &TabManager{
@@ -135,7 +135,7 @@ func TestOnScrollbackGrowBumpsOffsetForActiveScrollingTab(t *testing.T) {
 	other := &Tab{sb: newScrollback(20)}
 	// Pre-fill both scrollbacks so the active-tab bump isn't clipped by
 	// the sbLen clamp added in onScrollbackGrow.
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		tab.sb.push([][]vt10x.Glyph{glyphRow(string(rune('a'+i)), 1)}, false)
 		other.sb.push([][]vt10x.Glyph{glyphRow(string(rune('a'+i)), 1)}, false)
 	}
@@ -172,7 +172,7 @@ func TestOnScrollbackGrowClampsOffsetToScrollbackLength(t *testing.T) {
 	// 3 rows in scrollback; an inflated scrollOffset+added must be
 	// clamped back to len so adjustScrollOffset doesn't have to unwind
 	// phantom scroll distance before exiting scroll mode.
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		tab.sb.push([][]vt10x.Glyph{glyphRow(string(rune('a'+i)), 1)}, false)
 	}
 	tm := &TabManager{
@@ -192,7 +192,7 @@ func TestOnScrollbackGrowClampsOffsetToScrollbackLength(t *testing.T) {
 
 func TestScrollbackPushKeepsDistinctRowsAndEvictsAtCap(t *testing.T) {
 	sb := newScrollback(3)
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		row := glyphRow(string(rune('a'+i)), 1)
 		sb.push([][]vt10x.Glyph{row}, false)
 	}
@@ -212,7 +212,7 @@ func TestScrollbackPushKeepsDistinctRowsAndEvictsAtCap(t *testing.T) {
 
 func TestSnapshotTailReturnsAllRowsWhenNExceedsLength(t *testing.T) {
 	sb := newScrollback(10)
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		sb.push([][]vt10x.Glyph{glyphRow(string(rune('x'+i)), 1)}, false)
 	}
 	tail := sb.snapshotTail(100)

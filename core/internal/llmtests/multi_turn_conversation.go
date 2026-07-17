@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // RunMultiTurnConversationTest executes the multi-turn conversation test scenario
@@ -32,7 +32,7 @@ func RunMultiTurnConversationTest(t *testing.T, client *bifrost.Bifrost, ctx con
 			Model:    testConfig.ChatModel,
 			Input:    messages1,
 			Params: &schemas.ChatParameters{
-				MaxCompletionTokens: bifrost.Ptr(150),
+				MaxCompletionTokens: new(150),
 			},
 			Fallbacks: testConfig.Fallbacks,
 		}
@@ -41,11 +41,11 @@ func RunMultiTurnConversationTest(t *testing.T, client *bifrost.Bifrost, ctx con
 		retryConfig1 := GetTestRetryConfigForScenario("MultiTurnConversation", testConfig)
 		retryContext1 := TestRetryContext{
 			ScenarioName: "MultiTurnConversation_Step1",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"acknowledging_name": true,
 				"polite_response":    true,
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider": testConfig.Provider,
 				"model":    testConfig.ChatModel,
 				"step":     "introduction",
@@ -98,7 +98,7 @@ func RunMultiTurnConversationTest(t *testing.T, client *bifrost.Bifrost, ctx con
 			Model:    testConfig.ChatModel,
 			Input:    messages2,
 			Params: &schemas.ChatParameters{
-				MaxCompletionTokens: bifrost.Ptr(150),
+				MaxCompletionTokens: new(150),
 			},
 			Fallbacks: testConfig.Fallbacks,
 		}
@@ -107,11 +107,11 @@ func RunMultiTurnConversationTest(t *testing.T, client *bifrost.Bifrost, ctx con
 		retryConfig2 := GetTestRetryConfigForScenario("MultiTurnConversation", testConfig)
 		retryContext2 := TestRetryContext{
 			ScenarioName: "MultiTurnConversation_Step2",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"should_remember_alice": true,
 				"memory_recall":         true,
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider": testConfig.Provider,
 				"model":    testConfig.ChatModel,
 				"step":     "memory_test",
@@ -133,19 +133,19 @@ func RunMultiTurnConversationTest(t *testing.T, client *bifrost.Bifrost, ctx con
 		expectations2.ShouldContainKeywords = []string{"alice"}                                  // Case insensitive
 		expectations2.ShouldNotContainWords = []string{"don't know", "can't remember", "forgot"} // Memory failure indicators
 
-	response2, bifrostErr := WithChatTestRetry(t, chatRetryConfig2, retryContext2, expectations2, "MultiTurnConversation_Step2", func() (*schemas.BifrostChatResponse, *schemas.BifrostError) {
-		bfCtx := schemas.NewBifrostContext(ctx, schemas.NoDeadline)
-		return client.ChatCompletionRequest(bfCtx, secondRequest)
-	})
+		response2, bifrostErr := WithChatTestRetry(t, chatRetryConfig2, retryContext2, expectations2, "MultiTurnConversation_Step2", func() (*schemas.BifrostChatResponse, *schemas.BifrostError) {
+			bfCtx := schemas.NewBifrostContext(ctx, schemas.NoDeadline)
+			return client.ChatCompletionRequest(bfCtx, secondRequest)
+		})
 
-	if bifrostErr != nil {
-		t.Fatalf("❌ MultiTurnConversation_Step2 request failed after retries: %v", GetErrorMessage(bifrostErr))
-	}
+		if bifrostErr != nil {
+			t.Fatalf("❌ MultiTurnConversation_Step2 request failed after retries: %v", GetErrorMessage(bifrostErr))
+		}
 
-	// Validation already happened inside WithChatTestRetry via expectations2
-	// If we reach here, the model successfully remembered "Alice"
-	content := GetChatContent(response2)
-	t.Logf("✅ Model successfully remembered the name: %s", content)
-	t.Logf("✅ Multi-turn conversation completed successfully")
+		// Validation already happened inside WithChatTestRetry via expectations2
+		// If we reach here, the model successfully remembered "Alice"
+		content := GetChatContent(response2)
+		t.Logf("✅ Model successfully remembered the name: %s", content)
+		t.Logf("✅ Multi-turn conversation completed successfully")
 	})
 }

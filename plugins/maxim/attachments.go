@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/maximhq/maxim-go/logging"
 )
 
@@ -19,7 +19,7 @@ import (
 // converting them to maxim-go attachment types.
 // Returns a slice of *logging.UrlAttachment or *logging.FileDataAttachment for use with
 // Logger.GenerationAddAttachment.
-func ExtractAttachmentsFromRequest(req *schemas.BifrostRequest) []interface{} {
+func ExtractAttachmentsFromRequest(req *schemas.BifrostRequest) []any {
 	if req == nil {
 		return nil
 	}
@@ -38,11 +38,11 @@ func ExtractAttachmentsFromRequest(req *schemas.BifrostRequest) []interface{} {
 	}
 }
 
-func extractFromImageGenerationRequest(igr *schemas.BifrostImageGenerationRequest) []interface{} {
+func extractFromImageGenerationRequest(igr *schemas.BifrostImageGenerationRequest) []any {
 	if igr == nil || igr.Params == nil || len(igr.Params.InputImages) == 0 {
 		return nil
 	}
-	var attachments []interface{}
+	var attachments []any
 	for _, img := range igr.Params.InputImages {
 		if att := inputImageStringToAttachment(img); att != nil {
 			attachments = append(attachments, att)
@@ -51,11 +51,11 @@ func extractFromImageGenerationRequest(igr *schemas.BifrostImageGenerationReques
 	return attachments
 }
 
-func extractFromImageEditRequest(ier *schemas.BifrostImageEditRequest) []interface{} {
+func extractFromImageEditRequest(ier *schemas.BifrostImageEditRequest) []any {
 	if ier == nil || ier.Input == nil || len(ier.Input.Images) == 0 {
 		return nil
 	}
-	var attachments []interface{}
+	var attachments []any
 	for i, img := range ier.Input.Images {
 		if att := imageInputToAttachment(img, i); att != nil {
 			attachments = append(attachments, att)
@@ -66,7 +66,7 @@ func extractFromImageEditRequest(ier *schemas.BifrostImageEditRequest) []interfa
 
 // imageInputToAttachment converts a raw ImageInput (binary image bytes) to a maxim FileDataAttachment.
 // idx is appended to the filename when greater than zero (for multi-image edit requests).
-func imageInputToAttachment(img schemas.ImageInput, idx int) interface{} {
+func imageInputToAttachment(img schemas.ImageInput, idx int) any {
 	if len(img.Image) == 0 {
 		return nil
 	}
@@ -98,7 +98,7 @@ func imageInputToAttachment(img schemas.ImageInput, idx int) interface{} {
 
 // inputImageStringToAttachment maps ImageGenerationParameters.InputImages entries (URL,
 // data URL, or raw base64) to maxim attachment types.
-func inputImageStringToAttachment(s string) interface{} {
+func inputImageStringToAttachment(s string) any {
 	if s == "" {
 		return nil
 	}
@@ -125,12 +125,12 @@ func inputImageStringToAttachment(s string) interface{} {
 	}
 }
 
-func extractFromChatRequest(cr *schemas.BifrostChatRequest) []interface{} {
+func extractFromChatRequest(cr *schemas.BifrostChatRequest) []any {
 	if cr == nil || cr.Input == nil {
 		return nil
 	}
 
-	var attachments []interface{}
+	var attachments []any
 	for _, msg := range cr.Input {
 		if msg.Content == nil || msg.Content.ContentBlocks == nil {
 			continue
@@ -144,12 +144,12 @@ func extractFromChatRequest(cr *schemas.BifrostChatRequest) []interface{} {
 	return attachments
 }
 
-func extractFromResponsesRequest(rr *schemas.BifrostResponsesRequest) []interface{} {
+func extractFromResponsesRequest(rr *schemas.BifrostResponsesRequest) []any {
 	if rr == nil || rr.Input == nil {
 		return nil
 	}
 
-	var attachments []interface{}
+	var attachments []any
 	for _, msg := range rr.Input {
 		if msg.Content == nil || msg.Content.ContentBlocks == nil {
 			continue
@@ -163,7 +163,7 @@ func extractFromResponsesRequest(rr *schemas.BifrostResponsesRequest) []interfac
 	return attachments
 }
 
-func chatBlockToAttachment(block schemas.ChatContentBlock) interface{} {
+func chatBlockToAttachment(block schemas.ChatContentBlock) any {
 	switch block.Type {
 	case schemas.ChatContentBlockTypeImage:
 		if block.ImageURLStruct != nil && block.ImageURLStruct.URL != "" {
@@ -181,7 +181,7 @@ func chatBlockToAttachment(block schemas.ChatContentBlock) interface{} {
 	return nil
 }
 
-func responsesBlockToAttachment(block schemas.ResponsesMessageContentBlock) interface{} {
+func responsesBlockToAttachment(block schemas.ResponsesMessageContentBlock) any {
 	switch block.Type {
 	case schemas.ResponsesInputMessageContentBlockTypeImage:
 		if block.ImageURL != nil && *block.ImageURL != "" {
@@ -201,7 +201,7 @@ func responsesBlockToAttachment(block schemas.ResponsesMessageContentBlock) inte
 	return nil
 }
 
-func responsesFileToAttachment(block *schemas.ResponsesMessageContentBlock) interface{} {
+func responsesFileToAttachment(block *schemas.ResponsesMessageContentBlock) any {
 	if block.FileURL != nil && *block.FileURL != "" {
 		name := "attachment"
 		if block.Filename != nil && *block.Filename != "" {
@@ -250,7 +250,7 @@ func responsesFileToAttachment(block *schemas.ResponsesMessageContentBlock) inte
 	return nil
 }
 
-func chatFileToAttachment(f *schemas.ChatInputFile) interface{} {
+func chatFileToAttachment(f *schemas.ChatInputFile) any {
 	if f.FileURL != nil && *f.FileURL != "" {
 		name := "attachment"
 		if f.Filename != nil && *f.Filename != "" {
@@ -299,16 +299,16 @@ func chatFileToAttachment(f *schemas.ChatInputFile) interface{} {
 	return nil
 }
 
-func audioDataToAttachment(data string, format *string) interface{} {
+func audioDataToAttachment(data string, format *string) any {
 	// Data can be base64 or a data URL (data:audio/wav;base64,...)
 	var b64 string
 	if strings.HasPrefix(data, "data:") {
-		idx := strings.Index(data, ";base64,")
-		if idx == -1 {
+		_, after, ok := strings.Cut(data, ";base64,")
+		if !ok {
 			log.Printf("%s invalid audio data URL format", PluginLoggerPrefix)
 			return nil
 		}
-		b64 = data[idx+8:]
+		b64 = after
 	} else {
 		b64 = data
 	}
@@ -344,7 +344,7 @@ func audioDataToAttachment(data string, format *string) interface{} {
 
 // urlToAttachment builds a UrlAttachment (e.g. chat vision image_url). For images, MIME is:
 // outputFormat when set → URL rsct query (e.g. Azure) → image/png.
-func urlToAttachment(urlStr string, kind string, outputFormat string) interface{} {
+func urlToAttachment(urlStr string, kind string, outputFormat string) any {
 	if strings.HasPrefix(urlStr, "data:") {
 		return dataURLToAttachment(urlStr, kind)
 	}
@@ -399,7 +399,7 @@ func imageOutputFormatToMime(format string) string {
 	}
 }
 
-func dataURLToAttachment(dataURL string, kind string) interface{} {
+func dataURLToAttachment(dataURL string, kind string) any {
 	// Format: data:image/png;base64,iVBORw0...
 	idx := strings.Index(dataURL, ";base64,")
 	if idx == -1 {

@@ -17,11 +17,11 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/configstore"
-	"github.com/maximhq/bifrost/framework/configstore/tables"
-	"github.com/maximhq/bifrost/framework/temptoken"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/configstore"
+	"github.com/grevinden/bifrost/framework/configstore/tables"
+	"github.com/grevinden/bifrost/framework/temptoken"
 )
 
 const (
@@ -207,13 +207,13 @@ func (p *OAuth2Provider) RefreshAccessToken(ctx context.Context, oauthConfigID s
 	token.ExpiresAt = nil
 	if newTokenResponse.ExpiresIn > 0 {
 		exp := now.Add(time.Duration(newTokenResponse.ExpiresIn) * time.Second)
-		token.ExpiresAt = bifrost.Ptr(exp)
+		token.ExpiresAt = new(exp)
 	}
 	token.AccessToken = strings.TrimSpace(newTokenResponse.AccessToken)
 	if newTokenResponse.RefreshToken != "" {
 		token.RefreshToken = strings.TrimSpace(newTokenResponse.RefreshToken)
 	}
-	token.LastRefreshedAt = bifrost.Ptr(now)
+	token.LastRefreshedAt = new(now)
 
 	if err := p.configStore.UpdateOauthToken(ctx, token); err != nil {
 		return fmt.Errorf("failed to update token: %w", err)
@@ -629,7 +629,7 @@ func (p *OAuth2Provider) CompleteOAuthFlow(ctx context.Context, state, code stri
 	var expiresAt *time.Time
 	if tokenResponse.ExpiresIn > 0 {
 		exp := time.Now().Add(time.Duration(tokenResponse.ExpiresIn) * time.Second)
-		expiresAt = bifrost.Ptr(exp)
+		expiresAt = new(exp)
 	}
 	tokenRecord := &tables.TableOauthToken{
 		ID:           tokenID,
@@ -1177,7 +1177,7 @@ func (p *OAuth2Provider) CompleteUserOAuthFlow(ctx context.Context, state string
 	var expiresAt *time.Time
 	if tokenResponse.ExpiresIn > 0 {
 		exp := time.Now().Add(time.Duration(tokenResponse.ExpiresIn) * time.Second)
-		expiresAt = bifrost.Ptr(exp)
+		expiresAt = new(exp)
 	}
 	tokenRecord := &tables.TableOauthUserToken{
 		ID:            uuid.New().String(),
@@ -1319,13 +1319,13 @@ func (p *OAuth2Provider) RefreshUserAccessToken(ctx context.Context, tokenID str
 	token.ExpiresAt = nil
 	if newTokenResponse.ExpiresIn > 0 {
 		exp := now.Add(time.Duration(newTokenResponse.ExpiresIn) * time.Second)
-		token.ExpiresAt = bifrost.Ptr(exp)
+		token.ExpiresAt = new(exp)
 	}
 	token.AccessToken = strings.TrimSpace(newTokenResponse.AccessToken)
 	if newTokenResponse.RefreshToken != "" {
 		token.RefreshToken = strings.TrimSpace(newTokenResponse.RefreshToken)
 	}
-	token.LastRefreshedAt = bifrost.Ptr(now)
+	token.LastRefreshedAt = new(now)
 
 	if err := p.configStore.UpdateOauthUserToken(ctx, token); err != nil {
 		return fmt.Errorf("failed to update per-user token after refresh: %w", err)

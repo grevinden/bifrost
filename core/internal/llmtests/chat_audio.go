@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // RunChatAudioTest executes the chat audio test scenario
@@ -37,12 +37,12 @@ func RunChatAudioTest(t *testing.T, client *bifrost.Bifrost, ctx context.Context
 		retryConfig := GetTestRetryConfigForScenario("ChatAudio", testConfig)
 		retryContext := TestRetryContext{
 			ScenarioName: "ChatAudio",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"should_process_audio":     true,
 				"should_return_audio":      true,
 				"should_return_transcript": true,
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider": testConfig.Provider,
 				"model":    testConfig.ChatAudioModel,
 			},
@@ -70,7 +70,7 @@ func RunChatAudioTest(t *testing.T, client *bifrost.Bifrost, ctx context.Context
 						Voice:  "alloy",
 						Format: "wav", // output format
 					},
-					MaxCompletionTokens: bifrost.Ptr(200),
+					MaxCompletionTokens: new(200),
 				},
 				Fallbacks: testConfig.Fallbacks,
 			}
@@ -90,7 +90,7 @@ func RunChatAudioTest(t *testing.T, client *bifrost.Bifrost, ctx context.Context
 			}
 		}
 
-		expectations := GetExpectationsForScenario("ChatAudio", testConfig, map[string]interface{}{})
+		expectations := GetExpectationsForScenario("ChatAudio", testConfig, map[string]any{})
 		expectations = ModifyExpectationsForProvider(expectations, testConfig.Provider)
 
 		chatResponse, chatError := WithChatTestRetry(t, chatRetryConfig, retryContext, expectations, "ChatAudio", chatOperation)
@@ -176,12 +176,12 @@ func RunChatAudioStreamTest(t *testing.T, client *bifrost.Bifrost, ctx context.C
 		retryConfig := StreamingRetryConfig()
 		retryContext := TestRetryContext{
 			ScenarioName: "ChatAudioStream",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"should_process_audio":     true,
 				"should_return_audio":      true,
 				"should_return_transcript": true,
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider": testConfig.Provider,
 				"model":    testConfig.ChatAudioModel,
 			},

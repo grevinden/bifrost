@@ -10,9 +10,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
-	"github.com/maximhq/bifrost/core/schemas"
 	"github.com/stretchr/testify/require"
 )
 
@@ -309,13 +309,13 @@ func createTestContextWithTimeout(timeout time.Duration) (*schemas.BifrostContex
 }
 
 // assertNoError asserts that error is nil
-func assertNoError(t *testing.T, err error, msgAndArgs ...interface{}) {
+func assertNoError(t *testing.T, err error, msgAndArgs ...any) {
 	t.Helper()
 	require.NoError(t, err, msgAndArgs...)
 }
 
 // assertError asserts that error is not nil
-func assertError(t *testing.T, err error, msgAndArgs ...interface{}) {
+func assertError(t *testing.T, err error, msgAndArgs ...any) {
 	t.Helper()
 	require.Error(t, err, msgAndArgs...)
 }

@@ -3,7 +3,7 @@ package runway
 import (
 	"strings"
 
-	schemas "github.com/maximhq/bifrost/core/schemas"
+	schemas "github.com/grevinden/bifrost/core/schemas"
 )
 
 // getRunwayEndpoint determines which Runway API endpoint to use based on the request parameters.

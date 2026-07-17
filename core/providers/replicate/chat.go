@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	schemas "github.com/maximhq/bifrost/core/schemas"
+	schemas "github.com/grevinden/bifrost/core/schemas"
 )
 
 // unsupportedSystemPromptModels is a set of models that don't support the system_prompt field.
@@ -301,8 +301,8 @@ func supportsSystemPrompt(model string) bool {
 
 	// Extract model identifier (handle both "owner/name" and "owner/name:version" formats)
 	modelIdentifier := modelLower
-	if idx := strings.Index(modelLower, ":"); idx != -1 {
-		modelIdentifier = modelLower[:idx]
+	if before, _, ok := strings.Cut(modelLower, ":"); ok {
+		modelIdentifier = before
 	}
 
 	// All deepseek models don't support system prompt

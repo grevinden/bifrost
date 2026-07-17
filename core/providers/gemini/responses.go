@@ -9,8 +9,8 @@ import (
 	"sync"
 	"time"
 
-	providerUtils "github.com/maximhq/bifrost/core/providers/utils"
-	"github.com/maximhq/bifrost/core/schemas"
+	providerUtils "github.com/grevinden/bifrost/core/providers/utils"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 func (request *GeminiGenerationRequest) ToBifrostResponsesRequest(ctx *schemas.BifrostContext) *schemas.BifrostResponsesRequest {
@@ -184,7 +184,7 @@ func (response *GenerateContentResponse) ToResponsesBifrostResponsesResponse() *
 
 	// Create the BifrostResponse with Responses structure
 	bifrostResp := &schemas.BifrostResponsesResponse{
-		ID:        schemas.Ptr("resp_" + providerUtils.GetRandomString(50)),
+		ID:        new("resp_" + providerUtils.GetRandomString(50)),
 		CreatedAt: int(time.Now().Unix()),
 		Model:     response.ModelVersion,
 	}
@@ -866,7 +866,7 @@ type GeminiResponsesStreamState struct {
 
 // geminiResponsesStreamStatePool provides a pool for Gemini responses stream state objects.
 var geminiResponsesStreamStatePool = sync.Pool{
-	New: func() interface{} {
+	New: func() any {
 		return &GeminiResponsesStreamState{
 			ItemIDs:              make(map[int]string),
 			ToolCallIDs:          make(map[int]string),
@@ -1105,7 +1105,7 @@ func processGeminiTextPart(part *Part, state *GeminiResponsesStreamState, sequen
 			Item: &schemas.ResponsesMessage{
 				ID:     &itemID,
 				Type:   schemas.Ptr(schemas.ResponsesMessageTypeMessage),
-				Status: schemas.Ptr("in_progress"),
+				Status: new("in_progress"),
 				Role:   schemas.Ptr(schemas.ResponsesInputMessageRoleAssistant),
 				Content: &schemas.ResponsesMessageContent{
 					ContentBlocks: []schemas.ResponsesMessageContentBlock{},
@@ -1123,7 +1123,7 @@ func processGeminiTextPart(part *Part, state *GeminiResponsesStreamState, sequen
 			ItemID:         &itemID,
 			Part: &schemas.ResponsesMessageContentBlock{
 				Type: schemas.ResponsesOutputMessageContentTypeText,
-				Text: schemas.Ptr(""),
+				Text: new(""),
 				ResponsesOutputMessageContentText: &schemas.ResponsesOutputMessageContentText{
 					LogProbs:    []schemas.ResponsesOutputMessageContentTextLogProb{},
 					Annotations: []schemas.ResponsesOutputMessageContentTextAnnotation{},
@@ -1354,7 +1354,7 @@ func processGeminiFunctionCallPart(part *Part, state *GeminiResponsesStreamState
 			ResponsesToolMessage: &schemas.ResponsesToolMessage{
 				CallID:    &toolUseID,
 				Name:      &part.FunctionCall.Name,
-				Arguments: schemas.Ptr(""),
+				Arguments: new(""),
 			},
 		},
 	}
@@ -1397,7 +1397,7 @@ func processGeminiFunctionCallPart(part *Part, state *GeminiResponsesStreamState
 		Item: &schemas.ResponsesMessage{
 			ID:     &toolUseID,
 			Type:   schemas.Ptr(schemas.ResponsesMessageTypeFunctionCall),
-			Status: schemas.Ptr("completed"),
+			Status: new("completed"),
 			ResponsesToolMessage: &schemas.ResponsesToolMessage{
 				CallID:    &toolUseID,
 				Name:      &part.FunctionCall.Name,
@@ -1455,7 +1455,7 @@ func processGeminiFunctionResponsePart(part *Part, state *GeminiResponsesStreamS
 
 	// Set tool name if present
 	if name := strings.TrimSpace(part.FunctionResponse.Name); name != "" {
-		item.ResponsesToolMessage.Name = schemas.Ptr(name)
+		item.ResponsesToolMessage.Name = new(name)
 	}
 
 	responses = append(responses, &schemas.BifrostResponsesStreamResponse{
@@ -1489,7 +1489,7 @@ func processGeminiFunctionResponsePart(part *Part, state *GeminiResponsesStreamS
 	if name := strings.TrimSpace(part.FunctionResponse.Name); name != "" {
 		last := responses[len(responses)-1]
 		if last.Item != nil && last.Item.ResponsesToolMessage != nil {
-			last.Item.ResponsesToolMessage.Name = schemas.Ptr(name)
+			last.Item.ResponsesToolMessage.Name = new(name)
 		}
 	}
 
@@ -1696,7 +1696,7 @@ func closeGeminiTextItem(state *GeminiResponsesStreamState, sequenceNumber int) 
 	doneItem := &schemas.ResponsesMessage{
 		Type:   schemas.Ptr(schemas.ResponsesMessageTypeMessage),
 		Role:   schemas.Ptr(schemas.ResponsesInputMessageRoleAssistant),
-		Status: schemas.Ptr("completed"),
+		Status: new("completed"),
 		Content: &schemas.ResponsesMessageContent{
 			ContentBlocks: []schemas.ResponsesMessageContentBlock{
 				{
@@ -1768,7 +1768,7 @@ func closeGeminiOpenItems(state *GeminiResponsesStreamState, groundingMetadata *
 			Item: &schemas.ResponsesMessage{
 				ID:     &itemID,
 				Type:   schemas.Ptr(schemas.ResponsesMessageTypeFunctionCall),
-				Status: schemas.Ptr("completed"),
+				Status: new("completed"),
 				ResponsesToolMessage: &schemas.ResponsesToolMessage{
 					CallID:    &toolCallID,
 					Name:      &toolName,
@@ -1796,7 +1796,7 @@ func closeGeminiOpenItems(state *GeminiResponsesStreamState, groundingMetadata *
 			Item: &schemas.ResponsesMessage{
 				ID:     &itemID,
 				Type:   schemas.Ptr(schemas.ResponsesMessageTypeMessage),
-				Status: schemas.Ptr("in_progress"),
+				Status: new("in_progress"),
 				Role:   schemas.Ptr(schemas.ResponsesInputMessageRoleAssistant),
 				Content: &schemas.ResponsesMessageContent{
 					ContentBlocks: []schemas.ResponsesMessageContentBlock{},
@@ -1813,7 +1813,7 @@ func closeGeminiOpenItems(state *GeminiResponsesStreamState, groundingMetadata *
 			ItemID:         &itemID,
 			Part: &schemas.ResponsesMessageContentBlock{
 				Type: schemas.ResponsesOutputMessageContentTypeText,
-				Text: schemas.Ptr(""),
+				Text: new(""),
 			},
 		})
 
@@ -1859,7 +1859,7 @@ func closeGeminiOpenItems(state *GeminiResponsesStreamState, groundingMetadata *
 			Item: &schemas.ResponsesMessage{
 				ID:     &itemID,
 				Type:   schemas.Ptr(schemas.ResponsesMessageTypeMessage),
-				Status: schemas.Ptr("completed"),
+				Status: new("completed"),
 				Role:   schemas.Ptr(schemas.ResponsesInputMessageRoleAssistant),
 				Content: &schemas.ResponsesMessageContent{
 					ContentBlocks: []schemas.ResponsesMessageContentBlock{
@@ -2340,8 +2340,8 @@ func convertGeminiToolsToResponsesTools(tools []Tool) []schemas.ResponsesTool {
 			for _, fn := range tool.FunctionDeclarations {
 				responsesTool := schemas.ResponsesTool{
 					Type:                  schemas.ResponsesToolTypeFunction,
-					Name:                  schemas.Ptr(fn.Name),
-					Description:           schemas.Ptr(fn.Description),
+					Name:                  new(fn.Name),
+					Description:           new(fn.Description),
 					ResponsesToolFunction: &schemas.ResponsesToolFunction{},
 				}
 				// Convert parameters schema if present
@@ -2378,20 +2378,20 @@ func convertGeminiToolConfigToToolChoice(toolConfig *ToolConfig) *schemas.Respon
 
 	switch toolConfig.FunctionCallingConfig.Mode {
 	case FunctionCallingConfigModeAuto:
-		toolChoice.Mode = schemas.Ptr("auto")
+		toolChoice.Mode = new("auto")
 	case FunctionCallingConfigModeAny:
-		toolChoice.Mode = schemas.Ptr("required")
+		toolChoice.Mode = new("required")
 	case FunctionCallingConfigModeNone:
-		toolChoice.Mode = schemas.Ptr("none")
+		toolChoice.Mode = new("none")
 	default:
-		toolChoice.Mode = schemas.Ptr("auto")
+		toolChoice.Mode = new("auto")
 	}
 
 	if toolConfig.FunctionCallingConfig.AllowedFunctionNames != nil {
 		for _, functionName := range toolConfig.FunctionCallingConfig.AllowedFunctionNames {
 			toolChoice.Tools = append(toolChoice.Tools, schemas.ResponsesToolChoiceAllowedToolDef{
 				Type: string(schemas.ResponsesToolTypeFunction),
-				Name: schemas.Ptr(functionName),
+				Name: new(functionName),
 			})
 		}
 	}
@@ -2435,9 +2435,9 @@ func convertGeminiCandidatesToResponsesOutput(candidates []*Candidate) []schemas
 			case part.Text != "":
 				// Regular text message
 				msg := schemas.ResponsesMessage{
-					ID:     schemas.Ptr("msg_" + providerUtils.GetRandomString(50)),
+					ID:     new("msg_" + providerUtils.GetRandomString(50)),
 					Role:   schemas.Ptr(schemas.ResponsesInputMessageRoleAssistant),
-					Status: schemas.Ptr("completed"),
+					Status: new("completed"),
 					Content: &schemas.ResponsesMessageContent{
 						ContentBlocks: []schemas.ResponsesMessageContentBlock{
 							{
@@ -2485,10 +2485,10 @@ func convertGeminiCandidatesToResponsesOutput(candidates []*Candidate) []schemas
 					Arguments: &argumentsStr,
 				}
 				msg := schemas.ResponsesMessage{
-					ID:                   schemas.Ptr("fc_" + providerUtils.GetRandomString(50)),
+					ID:                   new("fc_" + providerUtils.GetRandomString(50)),
 					Role:                 schemas.Ptr(schemas.ResponsesInputMessageRoleAssistant),
 					Type:                 schemas.Ptr(schemas.ResponsesMessageTypeFunctionCall),
-					Status:               schemas.Ptr("completed"),
+					Status:               new("completed"),
 					ResponsesToolMessage: toolMsg,
 				}
 				messages = append(messages, msg)
@@ -2501,7 +2501,7 @@ func convertGeminiCandidatesToResponsesOutput(candidates []*Candidate) []schemas
 					Role: schemas.Ptr(schemas.ResponsesInputMessageRoleAssistant),
 					Type: schemas.Ptr(schemas.ResponsesMessageTypeFunctionCallOutput),
 					ResponsesToolMessage: &schemas.ResponsesToolMessage{
-						CallID: schemas.Ptr(part.FunctionResponse.ID),
+						CallID: new(part.FunctionResponse.ID),
 						Output: &schemas.ResponsesToolMessageOutputStruct{
 							ResponsesToolCallOutputStr: &output,
 						},
@@ -2510,7 +2510,7 @@ func convertGeminiCandidatesToResponsesOutput(candidates []*Candidate) []schemas
 
 				// Also set the tool name if present (Gemini associates on name)
 				if name := strings.TrimSpace(part.FunctionResponse.Name); name != "" {
-					msg.ResponsesToolMessage.Name = schemas.Ptr(name)
+					msg.ResponsesToolMessage.Name = new(name)
 				} else {
 					// set name from call id
 					// if it contains a thought signature, remove it
@@ -2518,10 +2518,10 @@ func convertGeminiCandidatesToResponsesOutput(candidates []*Candidate) []schemas
 						parts := strings.SplitN(part.FunctionResponse.ID, thoughtSignatureSeparator, 2)
 						if len(parts) == 2 {
 							name := parts[0]
-							msg.ResponsesToolMessage.Name = schemas.Ptr(name)
+							msg.ResponsesToolMessage.Name = new(name)
 						}
 					} else {
-						msg.ResponsesToolMessage.Name = schemas.Ptr(part.FunctionResponse.ID)
+						msg.ResponsesToolMessage.Name = new(part.FunctionResponse.ID)
 					}
 				}
 				messages = append(messages, msg)
@@ -2541,15 +2541,15 @@ func convertGeminiCandidatesToResponsesOutput(candidates []*Candidate) []schemas
 						ResponsesInputMessageContentBlockImage: func() *schemas.ResponsesInputMessageContentBlockImage {
 							if strings.HasPrefix(part.InlineData.MIMEType, "image/") {
 								return &schemas.ResponsesInputMessageContentBlockImage{
-									ImageURL: schemas.Ptr("data:" + part.InlineData.MIMEType + ";base64," + part.InlineData.Data),
+									ImageURL: new("data:" + part.InlineData.MIMEType + ";base64," + part.InlineData.Data),
 								}
 							}
 							return nil
 						}(),
 						Audio: func() *schemas.ResponsesInputMessageContentBlockAudio {
-							if strings.HasPrefix(part.InlineData.MIMEType, "audio/") {
+							if after, ok := strings.CutPrefix(part.InlineData.MIMEType, "audio/"); ok {
 								// Extract format from MIME type (e.g., "audio/wav" -> "wav")
-								format := strings.TrimPrefix(part.InlineData.MIMEType, "audio/")
+								format := after
 								return &schemas.ResponsesInputMessageContentBlockAudio{
 									Format: format,
 									Data:   part.InlineData.Data,
@@ -2574,13 +2574,13 @@ func convertGeminiCandidatesToResponsesOutput(candidates []*Candidate) []schemas
 				block := schemas.ResponsesMessageContentBlock{
 					Type: schemas.ResponsesInputMessageContentBlockTypeFile,
 					ResponsesInputMessageContentBlockFile: &schemas.ResponsesInputMessageContentBlockFile{
-						FileURL: schemas.Ptr(part.FileData.FileURI),
+						FileURL: new(part.FileData.FileURI),
 					},
 				}
 				if strings.HasPrefix(part.FileData.MIMEType, "image/") {
 					block.Type = schemas.ResponsesInputMessageContentBlockTypeImage
 					block.ResponsesInputMessageContentBlockImage = &schemas.ResponsesInputMessageContentBlockImage{
-						ImageURL: schemas.Ptr(part.FileData.FileURI),
+						ImageURL: new(part.FileData.FileURI),
 					}
 				}
 				contentBlocks := []schemas.ResponsesMessageContentBlock{block}
@@ -2651,7 +2651,7 @@ func convertGeminiCandidatesToResponsesOutput(candidates []*Candidate) []schemas
 		if candidate.GroundingMetadata != nil {
 			webSearchmessage := schemas.ResponsesMessage{
 				Type:   schemas.Ptr(schemas.ResponsesMessageTypeWebSearchCall),
-				Status: schemas.Ptr("completed"),
+				Status: new("completed"),
 				ResponsesToolMessage: &schemas.ResponsesToolMessage{
 					Action: &schemas.ResponsesToolMessageActionStruct{
 						ResponsesWebSearchToolCallAction: &schemas.ResponsesWebSearchToolCallAction{
@@ -2662,7 +2662,7 @@ func convertGeminiCandidatesToResponsesOutput(candidates []*Candidate) []schemas
 				},
 			}
 			if len(candidate.GroundingMetadata.WebSearchQueries) > 0 {
-				webSearchmessage.ResponsesToolMessage.Action.ResponsesWebSearchToolCallAction.Query = schemas.Ptr(candidate.GroundingMetadata.WebSearchQueries[0])
+				webSearchmessage.ResponsesToolMessage.Action.ResponsesWebSearchToolCallAction.Query = new(candidate.GroundingMetadata.WebSearchQueries[0])
 			}
 
 			sources := []schemas.ResponsesWebSearchToolCallActionSearchSource{}
@@ -2670,7 +2670,7 @@ func convertGeminiCandidatesToResponsesOutput(candidates []*Candidate) []schemas
 				if source.Web != nil {
 					sources = append(sources, schemas.ResponsesWebSearchToolCallActionSearchSource{
 						Type:  "url",
-						Title: schemas.Ptr(source.Web.Title),
+						Title: new(source.Web.Title),
 						URL:   source.Web.URI,
 					})
 				}
@@ -2689,9 +2689,9 @@ func convertGeminiCandidatesToResponsesOutput(candidates []*Candidate) []schemas
 					if support.Segment != nil {
 						annotation := schemas.ResponsesOutputMessageContentTextAnnotation{
 							Type:       "url_citation",
-							Text:       schemas.Ptr(support.Segment.Text),
-							StartIndex: schemas.Ptr(int(support.Segment.StartIndex)),
-							EndIndex:   schemas.Ptr(int(support.Segment.EndIndex)),
+							Text:       new(support.Segment.Text),
+							StartIndex: new(int(support.Segment.StartIndex)),
+							EndIndex:   new(int(support.Segment.EndIndex)),
 						}
 
 						// Look up URL from grounding chunks
@@ -2700,9 +2700,9 @@ func convertGeminiCandidatesToResponsesOutput(candidates []*Candidate) []schemas
 							if chunkIdx >= 0 && int(chunkIdx) < len(candidate.GroundingMetadata.GroundingChunks) {
 								chunk := candidate.GroundingMetadata.GroundingChunks[chunkIdx]
 								if chunk.Web != nil {
-									annotation.URL = schemas.Ptr(chunk.Web.URI)
+									annotation.URL = new(chunk.Web.URI)
 									if chunk.Web.Title != "" {
-										annotation.Title = schemas.Ptr(chunk.Web.Title)
+										annotation.Title = new(chunk.Web.Title)
 									}
 								}
 							}
@@ -2715,12 +2715,12 @@ func convertGeminiCandidatesToResponsesOutput(candidates []*Candidate) []schemas
 				}
 				annotationsMessage := schemas.ResponsesMessage{
 					Type:   schemas.Ptr(schemas.ResponsesMessageTypeMessage),
-					Status: schemas.Ptr("completed"),
+					Status: new("completed"),
 					Content: &schemas.ResponsesMessageContent{
 						ContentBlocks: []schemas.ResponsesMessageContentBlock{
 							{
 								Type: schemas.ResponsesOutputMessageContentTypeText,
-								Text: schemas.Ptr(""),
+								Text: new(""),
 								ResponsesOutputMessageContentText: &schemas.ResponsesOutputMessageContentText{
 									Annotations: annotations,
 								},
@@ -2736,7 +2736,7 @@ func convertGeminiCandidatesToResponsesOutput(candidates []*Candidate) []schemas
 				candidate.GroundingMetadata.SearchEntryPoint.RenderedContent != "" {
 				renderedContentMessage := schemas.ResponsesMessage{
 					Type:   schemas.Ptr(schemas.ResponsesMessageTypeMessage),
-					Status: schemas.Ptr("completed"),
+					Status: new("completed"),
 					Content: &schemas.ResponsesMessageContent{
 						ContentBlocks: []schemas.ResponsesMessageContentBlock{
 							{
@@ -2785,19 +2785,19 @@ func convertTextConfigToGenerationConfig(textConfig *schemas.ResponsesTextConfig
 }
 
 // reconstructSchemaFromJSONSchema rebuilds a schema map from ResponsesTextConfigFormatJSONSchema
-func reconstructSchemaFromJSONSchema(jsonSchema *schemas.ResponsesTextConfigFormatJSONSchema) interface{} {
-	var schema map[string]interface{}
+func reconstructSchemaFromJSONSchema(jsonSchema *schemas.ResponsesTextConfigFormatJSONSchema) any {
+	var schema map[string]any
 
 	if jsonSchema.Schema != nil {
 		// If Schema field is set, use it directly
-		schemaMap, ok := (*jsonSchema.Schema).(map[string]interface{})
+		schemaMap, ok := (*jsonSchema.Schema).(map[string]any)
 		if !ok {
 			return *jsonSchema.Schema
 		}
 		schema = schemaMap
 	} else {
 		// New format: Schema is spread across individual fields
-		schema = make(map[string]interface{})
+		schema = make(map[string]any)
 
 		if jsonSchema.Defs != nil {
 			schema["$defs"] = *jsonSchema.Defs
@@ -2846,10 +2846,10 @@ func (r *GeminiGenerationRequest) convertParamsToGenerationConfigResponses(param
 	config := GenerationConfig{}
 
 	if params.Temperature != nil {
-		config.Temperature = schemas.Ptr(float64(*params.Temperature))
+		config.Temperature = new(float64(*params.Temperature))
 	}
 	if params.TopP != nil {
-		config.TopP = schemas.Ptr(float64(*params.TopP))
+		config.TopP = new(float64(*params.TopP))
 	}
 	if params.MaxOutputTokens != nil {
 		config.MaxOutputTokens = int32(*params.MaxOutputTokens)
@@ -2878,18 +2878,18 @@ func (r *GeminiGenerationRequest) convertParamsToGenerationConfigResponses(param
 			case 0:
 				setThinkingBudgetZeroIfSupported(&config, capModel)
 			case DynamicReasoningBudget: // Special case: -1 means dynamic budget
-				config.ThinkingConfig.ThinkingBudget = schemas.Ptr(int32(DynamicReasoningBudget))
+				config.ThinkingConfig.ThinkingBudget = new(int32(DynamicReasoningBudget))
 			default:
 				if err := validateThinkingBudget(capModel, budget); err != nil {
 					return config, err
 				}
-				config.ThinkingConfig.ThinkingBudget = schemas.Ptr(int32(budget))
+				config.ThinkingConfig.ThinkingBudget = new(int32(budget))
 			}
 		} else if hasEffort {
 			// User provided effort only (no max_tokens)
 			if supportsLevel {
 				// Gemini 3.0+ - use thinkingLevel (more native)
-				config.ThinkingConfig.ThinkingLevel = schemas.Ptr(effortToThinkingLevel(*params.Reasoning.Effort, capModel))
+				config.ThinkingConfig.ThinkingLevel = new(effortToThinkingLevel(*params.Reasoning.Effort, capModel))
 			} else {
 				maxTokens := providerUtils.GetMaxOutputTokensOrDefault(capModel, DefaultCompletionMaxTokens)
 				if config.MaxOutputTokens > 0 {
@@ -2903,7 +2903,7 @@ func (r *GeminiGenerationRequest) convertParamsToGenerationConfigResponses(param
 					budgetRange.Max,
 				)
 				if err == nil {
-					config.ThinkingConfig.ThinkingBudget = schemas.Ptr(int32(budgetTokens))
+					config.ThinkingConfig.ThinkingBudget = new(int32(budgetTokens))
 				}
 			}
 		}
@@ -2916,19 +2916,19 @@ func (r *GeminiGenerationRequest) convertParamsToGenerationConfigResponses(param
 		if topK, ok := params.ExtraParams["top_k"]; ok {
 			delete(params.ExtraParams, "top_k")
 			if val, success := schemas.SafeExtractInt(topK); success {
-				config.TopK = schemas.Ptr(val)
+				config.TopK = new(val)
 			}
 		}
 		if frequencyPenalty, ok := params.ExtraParams["frequency_penalty"]; ok {
 			delete(params.ExtraParams, "frequency_penalty")
 			if val, success := schemas.SafeExtractFloat64(frequencyPenalty); success {
-				config.FrequencyPenalty = schemas.Ptr(val)
+				config.FrequencyPenalty = new(val)
 			}
 		}
 		if presencePenalty, ok := params.ExtraParams["presence_penalty"]; ok {
 			delete(params.ExtraParams, "presence_penalty")
 			if val, success := schemas.SafeExtractFloat64(presencePenalty); success {
-				config.PresencePenalty = schemas.Ptr(val)
+				config.PresencePenalty = new(val)
 			}
 		}
 		if stopSequences, ok := params.ExtraParams["stop_sequences"]; ok {
@@ -3721,7 +3721,7 @@ func emitWebSearchFromGroundingMetadata(
 		Item: &schemas.ResponsesMessage{
 			ID:     &itemID,
 			Type:   schemas.Ptr(schemas.ResponsesMessageTypeWebSearchCall),
-			Status: schemas.Ptr("in_progress"),
+			Status: new("in_progress"),
 			ResponsesToolMessage: &schemas.ResponsesToolMessage{
 				Action: &schemas.ResponsesToolMessageActionStruct{
 					ResponsesWebSearchToolCallAction: &schemas.ResponsesWebSearchToolCallAction{
@@ -3765,7 +3765,7 @@ func emitWebSearchFromGroundingMetadata(
 		Item: &schemas.ResponsesMessage{
 			ID:     &itemID,
 			Type:   schemas.Ptr(schemas.ResponsesMessageTypeWebSearchCall),
-			Status: schemas.Ptr("completed"),
+			Status: new("completed"),
 			ResponsesToolMessage: &schemas.ResponsesToolMessage{
 				Action: &schemas.ResponsesToolMessageActionStruct{
 					ResponsesWebSearchToolCallAction: action,
@@ -3790,7 +3790,7 @@ func emitWebSearchFromGroundingMetadata(
 			Item: &schemas.ResponsesMessage{
 				ID:     &renderedItemID,
 				Type:   schemas.Ptr(schemas.ResponsesMessageTypeMessage),
-				Status: schemas.Ptr("completed"),
+				Status: new("completed"),
 				Content: &schemas.ResponsesMessageContent{
 					ContentBlocks: []schemas.ResponsesMessageContentBlock{
 						{
@@ -3845,8 +3845,8 @@ func emitAnnotationsFromGroundingSupports(
 		if support.Segment.Text != "" {
 			annotation.Text = &support.Segment.Text
 		}
-		annotation.StartIndex = schemas.Ptr(int(support.Segment.StartIndex))
-		annotation.EndIndex = schemas.Ptr(int(support.Segment.EndIndex))
+		annotation.StartIndex = new(int(support.Segment.StartIndex))
+		annotation.EndIndex = new(int(support.Segment.EndIndex))
 
 		// Find URL and title from chunk indices
 		if len(support.GroundingChunkIndices) > 0 {
@@ -3872,7 +3872,7 @@ func emitAnnotationsFromGroundingSupports(
 			SequenceNumber:  sequenceNumber + len(responses),
 			OutputIndex:     &state.TextOutputIndex,
 			ItemID:          &itemID,
-			ContentIndex:    schemas.Ptr(0),
+			ContentIndex:    new(0),
 			Annotation:      &annotation,
 			AnnotationIndex: &emmitedIndex,
 		})

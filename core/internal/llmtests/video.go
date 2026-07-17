@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 const (
@@ -231,8 +231,8 @@ func RunVideoListTest(t *testing.T, client *bifrost.Bifrost, ctx context.Context
 		limit := 5
 		req := &schemas.BifrostVideoListRequest{
 			Provider: testConfig.Provider,
-			Order:    bifrost.Ptr(order),
-			Limit:    bifrost.Ptr(limit),
+			Order:    new(order),
+			Limit:    new(limit),
 		}
 		bfCtx := schemas.NewBifrostContext(ctx, schemas.NoDeadline)
 		resp, err := client.VideoListRequest(bfCtx, req)
@@ -353,7 +353,7 @@ func createVideoJob(client *bifrost.Bifrost, ctx context.Context, testConfig Com
 			Prompt: videoTestPrompt,
 		},
 		Params: &schemas.VideoGenerationParameters{
-			Seconds: bifrost.Ptr("4"),
+			Seconds: new("4"),
 		},
 		Fallbacks: testConfig.Fallbacks,
 	}
@@ -363,7 +363,7 @@ func createVideoJob(client *bifrost.Bifrost, ctx context.Context, testConfig Com
 
 func retrieveVideoWithRetries(client *bifrost.Bifrost, ctx context.Context, testConfig ComprehensiveTestConfig, videoID string) (*schemas.BifrostVideoGenerationResponse, *schemas.BifrostError) {
 	var lastErr *schemas.BifrostError
-	for attempt := 0; attempt < videoRetrieveMaxRetries; attempt++ {
+	for range videoRetrieveMaxRetries {
 		req := &schemas.BifrostVideoRetrieveRequest{
 			Provider: testConfig.Provider,
 			ID:       videoID,

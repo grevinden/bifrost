@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/bytedance/sonic"
-	"github.com/maximhq/bifrost/framework/logstore"
+	"github.com/grevinden/bifrost/framework/logstore"
 )
 
 // CostRecalcJobKind is the sidekiq job kind used for background cost recalculation.

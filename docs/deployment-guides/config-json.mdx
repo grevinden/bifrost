@@ -302,7 +302,7 @@ Use this pattern when you want enterprise access-profile configuration to be see
 
 ## Example Configs
 
-Ready-to-use reference configurations from the [examples/configs](https://github.com/maximhq/bifrost/tree/main/examples/configs) directory on GitHub:
+Ready-to-use reference configurations from the [examples/configs](https://github.com/grevinden/bifrost/tree/main/examples/configs) directory on GitHub:
 
 <AccordionGroup>
 
@@ -310,9 +310,9 @@ Ready-to-use reference configurations from the [examples/configs](https://github
 
 | Example | Description |
 |---------|-------------|
-| [noconfigstorenologstore](https://github.com/maximhq/bifrost/blob/main/examples/configs/noconfigstorenologstore/config.json) | Bare-minimum file-only mode - no database, no UI, providers loaded from file |
-| [partial](https://github.com/maximhq/bifrost/blob/main/examples/configs/partial/config.json) | SQLite config store with a minimal provider setup |
-| [v1compat](https://github.com/maximhq/bifrost/blob/main/examples/configs/v1compat/config.json) | `"version": 1` for v1.4.x array semantics (empty = allow all) |
+| [noconfigstorenologstore](https://github.com/grevinden/bifrost/blob/main/examples/configs/noconfigstorenologstore/config.json) | Bare-minimum file-only mode - no database, no UI, providers loaded from file |
+| [partial](https://github.com/grevinden/bifrost/blob/main/examples/configs/partial/config.json) | SQLite config store with a minimal provider setup |
+| [v1compat](https://github.com/grevinden/bifrost/blob/main/examples/configs/v1compat/config.json) | `"version": 1` for v1.4.x array semantics (empty = allow all) |
 
 </Accordion>
 
@@ -320,12 +320,12 @@ Ready-to-use reference configurations from the [examples/configs](https://github
 
 | Example | Description |
 |---------|-------------|
-| [withconfigstore](https://github.com/maximhq/bifrost/blob/main/examples/configs/withconfigstore/config.json) | SQLite config store (Web UI enabled) |
-| [withconfigstorelogsstorepostgres](https://github.com/maximhq/bifrost/blob/main/examples/configs/withconfigstorelogsstorepostgres/config.json) | PostgreSQL for both config store and logs store |
-| [withlogstore](https://github.com/maximhq/bifrost/blob/main/examples/configs/withlogstore/config.json) | SQLite logs store |
-| [withobjectstorages3](https://github.com/maximhq/bifrost/blob/main/examples/configs/withobjectstorages3/config.json) | S3 object storage offload for logs |
-| [withobjectstoragegcs](https://github.com/maximhq/bifrost/blob/main/examples/configs/withobjectstoragegcs/config.json) | GCS object storage offload for logs |
-| [withvectorstoreweaviate](https://github.com/maximhq/bifrost/blob/main/examples/configs/withvectorstoreweaviate/config.json) | Weaviate vector store (with [docker-compose](https://github.com/maximhq/bifrost/blob/main/examples/configs/withvectorstoreweaviate/docker-compose.yml)) |
+| [withconfigstore](https://github.com/grevinden/bifrost/blob/main/examples/configs/withconfigstore/config.json) | SQLite config store (Web UI enabled) |
+| [withconfigstorelogsstorepostgres](https://github.com/grevinden/bifrost/blob/main/examples/configs/withconfigstorelogsstorepostgres/config.json) | PostgreSQL for both config store and logs store |
+| [withlogstore](https://github.com/grevinden/bifrost/blob/main/examples/configs/withlogstore/config.json) | SQLite logs store |
+| [withobjectstorages3](https://github.com/grevinden/bifrost/blob/main/examples/configs/withobjectstorages3/config.json) | S3 object storage offload for logs |
+| [withobjectstoragegcs](https://github.com/grevinden/bifrost/blob/main/examples/configs/withobjectstoragegcs/config.json) | GCS object storage offload for logs |
+| [withvectorstoreweaviate](https://github.com/grevinden/bifrost/blob/main/examples/configs/withvectorstoreweaviate/config.json) | Weaviate vector store (with [docker-compose](https://github.com/grevinden/bifrost/blob/main/examples/configs/withvectorstoreweaviate/docker-compose.yml)) |
 
 </Accordion>
 
@@ -333,8 +333,8 @@ Ready-to-use reference configurations from the [examples/configs](https://github
 
 | Example | Description |
 |---------|-------------|
-| [withsemanticcache](https://github.com/maximhq/bifrost/blob/main/examples/configs/withsemanticcache/config.json) | Semantic cache backed by Weaviate |
-| [withsemanticcachevalkey](https://github.com/maximhq/bifrost/blob/main/examples/configs/withsemanticcachevalkey/config.json) | Semantic cache backed by Valkey / Redis |
+| [withsemanticcache](https://github.com/grevinden/bifrost/blob/main/examples/configs/withsemanticcache/config.json) | Semantic cache backed by Weaviate |
+| [withsemanticcachevalkey](https://github.com/grevinden/bifrost/blob/main/examples/configs/withsemanticcachevalkey/config.json) | Semantic cache backed by Valkey / Redis |
 
 </Accordion>
 
@@ -342,12 +342,12 @@ Ready-to-use reference configurations from the [examples/configs](https://github
 
 | Example | Description |
 |---------|-------------|
-| [withauth](https://github.com/maximhq/bifrost/blob/main/examples/configs/withauth/config.json) | Admin username/password auth (`governance.auth_config`) |
-| [withvirtualkeys](https://github.com/maximhq/bifrost/blob/main/examples/configs/withvirtualkeys/config.json) | Virtual keys with provider/model allowlists |
-| [withteamscustomers](https://github.com/maximhq/bifrost/blob/main/examples/configs/withteamscustomers/config.json) | Teams and customers with budgets and rate limits |
-| [withroutingrules](https://github.com/maximhq/bifrost/blob/main/examples/configs/withroutingrules/config.json) | CEL-based routing rules for dynamic provider/model selection |
-| [withpricingoverridesnostore](https://github.com/maximhq/bifrost/blob/main/examples/configs/withpricingoverridesnostore/config.json) | Pricing overrides in file-only mode |
-| [withpricingoverridessqlite](https://github.com/maximhq/bifrost/blob/main/examples/configs/withpricingoverridessqlite/config.json) | Pricing overrides with SQLite config store |
+| [withauth](https://github.com/grevinden/bifrost/blob/main/examples/configs/withauth/config.json) | Admin username/password auth (`governance.auth_config`) |
+| [withvirtualkeys](https://github.com/grevinden/bifrost/blob/main/examples/configs/withvirtualkeys/config.json) | Virtual keys with provider/model allowlists |
+| [withteamscustomers](https://github.com/grevinden/bifrost/blob/main/examples/configs/withteamscustomers/config.json) | Teams and customers with budgets and rate limits |
+| [withroutingrules](https://github.com/grevinden/bifrost/blob/main/examples/configs/withroutingrules/config.json) | CEL-based routing rules for dynamic provider/model selection |
+| [withpricingoverridesnostore](https://github.com/grevinden/bifrost/blob/main/examples/configs/withpricingoverridesnostore/config.json) | Pricing overrides in file-only mode |
+| [withpricingoverridessqlite](https://github.com/grevinden/bifrost/blob/main/examples/configs/withpricingoverridessqlite/config.json) | Pricing overrides with SQLite config store |
 
 </Accordion>
 
@@ -355,9 +355,9 @@ Ready-to-use reference configurations from the [examples/configs](https://github
 
 | Example | Description |
 |---------|-------------|
-| [withobservability](https://github.com/maximhq/bifrost/blob/main/examples/configs/withobservability/config.json) | Prometheus metrics (telemetry always active, custom labels via `client.prometheus_labels`) |
-| [withprompushgateway](https://github.com/maximhq/bifrost/blob/main/examples/configs/withprompushgateway/config.json) | Prometheus Push Gateway for multi-instance deployments |
-| [withotel](https://github.com/maximhq/bifrost/blob/main/examples/configs/withotel/config.json) | OpenTelemetry traces and metrics |
+| [withobservability](https://github.com/grevinden/bifrost/blob/main/examples/configs/withobservability/config.json) | Prometheus metrics (telemetry always active, custom labels via `client.prometheus_labels`) |
+| [withprompushgateway](https://github.com/grevinden/bifrost/blob/main/examples/configs/withprompushgateway/config.json) | Prometheus Push Gateway for multi-instance deployments |
+| [withotel](https://github.com/grevinden/bifrost/blob/main/examples/configs/withotel/config.json) | OpenTelemetry traces and metrics |
 
 </Accordion>
 
@@ -365,14 +365,14 @@ Ready-to-use reference configurations from the [examples/configs](https://github
 
 | Example | Description |
 |---------|-------------|
-| [withdynamicplugin](https://github.com/maximhq/bifrost/blob/main/examples/configs/withdynamicplugin/config.json) | Loading a custom `.so` plugin at startup |
-| [withcompat](https://github.com/maximhq/bifrost/blob/main/examples/configs/withcompat/config.json) | SDK compatibility shims (`should_drop_params`, `convert_text_to_chat`) |
-| [withframework](https://github.com/maximhq/bifrost/blob/main/examples/configs/withframework/config.json) | Custom model pricing catalog URL and sync interval |
-| [withlargepayload](https://github.com/maximhq/bifrost/blob/main/examples/configs/withlargepayload/config.json) | Large payload optimization (streaming without full materialisation) |
-| [withwebsocket](https://github.com/maximhq/bifrost/blob/main/examples/configs/withwebsocket/config.json) | WebSocket / Realtime API connection pool tuning |
-| [withnginxreverseproxy](https://github.com/maximhq/bifrost/blob/main/examples/configs/withnginxreverseproxy/config.json) | 3-node Bifrost behind NGINX reverse proxy (includes [docker-compose](https://github.com/maximhq/bifrost/blob/main/examples/configs/withnginxreverseproxy/docker-compose.yml), [nginx.conf](https://github.com/maximhq/bifrost/blob/main/examples/configs/withnginxreverseproxy/nginx.conf), [helm values](https://github.com/maximhq/bifrost/blob/main/examples/configs/withnginxreverseproxy/helm-values.yaml), and [k8s ingress](https://github.com/maximhq/bifrost/blob/main/examples/configs/withnginxreverseproxy/k8s-ingress.yaml)) |
-| [withpostgresmcpclientsinconfig](https://github.com/maximhq/bifrost/blob/main/examples/configs/withpostgresmcpclientsinconfig/config.json) | MCP client definitions seeded from config.json with PostgreSQL store |
-| [encryptionmigration](https://github.com/maximhq/bifrost/blob/main/examples/configs/encryptionmigration/config.json) | Migrating to a new encryption key |
+| [withdynamicplugin](https://github.com/grevinden/bifrost/blob/main/examples/configs/withdynamicplugin/config.json) | Loading a custom `.so` plugin at startup |
+| [withcompat](https://github.com/grevinden/bifrost/blob/main/examples/configs/withcompat/config.json) | SDK compatibility shims (`should_drop_params`, `convert_text_to_chat`) |
+| [withframework](https://github.com/grevinden/bifrost/blob/main/examples/configs/withframework/config.json) | Custom model pricing catalog URL and sync interval |
+| [withlargepayload](https://github.com/grevinden/bifrost/blob/main/examples/configs/withlargepayload/config.json) | Large payload optimization (streaming without full materialisation) |
+| [withwebsocket](https://github.com/grevinden/bifrost/blob/main/examples/configs/withwebsocket/config.json) | WebSocket / Realtime API connection pool tuning |
+| [withnginxreverseproxy](https://github.com/grevinden/bifrost/blob/main/examples/configs/withnginxreverseproxy/config.json) | 3-node Bifrost behind NGINX reverse proxy (includes [docker-compose](https://github.com/grevinden/bifrost/blob/main/examples/configs/withnginxreverseproxy/docker-compose.yml), [nginx.conf](https://github.com/grevinden/bifrost/blob/main/examples/configs/withnginxreverseproxy/nginx.conf), [helm values](https://github.com/grevinden/bifrost/blob/main/examples/configs/withnginxreverseproxy/helm-values.yaml), and [k8s ingress](https://github.com/grevinden/bifrost/blob/main/examples/configs/withnginxreverseproxy/k8s-ingress.yaml)) |
+| [withpostgresmcpclientsinconfig](https://github.com/grevinden/bifrost/blob/main/examples/configs/withpostgresmcpclientsinconfig/config.json) | MCP client definitions seeded from config.json with PostgreSQL store |
+| [encryptionmigration](https://github.com/grevinden/bifrost/blob/main/examples/configs/encryptionmigration/config.json) | Migrating to a new encryption key |
 
 </Accordion>
 

@@ -1,4 +1,4 @@
-module github.com/maximhq/bifrost/transports
+module github.com/grevinden/bifrost/transports
 
 go 1.26.4
 
@@ -13,19 +13,20 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/google/pprof v0.0.0-20251213031049-b05bdaca462f
 	github.com/google/uuid v1.6.0
+	github.com/grevinden/bifrost/core v1.7.1
+	github.com/grevinden/bifrost/framework v1.5.1
+	github.com/grevinden/bifrost/plugins/compat v0.1.27
+	github.com/grevinden/bifrost/plugins/governance v1.6.5
+	github.com/grevinden/bifrost/plugins/llmboster v0.0.0
+	github.com/grevinden/bifrost/plugins/logging v1.6.1
+	github.com/grevinden/bifrost/plugins/maxim v1.6.28
+	github.com/grevinden/bifrost/plugins/modelcatalogresolver v1.0.9
+	github.com/grevinden/bifrost/plugins/otel v1.4.0
+	github.com/grevinden/bifrost/plugins/prompts v1.0.28
+	github.com/grevinden/bifrost/plugins/semanticcache v1.5.28
+	github.com/grevinden/bifrost/plugins/telemetry v1.5.28
 	github.com/klauspost/compress v1.18.6
 	github.com/mark3labs/mcp-go v0.43.2
-	github.com/maximhq/bifrost/core v1.7.1
-	github.com/maximhq/bifrost/framework v1.5.1
-	github.com/maximhq/bifrost/plugins/compat v0.1.27
-	github.com/maximhq/bifrost/plugins/governance v1.6.5
-	github.com/maximhq/bifrost/plugins/logging v1.6.1
-	github.com/maximhq/bifrost/plugins/maxim v1.6.28
-	github.com/maximhq/bifrost/plugins/modelcatalogresolver v1.0.9
-	github.com/maximhq/bifrost/plugins/otel v1.4.0
-	github.com/maximhq/bifrost/plugins/prompts v1.0.28
-	github.com/maximhq/bifrost/plugins/semanticcache v1.5.28
-	github.com/maximhq/bifrost/plugins/telemetry v1.5.28
 	github.com/pion/rtcp v1.2.16
 	github.com/pion/webrtc/v4 v4.2.9
 	github.com/prometheus/client_golang v1.23.2
@@ -134,6 +135,7 @@ require (
 	github.com/google/s2a-go v0.1.9 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.16 // indirect
 	github.com/googleapis/gax-go/v2 v2.22.0 // indirect
+	github.com/grevinden/bifrost/plugins/mocker v1.5.28 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.28.0 // indirect
 	github.com/hashicorp/go-version v1.8.0 // indirect
 	github.com/invopop/jsonschema v0.13.0 // indirect
@@ -152,7 +154,6 @@ require (
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-sqlite3 v1.14.32 // indirect
-	github.com/maximhq/bifrost/plugins/mocker v1.5.28 // indirect
 	github.com/maximhq/maxim-go v0.2.1 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/oapi-codegen/runtime v1.1.1 // indirect
@@ -237,3 +238,29 @@ require (
 	gorm.io/driver/clickhouse v0.7.0 // indirect
 	gorm.io/driver/postgres v1.6.0 // indirect
 )
+
+replace github.com/grevinden/bifrost/plugins/llmboster => ../plugins/llmboster
+
+replace github.com/grevinden/bifrost/core => ../core
+
+replace github.com/grevinden/bifrost/framework => ../framework
+
+replace github.com/grevinden/bifrost/plugins/compat => ../plugins/compat
+
+replace github.com/grevinden/bifrost/plugins/governance => ../plugins/governance
+
+replace github.com/grevinden/bifrost/plugins/logging => ../plugins/logging
+
+replace github.com/grevinden/bifrost/plugins/maxim => ../plugins/maxim
+
+replace github.com/grevinden/bifrost/plugins/mocker => ../plugins/mocker
+
+replace github.com/grevinden/bifrost/plugins/modelcatalogresolver => ../plugins/modelcatalogresolver
+
+replace github.com/grevinden/bifrost/plugins/otel => ../plugins/otel
+
+replace github.com/grevinden/bifrost/plugins/prompts => ../plugins/prompts
+
+replace github.com/grevinden/bifrost/plugins/semanticcache => ../plugins/semanticcache
+
+replace github.com/grevinden/bifrost/plugins/telemetry => ../plugins/telemetry

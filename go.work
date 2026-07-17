@@ -1,0 +1,20 @@
+go 1.26.4
+
+use (
+	./cli
+	./core
+	./framework
+	./tests/e2e/clis
+	./transports
+	./plugins/compat
+	./plugins/governance
+	./plugins/llmboster
+	./plugins/logging
+	./plugins/maxim
+	./plugins/mocker
+	./plugins/modelcatalogresolver
+	./plugins/otel
+	./plugins/prompts
+	./plugins/semanticcache
+	./plugins/telemetry
+)

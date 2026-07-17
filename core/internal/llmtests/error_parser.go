@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // =============================================================================
@@ -14,12 +14,12 @@ import (
 
 // ParsedError represents a cleaned-up, human-readable error
 type ParsedError struct {
-	Category    string                 // Error category (HTTP, Auth, RateLimit, etc.)
-	Title       string                 // Short, readable title
-	Message     string                 // Main error message
-	Details     []string               // Additional details
-	Suggestions []string               // Potential solutions
-	Technical   map[string]interface{} // Technical details for debugging
+	Category    string         // Error category (HTTP, Auth, RateLimit, etc.)
+	Title       string         // Short, readable title
+	Message     string         // Main error message
+	Details     []string       // Additional details
+	Suggestions []string       // Potential solutions
+	Technical   map[string]any // Technical details for debugging
 }
 
 // ErrorCategory represents different types of errors
@@ -54,7 +54,7 @@ func ParseBifrostError(err *schemas.BifrostError) ParsedError {
 	}
 
 	parsed := ParsedError{
-		Technical:   make(map[string]interface{}),
+		Technical:   make(map[string]any),
 		Details:     make([]string, 0),
 		Suggestions: make([]string, 0),
 	}
@@ -377,7 +377,7 @@ func LogErrorConcise(t *testing.T, err *schemas.BifrostError, context string) {
 
 // RequireNoError is like require.NoError but with better error formatting
 // ALWAYS includes ❌ prefix in error messages for consistency
-func RequireNoError(t *testing.T, err *schemas.BifrostError, msgAndArgs ...interface{}) {
+func RequireNoError(t *testing.T, err *schemas.BifrostError, msgAndArgs ...any) {
 	if err != nil {
 		parsed := ParseBifrostError(err)
 		message := "Expected no error"
@@ -399,7 +399,7 @@ func RequireNoError(t *testing.T, err *schemas.BifrostError, msgAndArgs ...inter
 }
 
 // AssertNoError is like assert.NoError but with better error formatting
-func AssertNoError(t *testing.T, err *schemas.BifrostError, msgAndArgs ...interface{}) bool {
+func AssertNoError(t *testing.T, err *schemas.BifrostError, msgAndArgs ...any) bool {
 	if err != nil {
 		parsed := ParseBifrostError(err)
 		message := "Expected no error"

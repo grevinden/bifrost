@@ -1,14 +1,14 @@
-module github.com/maximhq/bifrost/tests/cmd/e2eseed
+module github.com/grevinden/bifrost/tests/cmd/e2eseed
 
 go 1.26.4
 
 replace (
-	github.com/maximhq/bifrost/core => ../../../core
-	github.com/maximhq/bifrost/framework => ../../../framework
-	github.com/maximhq/bifrost/tests/cmd/seed => ../seed
+	github.com/grevinden/bifrost/core => ../../../core
+	github.com/grevinden/bifrost/framework => ../../../framework
+	github.com/grevinden/bifrost/tests/cmd/seed => ../seed
 )
 
-require github.com/maximhq/bifrost/tests/cmd/seed v0.0.0-00010101000000-000000000000
+require github.com/grevinden/bifrost/tests/cmd/seed v0.0.0-00010101000000-000000000000
 
 require (
 	cel.dev/expr v0.25.1 // indirect
@@ -85,8 +85,8 @@ require (
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-sqlite3 v1.14.32 // indirect
-	github.com/maximhq/bifrost/core v1.6.3 // indirect
-	github.com/maximhq/bifrost/framework v1.3.16 // indirect
+	github.com/grevinden/bifrost/core v1.7.1 // indirect
+	github.com/grevinden/bifrost/framework v1.3.16 // indirect
 	github.com/paulmach/orb v0.11.1 // indirect
 	github.com/pierrec/lz4/v4 v4.1.22 // indirect
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c // indirect

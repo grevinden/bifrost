@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // TestParameterVariations tests that different parameters don't cache hit inappropriately
@@ -94,13 +94,13 @@ func TestToolVariations(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: bifrost.Ptr("What's the weather like today?"),
+					ContentStr: new("What's the weather like today?"),
 				},
 			},
 		},
 		Params: &schemas.ChatParameters{
-			MaxCompletionTokens: bifrost.Ptr(100),
-			Temperature:         bifrost.Ptr(0.5),
+			MaxCompletionTokens: new(100),
+			Temperature:         new(0.5),
 		},
 	}
 
@@ -112,29 +112,29 @@ func TestToolVariations(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: bifrost.Ptr("What's the weather like today?"),
+					ContentStr: new("What's the weather like today?"),
 				},
 			},
 		},
 		Params: &schemas.ChatParameters{
-			MaxCompletionTokens: bifrost.Ptr(100),
-			Temperature:         bifrost.Ptr(0.5),
+			MaxCompletionTokens: new(100),
+			Temperature:         new(0.5),
 			Tools: []schemas.ChatTool{
 				{
 					Type: schemas.ChatToolTypeFunction,
 					Function: &schemas.ChatToolFunction{
 						Name:        "get_weather",
-						Description: bifrost.Ptr("Get the current weather"),
+						Description: new("Get the current weather"),
 						Parameters: &schemas.ToolFunctionParameters{
 							Type: "object",
 							Properties: schemas.NewOrderedMapFromPairs(
-								schemas.KV("location", map[string]interface{}{
+								schemas.KV("location", map[string]any{
 									"type":        "string",
 									"description": "The city and state",
 								}),
 							),
 						},
-						Strict: bifrost.Ptr(false),
+						Strict: new(false),
 					},
 				},
 			},
@@ -149,29 +149,29 @@ func TestToolVariations(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: bifrost.Ptr("What's the weather like today?"),
+					ContentStr: new("What's the weather like today?"),
 				},
 			},
 		},
 		Params: &schemas.ChatParameters{
-			MaxCompletionTokens: bifrost.Ptr(100),
-			Temperature:         bifrost.Ptr(0.5),
+			MaxCompletionTokens: new(100),
+			Temperature:         new(0.5),
 			Tools: []schemas.ChatTool{
 				{
 					Type: schemas.ChatToolTypeFunction,
 					Function: &schemas.ChatToolFunction{
 						Name:        "get_current_weather",
-						Description: bifrost.Ptr("Get current weather information"),
+						Description: new("Get current weather information"),
 						Parameters: &schemas.ToolFunctionParameters{
 							Type: "object",
 							Properties: schemas.NewOrderedMapFromPairs(
-								schemas.KV("city", map[string]interface{}{ // Different parameter name
+								schemas.KV("city", map[string]any{ // Different parameter name
 									"type":        "string",
 									"description": "The city name",
 								}),
 							),
 						},
-						Strict: bifrost.Ptr(false),
+						Strict: new(false),
 					},
 				},
 			},
@@ -241,7 +241,7 @@ func TestContentVariations(t *testing.T) {
 							ContentBlocks: []schemas.ChatContentBlock{
 								{
 									Type: schemas.ChatContentBlockTypeText,
-									Text: bifrost.Ptr("Analyze this image"),
+									Text: new("Analyze this image"),
 								},
 								{
 									Type: schemas.ChatContentBlockTypeImage,
@@ -254,8 +254,8 @@ func TestContentVariations(t *testing.T) {
 					},
 				},
 				Params: &schemas.ChatParameters{
-					MaxCompletionTokens: bifrost.Ptr(200),
-					Temperature:         bifrost.Ptr(0.3),
+					MaxCompletionTokens: new(200),
+					Temperature:         new(0.3),
 				},
 			},
 		},
@@ -271,7 +271,7 @@ func TestContentVariations(t *testing.T) {
 							ContentBlocks: []schemas.ChatContentBlock{
 								{
 									Type: schemas.ChatContentBlockTypeText,
-									Text: bifrost.Ptr("Compare these images"),
+									Text: new("Compare these images"),
 								},
 								{
 									Type: schemas.ChatContentBlockTypeImage,
@@ -290,8 +290,8 @@ func TestContentVariations(t *testing.T) {
 					},
 				},
 				Params: &schemas.ChatParameters{
-					MaxCompletionTokens: bifrost.Ptr(200),
-					Temperature:         bifrost.Ptr(0.3),
+					MaxCompletionTokens: new(200),
+					Temperature:         new(0.3),
 				},
 			},
 		},
@@ -304,13 +304,13 @@ func TestContentVariations(t *testing.T) {
 					{
 						Role: schemas.ChatMessageRoleUser,
 						Content: &schemas.ChatMessageContent{
-							ContentStr: bifrost.Ptr(strings.Repeat("This is a very long prompt. ", 100)),
+							ContentStr: new(strings.Repeat("This is a very long prompt. ", 100)),
 						},
 					},
 				},
 				Params: &schemas.ChatParameters{
-					MaxCompletionTokens: bifrost.Ptr(50),
-					Temperature:         bifrost.Ptr(0.2),
+					MaxCompletionTokens: new(50),
+					Temperature:         new(0.2),
 				},
 			},
 		},
@@ -323,25 +323,25 @@ func TestContentVariations(t *testing.T) {
 					{
 						Role: schemas.ChatMessageRoleUser,
 						Content: &schemas.ChatMessageContent{
-							ContentStr: bifrost.Ptr("What is AI?"),
+							ContentStr: new("What is AI?"),
 						},
 					},
 					{
 						Role: schemas.ChatMessageRoleAssistant,
 						Content: &schemas.ChatMessageContent{
-							ContentStr: bifrost.Ptr("AI stands for Artificial Intelligence..."),
+							ContentStr: new("AI stands for Artificial Intelligence..."),
 						},
 					},
 					{
 						Role: schemas.ChatMessageRoleUser,
 						Content: &schemas.ChatMessageContent{
-							ContentStr: bifrost.Ptr("Can you give me examples?"),
+							ContentStr: new("Can you give me examples?"),
 						},
 					},
 				},
 				Params: &schemas.ChatParameters{
-					MaxCompletionTokens: bifrost.Ptr(150),
-					Temperature:         bifrost.Ptr(0.5),
+					MaxCompletionTokens: new(150),
+					Temperature:         new(0.5),
 				},
 			},
 		},
@@ -394,16 +394,16 @@ func TestBoundaryParameterValues(t *testing.T) {
 					{
 						Role: schemas.ChatMessageRoleUser,
 						Content: &schemas.ChatMessageContent{
-							ContentStr: bifrost.Ptr("Test max parameters"),
+							ContentStr: new("Test max parameters"),
 						},
 					},
 				},
 				Params: &schemas.ChatParameters{
-					MaxCompletionTokens: bifrost.Ptr(4096),
-					PresencePenalty:     bifrost.Ptr(2.0),
-					FrequencyPenalty:    bifrost.Ptr(2.0),
-					Temperature:         bifrost.Ptr(2.0),
-					TopP:                bifrost.Ptr(1.0),
+					MaxCompletionTokens: new(4096),
+					PresencePenalty:     new(2.0),
+					FrequencyPenalty:    new(2.0),
+					Temperature:         new(2.0),
+					TopP:                new(1.0),
 				},
 			},
 		},
@@ -416,16 +416,16 @@ func TestBoundaryParameterValues(t *testing.T) {
 					{
 						Role: schemas.ChatMessageRoleUser,
 						Content: &schemas.ChatMessageContent{
-							ContentStr: bifrost.Ptr("Test min parameters"),
+							ContentStr: new("Test min parameters"),
 						},
 					},
 				},
 				Params: &schemas.ChatParameters{
-					MaxCompletionTokens: bifrost.Ptr(1),
-					PresencePenalty:     bifrost.Ptr(-2.0),
-					FrequencyPenalty:    bifrost.Ptr(-2.0),
-					Temperature:         bifrost.Ptr(0.0),
-					TopP:                bifrost.Ptr(0.01),
+					MaxCompletionTokens: new(1),
+					PresencePenalty:     new(-2.0),
+					FrequencyPenalty:    new(-2.0),
+					Temperature:         new(0.0),
+					TopP:                new(0.01),
 				},
 			},
 		},
@@ -438,15 +438,15 @@ func TestBoundaryParameterValues(t *testing.T) {
 					{
 						Role: schemas.ChatMessageRoleUser,
 						Content: &schemas.ChatMessageContent{
-							ContentStr: bifrost.Ptr("Test edge case parameters"),
+							ContentStr: new("Test edge case parameters"),
 						},
 					},
 				},
 				Params: &schemas.ChatParameters{
-					MaxCompletionTokens: bifrost.Ptr(1),
-					User:                bifrost.Ptr("test-user-id-12345"),
-					Temperature:         bifrost.Ptr(0.0),
-					TopP:                bifrost.Ptr(0.1),
+					MaxCompletionTokens: new(1),
+					User:                new("test-user-id-12345"),
+					Temperature:         new(0.0),
+					TopP:                new(0.1),
 				},
 			},
 		},

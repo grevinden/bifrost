@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/vectorstore"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/vectorstore"
 )
 
 // TestSemanticCacheBasicFunctionality tests the core caching functionality.
@@ -529,7 +529,7 @@ func (m *MockUnsupportedStore) RequiresVectors() bool {
 	return false
 }
 
-func (m *MockUnsupportedStore) Add(ctx context.Context, namespace string, id string, embedding []float32, metadata map[string]interface{}) error {
+func (m *MockUnsupportedStore) Add(ctx context.Context, namespace string, id string, embedding []float32, metadata map[string]any) error {
 	return vectorstore.ErrNotSupported
 }
 
@@ -541,11 +541,11 @@ func (m *MockUnsupportedStore) DeleteAll(ctx context.Context, namespace string, 
 	return nil, vectorstore.ErrNotSupported
 }
 
-func (m *MockUnsupportedStore) SearchSemanticCache(ctx context.Context, queryEmbedding []float32, metadata map[string]interface{}, threshold float64, limit int64) ([]vectorstore.SearchResult, error) {
+func (m *MockUnsupportedStore) SearchSemanticCache(ctx context.Context, queryEmbedding []float32, metadata map[string]any, threshold float64, limit int64) ([]vectorstore.SearchResult, error) {
 	return nil, vectorstore.ErrNotSupported
 }
 
-func (m *MockUnsupportedStore) AddSemanticCache(ctx context.Context, key string, embedding []float32, metadata map[string]interface{}, ttl time.Duration) error {
+func (m *MockUnsupportedStore) AddSemanticCache(ctx context.Context, key string, embedding []float32, metadata map[string]any, ttl time.Duration) error {
 	return vectorstore.ErrNotSupported
 }
 

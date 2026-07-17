@@ -9,9 +9,9 @@ import (
 	"net/url"
 	"strings"
 
-	openaiProvider "github.com/maximhq/bifrost/core/providers/openai"
-	providerUtils "github.com/maximhq/bifrost/core/providers/utils"
-	"github.com/maximhq/bifrost/core/schemas"
+	openaiProvider "github.com/grevinden/bifrost/core/providers/openai"
+	providerUtils "github.com/grevinden/bifrost/core/providers/utils"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/valyala/fasthttp"
 )
 

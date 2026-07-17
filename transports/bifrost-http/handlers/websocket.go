@@ -13,8 +13,8 @@ import (
 	"github.com/bytedance/sonic"
 	"github.com/fasthttp/router"
 	"github.com/fasthttp/websocket"
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/transports/bifrost-http/lib"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/transports/bifrost-http/lib"
 	"github.com/valyala/fasthttp"
 )
 

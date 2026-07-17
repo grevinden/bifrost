@@ -20,12 +20,12 @@ import (
 
 	"github.com/bytedance/sonic"
 	"github.com/fasthttp/router"
-	bifrost "github.com/maximhq/bifrost/core"
+	bifrost "github.com/grevinden/bifrost/core"
 
-	providerUtils "github.com/maximhq/bifrost/core/providers/utils"
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/modelcatalog"
-	"github.com/maximhq/bifrost/transports/bifrost-http/lib"
+	providerUtils "github.com/grevinden/bifrost/core/providers/utils"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/modelcatalog"
+	"github.com/grevinden/bifrost/transports/bifrost-http/lib"
 	"github.com/valyala/fasthttp"
 )
 

@@ -8,7 +8,7 @@ import (
 
 	"github.com/bytedance/sonic"
 	"github.com/google/uuid"
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 type AgentModeExecutor struct {
@@ -144,7 +144,7 @@ func (a *AgentModeExecutor) executeAgent(
 	fetchNewRequestIDFunc func(ctx *schemas.BifrostContext) string,
 	executeToolFunc MCPToolExecutor,
 	clientManager ClientManager,
-) (interface{}, *schemas.BifrostError) {
+) (any, *schemas.BifrostError) {
 	// Get initial response from adapter
 	currentResponse := adapter.getInitialResponse()
 
@@ -196,7 +196,7 @@ func (a *AgentModeExecutor) executeAgent(
 					allClientNames, allowedAutoExecutionTools := buildAllowedAutoExecutionTools(ctx, clientManager)
 
 					// Parse tool arguments
-					var arguments map[string]interface{}
+					var arguments map[string]any
 					if err := sonic.Unmarshal([]byte(toolCall.Function.Arguments), &arguments); err != nil {
 						a.logger.Debug("%s Failed to parse tool arguments: %v", CodeModeLogPrefix, err)
 						nonAutoExecutableTools = append(nonAutoExecutableTools, toolCall)

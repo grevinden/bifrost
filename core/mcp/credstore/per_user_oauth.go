@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/maximhq/bifrost/core/mcp/utils"
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/mcp/utils"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // perUserOAuthResolver handles MCPAuthTypePerUserOauth — each caller's

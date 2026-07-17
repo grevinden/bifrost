@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/weaviate/weaviate-go-client/v5/weaviate/filters"
@@ -123,7 +123,7 @@ func (ts *TestSetup) ensureClassExists(t *testing.T) {
 				DataType: []string{"boolean"},
 			},
 		},
-		VectorIndexConfig: map[string]interface{}{
+		VectorIndexConfig: map[string]any{
 			"distance": "cosine",
 		},
 	}
@@ -357,7 +357,7 @@ func TestWeaviateStore_Integration(t *testing.T) {
 	t.Run("Add and GetChunk", func(t *testing.T) {
 		testKey := generateUUID()
 		embedding := generateTestEmbedding(TestEmbeddingDim)
-		metadata := map[string]interface{}{
+		metadata := map[string]any{
 			"type":   "document",
 			"size":   1024,
 			"public": true,
@@ -379,7 +379,7 @@ func TestWeaviateStore_Integration(t *testing.T) {
 
 	t.Run("Add without embedding", func(t *testing.T) {
 		testKey := generateUUID()
-		metadata := map[string]interface{}{
+		metadata := map[string]any{
 			"type": "metadata-only",
 		}
 
@@ -407,11 +407,11 @@ func TestWeaviateStore_FilteringScenarios(t *testing.T) {
 	// Setup test data for filtering scenarios
 	testData := []struct {
 		key      string
-		metadata map[string]interface{}
+		metadata map[string]any
 	}{
 		{
 			generateUUID(),
-			map[string]interface{}{
+			map[string]any{
 				"type":   "pdf",
 				"size":   1024,
 				"public": true,
@@ -420,7 +420,7 @@ func TestWeaviateStore_FilteringScenarios(t *testing.T) {
 		},
 		{
 			generateUUID(),
-			map[string]interface{}{
+			map[string]any{
 				"type":   "docx",
 				"size":   2048,
 				"public": false,
@@ -429,7 +429,7 @@ func TestWeaviateStore_FilteringScenarios(t *testing.T) {
 		},
 		{
 			generateUUID(),
-			map[string]interface{}{
+			map[string]any{
 				"type":   "pdf",
 				"size":   512,
 				"public": true,
@@ -438,7 +438,7 @@ func TestWeaviateStore_FilteringScenarios(t *testing.T) {
 		},
 		{
 			generateUUID(),
-			map[string]interface{}{
+			map[string]any{
 				"type":   "txt",
 				"size":   256,
 				"public": true,
@@ -530,22 +530,22 @@ func TestWeaviateStore_CompleteUseCases(t *testing.T) {
 		documents := []struct {
 			key       string
 			embedding []float32
-			metadata  map[string]interface{}
+			metadata  map[string]any
 		}{
 			{
 				generateUUID(),
 				generateTestEmbedding(TestEmbeddingDim),
-				map[string]interface{}{"type": "pdf", "size": 1024, "public": true},
+				map[string]any{"type": "pdf", "size": 1024, "public": true},
 			},
 			{
 				generateUUID(),
 				generateTestEmbedding(TestEmbeddingDim),
-				map[string]interface{}{"type": "docx", "size": 2048, "public": false},
+				map[string]any{"type": "docx", "size": 2048, "public": false},
 			},
 			{
 				generateUUID(),
 				generateTestEmbedding(TestEmbeddingDim),
-				map[string]interface{}{"type": "pdf", "size": 512, "public": true},
+				map[string]any{"type": "pdf", "size": 512, "public": true},
 			},
 		}
 
@@ -593,22 +593,22 @@ func TestWeaviateStore_CompleteUseCases(t *testing.T) {
 		userContent := []struct {
 			key       string
 			embedding []float32
-			metadata  map[string]interface{}
+			metadata  map[string]any
 		}{
 			{
 				generateUUID(),
 				generateTestEmbedding(TestEmbeddingDim),
-				map[string]interface{}{"user": "alice", "lang": "en", "category": "tech"},
+				map[string]any{"user": "alice", "lang": "en", "category": "tech"},
 			},
 			{
 				generateUUID(),
 				generateTestEmbedding(TestEmbeddingDim),
-				map[string]interface{}{"user": "bob", "lang": "es", "category": "tech"},
+				map[string]any{"user": "bob", "lang": "es", "category": "tech"},
 			},
 			{
 				generateUUID(),
 				generateTestEmbedding(TestEmbeddingDim),
-				map[string]interface{}{"user": "alice", "lang": "en", "category": "sports"},
+				map[string]any{"user": "alice", "lang": "en", "category": "sports"},
 			},
 		}
 
@@ -649,12 +649,12 @@ func TestWeaviateStore_CompleteUseCases(t *testing.T) {
 		cacheEntries := []struct {
 			key       string
 			embedding []float32
-			metadata  map[string]interface{}
+			metadata  map[string]any
 		}{
 			{
 				generateUUID(),
 				generateTestEmbedding(TestEmbeddingDim),
-				map[string]interface{}{
+				map[string]any{
 					"request_hash": "abc123",
 					"user":         "u1",
 					"lang":         "en",
@@ -664,7 +664,7 @@ func TestWeaviateStore_CompleteUseCases(t *testing.T) {
 			{
 				generateUUID(),
 				generateTestEmbedding(TestEmbeddingDim),
-				map[string]interface{}{
+				map[string]any{
 					"request_hash": "def456",
 					"user":         "u1",
 					"lang":         "es",
@@ -760,7 +760,7 @@ func TestWeaviateStore_NamespaceDimensionHandling(t *testing.T) {
 		// Add a document with 512-dimensional embedding
 		testKey512 := generateUUID()
 		embedding512 := generateTestEmbedding(512)
-		metadata := map[string]interface{}{
+		metadata := map[string]any{
 			"type": "test_doc",
 			"test": "dimension_512",
 		}
@@ -784,7 +784,7 @@ func TestWeaviateStore_NamespaceDimensionHandling(t *testing.T) {
 		// Add a document with 1024-dimensional embedding
 		testKey1024 := generateUUID()
 		embedding1024 := generateTestEmbedding(1024)
-		metadata1024 := map[string]interface{}{
+		metadata1024 := map[string]any{
 			"type": "test_doc",
 			"test": "dimension_1024",
 		}

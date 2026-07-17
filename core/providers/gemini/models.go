@@ -3,8 +3,8 @@ package gemini
 import (
 	"strings"
 
-	providerUtils "github.com/maximhq/bifrost/core/providers/utils"
-	"github.com/maximhq/bifrost/core/schemas"
+	providerUtils "github.com/grevinden/bifrost/core/providers/utils"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 func toGeminiModelResourceName(modelID string) string {
@@ -49,15 +49,15 @@ func (response *GeminiListModelsResponse) ToBifrostListModelsResponse(providerKe
 		for _, result := range pipeline.FilterModel(modelName) {
 			entry := schemas.Model{
 				ID:               string(providerKey) + "/" + result.ResolvedID,
-				Name:             schemas.Ptr(model.DisplayName),
-				Description:      schemas.Ptr(model.Description),
-				ContextLength:    schemas.Ptr(int(contextLength)),
-				MaxInputTokens:   schemas.Ptr(model.InputTokenLimit),
-				MaxOutputTokens:  schemas.Ptr(model.OutputTokenLimit),
+				Name:             new(model.DisplayName),
+				Description:      new(model.Description),
+				ContextLength:    new(int(contextLength)),
+				MaxInputTokens:   new(model.InputTokenLimit),
+				MaxOutputTokens:  new(model.OutputTokenLimit),
 				SupportedMethods: model.SupportedGenerationMethods,
 			}
 			if result.AliasValue != "" {
-				entry.Alias = schemas.Ptr(result.AliasValue)
+				entry.Alias = new(result.AliasValue)
 			}
 			bifrostResponse.Data = append(bifrostResponse.Data, entry)
 			included[strings.ToLower(result.ResolvedID)] = true

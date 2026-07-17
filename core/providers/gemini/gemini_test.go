@@ -10,12 +10,12 @@ import (
 	"time"
 
 	"github.com/bytedance/sonic"
-	"github.com/maximhq/bifrost/core/internal/llmtests"
-	"github.com/maximhq/bifrost/core/providers/gemini"
+	"github.com/grevinden/bifrost/core/internal/llmtests"
+	"github.com/grevinden/bifrost/core/providers/gemini"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 func TestGemini(t *testing.T) {
@@ -359,16 +359,16 @@ func TestMissingThoughtSignatureUsesBypassSentinel(t *testing.T) {
 		Input: []schemas.ChatMessage{
 			{
 				Role:    schemas.ChatMessageRoleUser,
-				Content: &schemas.ChatMessageContent{ContentStr: schemas.Ptr("What is the weather?")},
+				Content: &schemas.ChatMessageContent{ContentStr: new("What is the weather?")},
 			},
 			{
 				Role: schemas.ChatMessageRoleAssistant,
 				ChatAssistantMessage: &schemas.ChatAssistantMessage{
 					ToolCalls: []schemas.ChatAssistantMessageToolCall{{
-						ID:   schemas.Ptr("call_1"),
-						Type: schemas.Ptr("function"),
+						ID:   new("call_1"),
+						Type: new("function"),
 						Function: schemas.ChatAssistantMessageToolCallFunction{
-							Name:      schemas.Ptr("get_weather"),
+							Name:      new("get_weather"),
 							Arguments: `{"location":"Boston"}`,
 						},
 					}},
@@ -376,8 +376,8 @@ func TestMissingThoughtSignatureUsesBypassSentinel(t *testing.T) {
 			},
 			{
 				Role:            schemas.ChatMessageRoleTool,
-				ChatToolMessage: &schemas.ChatToolMessage{ToolCallID: schemas.Ptr("call_1")},
-				Content:         &schemas.ChatMessageContent{ContentStr: schemas.Ptr(`{"temperature":"10C"}`)},
+				ChatToolMessage: &schemas.ChatToolMessage{ToolCallID: new("call_1")},
+				Content:         &schemas.ChatMessageContent{ContentStr: new(`{"temperature":"10C"}`)},
 			},
 		},
 	})
@@ -402,7 +402,7 @@ func TestGeminiChatCompletionRejectsGCSImageURL(t *testing.T) {
 					ContentBlocks: []schemas.ChatContentBlock{
 						{
 							Type: schemas.ChatContentBlockTypeText,
-							Text: schemas.Ptr("Describe this image."),
+							Text: new("Describe this image."),
 						},
 						{
 							Type: schemas.ChatContentBlockTypeImage,
@@ -430,12 +430,12 @@ func TestGeminiResponsesRejectsGCSImageURL(t *testing.T) {
 					ContentBlocks: []schemas.ResponsesMessageContentBlock{
 						{
 							Type: schemas.ResponsesInputMessageContentBlockTypeText,
-							Text: schemas.Ptr("Describe this image."),
+							Text: new("Describe this image."),
 						},
 						{
 							Type: schemas.ResponsesInputMessageContentBlockTypeImage,
 							ResponsesInputMessageContentBlockImage: &schemas.ResponsesInputMessageContentBlockImage{
-								ImageURL: schemas.Ptr("gs://my-bucket/xxx.png"),
+								ImageURL: new("gs://my-bucket/xxx.png"),
 							},
 						},
 					},
@@ -458,10 +458,10 @@ func TestEmbeddedThoughtSignatureDoesNotUseBypassSentinel(t *testing.T) {
 			Role: schemas.ChatMessageRoleAssistant,
 			ChatAssistantMessage: &schemas.ChatAssistantMessage{
 				ToolCalls: []schemas.ChatAssistantMessageToolCall{{
-					ID:   schemas.Ptr(callID),
-					Type: schemas.Ptr("function"),
+					ID:   new(callID),
+					Type: new("function"),
 					Function: schemas.ChatAssistantMessageToolCallFunction{
-						Name:      schemas.Ptr("get_weather"),
+						Name:      new("get_weather"),
 						Arguments: `{"location":"Boston"}`,
 					},
 				}},
@@ -667,22 +667,22 @@ func TestGeminiGenerationRequestUnmarshalAcceptsSchemaIntegerConstraints(t *test
 // parseToolParams parses fd.ParametersJSONSchema (raw JSON Schema passthrough) into a
 // map for assertions. All tool conversion paths now use ParametersJSONSchema; fd.Parameters
 // is always nil.
-func parseToolParams(t *testing.T, fd *gemini.FunctionDeclaration) map[string]interface{} {
+func parseToolParams(t *testing.T, fd *gemini.FunctionDeclaration) map[string]any {
 	t.Helper()
 	require.NotNil(t, fd.ParametersJSONSchema, "ParametersJSONSchema must be set")
 	raw, err := json.Marshal(fd.ParametersJSONSchema)
 	require.NoError(t, err)
-	var m map[string]interface{}
+	var m map[string]any
 	require.NoError(t, json.Unmarshal(raw, &m))
 	return m
 }
 
 // getSchemaProperty returns the named property from a schema map's "properties" object.
-func getSchemaProperty(t *testing.T, schema map[string]interface{}, key string) map[string]interface{} {
+func getSchemaProperty(t *testing.T, schema map[string]any, key string) map[string]any {
 	t.Helper()
-	props, ok := schema["properties"].(map[string]interface{})
+	props, ok := schema["properties"].(map[string]any)
 	require.True(t, ok, "schema must have a properties map")
-	prop, ok := props[key].(map[string]interface{})
+	prop, ok := props[key].(map[string]any)
 	require.True(t, ok, "property %q must be an object", key)
 	return prop
 }
@@ -702,7 +702,7 @@ func TestBifrostToGeminiToolConversion(t *testing.T) {
 					{
 						Role: schemas.ChatMessageRoleUser,
 						Content: &schemas.ChatMessageContent{
-							ContentStr: schemas.Ptr("Test comprehensive tool"),
+							ContentStr: new("Test comprehensive tool"),
 						},
 					},
 				},
@@ -712,23 +712,23 @@ func TestBifrostToGeminiToolConversion(t *testing.T) {
 							Type: schemas.ChatToolTypeFunction,
 							Function: &schemas.ChatToolFunction{
 								Name:        "search_products",
-								Description: schemas.Ptr("Search for products with filters"),
+								Description: new("Search for products with filters"),
 								Parameters: &schemas.ToolFunctionParameters{
 									Type: "object",
 									Properties: schemas.NewOrderedMapFromPairs(
-										schemas.KV("query", map[string]interface{}{
+										schemas.KV("query", map[string]any{
 											"type":        "string",
 											"description": "Search query",
 										}),
-										schemas.KV("category", map[string]interface{}{
+										schemas.KV("category", map[string]any{
 											"type":        "string",
 											"description": "Product category",
-											"enum":        []interface{}{"electronics", "books", "clothing"},
+											"enum":        []any{"electronics", "books", "clothing"},
 										}),
-										schemas.KV("tags", map[string]interface{}{
+										schemas.KV("tags", map[string]any{
 											"type":        "array",
 											"description": "Filter tags",
-											"items": map[string]interface{}{
+											"items": map[string]any{
 												"type":        "string",
 												"description": "A tag",
 											},
@@ -749,7 +749,7 @@ func TestBifrostToGeminiToolConversion(t *testing.T) {
 				assert.Equal(t, "Search for products with filters", fd.Description)
 
 				params := parseToolParams(t, fd)
-				required := params["required"].([]interface{})
+				required := params["required"].([]any)
 				assert.Contains(t, required, "query")
 
 				queryProp := getSchemaProperty(t, params, "query")
@@ -757,12 +757,12 @@ func TestBifrostToGeminiToolConversion(t *testing.T) {
 
 				categoryProp := getSchemaProperty(t, params, "category")
 				assert.Equal(t, "string", categoryProp["type"])
-				assert.Equal(t, []interface{}{"electronics", "books", "clothing"}, categoryProp["enum"])
+				assert.Equal(t, []any{"electronics", "books", "clothing"}, categoryProp["enum"])
 
 				// Array with items (the critical bug fix)
 				tagsProp := getSchemaProperty(t, params, "tags")
 				assert.Equal(t, "array", tagsProp["type"])
-				items, ok := tagsProp["items"].(map[string]interface{})
+				items, ok := tagsProp["items"].(map[string]any)
 				require.True(t, ok, "items field must be present - this was the bug")
 				assert.Equal(t, "string", items["type"])
 			},
@@ -775,7 +775,7 @@ func TestBifrostToGeminiToolConversion(t *testing.T) {
 					{
 						Role: schemas.ChatMessageRoleUser,
 						Content: &schemas.ChatMessageContent{
-							ContentStr: schemas.Ptr("Test nested structures"),
+							ContentStr: new("Test nested structures"),
 						},
 					},
 				},
@@ -785,31 +785,31 @@ func TestBifrostToGeminiToolConversion(t *testing.T) {
 							Type: schemas.ChatToolTypeFunction,
 							Function: &schemas.ChatToolFunction{
 								Name:        "process_order",
-								Description: schemas.Ptr("Process customer order"),
+								Description: new("Process customer order"),
 								Parameters: &schemas.ToolFunctionParameters{
 									Type: "object",
 									Properties: schemas.NewOrderedMapFromPairs(
-										schemas.KV("customer", map[string]interface{}{
+										schemas.KV("customer", map[string]any{
 											"type": "object",
-											"properties": map[string]interface{}{
-												"name": map[string]interface{}{
+											"properties": map[string]any{
+												"name": map[string]any{
 													"type": "string",
 												},
-												"email": map[string]interface{}{
+												"email": map[string]any{
 													"type": "string",
 												},
 											},
 											"required": []string{"name", "email"},
 										}),
-										schemas.KV("items", map[string]interface{}{
+										schemas.KV("items", map[string]any{
 											"type": "array",
-											"items": map[string]interface{}{
+											"items": map[string]any{
 												"type": "object",
-												"properties": map[string]interface{}{
-													"product_id": map[string]interface{}{
+												"properties": map[string]any{
+													"product_id": map[string]any{
 														"type": "string",
 													},
-													"quantity": map[string]interface{}{
+													"quantity": map[string]any{
 														"type": "integer",
 													},
 												},
@@ -831,22 +831,22 @@ func TestBifrostToGeminiToolConversion(t *testing.T) {
 
 				customerProp := getSchemaProperty(t, params, "customer")
 				assert.Equal(t, "object", customerProp["type"])
-				customerProps := customerProp["properties"].(map[string]interface{})
+				customerProps := customerProp["properties"].(map[string]any)
 				assert.Contains(t, customerProps, "name")
 				assert.Contains(t, customerProps, "email")
-				customerRequired := customerProp["required"].([]interface{})
-				assert.Equal(t, []interface{}{"name", "email"}, customerRequired)
+				customerRequired := customerProp["required"].([]any)
+				assert.Equal(t, []any{"name", "email"}, customerRequired)
 
 				itemsProp := getSchemaProperty(t, params, "items")
 				assert.Equal(t, "array", itemsProp["type"])
-				itemsItems, ok := itemsProp["items"].(map[string]interface{})
+				itemsItems, ok := itemsProp["items"].(map[string]any)
 				require.True(t, ok, "array items must be present")
 				assert.Equal(t, "object", itemsItems["type"])
-				itemsProps := itemsItems["properties"].(map[string]interface{})
+				itemsProps := itemsItems["properties"].(map[string]any)
 				assert.Contains(t, itemsProps, "product_id")
 				assert.Contains(t, itemsProps, "quantity")
-				itemsRequired := itemsItems["required"].([]interface{})
-				assert.Equal(t, []interface{}{"product_id", "quantity"}, itemsRequired)
+				itemsRequired := itemsItems["required"].([]any)
+				assert.Equal(t, []any{"product_id", "quantity"}, itemsRequired)
 			},
 		},
 		{
@@ -861,7 +861,7 @@ func TestBifrostToGeminiToolConversion(t *testing.T) {
 					{
 						Role: schemas.ChatMessageRoleUser,
 						Content: &schemas.ChatMessageContent{
-							ContentStr: schemas.Ptr("Test nested OrderedMap properties"),
+							ContentStr: new("Test nested OrderedMap properties"),
 						},
 					},
 				},
@@ -871,32 +871,32 @@ func TestBifrostToGeminiToolConversion(t *testing.T) {
 							Type: schemas.ChatToolTypeFunction,
 							Function: &schemas.ChatToolFunction{
 								Name:        "browser_fill_form",
-								Description: schemas.Ptr("Fill form fields"),
+								Description: new("Fill form fields"),
 								Parameters: &schemas.ToolFunctionParameters{
 									Type: "object",
 									// Use OrderedMap for the nested items.properties to simulate
 									// JSON deserialization, which stores nested objects as *OrderedMap
 									Properties: schemas.NewOrderedMapFromPairs(
-										schemas.KV("fields", map[string]interface{}{
+										schemas.KV("fields", map[string]any{
 											"type":        "array",
 											"description": "Fields to fill in",
 											"items": schemas.NewOrderedMapFromPairs(
 												schemas.KV("type", "object"),
 												schemas.KV("properties", schemas.NewOrderedMapFromPairs(
-													schemas.KV("name", map[string]interface{}{
+													schemas.KV("name", map[string]any{
 														"type":        "string",
 														"description": "Human-readable field name",
 													}),
-													schemas.KV("ref", map[string]interface{}{
+													schemas.KV("ref", map[string]any{
 														"type":        "string",
 														"description": "Target field reference",
 													}),
-													schemas.KV("value", map[string]interface{}{
+													schemas.KV("value", map[string]any{
 														"type":        "string",
 														"description": "Value to fill",
 													}),
 												)),
-												schemas.KV("required", []interface{}{"name", "ref", "value"}),
+												schemas.KV("required", []any{"name", "ref", "value"}),
 												schemas.KV("additionalProperties", false),
 											),
 										}),
@@ -916,19 +916,19 @@ func TestBifrostToGeminiToolConversion(t *testing.T) {
 
 				fieldsProp := getSchemaProperty(t, params, "fields")
 				assert.Equal(t, "array", fieldsProp["type"])
-				fieldsItems, ok := fieldsProp["items"].(map[string]interface{})
+				fieldsItems, ok := fieldsProp["items"].(map[string]any)
 				require.True(t, ok, "array items must be present")
 				assert.Equal(t, "object", fieldsItems["type"])
 
 				// Nested properties inside items must be preserved even when they
 				// come as *OrderedMap from JSON deserialization.
-				nestedProps, ok := fieldsItems["properties"].(map[string]interface{})
+				nestedProps, ok := fieldsItems["properties"].(map[string]any)
 				require.True(t, ok, "nested properties must not be nil - this was the bug")
 				assert.Contains(t, nestedProps, "name")
 				assert.Contains(t, nestedProps, "ref")
 				assert.Contains(t, nestedProps, "value")
-				fieldsRequired := fieldsItems["required"].([]interface{})
-				assert.Equal(t, []interface{}{"name", "ref", "value"}, fieldsRequired)
+				fieldsRequired := fieldsItems["required"].([]any)
+				assert.Equal(t, []any{"name", "ref", "value"}, fieldsRequired)
 			},
 		},
 		{
@@ -939,7 +939,7 @@ func TestBifrostToGeminiToolConversion(t *testing.T) {
 					{
 						Role: schemas.ChatMessageRoleUser,
 						Content: &schemas.ChatMessageContent{
-							ContentStr: schemas.Ptr("Edge case test"),
+							ContentStr: new("Edge case test"),
 						},
 					},
 				},
@@ -952,9 +952,9 @@ func TestBifrostToGeminiToolConversion(t *testing.T) {
 								Parameters: &schemas.ToolFunctionParameters{
 									Type: "object",
 									Properties: schemas.NewOrderedMapFromPairs(
-										schemas.KV("data", map[string]interface{}{
+										schemas.KV("data", map[string]any{
 											"type":  "array",
-											"items": map[string]interface{}{}, // Empty items object
+											"items": map[string]any{}, // Empty items object
 										}),
 									),
 								},
@@ -978,7 +978,7 @@ func TestBifrostToGeminiToolConversion(t *testing.T) {
 					{
 						Role: schemas.ChatMessageRoleUser,
 						Content: &schemas.ChatMessageContent{
-							ContentStr: schemas.Ptr("Test validation constraints"),
+							ContentStr: new("Test validation constraints"),
 						},
 					},
 				},
@@ -988,27 +988,27 @@ func TestBifrostToGeminiToolConversion(t *testing.T) {
 							Type: schemas.ChatToolTypeFunction,
 							Function: &schemas.ChatToolFunction{
 								Name:        "validate_input",
-								Description: schemas.Ptr("Validate input with constraints"),
+								Description: new("Validate input with constraints"),
 								Parameters: &schemas.ToolFunctionParameters{
 									Type: "object",
 									Properties: schemas.NewOrderedMapFromPairs(
-										schemas.KV("username", map[string]interface{}{
+										schemas.KV("username", map[string]any{
 											"type":        "string",
 											"description": "Username with length constraints",
 											"minLength":   float64(3),
 											"maxLength":   float64(20),
 											"pattern":     "^[a-zA-Z0-9_]+$",
 										}),
-										schemas.KV("age", map[string]interface{}{
+										schemas.KV("age", map[string]any{
 											"type":    "integer",
 											"minimum": float64(0),
 											"maximum": float64(150),
 										}),
-										schemas.KV("tags", map[string]interface{}{
+										schemas.KV("tags", map[string]any{
 											"type":     "array",
 											"minItems": float64(1),
 											"maxItems": float64(5),
-											"items": map[string]interface{}{
+											"items": map[string]any{
 												"type": "string",
 											},
 										}),
@@ -1050,7 +1050,7 @@ func TestBifrostToGeminiToolConversion(t *testing.T) {
 					{
 						Role: schemas.ChatMessageRoleUser,
 						Content: &schemas.ChatMessageContent{
-							ContentStr: schemas.Ptr("Test anyOf union types"),
+							ContentStr: new("Test anyOf union types"),
 						},
 					},
 				},
@@ -1060,14 +1060,14 @@ func TestBifrostToGeminiToolConversion(t *testing.T) {
 							Type: schemas.ChatToolTypeFunction,
 							Function: &schemas.ChatToolFunction{
 								Name:        "process_id",
-								Description: schemas.Ptr("Process ID that can be string or number"),
+								Description: new("Process ID that can be string or number"),
 								Parameters: &schemas.ToolFunctionParameters{
 									Type: "object",
 									Properties: schemas.NewOrderedMapFromPairs(
-										schemas.KV("id", map[string]interface{}{
-											"anyOf": []interface{}{
-												map[string]interface{}{"type": "string"},
-												map[string]interface{}{"type": "integer"},
+										schemas.KV("id", map[string]any{
+											"anyOf": []any{
+												map[string]any{"type": "string"},
+												map[string]any{"type": "integer"},
 											},
 											"description": "ID that can be string or integer",
 										}),
@@ -1085,11 +1085,11 @@ func TestBifrostToGeminiToolConversion(t *testing.T) {
 				params := parseToolParams(t, fd)
 
 				idProp := getSchemaProperty(t, params, "id")
-				anyOf, ok := idProp["anyOf"].([]interface{})
+				anyOf, ok := idProp["anyOf"].([]any)
 				require.True(t, ok, "anyOf should be set")
 				require.Len(t, anyOf, 2, "anyOf should have 2 options")
-				assert.Equal(t, "string", anyOf[0].(map[string]interface{})["type"])
-				assert.Equal(t, "integer", anyOf[1].(map[string]interface{})["type"])
+				assert.Equal(t, "string", anyOf[0].(map[string]any)["type"])
+				assert.Equal(t, "integer", anyOf[1].(map[string]any)["type"])
 				// With passthrough, sibling fields alongside anyOf are preserved
 				assert.Equal(t, "ID that can be string or integer", idProp["description"])
 			},
@@ -1102,7 +1102,7 @@ func TestBifrostToGeminiToolConversion(t *testing.T) {
 					{
 						Role: schemas.ChatMessageRoleUser,
 						Content: &schemas.ChatMessageContent{
-							ContentStr: schemas.Ptr("Test top-level items field"),
+							ContentStr: new("Test top-level items field"),
 						},
 					},
 				},
@@ -1112,15 +1112,15 @@ func TestBifrostToGeminiToolConversion(t *testing.T) {
 							Type: schemas.ChatToolTypeFunction,
 							Function: &schemas.ChatToolFunction{
 								Name:        "process_list",
-								Description: schemas.Ptr("Process a list of items"),
+								Description: new("Process a list of items"),
 								Parameters: &schemas.ToolFunctionParameters{
 									Type: "array",
 									Items: schemas.NewOrderedMapFromPairs(
 										schemas.KV("type", "string"),
 										schemas.KV("description", "Item in the list"),
 									),
-									MinItems: schemas.Ptr(int64(1)),
-									MaxItems: schemas.Ptr(int64(10)),
+									MinItems: new(int64(1)),
+									MaxItems: new(int64(10)),
 								},
 							},
 						},
@@ -1133,7 +1133,7 @@ func TestBifrostToGeminiToolConversion(t *testing.T) {
 				params := parseToolParams(t, fd)
 
 				assert.Equal(t, "array", params["type"])
-				items, ok := params["items"].(map[string]interface{})
+				items, ok := params["items"].(map[string]any)
 				require.True(t, ok, "items should be set on top-level array")
 				assert.Equal(t, "string", items["type"])
 				assert.Equal(t, float64(1), params["minItems"])
@@ -1148,7 +1148,7 @@ func TestBifrostToGeminiToolConversion(t *testing.T) {
 					{
 						Role: schemas.ChatMessageRoleUser,
 						Content: &schemas.ChatMessageContent{
-							ContentStr: schemas.Ptr("Test misc fields"),
+							ContentStr: new("Test misc fields"),
 						},
 					},
 				},
@@ -1158,18 +1158,18 @@ func TestBifrostToGeminiToolConversion(t *testing.T) {
 							Type: schemas.ChatToolTypeFunction,
 							Function: &schemas.ChatToolFunction{
 								Name:        "config_tool",
-								Description: schemas.Ptr("Tool with misc schema fields"),
+								Description: new("Tool with misc schema fields"),
 								Parameters: &schemas.ToolFunctionParameters{
 									Type:  "object",
-									Title: schemas.Ptr("ConfigParameters"),
+									Title: new("ConfigParameters"),
 									Properties: schemas.NewOrderedMapFromPairs(
-										schemas.KV("enabled", map[string]interface{}{
+										schemas.KV("enabled", map[string]any{
 											"type":     "boolean",
 											"default":  true,
 											"nullable": true,
 											"title":    "Enabled Flag",
 										}),
-										schemas.KV("format_type", map[string]interface{}{
+										schemas.KV("format_type", map[string]any{
 											"type":   "string",
 											"format": "email",
 										}),
@@ -1213,20 +1213,20 @@ func TestBifrostToGeminiToolConversion_PropertyOrdering(t *testing.T) {
 		Model: "gemini-2.0-flash",
 		Input: []schemas.ChatMessage{{
 			Role:    schemas.ChatMessageRoleUser,
-			Content: &schemas.ChatMessageContent{ContentStr: schemas.Ptr("test")},
+			Content: &schemas.ChatMessageContent{ContentStr: new("test")},
 		}},
 		Params: &schemas.ChatParameters{
 			Tools: []schemas.ChatTool{{
 				Type: schemas.ChatToolTypeFunction,
 				Function: &schemas.ChatToolFunction{
 					Name:        "AnswerResponseModel",
-					Description: schemas.Ptr("Extract answer"),
+					Description: new("Extract answer"),
 					Parameters: &schemas.ToolFunctionParameters{
 						Type: "object",
 						Properties: schemas.NewOrderedMapFromPairs(
-							schemas.KV("chain_of_thought", map[string]interface{}{"type": "string", "description": "Reasoning"}),
-							schemas.KV("answer", map[string]interface{}{"type": "string", "description": "The answer"}),
-							schemas.KV("citations", map[string]interface{}{"type": "array"}),
+							schemas.KV("chain_of_thought", map[string]any{"type": "string", "description": "Reasoning"}),
+							schemas.KV("answer", map[string]any{"type": "string", "description": "The answer"}),
+							schemas.KV("citations", map[string]any{"type": "array"}),
 						),
 						Required: []string{"chain_of_thought", "answer"},
 					},
@@ -1245,7 +1245,7 @@ func TestBifrostToGeminiToolConversion_PropertyOrdering(t *testing.T) {
 	// separate field. Property order is preserved by the OrderedMap key order in the
 	// serialized JSON.
 	params := parseToolParams(t, fd)
-	props, ok := params["properties"].(map[string]interface{})
+	props, ok := params["properties"].(map[string]any)
 	require.True(t, ok, "parameters must have properties")
 	assert.Len(t, props, 3)
 	assert.Contains(t, props, "chain_of_thought")
@@ -1258,7 +1258,7 @@ func TestBifrostToGeminiToolConversion_NestedPropertyOrdering(t *testing.T) {
 		Model: "gemini-2.0-flash",
 		Input: []schemas.ChatMessage{{
 			Role:    schemas.ChatMessageRoleUser,
-			Content: &schemas.ChatMessageContent{ContentStr: schemas.Ptr("test")},
+			Content: &schemas.ChatMessageContent{ContentStr: new("test")},
 		}},
 		Params: &schemas.ChatParameters{
 			Tools: []schemas.ChatTool{{
@@ -1276,7 +1276,7 @@ func TestBifrostToGeminiToolConversion_NestedPropertyOrdering(t *testing.T) {
 									schemas.KV("explanation", schemas.NewOrderedMapFromPairs(schemas.KV("type", "string"))),
 								)),
 							)),
-							schemas.KV("reasoning", map[string]interface{}{"type": "string"}),
+							schemas.KV("reasoning", map[string]any{"type": "string"}),
 						),
 					},
 				},
@@ -1293,14 +1293,14 @@ func TestBifrostToGeminiToolConversion_NestedPropertyOrdering(t *testing.T) {
 	// With ParametersJSONSchema passthrough, propertyOrdering is not emitted as a
 	// separate field. Verify all top-level and nested properties are present.
 	params := parseToolParams(t, fd)
-	props, ok := params["properties"].(map[string]interface{})
+	props, ok := params["properties"].(map[string]any)
 	require.True(t, ok)
 	assert.Contains(t, props, "output")
 	assert.Contains(t, props, "reasoning")
 
-	outputProp, ok := props["output"].(map[string]interface{})
+	outputProp, ok := props["output"].(map[string]any)
 	require.True(t, ok)
-	nestedProps, ok := outputProp["properties"].(map[string]interface{})
+	nestedProps, ok := outputProp["properties"].(map[string]any)
 	require.True(t, ok, "nested properties must be present")
 	assert.Contains(t, nestedProps, "verdict")
 	assert.Contains(t, nestedProps, "score")
@@ -1322,28 +1322,28 @@ func TestStructuredOutputConversion(t *testing.T) {
 					{
 						Role: schemas.ChatMessageRoleUser,
 						Content: &schemas.ChatMessageContent{
-							ContentStr: schemas.Ptr("Extract information: User ID is 12345, Status is \"active\""),
+							ContentStr: new("Extract information: User ID is 12345, Status is \"active\""),
 						},
 					},
 				},
 				Params: &schemas.ChatParameters{
-					ResponseFormat: schemas.Ptr[interface{}](map[string]interface{}{
+					ResponseFormat: schemas.Ptr[any](map[string]any{
 						"type": "json_schema",
-						"json_schema": map[string]interface{}{
+						"json_schema": map[string]any{
 							"name": "UserInfo",
-							"schema": map[string]interface{}{
+							"schema": map[string]any{
 								"type": "object",
-								"properties": map[string]interface{}{
-									"user_id": map[string]interface{}{
-										"type":        []interface{}{"string", "integer"},
+								"properties": map[string]any{
+									"user_id": map[string]any{
+										"type":        []any{"string", "integer"},
 										"description": "User ID as string or integer",
 									},
-									"status": map[string]interface{}{
+									"status": map[string]any{
 										"type": "string",
-										"enum": []interface{}{"active", "inactive"},
+										"enum": []any{"active", "inactive"},
 									},
 								},
-								"required":             []interface{}{"user_id", "status"},
+								"required":             []any{"user_id", "status"},
 								"additionalProperties": false,
 							},
 						},
@@ -1358,37 +1358,37 @@ func TestStructuredOutputConversion(t *testing.T) {
 				assert.NotNil(t, result.GenerationConfig.ResponseJSONSchema, "responseJsonSchema should be set")
 
 				// Validate the schema structure
-				schemaMap, ok := result.GenerationConfig.ResponseJSONSchema.(map[string]interface{})
+				schemaMap, ok := result.GenerationConfig.ResponseJSONSchema.(map[string]any)
 				require.True(t, ok, "ResponseJSONSchema should be a map")
 
 				// Check properties
-				properties, ok := schemaMap["properties"].(map[string]interface{})
+				properties, ok := schemaMap["properties"].(map[string]any)
 				require.True(t, ok, "properties should be a map")
 
 				// Validate user_id property - should be converted to anyOf
-				userID, ok := properties["user_id"].(map[string]interface{})
+				userID, ok := properties["user_id"].(map[string]any)
 				require.True(t, ok, "user_id should exist in properties")
 
 				// user_id should have anyOf instead of type array
 				anyOf, hasAnyOf := userID["anyOf"]
 				assert.True(t, hasAnyOf, "user_id should have anyOf for union types")
 
-				anyOfSlice, ok := anyOf.([]interface{})
+				anyOfSlice, ok := anyOf.([]any)
 				require.True(t, ok, "anyOf should be a slice")
 				require.Len(t, anyOfSlice, 2, "anyOf should have 2 branches for string and integer")
 
 				// Verify the anyOf branches
-				stringBranch := anyOfSlice[0].(map[string]interface{})
+				stringBranch := anyOfSlice[0].(map[string]any)
 				assert.Equal(t, "string", stringBranch["type"])
 
-				integerBranch := anyOfSlice[1].(map[string]interface{})
+				integerBranch := anyOfSlice[1].(map[string]any)
 				assert.Equal(t, "integer", integerBranch["type"])
 
 				// Validate status property - should remain unchanged
-				status, ok := properties["status"].(map[string]interface{})
+				status, ok := properties["status"].(map[string]any)
 				require.True(t, ok, "status should exist in properties")
 				assert.Equal(t, "string", status["type"])
-				enum := status["enum"].([]interface{})
+				enum := status["enum"].([]any)
 				assert.Len(t, enum, 2)
 			},
 		},
@@ -1400,20 +1400,20 @@ func TestStructuredOutputConversion(t *testing.T) {
 					{
 						Role: schemas.ChatMessageRoleUser,
 						Content: &schemas.ChatMessageContent{
-							ContentStr: schemas.Ptr("Extract nullable field"),
+							ContentStr: new("Extract nullable field"),
 						},
 					},
 				},
 				Params: &schemas.ChatParameters{
-					ResponseFormat: schemas.Ptr[interface{}](map[string]interface{}{
+					ResponseFormat: schemas.Ptr[any](map[string]any{
 						"type": "json_schema",
-						"json_schema": map[string]interface{}{
+						"json_schema": map[string]any{
 							"name": "NullableData",
-							"schema": map[string]interface{}{
+							"schema": map[string]any{
 								"type": "object",
-								"properties": map[string]interface{}{
-									"name": map[string]interface{}{
-										"type": []interface{}{"string", "null"},
+								"properties": map[string]any{
+									"name": map[string]any{
+										"type": []any{"string", "null"},
 									},
 								},
 							},
@@ -1422,13 +1422,13 @@ func TestStructuredOutputConversion(t *testing.T) {
 				},
 			},
 			validate: func(t *testing.T, result *gemini.GeminiGenerationRequest) {
-				schemaMap := result.GenerationConfig.ResponseJSONSchema.(map[string]interface{})
-				properties := schemaMap["properties"].(map[string]interface{})
-				name := properties["name"].(map[string]interface{})
+				schemaMap := result.GenerationConfig.ResponseJSONSchema.(map[string]any)
+				properties := schemaMap["properties"].(map[string]any)
+				name := properties["name"].(map[string]any)
 
 				// Nullable types should be kept as array (Gemini supports this)
 				typeVal := name["type"]
-				typeSlice, ok := typeVal.([]interface{})
+				typeSlice, ok := typeVal.([]any)
 				require.True(t, ok, "type should remain as array for nullable types")
 				require.Len(t, typeSlice, 2)
 				assert.Contains(t, typeSlice, "string")
@@ -1443,35 +1443,35 @@ func TestStructuredOutputConversion(t *testing.T) {
 					{
 						Role: schemas.ChatMessageRoleUser,
 						Content: &schemas.ChatMessageContent{
-							ContentStr: schemas.Ptr("Extract nested data"),
+							ContentStr: new("Extract nested data"),
 						},
 					},
 				},
 				Params: &schemas.ChatParameters{
-					ResponseFormat: schemas.Ptr[interface{}](map[string]interface{}{
+					ResponseFormat: schemas.Ptr[any](map[string]any{
 						"type": "json_schema",
-						"json_schema": map[string]interface{}{
+						"json_schema": map[string]any{
 							"name": "ComplexData",
-							"schema": map[string]interface{}{
+							"schema": map[string]any{
 								"type": "object",
-								"properties": map[string]interface{}{
-									"items": map[string]interface{}{
+								"properties": map[string]any{
+									"items": map[string]any{
 										"type": "array",
-										"items": map[string]interface{}{
+										"items": map[string]any{
 											"type": "object",
-											"properties": map[string]interface{}{
-												"id": map[string]interface{}{
+											"properties": map[string]any{
+												"id": map[string]any{
 													"type": "integer",
 												},
-												"name": map[string]interface{}{
+												"name": map[string]any{
 													"type": "string",
 												},
 											},
-											"required": []interface{}{"id", "name"},
+											"required": []any{"id", "name"},
 										},
 									},
 								},
-								"required": []interface{}{"items"},
+								"required": []any{"items"},
 							},
 						},
 					}),
@@ -1481,17 +1481,17 @@ func TestStructuredOutputConversion(t *testing.T) {
 				assert.Equal(t, "application/json", result.GenerationConfig.ResponseMIMEType)
 				assert.NotNil(t, result.GenerationConfig.ResponseJSONSchema)
 
-				schemaMap := result.GenerationConfig.ResponseJSONSchema.(map[string]interface{})
-				properties := schemaMap["properties"].(map[string]interface{})
-				items := properties["items"].(map[string]interface{})
+				schemaMap := result.GenerationConfig.ResponseJSONSchema.(map[string]any)
+				properties := schemaMap["properties"].(map[string]any)
+				items := properties["items"].(map[string]any)
 
 				// Validate array items
 				assert.Equal(t, "array", items["type"])
-				itemsSchema := items["items"].(map[string]interface{})
+				itemsSchema := items["items"].(map[string]any)
 				assert.Equal(t, "object", itemsSchema["type"])
 
 				// Validate nested properties
-				nestedProps := itemsSchema["properties"].(map[string]interface{})
+				nestedProps := itemsSchema["properties"].(map[string]any)
 				assert.Contains(t, nestedProps, "id")
 				assert.Contains(t, nestedProps, "name")
 			},
@@ -1504,12 +1504,12 @@ func TestStructuredOutputConversion(t *testing.T) {
 					{
 						Role: schemas.ChatMessageRoleUser,
 						Content: &schemas.ChatMessageContent{
-							ContentStr: schemas.Ptr("Return JSON"),
+							ContentStr: new("Return JSON"),
 						},
 					},
 				},
 				Params: &schemas.ChatParameters{
-					ResponseFormat: schemas.Ptr[interface{}](map[string]interface{}{
+					ResponseFormat: schemas.Ptr[any](map[string]any{
 						"type": "json_object",
 					}),
 				},
@@ -1544,11 +1544,11 @@ func TestStructuredOutputWithToolsConflict(t *testing.T) {
 				Type: schemas.ChatToolTypeFunction,
 				Function: &schemas.ChatToolFunction{
 					Name:        "get_weather",
-					Description: schemas.Ptr("Get the weather for a city"),
+					Description: new("Get the weather for a city"),
 					Parameters: &schemas.ToolFunctionParameters{
 						Type: "object",
 						Properties: schemas.NewOrderedMapFromPairs(
-							schemas.KV("city", map[string]interface{}{
+							schemas.KV("city", map[string]any{
 								"type": "string",
 							}),
 						),
@@ -1558,20 +1558,20 @@ func TestStructuredOutputWithToolsConflict(t *testing.T) {
 			},
 		}
 	}
-	jsonObjectFormat := func() *interface{} {
-		return schemas.Ptr[interface{}](map[string]interface{}{
+	jsonObjectFormat := func() *any {
+		return schemas.Ptr[any](map[string]any{
 			"type": "json_object",
 		})
 	}
-	jsonSchemaFormat := func() *interface{} {
-		return schemas.Ptr[interface{}](map[string]interface{}{
+	jsonSchemaFormat := func() *any {
+		return schemas.Ptr[any](map[string]any{
 			"type": "json_schema",
-			"json_schema": map[string]interface{}{
+			"json_schema": map[string]any{
 				"name": "Result",
-				"schema": map[string]interface{}{
+				"schema": map[string]any{
 					"type": "object",
-					"properties": map[string]interface{}{
-						"answer": map[string]interface{}{"type": "string"},
+					"properties": map[string]any{
+						"answer": map[string]any{"type": "string"},
 					},
 				},
 			},
@@ -1581,7 +1581,7 @@ func TestStructuredOutputWithToolsConflict(t *testing.T) {
 		{
 			Role: schemas.ChatMessageRoleUser,
 			Content: &schemas.ChatMessageContent{
-				ContentStr: schemas.Ptr("What's the weather?"),
+				ContentStr: new("What's the weather?"),
 			},
 		},
 	}
@@ -1683,7 +1683,7 @@ func TestResponsesStructuredOutputConversion(t *testing.T) {
 						Role: schemas.Ptr(schemas.ResponsesInputMessageRoleUser),
 						Type: schemas.Ptr(schemas.ResponsesMessageTypeMessage),
 						Content: &schemas.ResponsesMessageContent{
-							ContentStr: schemas.Ptr("Extract info with union types"),
+							ContentStr: new("Extract info with union types"),
 						},
 					},
 				},
@@ -1691,22 +1691,22 @@ func TestResponsesStructuredOutputConversion(t *testing.T) {
 					Text: &schemas.ResponsesTextConfig{
 						Format: &schemas.ResponsesTextConfigFormat{
 							Type: "json_schema",
-							Name: schemas.Ptr("UserInfo"),
+							Name: new("UserInfo"),
 							JSONSchema: &schemas.ResponsesTextConfigFormatJSONSchema{
-								Type: schemas.Ptr("object"),
-								Properties: &map[string]interface{}{
-									"user_id": map[string]interface{}{
-										"type":        []interface{}{"string", "integer"},
+								Type: new("object"),
+								Properties: &map[string]any{
+									"user_id": map[string]any{
+										"type":        []any{"string", "integer"},
 										"description": "User ID as string or integer",
 									},
-									"status": map[string]interface{}{
+									"status": map[string]any{
 										"type": "string",
-										"enum": []interface{}{"active", "inactive"},
+										"enum": []any{"active", "inactive"},
 									},
 								},
 								Required: []string{"user_id", "status"},
 								AdditionalProperties: &schemas.AdditionalPropertiesStruct{
-									AdditionalPropertiesBool: schemas.Ptr(false),
+									AdditionalPropertiesBool: new(false),
 								},
 							},
 						},
@@ -1719,29 +1719,29 @@ func TestResponsesStructuredOutputConversion(t *testing.T) {
 				assert.NotNil(t, result.GenerationConfig.ResponseJSONSchema)
 
 				// Validate the schema structure
-				schemaMap, ok := result.GenerationConfig.ResponseJSONSchema.(map[string]interface{})
+				schemaMap, ok := result.GenerationConfig.ResponseJSONSchema.(map[string]any)
 				require.True(t, ok, "ResponseJSONSchema should be a map")
 
-				properties, ok := schemaMap["properties"].(map[string]interface{})
+				properties, ok := schemaMap["properties"].(map[string]any)
 				require.True(t, ok, "properties should be a map")
 
 				// Validate user_id property - should be converted to anyOf
-				userID, ok := properties["user_id"].(map[string]interface{})
+				userID, ok := properties["user_id"].(map[string]any)
 				require.True(t, ok, "user_id should exist in properties")
 
 				// user_id should have anyOf instead of type array
 				anyOf, hasAnyOf := userID["anyOf"]
 				assert.True(t, hasAnyOf, "user_id should have anyOf for union types in Responses API")
 
-				anyOfSlice, ok := anyOf.([]interface{})
+				anyOfSlice, ok := anyOf.([]any)
 				require.True(t, ok, "anyOf should be a slice")
 				require.Len(t, anyOfSlice, 2, "anyOf should have 2 branches for string and integer")
 
 				// Verify the anyOf branches
-				stringBranch := anyOfSlice[0].(map[string]interface{})
+				stringBranch := anyOfSlice[0].(map[string]any)
 				assert.Equal(t, "string", stringBranch["type"])
 
-				integerBranch := anyOfSlice[1].(map[string]interface{})
+				integerBranch := anyOfSlice[1].(map[string]any)
 				assert.Equal(t, "integer", integerBranch["type"])
 			},
 		},
@@ -1755,7 +1755,7 @@ func TestResponsesStructuredOutputConversion(t *testing.T) {
 						Role: schemas.Ptr(schemas.ResponsesInputMessageRoleUser),
 						Type: schemas.Ptr(schemas.ResponsesMessageTypeMessage),
 						Content: &schemas.ResponsesMessageContent{
-							ContentStr: schemas.Ptr("Extract nullable field"),
+							ContentStr: new("Extract nullable field"),
 						},
 					},
 				},
@@ -1763,12 +1763,12 @@ func TestResponsesStructuredOutputConversion(t *testing.T) {
 					Text: &schemas.ResponsesTextConfig{
 						Format: &schemas.ResponsesTextConfigFormat{
 							Type: "json_schema",
-							Name: schemas.Ptr("NullableData"),
+							Name: new("NullableData"),
 							JSONSchema: &schemas.ResponsesTextConfigFormatJSONSchema{
-								Type: schemas.Ptr("object"),
-								Properties: &map[string]interface{}{
-									"name": map[string]interface{}{
-										"type": []interface{}{"string", "null"},
+								Type: new("object"),
+								Properties: &map[string]any{
+									"name": map[string]any{
+										"type": []any{"string", "null"},
 									},
 								},
 							},
@@ -1777,13 +1777,13 @@ func TestResponsesStructuredOutputConversion(t *testing.T) {
 				},
 			},
 			validate: func(t *testing.T, result *gemini.GeminiGenerationRequest) {
-				schemaMap := result.GenerationConfig.ResponseJSONSchema.(map[string]interface{})
-				properties := schemaMap["properties"].(map[string]interface{})
-				name := properties["name"].(map[string]interface{})
+				schemaMap := result.GenerationConfig.ResponseJSONSchema.(map[string]any)
+				properties := schemaMap["properties"].(map[string]any)
+				name := properties["name"].(map[string]any)
 
 				// Nullable types should be kept as array (Gemini supports this)
 				typeVal := name["type"]
-				typeSlice, ok := typeVal.([]interface{})
+				typeSlice, ok := typeVal.([]any)
 				require.True(t, ok, "type should remain as array for nullable types in Responses API")
 				require.Len(t, typeSlice, 2)
 				assert.Contains(t, typeSlice, "string")
@@ -1840,7 +1840,7 @@ func TestServiceTierMappingChat(t *testing.T) {
 			req := &schemas.BifrostChatRequest{
 				Model: "gemini-2.0-flash",
 				Input: []schemas.ChatMessage{
-					{Role: schemas.ChatMessageRoleUser, Content: &schemas.ChatMessageContent{ContentStr: schemas.Ptr("hello")}},
+					{Role: schemas.ChatMessageRoleUser, Content: &schemas.ChatMessageContent{ContentStr: new("hello")}},
 				},
 				Params: &schemas.ChatParameters{
 					ServiceTier: tt.inputTier,
@@ -1895,7 +1895,7 @@ func TestServiceTierMappingResponses(t *testing.T) {
 					{
 						Role:    schemas.Ptr(schemas.ResponsesInputMessageRoleUser),
 						Type:    schemas.Ptr(schemas.ResponsesMessageTypeMessage),
-						Content: &schemas.ResponsesMessageContent{ContentStr: schemas.Ptr("hello")},
+						Content: &schemas.ResponsesMessageContent{ContentStr: new("hello")},
 					},
 				},
 				Params: &schemas.ResponsesParameters{
@@ -1975,7 +1975,7 @@ func TestParallelFunctionCallingConversion(t *testing.T) {
 					{
 						Role: schemas.ChatMessageRoleUser,
 						Content: &schemas.ChatMessageContent{
-							ContentStr: schemas.Ptr("What's the weather?"),
+							ContentStr: new("What's the weather?"),
 						},
 					},
 					{
@@ -1983,10 +1983,10 @@ func TestParallelFunctionCallingConversion(t *testing.T) {
 						ChatAssistantMessage: &schemas.ChatAssistantMessage{
 							ToolCalls: []schemas.ChatAssistantMessageToolCall{
 								{
-									ID:   schemas.Ptr("call_1"),
-									Type: schemas.Ptr("function"),
+									ID:   new("call_1"),
+									Type: new("function"),
 									Function: schemas.ChatAssistantMessageToolCallFunction{
-										Name:      schemas.Ptr("get_weather"),
+										Name:      new("get_weather"),
 										Arguments: `{"location":"Tokyo"}`,
 									},
 								},
@@ -1996,10 +1996,10 @@ func TestParallelFunctionCallingConversion(t *testing.T) {
 					{
 						Role: schemas.ChatMessageRoleTool,
 						ChatToolMessage: &schemas.ChatToolMessage{
-							ToolCallID: schemas.Ptr("call_1"),
+							ToolCallID: new("call_1"),
 						},
 						Content: &schemas.ChatMessageContent{
-							ContentStr: schemas.Ptr(`{"temperature":22,"condition":"sunny"}`),
+							ContentStr: new(`{"temperature":22,"condition":"sunny"}`),
 						},
 					},
 				},
@@ -2029,7 +2029,7 @@ func TestParallelFunctionCallingConversion(t *testing.T) {
 					{
 						Role: schemas.ChatMessageRoleUser,
 						Content: &schemas.ChatMessageContent{
-							ContentStr: schemas.Ptr("What's the weather and time in Tokyo?"),
+							ContentStr: new("What's the weather and time in Tokyo?"),
 						},
 					},
 					{
@@ -2037,18 +2037,18 @@ func TestParallelFunctionCallingConversion(t *testing.T) {
 						ChatAssistantMessage: &schemas.ChatAssistantMessage{
 							ToolCalls: []schemas.ChatAssistantMessageToolCall{
 								{
-									ID:   schemas.Ptr("call_1"),
-									Type: schemas.Ptr("function"),
+									ID:   new("call_1"),
+									Type: new("function"),
 									Function: schemas.ChatAssistantMessageToolCallFunction{
-										Name:      schemas.Ptr("get_weather"),
+										Name:      new("get_weather"),
 										Arguments: `{"location":"Tokyo"}`,
 									},
 								},
 								{
-									ID:   schemas.Ptr("call_2"),
-									Type: schemas.Ptr("function"),
+									ID:   new("call_2"),
+									Type: new("function"),
 									Function: schemas.ChatAssistantMessageToolCallFunction{
-										Name:      schemas.Ptr("get_time"),
+										Name:      new("get_time"),
 										Arguments: `{"timezone":"Asia/Tokyo"}`,
 									},
 								},
@@ -2058,19 +2058,19 @@ func TestParallelFunctionCallingConversion(t *testing.T) {
 					{
 						Role: schemas.ChatMessageRoleTool,
 						ChatToolMessage: &schemas.ChatToolMessage{
-							ToolCallID: schemas.Ptr("call_1"),
+							ToolCallID: new("call_1"),
 						},
 						Content: &schemas.ChatMessageContent{
-							ContentStr: schemas.Ptr(`{"temperature":22,"condition":"sunny"}`),
+							ContentStr: new(`{"temperature":22,"condition":"sunny"}`),
 						},
 					},
 					{
 						Role: schemas.ChatMessageRoleTool,
 						ChatToolMessage: &schemas.ChatToolMessage{
-							ToolCallID: schemas.Ptr("call_2"),
+							ToolCallID: new("call_2"),
 						},
 						Content: &schemas.ChatMessageContent{
-							ContentStr: schemas.Ptr(`{"time":"10:30 AM","date":"2026-01-20"}`),
+							ContentStr: new(`{"time":"10:30 AM","date":"2026-01-20"}`),
 						},
 					},
 				},
@@ -2107,33 +2107,33 @@ func TestParallelFunctionCallingConversion(t *testing.T) {
 					{
 						Role: schemas.ChatMessageRoleUser,
 						Content: &schemas.ChatMessageContent{
-							ContentStr: schemas.Ptr("Get weather, time, and news for Tokyo"),
+							ContentStr: new("Get weather, time, and news for Tokyo"),
 						},
 					},
 					{
 						Role: schemas.ChatMessageRoleAssistant,
 						ChatAssistantMessage: &schemas.ChatAssistantMessage{
 							ToolCalls: []schemas.ChatAssistantMessageToolCall{
-								{ID: schemas.Ptr("call_1"), Type: schemas.Ptr("function"), Function: schemas.ChatAssistantMessageToolCallFunction{Name: schemas.Ptr("get_weather"), Arguments: `{}`}},
-								{ID: schemas.Ptr("call_2"), Type: schemas.Ptr("function"), Function: schemas.ChatAssistantMessageToolCallFunction{Name: schemas.Ptr("get_time"), Arguments: `{}`}},
-								{ID: schemas.Ptr("call_3"), Type: schemas.Ptr("function"), Function: schemas.ChatAssistantMessageToolCallFunction{Name: schemas.Ptr("get_news"), Arguments: `{}`}},
+								{ID: new("call_1"), Type: new("function"), Function: schemas.ChatAssistantMessageToolCallFunction{Name: new("get_weather"), Arguments: `{}`}},
+								{ID: new("call_2"), Type: new("function"), Function: schemas.ChatAssistantMessageToolCallFunction{Name: new("get_time"), Arguments: `{}`}},
+								{ID: new("call_3"), Type: new("function"), Function: schemas.ChatAssistantMessageToolCallFunction{Name: new("get_news"), Arguments: `{}`}},
 							},
 						},
 					},
 					{
 						Role:            schemas.ChatMessageRoleTool,
-						ChatToolMessage: &schemas.ChatToolMessage{ToolCallID: schemas.Ptr("call_1")},
-						Content:         &schemas.ChatMessageContent{ContentStr: schemas.Ptr(`{"temperature":22}`)},
+						ChatToolMessage: &schemas.ChatToolMessage{ToolCallID: new("call_1")},
+						Content:         &schemas.ChatMessageContent{ContentStr: new(`{"temperature":22}`)},
 					},
 					{
 						Role:            schemas.ChatMessageRoleTool,
-						ChatToolMessage: &schemas.ChatToolMessage{ToolCallID: schemas.Ptr("call_2")},
-						Content:         &schemas.ChatMessageContent{ContentStr: schemas.Ptr(`{"time":"10:30"}`)},
+						ChatToolMessage: &schemas.ChatToolMessage{ToolCallID: new("call_2")},
+						Content:         &schemas.ChatMessageContent{ContentStr: new(`{"time":"10:30"}`)},
 					},
 					{
 						Role:            schemas.ChatMessageRoleTool,
-						ChatToolMessage: &schemas.ChatToolMessage{ToolCallID: schemas.Ptr("call_3")},
-						Content:         &schemas.ChatMessageContent{ContentStr: schemas.Ptr(`{"headline":"Breaking"}`)},
+						ChatToolMessage: &schemas.ChatToolMessage{ToolCallID: new("call_3")},
+						Content:         &schemas.ChatMessageContent{ContentStr: new(`{"headline":"Breaking"}`)},
 					},
 				},
 			},
@@ -2159,32 +2159,32 @@ func TestParallelFunctionCallingConversion(t *testing.T) {
 					{
 						Role: schemas.ChatMessageRoleUser,
 						Content: &schemas.ChatMessageContent{
-							ContentStr: schemas.Ptr("First question"),
+							ContentStr: new("First question"),
 						},
 					},
 					{
 						Role: schemas.ChatMessageRoleAssistant,
 						ChatAssistantMessage: &schemas.ChatAssistantMessage{
 							ToolCalls: []schemas.ChatAssistantMessageToolCall{
-								{ID: schemas.Ptr("call_1"), Type: schemas.Ptr("function"), Function: schemas.ChatAssistantMessageToolCallFunction{Name: schemas.Ptr("tool1"), Arguments: `{}`}},
-								{ID: schemas.Ptr("call_2"), Type: schemas.Ptr("function"), Function: schemas.ChatAssistantMessageToolCallFunction{Name: schemas.Ptr("tool2"), Arguments: `{}`}},
+								{ID: new("call_1"), Type: new("function"), Function: schemas.ChatAssistantMessageToolCallFunction{Name: new("tool1"), Arguments: `{}`}},
+								{ID: new("call_2"), Type: new("function"), Function: schemas.ChatAssistantMessageToolCallFunction{Name: new("tool2"), Arguments: `{}`}},
 							},
 						},
 					},
 					{
 						Role:            schemas.ChatMessageRoleTool,
-						ChatToolMessage: &schemas.ChatToolMessage{ToolCallID: schemas.Ptr("call_1")},
-						Content:         &schemas.ChatMessageContent{ContentStr: schemas.Ptr(`{"result":"1"}`)},
+						ChatToolMessage: &schemas.ChatToolMessage{ToolCallID: new("call_1")},
+						Content:         &schemas.ChatMessageContent{ContentStr: new(`{"result":"1"}`)},
 					},
 					{
 						Role:            schemas.ChatMessageRoleTool,
-						ChatToolMessage: &schemas.ChatToolMessage{ToolCallID: schemas.Ptr("call_2")},
-						Content:         &schemas.ChatMessageContent{ContentStr: schemas.Ptr(`{"result":"2"}`)},
+						ChatToolMessage: &schemas.ChatToolMessage{ToolCallID: new("call_2")},
+						Content:         &schemas.ChatMessageContent{ContentStr: new(`{"result":"2"}`)},
 					},
 					{
 						Role: schemas.ChatMessageRoleUser,
 						Content: &schemas.ChatMessageContent{
-							ContentStr: schemas.Ptr("Follow up question"),
+							ContentStr: new("Follow up question"),
 						},
 					},
 				},
@@ -2219,27 +2219,27 @@ func TestParallelFunctionCallingConversion(t *testing.T) {
 					{
 						Role: schemas.ChatMessageRoleUser,
 						Content: &schemas.ChatMessageContent{
-							ContentStr: schemas.Ptr("Question"),
+							ContentStr: new("Question"),
 						},
 					},
 					{
 						Role: schemas.ChatMessageRoleAssistant,
 						ChatAssistantMessage: &schemas.ChatAssistantMessage{
 							ToolCalls: []schemas.ChatAssistantMessageToolCall{
-								{ID: schemas.Ptr("call_1"), Type: schemas.Ptr("function"), Function: schemas.ChatAssistantMessageToolCallFunction{Name: schemas.Ptr("tool1"), Arguments: `{}`}},
-								{ID: schemas.Ptr("call_2"), Type: schemas.Ptr("function"), Function: schemas.ChatAssistantMessageToolCallFunction{Name: schemas.Ptr("tool2"), Arguments: `{}`}},
+								{ID: new("call_1"), Type: new("function"), Function: schemas.ChatAssistantMessageToolCallFunction{Name: new("tool1"), Arguments: `{}`}},
+								{ID: new("call_2"), Type: new("function"), Function: schemas.ChatAssistantMessageToolCallFunction{Name: new("tool2"), Arguments: `{}`}},
 							},
 						},
 					},
 					{
 						Role:            schemas.ChatMessageRoleTool,
-						ChatToolMessage: &schemas.ChatToolMessage{ToolCallID: schemas.Ptr("call_1")},
-						Content:         &schemas.ChatMessageContent{ContentStr: schemas.Ptr(`{"result":"1"}`)},
+						ChatToolMessage: &schemas.ChatToolMessage{ToolCallID: new("call_1")},
+						Content:         &schemas.ChatMessageContent{ContentStr: new(`{"result":"1"}`)},
 					},
 					{
 						Role:            schemas.ChatMessageRoleTool,
-						ChatToolMessage: &schemas.ChatToolMessage{ToolCallID: schemas.Ptr("call_2")},
-						Content:         &schemas.ChatMessageContent{ContentStr: schemas.Ptr(`{"result":"2"}`)},
+						ChatToolMessage: &schemas.ChatToolMessage{ToolCallID: new("call_2")},
+						Content:         &schemas.ChatMessageContent{ContentStr: new(`{"result":"2"}`)},
 					},
 					// No message after tool responses - they're at the end
 				},
@@ -2286,42 +2286,42 @@ func TestResponsesAPIParallelFunctionCalling(t *testing.T) {
 						Role: schemas.Ptr(schemas.ResponsesInputMessageRoleUser),
 						Type: schemas.Ptr(schemas.ResponsesMessageTypeMessage),
 						Content: &schemas.ResponsesMessageContent{
-							ContentStr: schemas.Ptr("What's the weather and time?"),
+							ContentStr: new("What's the weather and time?"),
 						},
 					},
 					{
 						Type: schemas.Ptr(schemas.ResponsesMessageTypeFunctionCall),
 						ResponsesToolMessage: &schemas.ResponsesToolMessage{
-							CallID:    schemas.Ptr("call_1"),
-							Name:      schemas.Ptr("get_weather"),
-							Arguments: schemas.Ptr(`{"location":"Tokyo"}`),
+							CallID:    new("call_1"),
+							Name:      new("get_weather"),
+							Arguments: new(`{"location":"Tokyo"}`),
 						},
 					},
 					{
 						Type: schemas.Ptr(schemas.ResponsesMessageTypeFunctionCall),
 						ResponsesToolMessage: &schemas.ResponsesToolMessage{
-							CallID:    schemas.Ptr("call_2"),
-							Name:      schemas.Ptr("get_time"),
-							Arguments: schemas.Ptr(`{"timezone":"Asia/Tokyo"}`),
+							CallID:    new("call_2"),
+							Name:      new("get_time"),
+							Arguments: new(`{"timezone":"Asia/Tokyo"}`),
 						},
 					},
 					{
 						Type: schemas.Ptr(schemas.ResponsesMessageTypeFunctionCallOutput),
 						ResponsesToolMessage: &schemas.ResponsesToolMessage{
-							CallID: schemas.Ptr("call_1"),
-							Name:   schemas.Ptr("get_weather"),
+							CallID: new("call_1"),
+							Name:   new("get_weather"),
 							Output: &schemas.ResponsesToolMessageOutputStruct{
-								ResponsesToolCallOutputStr: schemas.Ptr(`{"temperature":22,"condition":"sunny"}`),
+								ResponsesToolCallOutputStr: new(`{"temperature":22,"condition":"sunny"}`),
 							},
 						},
 					},
 					{
 						Type: schemas.Ptr(schemas.ResponsesMessageTypeFunctionCallOutput),
 						ResponsesToolMessage: &schemas.ResponsesToolMessage{
-							CallID: schemas.Ptr("call_2"),
-							Name:   schemas.Ptr("get_time"),
+							CallID: new("call_2"),
+							Name:   new("get_time"),
 							Output: &schemas.ResponsesToolMessageOutputStruct{
-								ResponsesToolCallOutputStr: schemas.Ptr(`{"time":"10:30 AM"}`),
+								ResponsesToolCallOutputStr: new(`{"time":"10:30 AM"}`),
 							},
 						},
 					},
@@ -2369,24 +2369,24 @@ func TestResponsesAPIParallelFunctionCalling(t *testing.T) {
 						Role: schemas.Ptr(schemas.ResponsesInputMessageRoleUser),
 						Type: schemas.Ptr(schemas.ResponsesMessageTypeMessage),
 						Content: &schemas.ResponsesMessageContent{
-							ContentStr: schemas.Ptr("What's the weather?"),
+							ContentStr: new("What's the weather?"),
 						},
 					},
 					{
 						Type: schemas.Ptr(schemas.ResponsesMessageTypeFunctionCall),
 						ResponsesToolMessage: &schemas.ResponsesToolMessage{
-							CallID:    schemas.Ptr("call_1"),
-							Name:      schemas.Ptr("get_weather"),
-							Arguments: schemas.Ptr(`{}`),
+							CallID:    new("call_1"),
+							Name:      new("get_weather"),
+							Arguments: new(`{}`),
 						},
 					},
 					{
 						Type: schemas.Ptr(schemas.ResponsesMessageTypeFunctionCallOutput),
 						ResponsesToolMessage: &schemas.ResponsesToolMessage{
-							CallID: schemas.Ptr("call_1"),
-							Name:   schemas.Ptr("get_weather"),
+							CallID: new("call_1"),
+							Name:   new("get_weather"),
 							Output: &schemas.ResponsesToolMessageOutputStruct{
-								ResponsesToolCallOutputStr: schemas.Ptr(`{"temperature":22}`),
+								ResponsesToolCallOutputStr: new(`{"temperature":22}`),
 							},
 						},
 					},
@@ -2423,40 +2423,40 @@ func TestResponsesAPIParallelFunctionCalling(t *testing.T) {
 						Role: schemas.Ptr(schemas.ResponsesInputMessageRoleUser),
 						Type: schemas.Ptr(schemas.ResponsesMessageTypeMessage),
 						Content: &schemas.ResponsesMessageContent{
-							ContentStr: schemas.Ptr("First question"),
+							ContentStr: new("First question"),
 						},
 					},
 					{
 						Type: schemas.Ptr(schemas.ResponsesMessageTypeFunctionCall),
 						ResponsesToolMessage: &schemas.ResponsesToolMessage{
-							CallID:    schemas.Ptr("call_1"),
-							Name:      schemas.Ptr("tool1"),
-							Arguments: schemas.Ptr(`{}`),
+							CallID:    new("call_1"),
+							Name:      new("tool1"),
+							Arguments: new(`{}`),
 						},
 					},
 					{
 						Type: schemas.Ptr(schemas.ResponsesMessageTypeFunctionCall),
 						ResponsesToolMessage: &schemas.ResponsesToolMessage{
-							CallID:    schemas.Ptr("call_2"),
-							Name:      schemas.Ptr("tool2"),
-							Arguments: schemas.Ptr(`{}`),
+							CallID:    new("call_2"),
+							Name:      new("tool2"),
+							Arguments: new(`{}`),
 						},
 					},
 					{
 						Type: schemas.Ptr(schemas.ResponsesMessageTypeFunctionCallOutput),
 						ResponsesToolMessage: &schemas.ResponsesToolMessage{
-							CallID: schemas.Ptr("call_1"),
+							CallID: new("call_1"),
 							Output: &schemas.ResponsesToolMessageOutputStruct{
-								ResponsesToolCallOutputStr: schemas.Ptr(`{"result":"1"}`),
+								ResponsesToolCallOutputStr: new(`{"result":"1"}`),
 							},
 						},
 					},
 					{
 						Type: schemas.Ptr(schemas.ResponsesMessageTypeFunctionCallOutput),
 						ResponsesToolMessage: &schemas.ResponsesToolMessage{
-							CallID: schemas.Ptr("call_2"),
+							CallID: new("call_2"),
 							Output: &schemas.ResponsesToolMessageOutputStruct{
-								ResponsesToolCallOutputStr: schemas.Ptr(`{"result":"2"}`),
+								ResponsesToolCallOutputStr: new(`{"result":"2"}`),
 							},
 						},
 					},
@@ -2464,7 +2464,7 @@ func TestResponsesAPIParallelFunctionCalling(t *testing.T) {
 						Role: schemas.Ptr(schemas.ResponsesInputMessageRoleUser),
 						Type: schemas.Ptr(schemas.ResponsesMessageTypeMessage),
 						Content: &schemas.ResponsesMessageContent{
-							ContentStr: schemas.Ptr("Follow up question"),
+							ContentStr: new("Follow up question"),
 						},
 					},
 				},
@@ -2501,27 +2501,27 @@ func TestResponsesAPIParallelFunctionCalling(t *testing.T) {
 						Role: schemas.Ptr(schemas.ResponsesInputMessageRoleUser),
 						Type: schemas.Ptr(schemas.ResponsesMessageTypeMessage),
 						Content: &schemas.ResponsesMessageContent{
-							ContentStr: schemas.Ptr("List browser tabs"),
+							ContentStr: new("List browser tabs"),
 						},
 					},
 					{
 						Type: schemas.Ptr(schemas.ResponsesMessageTypeFunctionCall),
 						ResponsesToolMessage: &schemas.ResponsesToolMessage{
-							CallID:    schemas.Ptr("call_tabs"),
-							Name:      schemas.Ptr("browser_tabs"),
-							Arguments: schemas.Ptr(`{"action":"list"}`),
+							CallID:    new("call_tabs"),
+							Name:      new("browser_tabs"),
+							Arguments: new(`{"action":"list"}`),
 						},
 					},
 					{
 						Type: schemas.Ptr(schemas.ResponsesMessageTypeFunctionCallOutput),
 						ResponsesToolMessage: &schemas.ResponsesToolMessage{
-							CallID: schemas.Ptr("call_tabs"),
+							CallID: new("call_tabs"),
 							Output: &schemas.ResponsesToolMessageOutputStruct{
 								// Output as content blocks (Anthropic Responses API format)
 								ResponsesFunctionToolCallOutputBlocks: []schemas.ResponsesMessageContentBlock{
 									{
 										Type: schemas.ResponsesInputMessageContentBlockTypeText,
-										Text: schemas.Ptr("### Open tabs\n- 0: (current) [Google] (https://google.com)\n- 1: [GitHub] (https://github.com)\n"),
+										Text: new("### Open tabs\n- 0: (current) [Google] (https://google.com)\n- 1: [GitHub] (https://github.com)\n"),
 									},
 								},
 							},
@@ -2565,33 +2565,33 @@ func TestResponsesAPIParallelFunctionCalling(t *testing.T) {
 						Role: schemas.Ptr(schemas.ResponsesInputMessageRoleUser),
 						Type: schemas.Ptr(schemas.ResponsesMessageTypeMessage),
 						Content: &schemas.ResponsesMessageContent{
-							ContentStr: schemas.Ptr("What color is the image the tool returned?"),
+							ContentStr: new("What color is the image the tool returned?"),
 						},
 					},
 					{
 						Type: schemas.Ptr(schemas.ResponsesMessageTypeFunctionCall),
 						ResponsesToolMessage: &schemas.ResponsesToolMessage{
-							CallID:    schemas.Ptr("c1"),
-							Name:      schemas.Ptr("read_file"),
-							Arguments: schemas.Ptr(`{}`),
+							CallID:    new("c1"),
+							Name:      new("read_file"),
+							Arguments: new(`{}`),
 						},
 					},
 					{
 						Type: schemas.Ptr(schemas.ResponsesMessageTypeFunctionCallOutput),
 						ResponsesToolMessage: &schemas.ResponsesToolMessage{
-							CallID: schemas.Ptr("c1"),
+							CallID: new("c1"),
 							Output: &schemas.ResponsesToolMessageOutputStruct{
 								// Mixed text + image blocks (OpenAI Responses API format)
 								ResponsesFunctionToolCallOutputBlocks: []schemas.ResponsesMessageContentBlock{
 									{
 										Type: schemas.ResponsesInputMessageContentBlockTypeText,
-										Text: schemas.Ptr("result:"),
+										Text: new("result:"),
 									},
 									{
 										Type: schemas.ResponsesInputMessageContentBlockTypeImage,
 										ResponsesInputMessageContentBlockImage: &schemas.ResponsesInputMessageContentBlockImage{
 											// 1x1 red PNG
-											ImageURL: schemas.Ptr("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="),
+											ImageURL: new("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="),
 										},
 									},
 								},
@@ -2638,25 +2638,25 @@ func TestResponsesAPIParallelFunctionCalling(t *testing.T) {
 					{
 						Type: schemas.Ptr(schemas.ResponsesMessageTypeFunctionCall),
 						ResponsesToolMessage: &schemas.ResponsesToolMessage{
-							CallID:    schemas.Ptr("c1"),
-							Name:      schemas.Ptr("read_file"),
-							Arguments: schemas.Ptr(`{}`),
+							CallID:    new("c1"),
+							Name:      new("read_file"),
+							Arguments: new(`{}`),
 						},
 					},
 					{
 						Type: schemas.Ptr(schemas.ResponsesMessageTypeFunctionCallOutput),
 						ResponsesToolMessage: &schemas.ResponsesToolMessage{
-							CallID: schemas.Ptr("c1"),
+							CallID: new("c1"),
 							Output: &schemas.ResponsesToolMessageOutputStruct{
 								ResponsesFunctionToolCallOutputBlocks: []schemas.ResponsesMessageContentBlock{
 									{
 										Type: schemas.ResponsesInputMessageContentBlockTypeText,
-										Text: schemas.Ptr("result:"),
+										Text: new("result:"),
 									},
 									{
 										Type: schemas.ResponsesInputMessageContentBlockTypeImage,
 										ResponsesInputMessageContentBlockImage: &schemas.ResponsesInputMessageContentBlockImage{
-											ImageURL: schemas.Ptr("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="),
+											ImageURL: new("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="),
 										},
 									},
 								},
@@ -2691,25 +2691,25 @@ func TestResponsesAPIParallelFunctionCalling(t *testing.T) {
 					{
 						Type: schemas.Ptr(schemas.ResponsesMessageTypeFunctionCall),
 						ResponsesToolMessage: &schemas.ResponsesToolMessage{
-							CallID:    schemas.Ptr("c1"),
-							Name:      schemas.Ptr("read_file"),
-							Arguments: schemas.Ptr(`{}`),
+							CallID:    new("c1"),
+							Name:      new("read_file"),
+							Arguments: new(`{}`),
 						},
 					},
 					{
 						Type: schemas.Ptr(schemas.ResponsesMessageTypeFunctionCallOutput),
 						ResponsesToolMessage: &schemas.ResponsesToolMessage{
-							CallID: schemas.Ptr("c1"),
+							CallID: new("c1"),
 							Output: &schemas.ResponsesToolMessageOutputStruct{
 								ResponsesFunctionToolCallOutputBlocks: []schemas.ResponsesMessageContentBlock{
 									{
 										Type: schemas.ResponsesInputMessageContentBlockTypeText,
-										Text: schemas.Ptr("result:"),
+										Text: new("result:"),
 									},
 									{
 										Type: schemas.ResponsesInputMessageContentBlockTypeImage,
 										ResponsesInputMessageContentBlockImage: &schemas.ResponsesInputMessageContentBlockImage{
-											ImageURL: schemas.Ptr("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="),
+											ImageURL: new("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="),
 										},
 									},
 								},
@@ -2770,7 +2770,7 @@ func TestBifrostResponsesToGeminiToolConversion(t *testing.T) {
 						Role: schemas.Ptr(schemas.ResponsesInputMessageRoleUser),
 						Type: schemas.Ptr(schemas.ResponsesMessageTypeMessage),
 						Content: &schemas.ResponsesMessageContent{
-							ContentStr: schemas.Ptr("Test array items"),
+							ContentStr: new("Test array items"),
 						},
 					},
 				},
@@ -2778,23 +2778,23 @@ func TestBifrostResponsesToGeminiToolConversion(t *testing.T) {
 					Tools: []schemas.ResponsesTool{
 						{
 							Type:        schemas.ResponsesToolTypeFunction,
-							Name:        schemas.Ptr("filter_data"),
-							Description: schemas.Ptr("Filter data with criteria"),
+							Name:        new("filter_data"),
+							Description: new("Filter data with criteria"),
 							ResponsesToolFunction: &schemas.ResponsesToolFunction{
 								Parameters: &schemas.ToolFunctionParameters{
 									Type: "object",
 									Properties: schemas.NewOrderedMapFromPairs(
-										schemas.KV("filters", map[string]interface{}{
+										schemas.KV("filters", map[string]any{
 											"type":        "array",
 											"description": "List of filters",
-											"items": map[string]interface{}{
+											"items": map[string]any{
 												"type":        "string",
 												"description": "Filter criterion",
 											},
 										}),
-										schemas.KV("sort_order", map[string]interface{}{
+										schemas.KV("sort_order", map[string]any{
 											"type": "string",
-											"enum": []interface{}{"asc", "desc"},
+											"enum": []any{"asc", "desc"},
 										}),
 									),
 									Required: []string{"filters"},
@@ -2814,13 +2814,13 @@ func TestBifrostResponsesToGeminiToolConversion(t *testing.T) {
 				params := parseToolParams(t, fd)
 				filtersProp := getSchemaProperty(t, params, "filters")
 				assert.Equal(t, "array", filtersProp["type"])
-				items, ok := filtersProp["items"].(map[string]interface{})
+				items, ok := filtersProp["items"].(map[string]any)
 				require.True(t, ok, "items field must be present in Responses API conversion")
 				assert.Equal(t, "string", items["type"])
 				assert.Equal(t, "Filter criterion", items["description"])
 
 				sortProp := getSchemaProperty(t, params, "sort_order")
-				assert.Equal(t, []interface{}{"asc", "desc"}, sortProp["enum"])
+				assert.Equal(t, []any{"asc", "desc"}, sortProp["enum"])
 			},
 		},
 		{
@@ -2833,7 +2833,7 @@ func TestBifrostResponsesToGeminiToolConversion(t *testing.T) {
 						Role: schemas.Ptr(schemas.ResponsesInputMessageRoleUser),
 						Type: schemas.Ptr(schemas.ResponsesMessageTypeMessage),
 						Content: &schemas.ResponsesMessageContent{
-							ContentStr: schemas.Ptr("Call the tool with a nullable parameter"),
+							ContentStr: new("Call the tool with a nullable parameter"),
 						},
 					},
 				},
@@ -2841,19 +2841,19 @@ func TestBifrostResponsesToGeminiToolConversion(t *testing.T) {
 					Tools: []schemas.ResponsesTool{
 						{
 							Type:        schemas.ResponsesToolTypeFunction,
-							Name:        schemas.Ptr("get_process"),
-							Description: schemas.Ptr("Get process info"),
+							Name:        new("get_process"),
+							Description: new("Get process info"),
 							ResponsesToolFunction: &schemas.ResponsesToolFunction{
 								Parameters: &schemas.ToolFunctionParameters{
 									Type: "object",
 									Properties: schemas.NewOrderedMapFromPairs(
-										schemas.KV("pid", map[string]interface{}{
+										schemas.KV("pid", map[string]any{
 											"type": "integer",
 										}),
-										schemas.KV("timeout_secs", map[string]interface{}{
-											"anyOf": []interface{}{
-												map[string]interface{}{"type": "integer"},
-												map[string]interface{}{"type": "null"},
+										schemas.KV("timeout_secs", map[string]any{
+											"anyOf": []any{
+												map[string]any{"type": "integer"},
+												map[string]any{"type": "null"},
 											},
 											"description": "Optional timeout",
 										}),
@@ -2872,11 +2872,11 @@ func TestBifrostResponsesToGeminiToolConversion(t *testing.T) {
 
 				params := parseToolParams(t, fd)
 				timeoutProp := getSchemaProperty(t, params, "timeout_secs")
-				anyOf, ok := timeoutProp["anyOf"].([]interface{})
+				anyOf, ok := timeoutProp["anyOf"].([]any)
 				require.True(t, ok, "anyOf should be preserved")
 				require.Len(t, anyOf, 2)
-				assert.Equal(t, "integer", anyOf[0].(map[string]interface{})["type"])
-				assert.Equal(t, "null", anyOf[1].(map[string]interface{})["type"])
+				assert.Equal(t, "integer", anyOf[0].(map[string]any)["type"])
+				assert.Equal(t, "null", anyOf[1].(map[string]any)["type"])
 				// With passthrough, sibling fields alongside anyOf are preserved
 				assert.Equal(t, "Optional timeout", timeoutProp["description"])
 
@@ -2884,21 +2884,21 @@ func TestBifrostResponsesToGeminiToolConversion(t *testing.T) {
 				payload, err := json.Marshal(result)
 				require.NoError(t, err)
 
-				var raw map[string]interface{}
+				var raw map[string]any
 				require.NoError(t, json.Unmarshal(payload, &raw))
-				tools, ok := raw["tools"].([]interface{})
+				tools, ok := raw["tools"].([]any)
 				require.True(t, ok)
-				tool, ok := tools[0].(map[string]interface{})
+				tool, ok := tools[0].(map[string]any)
 				require.True(t, ok)
-				functionDeclarations, ok := tool["functionDeclarations"].([]interface{})
+				functionDeclarations, ok := tool["functionDeclarations"].([]any)
 				require.True(t, ok)
-				functionDeclaration, ok := functionDeclarations[0].(map[string]interface{})
+				functionDeclaration, ok := functionDeclarations[0].(map[string]any)
 				require.True(t, ok)
-				parameters, ok := functionDeclaration["parametersJsonSchema"].(map[string]interface{})
+				parameters, ok := functionDeclaration["parametersJsonSchema"].(map[string]any)
 				require.True(t, ok, "key must be parametersJsonSchema, not parameters")
-				properties, ok := parameters["properties"].(map[string]interface{})
+				properties, ok := parameters["properties"].(map[string]any)
 				require.True(t, ok)
-				timeoutSchema, ok := properties["timeout_secs"].(map[string]interface{})
+				timeoutSchema, ok := properties["timeout_secs"].(map[string]any)
 				require.True(t, ok)
 
 				assert.Contains(t, timeoutSchema, "anyOf")
@@ -2916,7 +2916,7 @@ func TestBifrostResponsesToGeminiToolConversion(t *testing.T) {
 						Role: schemas.Ptr(schemas.ResponsesInputMessageRoleUser),
 						Type: schemas.Ptr(schemas.ResponsesMessageTypeMessage),
 						Content: &schemas.ResponsesMessageContent{
-							ContentStr: schemas.Ptr("Complex test"),
+							ContentStr: new("Complex test"),
 						},
 					},
 				},
@@ -2924,27 +2924,27 @@ func TestBifrostResponsesToGeminiToolConversion(t *testing.T) {
 					Tools: []schemas.ResponsesTool{
 						{
 							Type:        schemas.ResponsesToolTypeFunction,
-							Name:        schemas.Ptr("batch_update"),
-							Description: schemas.Ptr("Update multiple records"),
+							Name:        new("batch_update"),
+							Description: new("Update multiple records"),
 							ResponsesToolFunction: &schemas.ResponsesToolFunction{
 								Parameters: &schemas.ToolFunctionParameters{
 									Type: "object",
 									Properties: schemas.NewOrderedMapFromPairs(
-										schemas.KV("updates", map[string]interface{}{
+										schemas.KV("updates", map[string]any{
 											"type": "array",
-											"items": map[string]interface{}{
+											"items": map[string]any{
 												"type": "object",
-												"properties": map[string]interface{}{
-													"id": map[string]interface{}{
+												"properties": map[string]any{
+													"id": map[string]any{
 														"type": "string",
 													},
-													"fields": map[string]interface{}{
+													"fields": map[string]any{
 														"type": "object",
-														"properties": map[string]interface{}{
-															"name": map[string]interface{}{
+														"properties": map[string]any{
+															"name": map[string]any{
 																"type": "string",
 															},
-															"status": map[string]interface{}{
+															"status": map[string]any{
 																"type": "string",
 																"enum": []string{"active", "inactive"},
 															},
@@ -2970,23 +2970,23 @@ func TestBifrostResponsesToGeminiToolConversion(t *testing.T) {
 				updatesProp := getSchemaProperty(t, params, "updates")
 				assert.Equal(t, "array", updatesProp["type"])
 
-				updatesItems, ok := updatesProp["items"].(map[string]interface{})
+				updatesItems, ok := updatesProp["items"].(map[string]any)
 				require.True(t, ok, "array items must be present")
 				assert.Equal(t, "object", updatesItems["type"])
-				itemsProps := updatesItems["properties"].(map[string]interface{})
+				itemsProps := updatesItems["properties"].(map[string]any)
 				assert.Contains(t, itemsProps, "id")
 				assert.Contains(t, itemsProps, "fields")
-				itemsRequired := updatesItems["required"].([]interface{})
-				assert.Equal(t, []interface{}{"id", "fields"}, itemsRequired)
+				itemsRequired := updatesItems["required"].([]any)
+				assert.Equal(t, []any{"id", "fields"}, itemsRequired)
 
-				fieldsProp := itemsProps["fields"].(map[string]interface{})
+				fieldsProp := itemsProps["fields"].(map[string]any)
 				assert.Equal(t, "object", fieldsProp["type"])
-				fieldsProps := fieldsProp["properties"].(map[string]interface{})
+				fieldsProps := fieldsProp["properties"].(map[string]any)
 				assert.Contains(t, fieldsProps, "name")
 				assert.Contains(t, fieldsProps, "status")
 
-				statusProp := fieldsProps["status"].(map[string]interface{})
-				assert.Equal(t, []interface{}{"active", "inactive"}, statusProp["enum"])
+				statusProp := fieldsProps["status"].(map[string]any)
+				assert.Equal(t, []any{"active", "inactive"}, statusProp["enum"])
 			},
 		},
 		{
@@ -2999,7 +2999,7 @@ func TestBifrostResponsesToGeminiToolConversion(t *testing.T) {
 						Role: schemas.Ptr(schemas.ResponsesInputMessageRoleUser),
 						Type: schemas.Ptr(schemas.ResponsesMessageTypeMessage),
 						Content: &schemas.ResponsesMessageContent{
-							ContentStr: schemas.Ptr("Edge case"),
+							ContentStr: new("Edge case"),
 						},
 					},
 				},
@@ -3007,14 +3007,14 @@ func TestBifrostResponsesToGeminiToolConversion(t *testing.T) {
 					Tools: []schemas.ResponsesTool{
 						{
 							Type: schemas.ResponsesToolTypeFunction,
-							Name: schemas.Ptr("edge_case_tool"),
+							Name: new("edge_case_tool"),
 							ResponsesToolFunction: &schemas.ResponsesToolFunction{
 								Parameters: &schemas.ToolFunctionParameters{
 									Type: "object",
 									Properties: schemas.NewOrderedMapFromPairs(
-										schemas.KV("any_array", map[string]interface{}{
+										schemas.KV("any_array", map[string]any{
 											"type":  "array",
-											"items": map[string]interface{}{}, // Empty items
+											"items": map[string]any{}, // Empty items
 										}),
 									),
 								},
@@ -3378,7 +3378,7 @@ func TestGeminiToolInputKeyOrderPreservation(t *testing.T) {
 		Input: []schemas.ChatMessage{
 			{
 				Role:    schemas.ChatMessageRoleUser,
-				Content: &schemas.ChatMessageContent{ContentStr: schemas.Ptr("test")},
+				Content: &schemas.ChatMessageContent{ContentStr: new("test")},
 			},
 			{
 				Role: schemas.ChatMessageRoleAssistant,
@@ -3386,19 +3386,19 @@ func TestGeminiToolInputKeyOrderPreservation(t *testing.T) {
 					ToolCalls: []schemas.ChatAssistantMessageToolCall{
 						{
 							Index: 0,
-							Type:  schemas.Ptr("function"),
-							ID:    schemas.Ptr("toolu_001"),
+							Type:  new("function"),
+							ID:    new("toolu_001"),
 							Function: schemas.ChatAssistantMessageToolCallFunction{
-								Name:      schemas.Ptr("bash"),
+								Name:      new("bash"),
 								Arguments: `{"description":"Find references quickly","timeout":30000,"command":"grep -r auth_injector ."}`,
 							},
 						},
 						{
 							Index: 1,
-							Type:  schemas.Ptr("function"),
-							ID:    schemas.Ptr("toolu_002"),
+							Type:  new("function"),
+							ID:    new("toolu_002"),
 							Function: schemas.ChatAssistantMessageToolCallFunction{
-								Name:      schemas.Ptr("bash"),
+								Name:      new("bash"),
 								Arguments: `{"command":"git diff main...HEAD --stat","description":"Show diff"}`,
 							},
 						},
@@ -3450,7 +3450,7 @@ func minimalChatInput() []schemas.ChatMessage {
 	return []schemas.ChatMessage{
 		{
 			Role:    schemas.ChatMessageRoleUser,
-			Content: &schemas.ChatMessageContent{ContentStr: schemas.Ptr("Hello")},
+			Content: &schemas.ChatMessageContent{ContentStr: new("Hello")},
 		},
 	}
 }
@@ -3931,26 +3931,26 @@ func TestGenAIFallbacks_PreservedInBifrostResponsesRequest(t *testing.T) {
 // Regression: fallbacks was forwarded verbatim, causing Gemini to return 400
 // "Unknown name \"fallbacks\": Cannot find field."
 func TestNormalizeRawGenerateContentRequestForCompatibility(t *testing.T) {
-	parseBody := func(t *testing.T, b []byte) map[string]interface{} {
+	parseBody := func(t *testing.T, b []byte) map[string]any {
 		t.Helper()
-		var m map[string]interface{}
+		var m map[string]any
 		require.NoError(t, json.Unmarshal(b, &m))
 		return m
 	}
-	genConfig := func(m map[string]interface{}) map[string]interface{} {
-		gc, _ := m["generationConfig"].(map[string]interface{})
+	genConfig := func(m map[string]any) map[string]any {
+		gc, _ := m["generationConfig"].(map[string]any)
 		return gc
 	}
 
 	tests := []struct {
 		name     string
 		input    string
-		validate func(t *testing.T, result map[string]interface{})
+		validate func(t *testing.T, result map[string]any)
 	}{
 		{
 			name:  "StripsFallbacksField",
 			input: `{"contents":[{"parts":[{"text":"Hello"}]}],"fallbacks":["openai/gpt-4o","vertex/gemini-2-flash"]}`,
-			validate: func(t *testing.T, m map[string]interface{}) {
+			validate: func(t *testing.T, m map[string]any) {
 				assert.NotContains(t, m, "fallbacks", "fallbacks must not be forwarded to Gemini")
 				assert.Contains(t, m, "contents", "contents must be preserved")
 			},
@@ -3958,7 +3958,7 @@ func TestNormalizeRawGenerateContentRequestForCompatibility(t *testing.T) {
 		{
 			name:  "StripsGenerationConfigCompatFields",
 			input: `{"contents":[{"parts":[{"text":"Hi"}]}],"generationConfig":{"temperature":0.7,"responseLogprobs":true,"logprobs":5,"presencePenalty":0.5,"frequencyPenalty":0.3}}`,
-			validate: func(t *testing.T, m map[string]interface{}) {
+			validate: func(t *testing.T, m map[string]any) {
 				gc := genConfig(m)
 				require.NotNil(t, gc)
 				assert.NotContains(t, gc, "responseLogprobs")
@@ -3971,7 +3971,7 @@ func TestNormalizeRawGenerateContentRequestForCompatibility(t *testing.T) {
 		{
 			name:  "StripsFallbacksAlongsideCompatFields",
 			input: `{"contents":[{"parts":[{"text":"Hi"}]}],"fallbacks":["openai/gpt-4o"],"generationConfig":{"temperature":0.5,"presencePenalty":0.2}}`,
-			validate: func(t *testing.T, m map[string]interface{}) {
+			validate: func(t *testing.T, m map[string]any) {
 				assert.NotContains(t, m, "fallbacks")
 				gc := genConfig(m)
 				require.NotNil(t, gc)
@@ -3982,7 +3982,7 @@ func TestNormalizeRawGenerateContentRequestForCompatibility(t *testing.T) {
 		{
 			name:  "PreservesValidBodyWithNoStrippableFields",
 			input: `{"contents":[{"parts":[{"text":"Hi"}]}],"generationConfig":{"temperature":0.7,"maxOutputTokens":1000}}`,
-			validate: func(t *testing.T, m map[string]interface{}) {
+			validate: func(t *testing.T, m map[string]any) {
 				assert.Contains(t, m, "contents")
 				gc := genConfig(m)
 				require.NotNil(t, gc)
@@ -3993,7 +3993,7 @@ func TestNormalizeRawGenerateContentRequestForCompatibility(t *testing.T) {
 		{
 			name:  "HandlesBodyWithOnlyFallbacks",
 			input: `{"fallbacks":["openai/gpt-4o"]}`,
-			validate: func(t *testing.T, m map[string]interface{}) {
+			validate: func(t *testing.T, m map[string]any) {
 				assert.NotContains(t, m, "fallbacks")
 			},
 		},
@@ -4367,7 +4367,7 @@ func TestGeminiImageGenerationAspectRatio(t *testing.T) {
 			Provider: schemas.Gemini,
 			Model:    "gemini-3.1-flash-image-preview",
 			Input:    &schemas.ImageGenerationInput{Prompt: "test"},
-			Params:   &schemas.ImageGenerationParameters{AspectRatio: schemas.Ptr("16:9")},
+			Params:   &schemas.ImageGenerationParameters{AspectRatio: new("16:9")},
 		}
 		outReq := gemini.ToGeminiImageGenerationRequest(bifrostReq)
 		require.NotNil(t, outReq)
@@ -4382,8 +4382,8 @@ func TestGeminiImageGenerationAspectRatio(t *testing.T) {
 			Model:    "gemini-3.1-flash-image-preview",
 			Input:    &schemas.ImageGenerationInput{Prompt: "test"},
 			Params: &schemas.ImageGenerationParameters{
-				Size:        schemas.Ptr("1024x1024"),
-				AspectRatio: schemas.Ptr("16:9"),
+				Size:        new("1024x1024"),
+				AspectRatio: new("16:9"),
 			},
 		}
 		outReq := gemini.ToGeminiImageGenerationRequest(bifrostReq)
@@ -4402,7 +4402,7 @@ func TestImagenImageGenerationAspectRatio(t *testing.T) {
 			Provider: schemas.Gemini,
 			Model:    "imagen-4.0-generate-preview-05-20",
 			Input:    &schemas.ImageGenerationInput{Prompt: "test"},
-			Params:   &schemas.ImageGenerationParameters{AspectRatio: schemas.Ptr("16:9")},
+			Params:   &schemas.ImageGenerationParameters{AspectRatio: new("16:9")},
 		}
 		imagenReq := gemini.ToImagenImageGenerationRequest(bifrostReq)
 		require.NotNil(t, imagenReq)
@@ -4417,8 +4417,8 @@ func TestImagenImageGenerationAspectRatio(t *testing.T) {
 			Model:    "imagen-4.0-generate-preview-05-20",
 			Input:    &schemas.ImageGenerationInput{Prompt: "test"},
 			Params: &schemas.ImageGenerationParameters{
-				Size:        schemas.Ptr("1024x1024"),
-				AspectRatio: schemas.Ptr("16:9"),
+				Size:        new("1024x1024"),
+				AspectRatio: new("16:9"),
 			},
 		}
 		imagenReq := gemini.ToImagenImageGenerationRequest(bifrostReq)
@@ -4445,7 +4445,7 @@ func TestImagenImageEditSizeRoundtrip(t *testing.T) {
 			Prompt: "make it pop",
 			Images: []schemas.ImageInput{{Image: pngPixel}},
 		},
-		Params: &schemas.ImageEditParameters{Size: schemas.Ptr("2048x2048")},
+		Params: &schemas.ImageEditParameters{Size: new("2048x2048")},
 	}
 
 	imagenReq := gemini.ToImagenImageEditRequest(bifrostReq)
@@ -4461,7 +4461,7 @@ func TestWebSearchOptionsMapsToGoogleSearchTool(t *testing.T) {
 		return &schemas.BifrostChatRequest{
 			Model: "gemini-2.5-flash",
 			Input: []schemas.ChatMessage{
-				{Role: schemas.ChatMessageRoleUser, Content: &schemas.ChatMessageContent{ContentStr: schemas.Ptr("who won the euro 2024?")}},
+				{Role: schemas.ChatMessageRoleUser, Content: &schemas.ChatMessageContent{ContentStr: new("who won the euro 2024?")}},
 			},
 			Params: params,
 		}
@@ -4478,7 +4478,7 @@ func TestWebSearchOptionsMapsToGoogleSearchTool(t *testing.T) {
 
 	t.Run("appends alongside function tools", func(t *testing.T) {
 		result, err := gemini.ToGeminiChatCompletionRequest(nil, baseReq(&schemas.ChatParameters{
-			WebSearchOptions: &schemas.ChatWebSearchOptions{SearchContextSize: schemas.Ptr("high")},
+			WebSearchOptions: &schemas.ChatWebSearchOptions{SearchContextSize: new("high")},
 			Tools: []schemas.ChatTool{
 				{
 					Type: schemas.ChatToolTypeFunction,

@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // RunServerToolsViaOpenAIEndpointTest reproduces the user-reported bug where
@@ -90,7 +90,6 @@ func RunServerToolsViaOpenAIEndpointTest(t *testing.T, client *bifrost.Bifrost, 
 		}
 
 		for _, tc := range cases {
-			tc := tc
 			t.Run(tc.name, func(t *testing.T) {
 				if !tc.supported(testConfig.Provider) {
 					t.Skipf("%s not supported on %s per Table 20", tc.name, testConfig.Provider)
@@ -114,7 +113,7 @@ func RunServerToolsViaOpenAIEndpointTest(t *testing.T, client *bifrost.Bifrost, 
 						CreateBasicChatMessage(tc.prompt),
 					},
 					Params: &schemas.ChatParameters{
-						MaxCompletionTokens: bifrost.Ptr(500),
+						MaxCompletionTokens: new(500),
 						Tools:               []schemas.ChatTool{tool},
 					},
 					Fallbacks: testConfig.Fallbacks,

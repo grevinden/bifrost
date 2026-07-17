@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/maximhq/bifrost/core/providers/utils"
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/providers/utils"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // ToBifrostSpeechRequest converts a GeminiGenerationRequest to a BifrostSpeechRequest
@@ -19,17 +19,17 @@ func (request *GeminiGenerationRequest) ToBifrostSpeechRequest(ctx *schemas.Bifr
 	}
 
 	// Extract text input from contents
-	var textInput string
+	var textInput strings.Builder
 	for _, content := range request.Contents {
 		for _, part := range content.Parts {
 			if part.Text != "" {
-				textInput += part.Text
+				textInput.WriteString(part.Text)
 			}
 		}
 	}
 
 	bifrostReq.Input = &schemas.SpeechInput{
-		Input: textInput,
+		Input: textInput.String(),
 	}
 
 	// Convert generation config to parameters
@@ -70,7 +70,7 @@ func (request *GeminiGenerationRequest) ToBifrostSpeechRequest(ctx *schemas.Bifr
 		// Store response modalities in extra params if needed
 		if len(request.GenerationConfig.ResponseModalities) > 0 {
 			if bifrostReq.Params.ExtraParams == nil {
-				bifrostReq.Params.ExtraParams = make(map[string]interface{})
+				bifrostReq.Params.ExtraParams = make(map[string]any)
 			}
 			modalities := make([]string, len(request.GenerationConfig.ResponseModalities))
 			for i, mod := range request.GenerationConfig.ResponseModalities {

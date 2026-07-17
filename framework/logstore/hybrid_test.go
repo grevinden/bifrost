@@ -3,13 +3,14 @@ package logstore
 import (
 	"context"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/bytedance/sonic"
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/objectstore"
-	"github.com/maximhq/bifrost/framework/queryscope"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/objectstore"
+	"github.com/grevinden/bifrost/framework/queryscope"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
@@ -58,7 +59,7 @@ func TestHybridScopedDBDelegatesToInnerRDBStore(t *testing.T) {
 	hybrid, _, _ := newTestHybrid(t)
 	defer hybrid.Close(context.Background())
 
-	scoped, ok := interface{}(hybrid).(scopedDBLogStore)
+	scoped, ok := any(hybrid).(scopedDBLogStore)
 	require.True(t, ok, "hybrid logstore should preserve the RDB ScopedDB surface")
 
 	called := false
@@ -92,7 +93,7 @@ func TestHybrid_CreateAndFindByID(t *testing.T) {
 			{Role: schemas.ChatMessageRoleUser, Content: &schemas.ChatMessageContent{ContentStr: &inputContent}},
 		},
 		OutputMessageParsed: &schemas.ChatMessage{
-			Content: &schemas.ChatMessageContent{ContentStr: strPtr("I'm fine, thanks!")},
+			Content: &schemas.ChatMessageContent{ContentStr: new("I'm fine, thanks!")},
 		},
 	}
 
@@ -148,7 +149,7 @@ func TestHybrid_BatchCreateIfNotExists(t *testing.T) {
 	ctx := context.Background()
 
 	entries := make([]*Log, 3)
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		content := "input message"
 		entries[i] = &Log{
 			ID:        "batch-" + string(rune('a'+i)),
@@ -235,9 +236,9 @@ func TestHybrid_CreateAndFindMCPToolLog(t *testing.T) {
 	defer hybrid.Close(context.Background())
 	ctx := context.Background()
 
-	longInput := ""
-	for i := 0; i < 260; i++ {
-		longInput += "a"
+	var longInput strings.Builder
+	for range 260 {
+		longInput.WriteString("a")
 	}
 	entry := &MCPToolLog{
 		ID:          "mcp-1",
@@ -247,7 +248,7 @@ func TestHybrid_CreateAndFindMCPToolLog(t *testing.T) {
 		ServerLabel: "local",
 		Status:      "success",
 		ArgumentsParsed: map[string]any{
-			"input": longInput,
+			"input": longInput.String(),
 		},
 		ResultParsed: map[string]any{
 			"ok": true,
@@ -269,8 +270,8 @@ func TestHybrid_CreateAndFindMCPToolLog(t *testing.T) {
 	found, err := hybrid.FindMCPToolLog(ctx, "mcp-1")
 	require.NoError(t, err)
 	assert.True(t, found.HasObject)
-	assert.Equal(t, longInput, found.ArgumentsParsed.(map[string]interface{})["input"])
-	assert.Equal(t, true, found.ResultParsed.(map[string]interface{})["ok"])
+	assert.Equal(t, longInput.String(), found.ArgumentsParsed.(map[string]any)["input"])
+	assert.Equal(t, true, found.ResultParsed.(map[string]any)["ok"])
 }
 
 func TestHybrid_BatchCreateMCPToolLogsIfNotExists(t *testing.T) {
@@ -278,9 +279,9 @@ func TestHybrid_BatchCreateMCPToolLogsIfNotExists(t *testing.T) {
 	defer hybrid.Close(context.Background())
 	ctx := context.Background()
 
-	longInput := ""
-	for i := 0; i < 260; i++ {
-		longInput += "b"
+	var longInput strings.Builder
+	for range 260 {
+		longInput.WriteString("b")
 	}
 	entries := []*MCPToolLog{
 		{
@@ -291,7 +292,7 @@ func TestHybrid_BatchCreateMCPToolLogsIfNotExists(t *testing.T) {
 			ServerLabel: "docs",
 			Status:      "success",
 			ArgumentsParsed: map[string]any{
-				"query": longInput,
+				"query": longInput.String(),
 			},
 			ResultParsed: map[string]any{
 				"answer": "done",
@@ -330,8 +331,8 @@ func TestHybrid_BatchCreateMCPToolLogsIfNotExists(t *testing.T) {
 
 	found, err := hybrid.FindMCPToolLog(ctx, "mcp-batch-1")
 	require.NoError(t, err)
-	assert.Equal(t, longInput, found.ArgumentsParsed.(map[string]interface{})["query"])
-	assert.Equal(t, "done", found.ResultParsed.(map[string]interface{})["answer"])
+	assert.Equal(t, longInput.String(), found.ArgumentsParsed.(map[string]any)["query"])
+	assert.Equal(t, "done", found.ResultParsed.(map[string]any)["answer"])
 
 	foundError, err := hybrid.FindMCPToolLog(ctx, "mcp-batch-2")
 	require.NoError(t, err)
@@ -375,7 +376,7 @@ func TestHybrid_UpdateMCPToolLogOffloadsFullLog(t *testing.T) {
 		if err != nil || found.ResultParsed == nil {
 			return false
 		}
-		result, ok := found.ResultParsed.(map[string]interface{})
+		result, ok := found.ResultParsed.(map[string]any)
 		return ok && result["answer"] == "done"
 	})
 
@@ -388,8 +389,8 @@ func TestHybrid_UpdateMCPToolLogOffloadsFullLog(t *testing.T) {
 
 	found, err := hybrid.FindMCPToolLog(ctx, entry.ID)
 	require.NoError(t, err)
-	assert.Equal(t, "find this", found.ArgumentsParsed.(map[string]interface{})["query"])
-	assert.Equal(t, "done", found.ResultParsed.(map[string]interface{})["answer"])
+	assert.Equal(t, "find this", found.ArgumentsParsed.(map[string]any)["query"])
+	assert.Equal(t, "done", found.ResultParsed.(map[string]any)["answer"])
 }
 
 func TestHybrid_UpdateMCPToolLogRequiresObjectHydration(t *testing.T) {
@@ -426,8 +427,8 @@ func TestHybrid_UpdateMCPToolLogRequiresObjectHydration(t *testing.T) {
 
 	found, err := hybrid.FindMCPToolLog(ctx, entry.ID)
 	require.NoError(t, err)
-	assert.Equal(t, "full input", found.ArgumentsParsed.(map[string]interface{})["query"])
-	assert.Equal(t, "original", found.ResultParsed.(map[string]interface{})["answer"])
+	assert.Equal(t, "full input", found.ArgumentsParsed.(map[string]any)["query"])
+	assert.Equal(t, "original", found.ResultParsed.(map[string]any)["answer"])
 
 	dbOnly, err := inner.FindMCPToolLog(ctx, entry.ID)
 	require.NoError(t, err)
@@ -439,9 +440,9 @@ func TestHybrid_UpdateMCPToolLogHydratesObjectBeforeHasObjectMarker(t *testing.T
 	defer hybrid.Close(context.Background())
 	ctx := context.Background()
 
-	longInput := ""
-	for i := 0; i < 260; i++ {
-		longInput += "q"
+	var longInput strings.Builder
+	for range 260 {
+		longInput.WriteString("q")
 	}
 	entry := &MCPToolLog{
 		ID:          "mcp-has-object-false",
@@ -451,7 +452,7 @@ func TestHybrid_UpdateMCPToolLogHydratesObjectBeforeHasObjectMarker(t *testing.T
 		ServerLabel: "docs",
 		Status:      "processing",
 		ArgumentsParsed: map[string]any{
-			"query": longInput,
+			"query": longInput.String(),
 		},
 	}
 	payload, err := MarshalMCPToolLogPayload(entry)
@@ -472,14 +473,14 @@ func TestHybrid_UpdateMCPToolLogHydratesObjectBeforeHasObjectMarker(t *testing.T
 		if err != nil || found.ResultParsed == nil {
 			return false
 		}
-		result, ok := found.ResultParsed.(map[string]interface{})
+		result, ok := found.ResultParsed.(map[string]any)
 		return ok && result["answer"] == "done"
 	})
 
 	found, err := hybrid.FindMCPToolLog(ctx, entry.ID)
 	require.NoError(t, err)
-	assert.Equal(t, longInput, found.ArgumentsParsed.(map[string]interface{})["query"])
-	assert.Equal(t, "done", found.ResultParsed.(map[string]interface{})["answer"])
+	assert.Equal(t, longInput.String(), found.ArgumentsParsed.(map[string]any)["query"])
+	assert.Equal(t, "done", found.ResultParsed.(map[string]any)["answer"])
 }
 
 func TestHybrid_ProcessMCPUploadSkipsMissingRowsWithEmptyStatus(t *testing.T) {
@@ -634,7 +635,7 @@ func TestHybrid_MetadataIsRetainedInDBAndWrittenToObjectPayload(t *testing.T) {
 		InputHistoryParsed: []schemas.ChatMessage{
 			{Role: schemas.ChatMessageRoleUser, Content: &schemas.ChatMessageContent{ContentStr: &inputContent}},
 		},
-		MetadataParsed: map[string]interface{}{
+		MetadataParsed: map[string]any{
 			"cortex-user-id": "user-123",
 			"team":           "payments",
 		},

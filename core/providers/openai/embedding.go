@@ -1,7 +1,7 @@
 package openai
 
 import (
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // ToBifrostEmbeddingRequest converts an OpenAI embedding request to Bifrost format

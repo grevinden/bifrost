@@ -13,8 +13,8 @@ import (
 	"slices"
 	"sync"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // Key identifies one cached response. KeyID is "" for keyless providers

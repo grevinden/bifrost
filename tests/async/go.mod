@@ -1,3 +1,3 @@
-module github.com/maximhq/bifrost/tests/async
+module github.com/grevinden/bifrost/tests/async
 
 go 1.26.4

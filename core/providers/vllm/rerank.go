@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sort"
 
-	schemas "github.com/maximhq/bifrost/core/schemas"
+	schemas "github.com/grevinden/bifrost/core/schemas"
 )
 
 // ToVLLMRerankRequest converts a Bifrost rerank request to vLLM format.
@@ -34,7 +34,7 @@ func ToVLLMRerankRequest(bifrostReq *schemas.BifrostRerankRequest) *vLLMRerankRe
 }
 
 // ToBifrostRerankResponse converts a vLLM rerank response payload to Bifrost format.
-func ToBifrostRerankResponse(payload map[string]interface{}, documents []schemas.RerankDocument, returnDocuments bool) (*schemas.BifrostRerankResponse, error) {
+func ToBifrostRerankResponse(payload map[string]any, documents []schemas.RerankDocument, returnDocuments bool) (*schemas.BifrostRerankResponse, error) {
 	if payload == nil {
 		return nil, fmt.Errorf("vllm rerank response is nil")
 	}
@@ -56,7 +56,7 @@ func ToBifrostRerankResponse(payload map[string]interface{}, documents []schemas
 		return nil, fmt.Errorf("invalid vllm rerank response: missing results")
 	}
 
-	resultItems, ok := resultsRaw.([]interface{})
+	resultItems, ok := resultsRaw.([]any)
 	if !ok {
 		return nil, fmt.Errorf("invalid vllm rerank response: results must be an array")
 	}
@@ -65,7 +65,7 @@ func ToBifrostRerankResponse(payload map[string]interface{}, documents []schemas
 	response.Results = make([]schemas.RerankResult, 0, len(resultItems))
 
 	for _, item := range resultItems {
-		itemMap, ok := item.(map[string]interface{})
+		itemMap, ok := item.(map[string]any)
 		if !ok {
 			return nil, fmt.Errorf("invalid vllm rerank response: result item must be an object")
 		}
@@ -113,8 +113,8 @@ func ToBifrostRerankResponse(payload map[string]interface{}, documents []schemas
 	return response, nil
 }
 
-func parseVLLMUsage(rawUsage interface{}) (*schemas.BifrostLLMUsage, bool) {
-	usageMap, ok := rawUsage.(map[string]interface{})
+func parseVLLMUsage(rawUsage any) (*schemas.BifrostLLMUsage, bool) {
+	usageMap, ok := rawUsage.(map[string]any)
 	if !ok {
 		return nil, false
 	}

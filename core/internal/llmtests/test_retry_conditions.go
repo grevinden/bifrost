@@ -3,9 +3,10 @@ package llmtests
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strings"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // =============================================================================
@@ -138,7 +139,7 @@ func (c *MalformedToolArgsCondition) ShouldRetry(response *schemas.BifrostRespon
 		}
 
 		// Try to parse arguments as JSON
-		var args map[string]interface{}
+		var args map[string]any
 		if err := json.Unmarshal([]byte(toolCall.Arguments), &args); err != nil {
 			return true, fmt.Sprintf("tool call %d has malformed JSON arguments: %s", i, err.Error())
 		}
@@ -199,10 +200,8 @@ func (c *WrongToolCalledCondition) ShouldRetry(response *schemas.BifrostResponse
 		}
 
 		// Check if forbidden tool was called
-		for _, forbidden := range c.ForbiddenTools {
-			if toolName == forbidden {
-				return true, fmt.Sprintf("tool call %d called forbidden tool '%s'", i, toolName)
-			}
+		if slices.Contains(c.ForbiddenTools, toolName) {
+			return true, fmt.Sprintf("tool call %d called forbidden tool '%s'", i, toolName)
 		}
 
 		// If we have an expected tool and this isn't it

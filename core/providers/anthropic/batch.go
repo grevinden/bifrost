@@ -3,7 +3,7 @@ package anthropic
 import (
 	"time"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // Anthropic Batch API Types

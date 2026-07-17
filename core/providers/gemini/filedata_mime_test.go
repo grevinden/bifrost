@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -19,7 +19,8 @@ import (
 
 const testFileURI = "https://generativelanguage.googleapis.com/v1beta/files/abc"
 
-func sptr(s string) *string { return &s }
+//go:fix inline
+func sptr(s string) *string { return new(s) }
 
 // Incoming (Gemini -> Bifrost): no MIME must NOT be fabricated.
 func TestConvertGeminiFileDataToContentBlock_DoesNotFabricateMime(t *testing.T) {
@@ -47,7 +48,7 @@ func TestConvertContentBlockToGeminiPart_OmitsMimeWhenUnset(t *testing.T) {
 	part, err := convertContentBlockToGeminiPart(schemas.ResponsesMessageContentBlock{
 		Type: schemas.ResponsesInputMessageContentBlockTypeFile,
 		ResponsesInputMessageContentBlockFile: &schemas.ResponsesInputMessageContentBlockFile{
-			FileURL: sptr(testFileURI),
+			FileURL: new(testFileURI),
 		},
 	})
 	require.NoError(t, err)
@@ -60,8 +61,8 @@ func TestConvertContentBlockToGeminiPart_OmitsMimeWhenUnset(t *testing.T) {
 	part2, err := convertContentBlockToGeminiPart(schemas.ResponsesMessageContentBlock{
 		Type: schemas.ResponsesInputMessageContentBlockTypeFile,
 		ResponsesInputMessageContentBlockFile: &schemas.ResponsesInputMessageContentBlockFile{
-			FileURL:  sptr(testFileURI),
-			FileType: sptr("text/csv"),
+			FileURL:  new(testFileURI),
+			FileType: new("text/csv"),
 		},
 	})
 	require.NoError(t, err)
@@ -76,7 +77,7 @@ func TestConvertBifrostMessagesToGemini_OmitsFileMimeWhenUnset(t *testing.T) {
 		Content: &schemas.ChatMessageContent{
 			ContentBlocks: []schemas.ChatContentBlock{{
 				Type: schemas.ChatContentBlockTypeFile,
-				File: &schemas.ChatInputFile{FileURL: sptr(testFileURI)},
+				File: &schemas.ChatInputFile{FileURL: new(testFileURI)},
 			}},
 		},
 	}}

@@ -6,33 +6,33 @@ import (
 	"sync"
 	"time"
 
-	"github.com/maximhq/bifrost/core/providers/anthropic"
-	providerUtils "github.com/maximhq/bifrost/core/providers/utils"
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/providers/anthropic"
+	providerUtils "github.com/grevinden/bifrost/core/providers/utils"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/tidwall/gjson"
 )
 
 // CohereResponsesStreamState tracks state during streaming conversion for responses API
 type CohereResponsesStreamState struct {
-	ContentIndexToOutputIndex     map[int]int    // Maps Cohere content_index to OpenAI output_index
-	ToolArgumentBuffers           map[int]string // Maps output_index to accumulated tool argument JSON
-	ToolCallNames                 map[int]string // Maps output_index to tool name
-	ItemIDs                       map[int]string // Maps output_index to item ID for stable IDs
-	ReasoningContentIndices       map[int]bool   // Tracks which content indices are reasoning blocks
-	AnnotationIndexToContentIndex map[int]int    // Maps annotation index to content index for citation pairing
+	ContentIndexToOutputIndex     map[int]int              // Maps Cohere content_index to OpenAI output_index
+	ToolArgumentBuffers           map[int]string           // Maps output_index to accumulated tool argument JSON
+	ToolCallNames                 map[int]string           // Maps output_index to tool name
+	ItemIDs                       map[int]string           // Maps output_index to item ID for stable IDs
+	ReasoningContentIndices       map[int]bool             // Tracks which content indices are reasoning blocks
+	AnnotationIndexToContentIndex map[int]int              // Maps annotation index to content index for citation pairing
 	TextBuffers                   map[int]*strings.Builder // Maps output_index to accumulated text content for done events
-	CurrentOutputIndex            int            // Current output index counter
-	MessageID                     *string        // Message ID from message_start
-	Model                         *string        // Model name from message_start
-	CreatedAt                     int            // Timestamp for created_at consistency
-	HasEmittedCreated             bool           // Whether we've emitted response.created
-	HasEmittedInProgress          bool           // Whether we've emitted response.in_progress
-	ToolPlanOutputIndex           *int           // Output index for tool plan text item (if created)
+	CurrentOutputIndex            int                      // Current output index counter
+	MessageID                     *string                  // Message ID from message_start
+	Model                         *string                  // Model name from message_start
+	CreatedAt                     int                      // Timestamp for created_at consistency
+	HasEmittedCreated             bool                     // Whether we've emitted response.created
+	HasEmittedInProgress          bool                     // Whether we've emitted response.in_progress
+	ToolPlanOutputIndex           *int                     // Output index for tool plan text item (if created)
 }
 
 // cohereResponsesStreamStatePool provides a pool for Cohere responses stream state objects.
 var cohereResponsesStreamStatePool = sync.Pool{
-	New: func() interface{} {
+	New: func() any {
 		return &CohereResponsesStreamState{
 			ContentIndexToOutputIndex:     make(map[int]int),
 			ToolArgumentBuffers:           make(map[int]string),
@@ -209,7 +209,7 @@ func convertCohereContentBlockToBifrost(cohereBlock CohereContentBlock) schemas.
 		// Fallback to text block
 		return schemas.ResponsesMessageContentBlock{
 			Type: schemas.ResponsesInputMessageContentBlockTypeText,
-			Text: schemas.Ptr(string(cohereBlock.Type)),
+			Text: new(string(cohereBlock.Type)),
 			ResponsesOutputMessageContentText: &schemas.ResponsesOutputMessageContentText{
 				LogProbs:    []schemas.ResponsesOutputMessageContentTextLogProb{},
 				Annotations: []schemas.ResponsesOutputMessageContentTextAnnotation{},
@@ -279,8 +279,8 @@ func (chunk *CohereStreamEvent) ToBifrostResponsesStream(sequenceNumber int, sta
 			responses = append(responses, &schemas.BifrostResponsesStreamResponse{
 				Type:           schemas.ResponsesStreamResponseTypeOutputTextDone,
 				SequenceNumber: sequenceNumber + len(responses),
-				OutputIndex:    schemas.Ptr(outputIndex),
-				ContentIndex:   schemas.Ptr(0),
+				OutputIndex:    new(outputIndex),
+				ContentIndex:   new(0),
 				ItemID:         &itemID,
 				Text:           &accText,
 				LogProbs:       []schemas.ResponsesOutputMessageContentTextLogProb{},
@@ -299,8 +299,8 @@ func (chunk *CohereStreamEvent) ToBifrostResponsesStream(sequenceNumber int, sta
 			responses = append(responses, &schemas.BifrostResponsesStreamResponse{
 				Type:           schemas.ResponsesStreamResponseTypeContentPartDone,
 				SequenceNumber: sequenceNumber + len(responses),
-				OutputIndex:    schemas.Ptr(outputIndex),
-				ContentIndex:   schemas.Ptr(0),
+				OutputIndex:    new(outputIndex),
+				ContentIndex:   new(0),
 				ItemID:         &itemID,
 				Part:           part,
 			})
@@ -333,8 +333,8 @@ func (chunk *CohereStreamEvent) ToBifrostResponsesStream(sequenceNumber int, sta
 			responses = append(responses, &schemas.BifrostResponsesStreamResponse{
 				Type:           schemas.ResponsesStreamResponseTypeOutputItemDone,
 				SequenceNumber: sequenceNumber + len(responses),
-				OutputIndex:    schemas.Ptr(outputIndex),
-				ContentIndex:   schemas.Ptr(0),
+				OutputIndex:    new(outputIndex),
+				ContentIndex:   new(0),
 				Item:           doneItem,
 			})
 			delete(state.TextBuffers, outputIndex)
@@ -374,7 +374,7 @@ func (chunk *CohereStreamEvent) ToBifrostResponsesStream(sequenceNumber int, sta
 				responses = append(responses, &schemas.BifrostResponsesStreamResponse{
 					Type:           schemas.ResponsesStreamResponseTypeOutputItemAdded,
 					SequenceNumber: sequenceNumber + len(responses),
-					OutputIndex:    schemas.Ptr(outputIndex),
+					OutputIndex:    new(outputIndex),
 					ContentIndex:   chunk.Index,
 					Item:           item,
 				})
@@ -392,7 +392,7 @@ func (chunk *CohereStreamEvent) ToBifrostResponsesStream(sequenceNumber int, sta
 				responses = append(responses, &schemas.BifrostResponsesStreamResponse{
 					Type:           schemas.ResponsesStreamResponseTypeContentPartAdded,
 					SequenceNumber: sequenceNumber + len(responses),
-					OutputIndex:    schemas.Ptr(outputIndex),
+					OutputIndex:    new(outputIndex),
 					ContentIndex:   chunk.Index,
 					ItemID:         &itemID,
 					Part:           part,
@@ -425,7 +425,7 @@ func (chunk *CohereStreamEvent) ToBifrostResponsesStream(sequenceNumber int, sta
 				responses = append(responses, &schemas.BifrostResponsesStreamResponse{
 					Type:           schemas.ResponsesStreamResponseTypeOutputItemAdded,
 					SequenceNumber: sequenceNumber + len(responses),
-					OutputIndex:    schemas.Ptr(outputIndex),
+					OutputIndex:    new(outputIndex),
 					ContentIndex:   chunk.Index,
 					Item:           item,
 				})
@@ -439,7 +439,7 @@ func (chunk *CohereStreamEvent) ToBifrostResponsesStream(sequenceNumber int, sta
 				responses = append(responses, &schemas.BifrostResponsesStreamResponse{
 					Type:           schemas.ResponsesStreamResponseTypeContentPartAdded,
 					SequenceNumber: sequenceNumber + len(responses),
-					OutputIndex:    schemas.Ptr(outputIndex),
+					OutputIndex:    new(outputIndex),
 					ContentIndex:   chunk.Index,
 					ItemID:         &itemID,
 					Part:           part,
@@ -468,7 +468,7 @@ func (chunk *CohereStreamEvent) ToBifrostResponsesStream(sequenceNumber int, sta
 				response := &schemas.BifrostResponsesStreamResponse{
 					Type:           schemas.ResponsesStreamResponseTypeOutputTextDelta,
 					SequenceNumber: sequenceNumber,
-					OutputIndex:    schemas.Ptr(outputIndex),
+					OutputIndex:    new(outputIndex),
 					ContentIndex:   chunk.Index,
 					Delta:          chunk.Delta.Message.Content.CohereStreamContentObject.Text,
 					LogProbs:       []schemas.ResponsesOutputMessageContentTextLogProb{},
@@ -486,7 +486,7 @@ func (chunk *CohereStreamEvent) ToBifrostResponsesStream(sequenceNumber int, sta
 				response := &schemas.BifrostResponsesStreamResponse{
 					Type:           schemas.ResponsesStreamResponseTypeReasoningSummaryTextDelta,
 					SequenceNumber: sequenceNumber,
-					OutputIndex:    schemas.Ptr(outputIndex),
+					OutputIndex:    new(outputIndex),
 					ContentIndex:   chunk.Index,
 					Delta:          chunk.Delta.Message.Content.CohereStreamContentObject.Thinking,
 				}
@@ -518,7 +518,7 @@ func (chunk *CohereStreamEvent) ToBifrostResponsesStream(sequenceNumber int, sta
 				reasoningDoneResponse := &schemas.BifrostResponsesStreamResponse{
 					Type:           schemas.ResponsesStreamResponseTypeReasoningSummaryTextDone,
 					SequenceNumber: sequenceNumber + len(responses),
-					OutputIndex:    schemas.Ptr(outputIndex),
+					OutputIndex:    new(outputIndex),
 					ContentIndex:   chunk.Index,
 					Text:           &emptyText,
 				}
@@ -535,7 +535,7 @@ func (chunk *CohereStreamEvent) ToBifrostResponsesStream(sequenceNumber int, sta
 				partDoneResponse := &schemas.BifrostResponsesStreamResponse{
 					Type:           schemas.ResponsesStreamResponseTypeContentPartDone,
 					SequenceNumber: sequenceNumber + len(responses),
-					OutputIndex:    schemas.Ptr(outputIndex),
+					OutputIndex:    new(outputIndex),
 					ContentIndex:   chunk.Index,
 					Part:           part,
 				}
@@ -551,7 +551,7 @@ func (chunk *CohereStreamEvent) ToBifrostResponsesStream(sequenceNumber int, sta
 				responses = append(responses, &schemas.BifrostResponsesStreamResponse{
 					Type:           schemas.ResponsesStreamResponseTypeOutputTextDone,
 					SequenceNumber: sequenceNumber + len(responses),
-					OutputIndex:    schemas.Ptr(outputIndex),
+					OutputIndex:    new(outputIndex),
 					ContentIndex:   chunk.Index,
 					ItemID:         &itemID,
 					Text:           &accText,
@@ -571,7 +571,7 @@ func (chunk *CohereStreamEvent) ToBifrostResponsesStream(sequenceNumber int, sta
 				responses = append(responses, &schemas.BifrostResponsesStreamResponse{
 					Type:           schemas.ResponsesStreamResponseTypeContentPartDone,
 					SequenceNumber: sequenceNumber + len(responses),
-					OutputIndex:    schemas.Ptr(outputIndex),
+					OutputIndex:    new(outputIndex),
 					ContentIndex:   chunk.Index,
 					ItemID:         &itemID,
 					Part:           part,
@@ -625,7 +625,7 @@ func (chunk *CohereStreamEvent) ToBifrostResponsesStream(sequenceNumber int, sta
 			responses = append(responses, &schemas.BifrostResponsesStreamResponse{
 				Type:           schemas.ResponsesStreamResponseTypeOutputItemDone,
 				SequenceNumber: sequenceNumber + len(responses),
-				OutputIndex:    schemas.Ptr(outputIndex),
+				OutputIndex:    new(outputIndex),
 				ContentIndex:   chunk.Index,
 				Item:           doneItem,
 			})
@@ -672,8 +672,8 @@ func (chunk *CohereStreamEvent) ToBifrostResponsesStream(sequenceNumber int, sta
 				responses = append(responses, &schemas.BifrostResponsesStreamResponse{
 					Type:           schemas.ResponsesStreamResponseTypeOutputItemAdded,
 					SequenceNumber: sequenceNumber,
-					OutputIndex:    schemas.Ptr(outputIndex),
-					ContentIndex:   schemas.Ptr(0),
+					OutputIndex:    new(outputIndex),
+					ContentIndex:   new(0),
 					Item:           item,
 				})
 
@@ -690,8 +690,8 @@ func (chunk *CohereStreamEvent) ToBifrostResponsesStream(sequenceNumber int, sta
 				responses = append(responses, &schemas.BifrostResponsesStreamResponse{
 					Type:           schemas.ResponsesStreamResponseTypeContentPartAdded,
 					SequenceNumber: sequenceNumber + len(responses),
-					OutputIndex:    schemas.Ptr(outputIndex),
-					ContentIndex:   schemas.Ptr(0),
+					OutputIndex:    new(outputIndex),
+					ContentIndex:   new(0),
 					ItemID:         &itemID,
 					Part:           part,
 				})
@@ -708,8 +708,8 @@ func (chunk *CohereStreamEvent) ToBifrostResponsesStream(sequenceNumber int, sta
 			response := &schemas.BifrostResponsesStreamResponse{
 				Type:           schemas.ResponsesStreamResponseTypeOutputTextDelta,
 				SequenceNumber: sequenceNumber + len(responses),
-				OutputIndex:    schemas.Ptr(outputIndex),
-				ContentIndex:   schemas.Ptr(0), // Tool plan is typically at index 0
+				OutputIndex:    new(outputIndex),
+				ContentIndex:   new(0), // Tool plan is typically at index 0
 				Delta:          chunk.Delta.Message.ToolPlan,
 				LogProbs:       []schemas.ResponsesOutputMessageContentTextLogProb{},
 			}
@@ -735,8 +735,8 @@ func (chunk *CohereStreamEvent) ToBifrostResponsesStream(sequenceNumber int, sta
 			responses = append(responses, &schemas.BifrostResponsesStreamResponse{
 				Type:           schemas.ResponsesStreamResponseTypeOutputTextDone,
 				SequenceNumber: sequenceNumber + len(responses),
-				OutputIndex:    schemas.Ptr(outputIndex),
-				ContentIndex:   schemas.Ptr(0),
+				OutputIndex:    new(outputIndex),
+				ContentIndex:   new(0),
 				ItemID:         &itemID,
 				Text:           &accText,
 				LogProbs:       []schemas.ResponsesOutputMessageContentTextLogProb{},
@@ -755,8 +755,8 @@ func (chunk *CohereStreamEvent) ToBifrostResponsesStream(sequenceNumber int, sta
 			responses = append(responses, &schemas.BifrostResponsesStreamResponse{
 				Type:           schemas.ResponsesStreamResponseTypeContentPartDone,
 				SequenceNumber: sequenceNumber + len(responses),
-				OutputIndex:    schemas.Ptr(outputIndex),
-				ContentIndex:   schemas.Ptr(0),
+				OutputIndex:    new(outputIndex),
+				ContentIndex:   new(0),
 				ItemID:         &itemID,
 				Part:           part,
 			})
@@ -789,8 +789,8 @@ func (chunk *CohereStreamEvent) ToBifrostResponsesStream(sequenceNumber int, sta
 			responses = append(responses, &schemas.BifrostResponsesStreamResponse{
 				Type:           schemas.ResponsesStreamResponseTypeOutputItemDone,
 				SequenceNumber: sequenceNumber + len(responses),
-				OutputIndex:    schemas.Ptr(outputIndex),
-				ContentIndex:   schemas.Ptr(0),
+				OutputIndex:    new(outputIndex),
+				ContentIndex:   new(0),
 				Item:           doneItem,
 			})
 			delete(state.TextBuffers, outputIndex)
@@ -833,7 +833,7 @@ func (chunk *CohereStreamEvent) ToBifrostResponsesStream(sequenceNumber int, sta
 					ResponsesToolMessage: &schemas.ResponsesToolMessage{
 						CallID:    toolCall.ID,
 						Name:      toolCall.Function.Name,
-						Arguments: schemas.Ptr(""), // Arguments will be filled by deltas
+						Arguments: new(""), // Arguments will be filled by deltas
 					},
 				}
 
@@ -843,7 +843,7 @@ func (chunk *CohereStreamEvent) ToBifrostResponsesStream(sequenceNumber int, sta
 				responses = append(responses, &schemas.BifrostResponsesStreamResponse{
 					Type:           schemas.ResponsesStreamResponseTypeOutputItemAdded,
 					SequenceNumber: sequenceNumber + len(responses),
-					OutputIndex:    schemas.Ptr(outputIndex),
+					OutputIndex:    new(outputIndex),
 					Item:           item,
 				})
 				return responses, nil, false
@@ -872,8 +872,8 @@ func (chunk *CohereStreamEvent) ToBifrostResponsesStream(sequenceNumber int, sta
 					Type:           schemas.ResponsesStreamResponseTypeFunctionCallArgumentsDelta,
 					SequenceNumber: sequenceNumber,
 					ContentIndex:   chunk.Index,
-					OutputIndex:    schemas.Ptr(outputIndex),
-					Delta:          schemas.Ptr(toolCall.Function.Arguments),
+					OutputIndex:    new(outputIndex),
+					Delta:          new(toolCall.Function.Arguments),
 				}
 				if itemID != "" {
 					response.ItemID = &itemID
@@ -896,7 +896,7 @@ func (chunk *CohereStreamEvent) ToBifrostResponsesStream(sequenceNumber int, sta
 				response := &schemas.BifrostResponsesStreamResponse{
 					Type:           schemas.ResponsesStreamResponseTypeFunctionCallArgumentsDone,
 					SequenceNumber: sequenceNumber,
-					OutputIndex:    schemas.Ptr(outputIndex),
+					OutputIndex:    new(outputIndex),
 					ContentIndex:   chunk.Index,
 					Arguments:      &argsValue,
 				}
@@ -931,7 +931,7 @@ func (chunk *CohereStreamEvent) ToBifrostResponsesStream(sequenceNumber int, sta
 			responses = append(responses, &schemas.BifrostResponsesStreamResponse{
 				Type:           schemas.ResponsesStreamResponseTypeOutputItemDone,
 				SequenceNumber: sequenceNumber + len(responses),
-				OutputIndex:    schemas.Ptr(outputIndex),
+				OutputIndex:    new(outputIndex),
 				ContentIndex:   chunk.Index,
 				Item:           doneItem,
 			})
@@ -947,8 +947,8 @@ func (chunk *CohereStreamEvent) ToBifrostResponsesStream(sequenceNumber int, sta
 			// Map Cohere citation to ResponsesOutputMessageContentTextAnnotation
 			annotation := &schemas.ResponsesOutputMessageContentTextAnnotation{
 				Type:       "file_citation", // Default to file_citation
-				StartIndex: schemas.Ptr(citation.Start),
-				EndIndex:   schemas.Ptr(citation.End),
+				StartIndex: new(citation.Start),
+				EndIndex:   new(citation.End),
 			}
 
 			// Set annotation type and metadata
@@ -995,9 +995,9 @@ func (chunk *CohereStreamEvent) ToBifrostResponsesStream(sequenceNumber int, sta
 			return []*schemas.BifrostResponsesStreamResponse{{
 				Type:            schemas.ResponsesStreamResponseTypeOutputTextAnnotationAdded,
 				SequenceNumber:  sequenceNumber,
-				ContentIndex:    schemas.Ptr(citation.ContentIndex),
+				ContentIndex:    new(citation.ContentIndex),
 				Annotation:      annotation,
-				OutputIndex:     schemas.Ptr(outputIndex),
+				OutputIndex:     new(outputIndex),
 				AnnotationIndex: chunk.Index,
 			}}, nil, false
 		}
@@ -1020,7 +1020,7 @@ func (chunk *CohereStreamEvent) ToBifrostResponsesStream(sequenceNumber int, sta
 				Type:            schemas.ResponsesStreamResponseTypeOutputTextAnnotationDone,
 				SequenceNumber:  sequenceNumber,
 				ContentIndex:    &contentIndex,
-				OutputIndex:     schemas.Ptr(outputIndex),
+				OutputIndex:     new(outputIndex),
 				AnnotationIndex: chunk.Index,
 			}}, nil, false
 		}
@@ -1093,7 +1093,7 @@ func convertResponsesTextFormatToCohere(textFormat *schemas.ResponsesTextConfigF
 		// If schema is provided, extract it
 		if textFormat.JSONSchema != nil {
 			// Build schema map
-			schema := make(map[string]interface{})
+			schema := make(map[string]any)
 			if textFormat.JSONSchema.Type != nil {
 				schema["type"] = *textFormat.JSONSchema.Type
 			}
@@ -1107,7 +1107,7 @@ func convertResponsesTextFormatToCohere(textFormat *schemas.ResponsesTextConfigF
 				schema["additionalProperties"] = *textFormat.JSONSchema.AdditionalProperties
 			}
 
-			var schemaInterface interface{} = schema
+			var schemaInterface any = schema
 			cohereFormat.JSONSchema = &schemaInterface
 		}
 	default:
@@ -1165,7 +1165,7 @@ func ToCohereResponsesRequest(bifrostReq *schemas.BifrostResponsesRequest) (*Coh
 					}
 					cohereReq.Thinking = &CohereThinking{
 						Type:        ThinkingTypeEnabled,
-						TokenBudget: schemas.Ptr(budgetTokens),
+						TokenBudget: new(budgetTokens),
 					}
 				} else {
 					cohereReq.Thinking = &CohereThinking{
@@ -1197,7 +1197,7 @@ func ToCohereResponsesRequest(bifrostReq *schemas.BifrostResponsesRequest) (*Coh
 				cohereReq.PresencePenalty = presencePenalty
 			}
 			if thinkingParam, ok := schemas.SafeExtractFromMap(bifrostReq.Params.ExtraParams, "thinking"); ok {
-				if thinkingMap, ok := thinkingParam.(map[string]interface{}); ok {
+				if thinkingMap, ok := thinkingParam.(map[string]any); ok {
 					thinking := &CohereThinking{}
 					if typeStr, ok := schemas.SafeExtractString(thinkingMap["type"]); ok {
 						delete(thinkingMap, "type")
@@ -1256,7 +1256,7 @@ func (response *CohereChatResponse) ToBifrostResponsesResponse() *schemas.Bifros
 	}
 
 	bifrostResp := &schemas.BifrostResponsesResponse{
-		ID:        schemas.Ptr(response.ID),
+		ID:        new(response.ID),
 		CreatedAt: int(time.Now().Unix()), // Set current timestamp
 	}
 
@@ -1701,8 +1701,8 @@ func convertSingleCohereMessageToBifrostMessages(cohereMsg *CohereMessage, isOut
 			}
 
 			if isOutputMessage {
-				outputMsg.ID = schemas.Ptr("msg_" + fmt.Sprintf("%d", time.Now().UnixNano()))
-				outputMsg.Status = schemas.Ptr("completed")
+				outputMsg.ID = new("msg_" + fmt.Sprintf("%d", time.Now().UnixNano()))
+				outputMsg.Status = new("completed")
 			}
 
 			outputMessages = append(outputMessages, outputMsg)
@@ -1712,7 +1712,7 @@ func convertSingleCohereMessageToBifrostMessages(cohereMsg *CohereMessage, isOut
 	// Handle reasoning blocks - prepend reasoning message if we collected any
 	if len(reasoningContentBlocks) > 0 {
 		reasoningMessage := schemas.ResponsesMessage{
-			ID:   schemas.Ptr("rs_" + fmt.Sprintf("%d", time.Now().UnixNano())),
+			ID:   new("rs_" + fmt.Sprintf("%d", time.Now().UnixNano())),
 			Type: schemas.Ptr(schemas.ResponsesMessageTypeReasoning),
 			ResponsesReasoning: &schemas.ResponsesReasoning{
 				Summary: []schemas.ResponsesReasoningSummary{},
@@ -1742,16 +1742,16 @@ func convertSingleCohereMessageToBifrostMessages(cohereMsg *CohereMessage, isOut
 				functionName = toolCall.Function.Name
 			} else {
 				// Use empty string if Name is nil
-				functionName = schemas.Ptr("")
+				functionName = new("")
 			}
 
 			// Arguments is a string, not a pointer, so it's safe to access directly
-			functionArguments = schemas.Ptr(toolCall.Function.Arguments)
+			functionArguments = new(toolCall.Function.Arguments)
 
 			toolCallMsg := schemas.ResponsesMessage{
 				ID:     toolCall.ID,
 				Type:   schemas.Ptr(schemas.ResponsesMessageTypeFunctionCall),
-				Status: schemas.Ptr("completed"),
+				Status: new("completed"),
 				ResponsesToolMessage: &schemas.ResponsesToolMessage{
 					Name:      functionName,
 					CallID:    toolCall.ID,
@@ -1807,7 +1807,7 @@ func convertResponsesMessageContentBlocksToCohere(blocks []schemas.ResponsesMess
 				if summary := strings.TrimSpace(block.ResponsesOutputMessageContentCompaction.Summary); summary != "" {
 					cohereBlocks = append(cohereBlocks, CohereContentBlock{
 						Type: CohereContentBlockTypeText,
-						Text: schemas.Ptr(summary),
+						Text: new(summary),
 					})
 				}
 			}

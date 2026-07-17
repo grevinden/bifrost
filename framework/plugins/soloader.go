@@ -6,7 +6,7 @@ import (
 	"plugin"
 	"strings"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // SharedObjectPluginLoader is the loader for shared object plugins

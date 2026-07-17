@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // =============================================================================
@@ -432,8 +432,8 @@ Respond with JSON:
 			CreateBasicChatMessage(prompt),
 		},
 		Params: &schemas.ChatParameters{
-			MaxCompletionTokens: bifrost.Ptr(600),
-			Temperature:         bifrost.Ptr(0.1),
+			MaxCompletionTokens: new(600),
+			Temperature:         new(0.1),
 		},
 	}
 
@@ -568,8 +568,8 @@ JSON response:
 			CreateBasicChatMessage(prompt),
 		},
 		Params: &schemas.ChatParameters{
-			MaxCompletionTokens: bifrost.Ptr(300),
-			Temperature:         bifrost.Ptr(0.7),
+			MaxCompletionTokens: new(300),
+			Temperature:         new(0.7),
 		},
 	}
 
@@ -808,8 +808,8 @@ func RunCrossProviderConsistencyTest(t *testing.T, client *bifrost.Bifrost, ctx 
 					CreateBasicResponsesMessage(testPrompt),
 				},
 				Params: &schemas.ResponsesParameters{
-					MaxOutputTokens: bifrost.Ptr(200),
-					Temperature:     bifrost.Ptr(0.3),
+					MaxOutputTokens: new(200),
+					Temperature:     new(0.3),
 				},
 			}
 			responsesResponse, err := client.ResponsesRequest(ctx, responsesReq)
@@ -827,8 +827,8 @@ func RunCrossProviderConsistencyTest(t *testing.T, client *bifrost.Bifrost, ctx 
 					CreateBasicChatMessage(testPrompt),
 				},
 				Params: &schemas.ChatParameters{
-					MaxCompletionTokens: bifrost.Ptr(200),
-					Temperature:         bifrost.Ptr(0.3),
+					MaxCompletionTokens: new(200),
+					Temperature:         new(0.3),
 				},
 			}
 			chatResponse, err := client.ChatCompletionRequest(ctx, chatReq)
@@ -896,8 +896,8 @@ func executeStepWithProvider(t *testing.T, client *bifrost.Bifrost, ctx *schemas
 			Model:    getModelForModality(provider, step.RequiredModality),
 			Input:    responsesMessages,
 			Params: &schemas.ResponsesParameters{
-				MaxOutputTokens: bifrost.Ptr(300),
-				Temperature:     bifrost.Ptr(0.7),
+				MaxOutputTokens: new(300),
+				Temperature:     new(0.7),
 			},
 		}
 
@@ -922,8 +922,8 @@ func executeStepWithProvider(t *testing.T, client *bifrost.Bifrost, ctx *schemas
 			Model:    getModelForModality(provider, step.RequiredModality),
 			Input:    history,
 			Params: &schemas.ChatParameters{
-				MaxCompletionTokens: bifrost.Ptr(300),
-				Temperature:         bifrost.Ptr(0.7),
+				MaxCompletionTokens: new(300),
+				Temperature:         new(0.7),
 			},
 		}
 

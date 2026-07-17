@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -91,10 +91,10 @@ result = {
 `
 
 	toolCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-multiserver"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-multiserver"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("executeToolCode"),
+			Name:      new("executeToolCode"),
 			Arguments: fmt.Sprintf(`{"code": %s}`, mustJSONString(code)),
 		},
 	}
@@ -108,7 +108,7 @@ result = {
 	require.False(t, hasError, "should not have execution error: %s", errorMsg)
 	require.NotNil(t, returnValue, "should have return value")
 
-	returnObj, ok := returnValue.(map[string]interface{})
+	returnObj, ok := returnValue.(map[string]any)
 	require.True(t, ok, "result should be an object")
 
 	// Assertions
@@ -165,10 +165,10 @@ result = {
 `
 
 	toolCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-parallel"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-parallel"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("executeToolCode"),
+			Name:      new("executeToolCode"),
 			Arguments: fmt.Sprintf(`{"code": %s}`, mustJSONString(code)),
 		},
 	}
@@ -182,14 +182,14 @@ result = {
 	require.False(t, hasError, "should not have execution error: %s", errorMsg)
 	require.NotNil(t, returnValue, "should have return value")
 
-	returnObj, ok := returnValue.(map[string]interface{})
+	returnObj, ok := returnValue.(map[string]any)
 	require.True(t, ok, "result should be an object")
 
 	// Assertions - verify execution
 	results, hasResults := returnObj["results"]
 	assert.True(t, hasResults, "should have results array")
 
-	resultsArray, ok := results.([]interface{})
+	resultsArray, ok := results.([]any)
 	require.True(t, ok, "results should be array")
 	assert.Len(t, resultsArray, 4, "should have 4 results")
 	assert.Equal(t, float64(4), returnObj["count"], "should have count of 4")
@@ -245,10 +245,10 @@ result = {
 `
 
 	toolCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-chain"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-chain"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("executeToolCode"),
+			Name:      new("executeToolCode"),
 			Arguments: fmt.Sprintf(`{"code": %s}`, mustJSONString(code)),
 		},
 	}
@@ -261,7 +261,7 @@ result = {
 	returnValue, hasError, errorMsg := ParseCodeModeResponse(t, *result.Content.ContentStr)
 	require.False(t, hasError, "should not have execution error: %s", errorMsg)
 
-	returnObj, ok := returnValue.(map[string]interface{})
+	returnObj, ok := returnValue.(map[string]any)
 	require.True(t, ok)
 
 	// Assertions - verify chain worked
@@ -273,7 +273,7 @@ result = {
 	// Verify the transformed contains uppercase content
 	// string_transform returns an object with input, operation, result fields
 	transformedVal := returnObj["transformed"]
-	if transformedObj, ok := transformedVal.(map[string]interface{}); ok {
+	if transformedObj, ok := transformedVal.(map[string]any); ok {
 		// It's an object response from the tool
 		assert.NotNil(t, transformedObj["result"], "transformed object should have result field")
 		result := transformedObj["result"]
@@ -333,10 +333,10 @@ result = main()
 `
 
 	toolCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-blocked"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-blocked"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("executeToolCode"),
+			Name:      new("executeToolCode"),
 			Arguments: fmt.Sprintf(`{"code": %s}`, mustJSONString(code)),
 		},
 	}
@@ -349,7 +349,7 @@ result = main()
 	returnValue, hasError, errorMsg := ParseCodeModeResponse(t, *result.Content.ContentStr)
 	require.False(t, hasError, "should not have execution error: %s", errorMsg)
 
-	returnObj, ok := returnValue.(map[string]interface{})
+	returnObj, ok := returnValue.(map[string]any)
 	require.True(t, ok)
 
 	// Assertions - echo should have failed (tool not available due to filtering)
@@ -442,10 +442,10 @@ result = main()
 `
 
 	toolCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-mixed"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-mixed"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("executeToolCode"),
+			Name:      new("executeToolCode"),
 			Arguments: fmt.Sprintf(`{"code": %s}`, mustJSONString(code)),
 		},
 	}
@@ -458,7 +458,7 @@ result = main()
 	returnValue, hasError, errorMsg := ParseCodeModeResponse(t, *result.Content.ContentStr)
 	require.False(t, hasError, "should not have execution error: %s", errorMsg)
 
-	returnObj, ok := returnValue.(map[string]interface{})
+	returnObj, ok := returnValue.(map[string]any)
 	require.True(t, ok)
 
 	// Assertions - verify filtering behavior
@@ -467,7 +467,7 @@ result = main()
 	allowedTemp := returnObj["allowed_temp"]
 	assert.NotNil(t, allowedTemp, "allowed_temp should exist")
 	// Check if it's an error object
-	if tempObj, ok := allowedTemp.(map[string]interface{}); ok {
+	if tempObj, ok := allowedTemp.(map[string]any); ok {
 		_, hasToolError = tempObj["error"]
 		assert.False(t, hasToolError, "allowed_temp should not have error")
 	} else {
@@ -476,7 +476,7 @@ result = main()
 	}
 
 	// blocked_echo: Should fail
-	blockedEcho, ok := returnObj["blocked_echo"].(map[string]interface{})
+	blockedEcho, ok := returnObj["blocked_echo"].(map[string]any)
 	assert.True(t, ok, "blocked_echo should be object")
 	_, hasToolError = blockedEcho["error"]
 	assert.True(t, hasToolError, "blocked_echo should have error")
@@ -487,7 +487,7 @@ result = main()
 	assert.NotNil(t, allowedUUID, "allowed_uuid should not be nil")
 
 	// blocked_inprocess: Should fail
-	blockedInprocess, ok := returnObj["blocked_inprocess"].(map[string]interface{})
+	blockedInprocess, ok := returnObj["blocked_inprocess"].(map[string]any)
 	assert.True(t, ok, "blocked_inprocess should be object")
 	_, hasToolError = blockedInprocess["error"]
 	assert.True(t, hasToolError, "blocked_inprocess should have error")
@@ -547,10 +547,10 @@ result = main()
 `
 
 	toolCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-clientfilter"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-clientfilter"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("executeToolCode"),
+			Name:      new("executeToolCode"),
 			Arguments: fmt.Sprintf(`{"code": %s}`, mustJSONString(code)),
 		},
 	}
@@ -563,13 +563,13 @@ result = main()
 	returnValue, hasError, errorMsg := ParseCodeModeResponse(t, *result.Content.ContentStr)
 	require.False(t, hasError, "should not have execution error: %s", errorMsg)
 
-	returnObj, ok := returnValue.(map[string]interface{})
+	returnObj, ok := returnValue.(map[string]any)
 	require.True(t, ok)
 
 	// Assertions - temperature should succeed, gotest should fail
 	// temp: Should succeed (client allowed)
 	tempVal := returnObj["temp"]
-	if tempObj, ok := tempVal.(map[string]interface{}); ok {
+	if tempObj, ok := tempVal.(map[string]any); ok {
 		// Object response - check for error
 		_, hasErrorField := tempObj["error"]
 		assert.False(t, hasErrorField, "temp should not have error (client is allowed)")
@@ -581,7 +581,7 @@ result = main()
 
 	// gotest: Should fail (client filtered out)
 	gotestVal := returnObj["gotest"]
-	gotestObj, ok := gotestVal.(map[string]interface{})
+	gotestObj, ok := gotestVal.(map[string]any)
 	assert.True(t, ok, "gotest should be an object with error")
 	_, hasError = gotestObj["error"]
 	assert.True(t, hasError, "gotest should have error (client is filtered out)")

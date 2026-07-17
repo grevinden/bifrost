@@ -9,11 +9,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/maximhq/bifrost/framework/configstore/tables"
-	"github.com/maximhq/bifrost/framework/logstore"
-	"github.com/maximhq/bifrost/framework/queryscope"
-	"github.com/maximhq/bifrost/framework/sidekiq"
-	loggingplugin "github.com/maximhq/bifrost/plugins/logging"
+	"github.com/grevinden/bifrost/framework/configstore/tables"
+	"github.com/grevinden/bifrost/framework/logstore"
+	"github.com/grevinden/bifrost/framework/queryscope"
+	"github.com/grevinden/bifrost/framework/sidekiq"
+	loggingplugin "github.com/grevinden/bifrost/plugins/logging"
 	"github.com/valyala/fasthttp"
 	"gorm.io/gorm"
 )

@@ -22,11 +22,11 @@ type SarvamSpeechRequest struct {
 	DictID                *string  `json:"dict_id,omitempty"`
 	EnableCachedResponses *bool    `json:"enable_cached_responses,omitempty"`
 
-	ExtraParams map[string]interface{} `json:"-"`
+	ExtraParams map[string]any `json:"-"`
 }
 
 // GetExtraParams satisfies providerUtils.RequestBodyWithExtraParams.
-func (r *SarvamSpeechRequest) GetExtraParams() map[string]interface{} {
+func (r *SarvamSpeechRequest) GetExtraParams() map[string]any {
 	return r.ExtraParams
 }
 

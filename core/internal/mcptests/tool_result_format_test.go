@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -26,16 +26,16 @@ func TestToolResult_ComplexNestedStructures(t *testing.T) {
 	// Create tool that returns deeply nested structure
 	nestedHandler := func(args any) (string, error) {
 		// 5 levels deep nested structure
-		result := map[string]interface{}{
-			"level1": map[string]interface{}{
-				"level2": map[string]interface{}{
-					"level3": map[string]interface{}{
-						"level4": map[string]interface{}{
-							"level5": map[string]interface{}{
-								"data": "deeply nested value",
-								"array": []int{1, 2, 3, 4, 5},
+		result := map[string]any{
+			"level1": map[string]any{
+				"level2": map[string]any{
+					"level3": map[string]any{
+						"level4": map[string]any{
+							"level5": map[string]any{
+								"data":    "deeply nested value",
+								"array":   []int{1, 2, 3, 4, 5},
 								"boolean": true,
-								"null": nil,
+								"null":    nil,
 							},
 						},
 					},
@@ -51,7 +51,7 @@ func TestToolResult_ComplexNestedStructures(t *testing.T) {
 		Type: schemas.ChatToolTypeFunction,
 		Function: &schemas.ChatToolFunction{
 			Name:        "nested_tool",
-			Description: schemas.Ptr("Returns deeply nested structure"),
+			Description: new("Returns deeply nested structure"),
 		},
 	}
 
@@ -63,7 +63,7 @@ func TestToolResult_ComplexNestedStructures(t *testing.T) {
 
 	ctx := createTestContext()
 
-	toolCall := CreateToolCallForExecution("call-nested", "nested_tool", map[string]interface{}{})
+	toolCall := CreateToolCallForExecution("call-nested", "nested_tool", map[string]any{})
 
 	result, bifrostErr := bifrost.ExecuteChatMCPTool(ctx, &toolCall)
 
@@ -82,14 +82,14 @@ func TestToolResult_MultiPartContent(t *testing.T) {
 
 	// Tool that returns content with multiple sections
 	multiPartHandler := func(args any) (string, error) {
-		result := map[string]interface{}{
+		result := map[string]any{
 			"text_part": "This is the text section",
-			"data_part": map[string]interface{}{
+			"data_part": map[string]any{
 				"values": []int{1, 2, 3},
 			},
-			"metadata_part": map[string]interface{}{
+			"metadata_part": map[string]any{
 				"timestamp": "2024-01-01T00:00:00Z",
-				"source": "test",
+				"source":    "test",
 			},
 		}
 
@@ -101,7 +101,7 @@ func TestToolResult_MultiPartContent(t *testing.T) {
 		Type: schemas.ChatToolTypeFunction,
 		Function: &schemas.ChatToolFunction{
 			Name:        "multipart_tool",
-			Description: schemas.Ptr("Returns multi-part content"),
+			Description: new("Returns multi-part content"),
 		},
 	}
 
@@ -113,7 +113,7 @@ func TestToolResult_MultiPartContent(t *testing.T) {
 
 	ctx := createTestContext()
 
-	toolCall := CreateToolCallForExecution("call-multipart", "multipart_tool", map[string]interface{}{})
+	toolCall := CreateToolCallForExecution("call-multipart", "multipart_tool", map[string]any{})
 
 	result, bifrostErr := bifrost.ExecuteChatMCPTool(ctx, &toolCall)
 
@@ -158,7 +158,7 @@ func TestToolResult_LargePayload(t *testing.T) {
 				sizeBytes := targetSize * 1024
 				data := strings.Repeat("x", sizeBytes)
 
-				result := map[string]interface{}{
+				result := map[string]any{
 					"size_kb": targetSize,
 					"data":    data,
 				}
@@ -171,7 +171,7 @@ func TestToolResult_LargePayload(t *testing.T) {
 				Type: schemas.ChatToolTypeFunction,
 				Function: &schemas.ChatToolFunction{
 					Name:        toolName,
-					Description: schemas.Ptr(fmt.Sprintf("Returns %dKB payload", targetSize)),
+					Description: new(fmt.Sprintf("Returns %dKB payload", targetSize)),
 				},
 			}
 
@@ -183,7 +183,7 @@ func TestToolResult_LargePayload(t *testing.T) {
 
 			ctx := createTestContext()
 
-			toolCall := CreateToolCallForExecution("call-large-"+st.name, toolName, map[string]interface{}{})
+			toolCall := CreateToolCallForExecution("call-large-"+st.name, toolName, map[string]any{})
 
 			result, bifrostErr := bifrost.ExecuteChatMCPTool(ctx, &toolCall)
 
@@ -230,7 +230,7 @@ func TestToolResult_SpecialCharactersAndUnicode(t *testing.T) {
 			testContent := tc.content
 
 			specialHandler := func(args any) (string, error) {
-				result := map[string]interface{}{
+				result := map[string]any{
 					"content": testContent,
 					"type":    tc.name,
 				}
@@ -243,7 +243,7 @@ func TestToolResult_SpecialCharactersAndUnicode(t *testing.T) {
 				Type: schemas.ChatToolTypeFunction,
 				Function: &schemas.ChatToolFunction{
 					Name:        toolName,
-					Description: schemas.Ptr("Returns special characters"),
+					Description: new("Returns special characters"),
 				},
 			}
 
@@ -255,7 +255,7 @@ func TestToolResult_SpecialCharactersAndUnicode(t *testing.T) {
 
 			ctx := createTestContext()
 
-			toolCall := CreateToolCallForExecution("call-special-"+tc.name, toolName, map[string]interface{}{"content": tc.content})
+			toolCall := CreateToolCallForExecution("call-special-"+tc.name, toolName, map[string]any{"content": tc.content})
 
 			result, bifrostErr := bifrost.ExecuteChatMCPTool(ctx, &toolCall)
 
@@ -297,7 +297,7 @@ func TestToolResult_EmptyAndNullContent(t *testing.T) {
 				Type: schemas.ChatToolTypeFunction,
 				Function: &schemas.ChatToolFunction{
 					Name:        toolName,
-					Description: schemas.Ptr("Returns empty/null content"),
+					Description: new("Returns empty/null content"),
 				},
 			}
 
@@ -309,7 +309,7 @@ func TestToolResult_EmptyAndNullContent(t *testing.T) {
 
 			ctx := createTestContext()
 
-			toolCall := CreateToolCallForExecution("call-null-"+tc.name, toolName, map[string]interface{}{})
+			toolCall := CreateToolCallForExecution("call-null-"+tc.name, toolName, map[string]any{})
 
 			result, bifrostErr := bifrost.ExecuteChatMCPTool(ctx, &toolCall)
 
@@ -331,10 +331,10 @@ func TestToolResult_ArrayResults(t *testing.T) {
 	manager := setupMCPManager(t)
 
 	arrayHandler := func(args any) (string, error) {
-		result := []interface{}{
-			map[string]interface{}{"id": 1, "name": "Item 1"},
-			map[string]interface{}{"id": 2, "name": "Item 2"},
-			map[string]interface{}{"id": 3, "name": "Item 3"},
+		result := []any{
+			map[string]any{"id": 1, "name": "Item 1"},
+			map[string]any{"id": 2, "name": "Item 2"},
+			map[string]any{"id": 3, "name": "Item 3"},
 			"string item",
 			123,
 			true,
@@ -349,7 +349,7 @@ func TestToolResult_ArrayResults(t *testing.T) {
 		Type: schemas.ChatToolTypeFunction,
 		Function: &schemas.ChatToolFunction{
 			Name:        "array_tool",
-			Description: schemas.Ptr("Returns array result"),
+			Description: new("Returns array result"),
 		},
 	}
 
@@ -361,7 +361,7 @@ func TestToolResult_ArrayResults(t *testing.T) {
 
 	ctx := createTestContext()
 
-	toolCall := CreateToolCallForExecution("call-array", "array_tool", map[string]interface{}{})
+	toolCall := CreateToolCallForExecution("call-array", "array_tool", map[string]any{})
 
 	result, bifrostErr := bifrost.ExecuteChatMCPTool(ctx, &toolCall)
 
@@ -378,14 +378,14 @@ func TestToolResult_MixedDataTypes(t *testing.T) {
 	manager := setupMCPManager(t)
 
 	mixedHandler := func(args any) (string, error) {
-		result := map[string]interface{}{
+		result := map[string]any{
 			"string":  "text value",
 			"integer": 42,
 			"float":   3.14159,
 			"boolean": true,
 			"null":    nil,
-			"array":   []interface{}{1, "two", 3.0, false},
-			"object": map[string]interface{}{
+			"array":   []any{1, "two", 3.0, false},
+			"object": map[string]any{
 				"nested": "value",
 			},
 		}
@@ -398,7 +398,7 @@ func TestToolResult_MixedDataTypes(t *testing.T) {
 		Type: schemas.ChatToolTypeFunction,
 		Function: &schemas.ChatToolFunction{
 			Name:        "mixed_tool",
-			Description: schemas.Ptr("Returns mixed data types"),
+			Description: new("Returns mixed data types"),
 		},
 	}
 
@@ -410,7 +410,7 @@ func TestToolResult_MixedDataTypes(t *testing.T) {
 
 	ctx := createTestContext()
 
-	toolCall := CreateToolCallForExecution("call-mixed", "mixed_tool", map[string]interface{}{})
+	toolCall := CreateToolCallForExecution("call-mixed", "mixed_tool", map[string]any{})
 
 	result, bifrostErr := bifrost.ExecuteChatMCPTool(ctx, &toolCall)
 
@@ -436,10 +436,10 @@ func TestToolResult_BothFormats_ComplexStructure(t *testing.T) {
 	manager := setupMCPManager(t)
 
 	complexHandler := func(args any) (string, error) {
-		result := map[string]interface{}{
+		result := map[string]any{
 			"status": "success",
-			"data": map[string]interface{}{
-				"items": []map[string]interface{}{
+			"data": map[string]any{
+				"items": []map[string]any{
 					{"id": 1, "value": "first"},
 					{"id": 2, "value": "second"},
 				},
@@ -454,7 +454,7 @@ func TestToolResult_BothFormats_ComplexStructure(t *testing.T) {
 		Type: schemas.ChatToolTypeFunction,
 		Function: &schemas.ChatToolFunction{
 			Name:        "complex_tool",
-			Description: schemas.Ptr("Returns complex structure"),
+			Description: new("Returns complex structure"),
 		},
 	}
 
@@ -467,7 +467,7 @@ func TestToolResult_BothFormats_ComplexStructure(t *testing.T) {
 	ctx := createTestContext()
 
 	t.Run("chat_format", func(t *testing.T) {
-		toolCall := CreateToolCallForExecution("call-complex-chat", "complex_tool", map[string]interface{}{})
+		toolCall := CreateToolCallForExecution("call-complex-chat", "complex_tool", map[string]any{})
 
 		result, bifrostErr := bifrost.ExecuteChatMCPTool(ctx, &toolCall)
 
@@ -477,7 +477,7 @@ func TestToolResult_BothFormats_ComplexStructure(t *testing.T) {
 	})
 
 	t.Run("responses_format", func(t *testing.T) {
-		args := map[string]interface{}{}
+		args := map[string]any{}
 		toolMsg := CreateResponsesToolCallForExecution("call-complex-resp", "complex_tool", args)
 
 		result, bifrostErr := bifrost.ExecuteResponsesMCPTool(ctx, &toolMsg)
@@ -510,7 +510,7 @@ func TestToolResult_ContentEncoding(t *testing.T) {
 			testContent := tc.content
 
 			encodingHandler := func(args any) (string, error) {
-				result := map[string]interface{}{
+				result := map[string]any{
 					"encoded": testContent,
 				}
 
@@ -522,7 +522,7 @@ func TestToolResult_ContentEncoding(t *testing.T) {
 				Type: schemas.ChatToolTypeFunction,
 				Function: &schemas.ChatToolFunction{
 					Name:        toolName,
-					Description: schemas.Ptr("Returns encoded content"),
+					Description: new("Returns encoded content"),
 				},
 			}
 
@@ -534,7 +534,7 @@ func TestToolResult_ContentEncoding(t *testing.T) {
 
 			ctx := createTestContext()
 
-			toolCall := CreateToolCallForExecution("call-encoding-"+tc.name, toolName, map[string]interface{}{})
+			toolCall := CreateToolCallForExecution("call-encoding-"+tc.name, toolName, map[string]any{})
 
 			result, bifrostErr := bifrost.ExecuteChatMCPTool(ctx, &toolCall)
 

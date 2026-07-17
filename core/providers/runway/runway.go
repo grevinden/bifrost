@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	providerUtils "github.com/maximhq/bifrost/core/providers/utils"
-	schemas "github.com/maximhq/bifrost/core/schemas"
+	providerUtils "github.com/grevinden/bifrost/core/providers/utils"
+	schemas "github.com/grevinden/bifrost/core/schemas"
 	"github.com/valyala/fasthttp"
 )
 
@@ -232,7 +232,7 @@ func (provider *RunwayProvider) HandleRunwayImageTask(ctx *schemas.BifrostContex
 const runwayImagePollingInterval = 2 * time.Second
 
 // pollRunwayTask polls a Runway task until it reaches a terminal state or the context times out.
-func (provider *RunwayProvider) pollRunwayTask(ctx *schemas.BifrostContext, key schemas.Key, taskID string, sendBackRawResponse bool) (*RunwayTaskDetailsResponse, interface{}, *schemas.BifrostError) {
+func (provider *RunwayProvider) pollRunwayTask(ctx *schemas.BifrostContext, key schemas.Key, taskID string, sendBackRawResponse bool) (*RunwayTaskDetailsResponse, any, *schemas.BifrostError) {
 	pollCtx, cancel := schemas.NewBifrostContextWithTimeout(ctx, time.Duration(provider.networkConfig.DefaultRequestTimeoutInSeconds)*time.Second)
 	defer cancel()
 
@@ -261,7 +261,7 @@ func (provider *RunwayProvider) pollRunwayTask(ctx *schemas.BifrostContext, key 
 }
 
 // retrieveRunwayTask fetches the current state of a Runway task.
-func (provider *RunwayProvider) retrieveRunwayTask(ctx *schemas.BifrostContext, key schemas.Key, taskID string, sendBackRawResponse bool) (*RunwayTaskDetailsResponse, interface{}, *schemas.BifrostError) {
+func (provider *RunwayProvider) retrieveRunwayTask(ctx *schemas.BifrostContext, key schemas.Key, taskID string, sendBackRawResponse bool) (*RunwayTaskDetailsResponse, any, *schemas.BifrostError) {
 	req := fasthttp.AcquireRequest()
 	resp := fasthttp.AcquireResponse()
 	defer fasthttp.ReleaseRequest(req)

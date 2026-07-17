@@ -10,10 +10,10 @@ import (
 	"os"
 	"slices"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	providerUtils "github.com/maximhq/bifrost/core/providers/utils"
-	"github.com/maximhq/bifrost/core/schemas"
-	configstoreTables "github.com/maximhq/bifrost/framework/configstore/tables"
+	bifrost "github.com/grevinden/bifrost/core"
+	providerUtils "github.com/grevinden/bifrost/core/providers/utils"
+	"github.com/grevinden/bifrost/core/schemas"
+	configstoreTables "github.com/grevinden/bifrost/framework/configstore/tables"
 	"github.com/tidwall/gjson"
 )
 

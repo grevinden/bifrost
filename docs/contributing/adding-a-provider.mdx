@@ -15,7 +15,7 @@ This guide will walk you through creating a provider for Bifrost, testing locall
 ## Setup
 
 1.  **Fork and Clone**:
-    *   Fork the repository: https://github.com/maximhq/bifrost/
+    *   Fork the repository: https://github.com/grevinden/bifrost/
     *   Clone your fork: `git clone https://github.com/<your_github_username>/bifrost/`
 2.  **Initialize**:
     *   Run `make dev` at the root of the project to set up dependencies and tools.
@@ -188,8 +188,8 @@ import (
     "strings"
     "time"
 
-    providerUtils "github.com/maximhq/bifrost/core/providers/utils"
-    schemas "github.com/maximhq/bifrost/core/schemas"
+    providerUtils "github.com/grevinden/bifrost/core/providers/utils"
+    schemas "github.com/grevinden/bifrost/core/schemas"
     "github.com/valyala/fasthttp"
 )
 
@@ -266,8 +266,8 @@ import (
     "time"
 
     "github.com/bytedance/sonic"
-    providerUtils "github.com/maximhq/bifrost/core/providers/utils"
-    schemas "github.com/maximhq/bifrost/core/schemas"
+    providerUtils "github.com/grevinden/bifrost/core/providers/utils"
+    schemas "github.com/grevinden/bifrost/core/schemas"
     "github.com/valyala/fasthttp"
 )
 
@@ -422,7 +422,7 @@ import (
     "fmt"
 
     "github.com/bytedance/sonic"
-    schemas "github.com/maximhq/bifrost/core/schemas"
+    schemas "github.com/grevinden/bifrost/core/schemas"
 )
 
 // ToHuggingFaceChatCompletionRequest converts a Bifrost chat request to HuggingFace format
@@ -536,7 +536,7 @@ func ToHuggingFaceChatCompletionRequest(bifrostReq *schemas.BifrostChatRequest) 
 package providername
 
 import (
-    "github.com/maximhq/bifrost/core/schemas"
+    "github.com/grevinden/bifrost/core/schemas"
 )
 
 // ToProviderNameEmbeddingRequest converts a Bifrost embedding request to provider format
@@ -575,7 +575,7 @@ package providername
 
 import (
     "strings"
-    schemas "github.com/maximhq/bifrost/core/schemas"
+    schemas "github.com/grevinden/bifrost/core/schemas"
 )
 
 // ToBifrostListModelsResponse converts provider models list to Bifrost format
@@ -657,9 +657,9 @@ import (
     "strings"
     "time"
 
-    "github.com/maximhq/bifrost/core/providers/openai"
-    providerUtils "github.com/maximhq/bifrost/core/providers/utils"
-    schemas "github.com/maximhq/bifrost/core/schemas"
+    "github.com/grevinden/bifrost/core/providers/openai"
+    providerUtils "github.com/grevinden/bifrost/core/providers/utils"
+    schemas "github.com/grevinden/bifrost/core/schemas"
     "github.com/valyala/fasthttp"
 )
 
@@ -1096,8 +1096,8 @@ Follow this **exact order** when implementing a new provider.
        "encoding/json"
        "fmt"
        
-       providerUtils "github.com/maximhq/bifrost/core/providers/utils"
-       schemas "github.com/maximhq/bifrost/core/schemas"
+       providerUtils "github.com/grevinden/bifrost/core/providers/utils"
+       schemas "github.com/grevinden/bifrost/core/schemas"
        "github.com/valyala/fasthttp"
    )
 
@@ -1162,7 +1162,7 @@ Follow this **exact order** when implementing a new provider.
 
    import (
        "fmt"
-       schemas "github.com/maximhq/bifrost/core/schemas"
+       schemas "github.com/grevinden/bifrost/core/schemas"
    )
 
    // ToBifrostListModelsResponse converts provider models to Bifrost format
@@ -1206,7 +1206,7 @@ Follow this **exact order** when implementing a new provider.
    ```go
    package [provider_name]
 
-   import schemas "github.com/maximhq/bifrost/core/schemas"
+   import schemas "github.com/grevinden/bifrost/core/schemas"
 
    // To[ProviderName]EmbeddingRequest converts Bifrost request to provider format
    func To[ProviderName]EmbeddingRequest(
@@ -1288,7 +1288,7 @@ Follow this **exact order** when implementing a new provider.
    import (
        "encoding/json"
        "github.com/bytedance/sonic"
-       schemas "github.com/maximhq/bifrost/core/schemas"
+       schemas "github.com/grevinden/bifrost/core/schemas"
    )
 
    // To[ProviderName]ChatCompletionRequest converts Bifrost chat request to provider format
@@ -1482,7 +1482,7 @@ For OpenAI-compatible providers, follow the simpler structure shown in the "Open
 
 **Implementation Checklist**:
 - ✅ Create `[provider_name].go` only
-- ✅ Import `github.com/maximhq/bifrost/core/providers/openai`
+- ✅ Import `github.com/grevinden/bifrost/core/providers/openai`
 - ✅ Implement constructor returning `(*Provider, error)`
 - ✅ Set default BaseURL specific to provider
 - ✅ Delegate all methods to `openai.HandleOpenAI*` functions
@@ -1699,7 +1699,7 @@ Manage all your AI providers from a unified interface:
 ```go
 import (
     // ... existing imports
-    "github.com/maximhq/bifrost/core/providers/[providername]"
+    "github.com/grevinden/bifrost/core/providers/[providername]"
 )
 ```
 
@@ -2088,8 +2088,8 @@ import (
     "os"
     "testing"
 
-    "github.com/maximhq/bifrost/core/internal/llmtests"
-    "github.com/maximhq/bifrost/core/schemas"
+    "github.com/grevinden/bifrost/core/internal/llmtests"
+    "github.com/grevinden/bifrost/core/schemas"
 )
 
 func TestProviderName(t *testing.T) {

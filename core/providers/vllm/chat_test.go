@@ -9,7 +9,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	schemas "github.com/maximhq/bifrost/core/schemas"
+	schemas "github.com/grevinden/bifrost/core/schemas"
 )
 
 // TestChatCompletion_ExtraParamsForwardedAutomatically verifies that provider-specific
@@ -18,7 +18,7 @@ import (
 func TestChatCompletion_ExtraParamsForwardedAutomatically(t *testing.T) {
 	t.Parallel()
 
-	var capturedBody map[string]interface{}
+	var capturedBody map[string]any
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		body, err := io.ReadAll(r.Body)
@@ -70,8 +70,8 @@ func TestChatCompletion_ExtraParamsForwardedAutomatically(t *testing.T) {
 			},
 		},
 		Params: &schemas.ChatParameters{
-			ExtraParams: map[string]interface{}{
-				"chat_template_kwargs": map[string]interface{}{
+			ExtraParams: map[string]any{
+				"chat_template_kwargs": map[string]any{
 					"enable_thinking": true,
 				},
 			},
@@ -92,7 +92,7 @@ func TestChatCompletion_ExtraParamsForwardedAutomatically(t *testing.T) {
 		t.Fatalf("chat_template_kwargs missing from outgoing request body; got keys: %v", keys(capturedBody))
 	}
 
-	kwargsMap, ok := rawKwargs.(map[string]interface{})
+	kwargsMap, ok := rawKwargs.(map[string]any)
 	if !ok {
 		t.Fatalf("expected chat_template_kwargs to be an object, got %T", rawKwargs)
 	}
@@ -101,7 +101,7 @@ func TestChatCompletion_ExtraParamsForwardedAutomatically(t *testing.T) {
 	}
 }
 
-func keys(m map[string]interface{}) []string {
+func keys(m map[string]any) []string {
 	out := make([]string, 0, len(m))
 	for k := range m {
 		out = append(out, k)

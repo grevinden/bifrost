@@ -5,8 +5,8 @@ import (
 	"mime/multipart"
 	"testing"
 
-	"github.com/maximhq/bifrost/core/providers/openai"
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/providers/openai"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // multipartBody builds a multipart/form-data body with the given fields, matching what the

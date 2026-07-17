@@ -8,7 +8,7 @@ import (
 	"math"
 	"strings"
 
-	schemas "github.com/maximhq/bifrost/core/schemas"
+	schemas "github.com/grevinden/bifrost/core/schemas"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/valyala/fasthttp"
 )

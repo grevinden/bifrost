@@ -9,8 +9,8 @@ import (
 	"os"
 	"testing"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // getPlugin initializes and returns a Plugin instance for testing purposes.
@@ -115,7 +115,7 @@ func TestMaximLoggerPlugin(t *testing.T) {
 			{
 				Role: "user",
 				Content: &schemas.ChatMessageContent{
-					ContentStr: bifrost.Ptr("Hello, how are you?"),
+					ContentStr: new("Hello, how are you?"),
 				},
 			},
 		},

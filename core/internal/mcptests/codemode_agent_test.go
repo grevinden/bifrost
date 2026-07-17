@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -54,7 +54,7 @@ func TestCodeModeAgent_Basic(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Test code mode agent"),
+					ContentStr: new("Test code mode agent"),
 				},
 			},
 		},
@@ -89,7 +89,6 @@ func TestCodeModeAgent_NonAutoToolInCode(t *testing.T) {
 		t.Skip("MCP_HTTP_URL not set")
 	}
 
-
 	// Code returns result, then LLM returns non-auto tool
 	codeModeClient := GetSampleCodeModeAgentClientConfig(t, config.HTTPServerURL)
 	httpClient := GetSampleHTTPClientConfigNoSpaces(config.HTTPServerURL)
@@ -122,7 +121,7 @@ func TestCodeModeAgent_NonAutoToolInCode(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Test non-auto tool"),
+					ContentStr: new("Test non-auto tool"),
 				},
 			},
 		},
@@ -162,7 +161,6 @@ func TestCodeModeAgent_AutoToolInCode(t *testing.T) {
 		t.Skip("MCP_HTTP_URL not set")
 	}
 
-
 	// Code calls tool, agent continues loop
 	codeModeClient := GetSampleCodeModeAgentClientConfig(t, config.HTTPServerURL)
 	httpClient := GetSampleHTTPClientConfigNoSpaces(config.HTTPServerURL)
@@ -195,7 +193,7 @@ func TestCodeModeAgent_AutoToolInCode(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Multi-iteration test"),
+					ContentStr: new("Multi-iteration test"),
 				},
 			},
 		},
@@ -225,7 +223,6 @@ func TestCodeModeAgent_MixedToolsInCode(t *testing.T) {
 	if config.HTTPServerURL == "" {
 		t.Skip("MCP_HTTP_URL not set")
 	}
-
 
 	// After code execution, LLM returns mixed auto/non-auto tools
 	codeModeClient := GetSampleCodeModeAgentClientConfig(t, config.HTTPServerURL)
@@ -260,7 +257,7 @@ func TestCodeModeAgent_MixedToolsInCode(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Mixed tools test"),
+					ContentStr: new("Mixed tools test"),
 				},
 			},
 		},
@@ -309,7 +306,6 @@ func TestCodeModeAgent_NoToolCallsInCode(t *testing.T) {
 		t.Skip("MCP_HTTP_URL not set")
 	}
 
-
 	// Code mode call is final step (no follow-up)
 	codeModeClient := GetSampleCodeModeAgentClientConfig(t, config.HTTPServerURL)
 	manager := setupMCPManager(t, codeModeClient)
@@ -334,7 +330,7 @@ func TestCodeModeAgent_NoToolCallsInCode(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Simple code test"),
+					ContentStr: new("Simple code test"),
 				},
 			},
 		},
@@ -369,7 +365,6 @@ func TestCodeModeAgent_FilteringInCode(t *testing.T) {
 		t.Skip("MCP_HTTP_URL not set")
 	}
 
-
 	// ToolsToExecute filtering applies to tools called from code
 	codeModeClient := GetSampleCodeModeAgentClientConfig(t, config.HTTPServerURL)
 	httpClient := GetSampleHTTPClientConfigNoSpaces(config.HTTPServerURL)
@@ -400,7 +395,7 @@ func TestCodeModeAgent_FilteringInCode(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Test filtering"),
+					ContentStr: new("Test filtering"),
 				},
 			},
 		},
@@ -431,14 +426,13 @@ func TestCodeModeAgent_AutoExecuteFiltering(t *testing.T) {
 		t.Skip("MCP_HTTP_URL not set")
 	}
 
-
 	// ToolsToAutoExecute doesn't apply to tools called from within code
 	// Tools called from code only need to be in ToolsToExecute
 	codeModeClient := GetSampleCodeModeAgentClientConfig(t, config.HTTPServerURL)
 	httpClient := GetSampleHTTPClientConfigNoSpaces(config.HTTPServerURL)
 	httpClient.ID = "mcpserver"
-	httpClient.ToolsToExecute = []string{"*"}       // All tools can execute
-	httpClient.ToolsToAutoExecute = []string{}      // No auto tools (agent-level)
+	httpClient.ToolsToExecute = []string{"*"}  // All tools can execute
+	httpClient.ToolsToAutoExecute = []string{} // No auto tools (agent-level)
 
 	manager := setupMCPManager(t, codeModeClient, httpClient)
 	ctx := createTestContext()
@@ -463,7 +457,7 @@ func TestCodeModeAgent_AutoExecuteFiltering(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Test auto-execute filtering"),
+					ContentStr: new("Test auto-execute filtering"),
 				},
 			},
 		},
@@ -501,7 +495,6 @@ func TestCodeModeAgent_MaxDepth(t *testing.T) {
 	if config.HTTPServerURL == "" {
 		t.Skip("MCP_HTTP_URL not set")
 	}
-
 
 	// Max depth applies to code mode iterations
 	codeModeClient := GetSampleCodeModeAgentClientConfig(t, config.HTTPServerURL)
@@ -543,7 +536,7 @@ func TestCodeModeAgent_MaxDepth(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Max depth test"),
+					ContentStr: new("Max depth test"),
 				},
 			},
 		},
@@ -572,7 +565,6 @@ func TestCodeModeAgent_MaxDepth_ChatFormat(t *testing.T) {
 	if config.HTTPServerURL == "" {
 		t.Skip("MCP_HTTP_URL not set")
 	}
-
 
 	codeModeClient := GetSampleCodeModeAgentClientConfig(t, config.HTTPServerURL)
 	httpClient := GetSampleHTTPClientConfigNoSpaces(config.HTTPServerURL)
@@ -610,7 +602,7 @@ func TestCodeModeAgent_MaxDepth_ChatFormat(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Chat format max depth"),
+					ContentStr: new("Chat format max depth"),
 				},
 			},
 		},
@@ -641,7 +633,6 @@ func TestCodeModeAgent_MaxDepth_ResponsesFormat(t *testing.T) {
 	if config.HTTPServerURL == "" {
 		t.Skip("MCP_HTTP_URL not set")
 	}
-
 
 	codeModeClient := GetSampleCodeModeAgentClientConfig(t, config.HTTPServerURL)
 	httpClient := GetSampleHTTPClientConfigNoSpaces(config.HTTPServerURL)
@@ -680,7 +671,7 @@ func TestCodeModeAgent_MaxDepth_ResponsesFormat(t *testing.T) {
 				Type: schemas.Ptr(schemas.ResponsesMessageTypeMessage),
 				Role: schemas.Ptr(schemas.ResponsesInputMessageRoleUser),
 				Content: &schemas.ResponsesMessageContent{
-					ContentStr: schemas.Ptr("Responses format max depth"),
+					ContentStr: new("Responses format max depth"),
 				},
 			},
 		},
@@ -715,7 +706,6 @@ func TestCodeModeAgent_Timeout(t *testing.T) {
 		t.Skip("MCP_HTTP_URL not set")
 	}
 
-
 	codeModeClient := GetSampleCodeModeAgentClientConfig(t, config.HTTPServerURL)
 	manager := setupMCPManager(t, codeModeClient)
 	manager.UpdateToolManagerConfig(&schemas.MCPToolManagerConfig{
@@ -746,7 +736,7 @@ func TestCodeModeAgent_Timeout(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Timeout test"),
+					ContentStr: new("Timeout test"),
 				},
 			},
 		},
@@ -775,7 +765,6 @@ func TestCodeModeAgent_Timeout_ChatFormat(t *testing.T) {
 	if config.HTTPServerURL == "" {
 		t.Skip("MCP_HTTP_URL not set")
 	}
-
 
 	codeModeClient := GetSampleCodeModeAgentClientConfig(t, config.HTTPServerURL)
 	manager := setupMCPManager(t, codeModeClient)
@@ -806,7 +795,7 @@ func TestCodeModeAgent_Timeout_ChatFormat(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Chat timeout test"),
+					ContentStr: new("Chat timeout test"),
 				},
 			},
 		},
@@ -834,7 +823,6 @@ func TestCodeModeAgent_Timeout_ResponsesFormat(t *testing.T) {
 	if config.HTTPServerURL == "" {
 		t.Skip("MCP_HTTP_URL not set")
 	}
-
 
 	codeModeClient := GetSampleCodeModeAgentClientConfig(t, config.HTTPServerURL)
 	manager := setupMCPManager(t, codeModeClient)
@@ -866,7 +854,7 @@ func TestCodeModeAgent_Timeout_ResponsesFormat(t *testing.T) {
 				Type: schemas.Ptr(schemas.ResponsesMessageTypeMessage),
 				Role: schemas.Ptr(schemas.ResponsesInputMessageRoleUser),
 				Content: &schemas.ResponsesMessageContent{
-					ContentStr: schemas.Ptr("Responses timeout test"),
+					ContentStr: new("Responses timeout test"),
 				},
 			},
 		},
@@ -899,7 +887,6 @@ func TestCodeModeAgent_ErrorInCode(t *testing.T) {
 		t.Skip("MCP_HTTP_URL not set")
 	}
 
-
 	// Runtime errors in code are handled gracefully
 	codeModeClient := GetSampleCodeModeAgentClientConfig(t, config.HTTPServerURL)
 	manager := setupMCPManager(t, codeModeClient)
@@ -925,7 +912,7 @@ func TestCodeModeAgent_ErrorInCode(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Error test"),
+					ContentStr: new("Error test"),
 				},
 			},
 		},
@@ -954,7 +941,6 @@ func TestCodeModeAgent_ToolErrorInCode(t *testing.T) {
 	if config.HTTPServerURL == "" {
 		t.Skip("MCP_HTTP_URL not set")
 	}
-
 
 	// Tool errors from code are propagated
 	codeModeClient := GetSampleCodeModeAgentClientConfig(t, config.HTTPServerURL)
@@ -987,7 +973,7 @@ func TestCodeModeAgent_ToolErrorInCode(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Tool error test"),
+					ContentStr: new("Tool error test"),
 				},
 			},
 		},

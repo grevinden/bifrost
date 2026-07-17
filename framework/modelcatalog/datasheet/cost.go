@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/maximhq/bifrost/core/schemas"
-	configstoreTables "github.com/maximhq/bifrost/framework/configstore/tables"
+	"github.com/grevinden/bifrost/core/schemas"
+	configstoreTables "github.com/grevinden/bifrost/framework/configstore/tables"
 )
 
 // CalculateCost calculates the cost of a Bifrost response.

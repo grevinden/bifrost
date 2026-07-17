@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"testing"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // BenchmarkMockerPlugin_PreHook_SimpleRule benchmarks simple rule matching
@@ -44,7 +44,7 @@ func BenchmarkMockerPlugin_PreHook_SimpleRule(b *testing.B) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: bifrost.Ptr("Hello, benchmark test"),
+					ContentStr: new("Hello, benchmark test"),
 				},
 			},
 		},
@@ -77,7 +77,7 @@ func BenchmarkMockerPlugin_PreHook_RegexRule(b *testing.B) {
 				Priority:    100,
 				Probability: 1.0,
 				Conditions: Conditions{
-					MessageRegex: bifrost.Ptr(`(?i).*hello.*`),
+					MessageRegex: new(`(?i).*hello.*`),
 				},
 				Responses: []Response{
 					{
@@ -101,7 +101,7 @@ func BenchmarkMockerPlugin_PreHook_RegexRule(b *testing.B) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: bifrost.Ptr("Hello, this should match the regex pattern"),
+					ContentStr: new("Hello, this should match the regex pattern"),
 				},
 			},
 		},
@@ -126,7 +126,7 @@ func BenchmarkMockerPlugin_PreHook_RegexRule(b *testing.B) {
 // BenchmarkMockerPlugin_PreHook_MultipleRules benchmarks multiple rule evaluation
 func BenchmarkMockerPlugin_PreHook_MultipleRules(b *testing.B) {
 	rules := make([]MockRule, 10)
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		rules[i] = MockRule{
 			Name:        "rule-" + strconv.Itoa(i),
 			Enabled:     true,
@@ -180,7 +180,7 @@ func BenchmarkMockerPlugin_PreHook_MultipleRules(b *testing.B) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: bifrost.Ptr("Test message"),
+					ContentStr: new("Test message"),
 				},
 			},
 		},
@@ -238,7 +238,7 @@ func BenchmarkMockerPlugin_PreHook_NoMatch(b *testing.B) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: bifrost.Ptr("Test message"),
+					ContentStr: new("Test message"),
 				},
 			},
 		},
@@ -275,7 +275,7 @@ func BenchmarkMockerPlugin_PreHook_Template(b *testing.B) {
 					{
 						Type: ResponseTypeSuccess,
 						Content: &SuccessResponse{
-							MessageTemplate: bifrost.Ptr("Hello from {{provider}} using model {{model}}!"),
+							MessageTemplate: new("Hello from {{provider}} using model {{model}}!"),
 						},
 					},
 				},
@@ -293,7 +293,7 @@ func BenchmarkMockerPlugin_PreHook_Template(b *testing.B) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: bifrost.Ptr("Test message"),
+					ContentStr: new("Test message"),
 				},
 			},
 		},

@@ -243,7 +243,7 @@ func validateReasoningMeetingTime(output string) error {
 
 func validateOceanDesertPoem(output string) error {
 	var nonEmpty int
-	for _, line := range strings.Split(output, "\n") {
+	for line := range strings.SplitSeq(output, "\n") {
 		if strings.TrimSpace(line) != "" {
 			nonEmpty++
 		}

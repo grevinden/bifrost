@@ -1,7 +1,7 @@
 package cohere
 
 import (
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // ToCohereEmbeddingRequest converts a Bifrost embedding request to Cohere format
@@ -97,7 +97,7 @@ func (req *CohereEmbeddingRequest) ToBifrostEmbeddingRequest(ctx *schemas.Bifros
 	}
 
 	// Convert extra params
-	extraParams := make(map[string]interface{})
+	extraParams := make(map[string]any)
 	if req.InputType != "" {
 		extraParams["input_type"] = req.InputType
 	}

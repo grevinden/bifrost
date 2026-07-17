@@ -13,7 +13,7 @@ import (
 	"time"
 
 	ws "github.com/fasthttp/websocket"
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // UpstreamConn wraps a WebSocket connection to an upstream provider.
@@ -61,7 +61,7 @@ func (c *UpstreamConn) WriteMessage(messageType int, data []byte) error {
 }
 
 // WriteJSON sends a JSON-encoded message to the upstream provider. Thread-safe.
-func (c *UpstreamConn) WriteJSON(v interface{}) error {
+func (c *UpstreamConn) WriteJSON(v any) error {
 	c.writeMu.Lock()
 	defer c.writeMu.Unlock()
 	c.lastUsed.Store(time.Now().UnixNano())
@@ -193,10 +193,7 @@ func (c *UpstreamConn) ValidateIdleHeartbeat(timeout time.Duration) bool {
 		if remaining <= 0 {
 			break
 		}
-		d := pollInterval
-		if remaining < d {
-			d = remaining
-		}
+		d := min(remaining, pollInterval)
 
 		_ = c.SetReadDeadline(time.Now().Add(d))
 		_, _, err := c.ReadMessage()

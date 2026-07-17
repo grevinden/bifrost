@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // StreamingToolCallAccumulator accumulates tool call fragments from streaming responses
@@ -246,7 +246,7 @@ func RunToolCallsStreamingTest(t *testing.T, client *bifrost.Bifrost, ctx contex
 			Model:    testConfig.ChatModel,
 			Input:    chatMessages,
 			Params: &schemas.ChatParameters{
-				MaxCompletionTokens: bifrost.Ptr(500),
+				MaxCompletionTokens: new(500),
 				Tools:               []schemas.ChatTool{*chatTool},
 			},
 			Fallbacks: testConfig.Fallbacks,
@@ -256,12 +256,12 @@ func RunToolCallsStreamingTest(t *testing.T, client *bifrost.Bifrost, ctx contex
 		retryConfig := StreamingRetryConfig()
 		retryContext := TestRetryContext{
 			ScenarioName: "ToolCallsStreamingChatCompletions",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"should_stream_content":  true,
 				"should_have_tool_calls": true,
 				"tool_name":              "get_weather",
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider": testConfig.Provider,
 				"model":    testConfig.ChatModel,
 				"tools":    true,
@@ -360,12 +360,12 @@ func RunToolCallsStreamingTest(t *testing.T, client *bifrost.Bifrost, ctx contex
 		retryConfig := StreamingRetryConfig()
 		retryContext := TestRetryContext{
 			ScenarioName: "ToolCallsStreamingResponses",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"should_stream_content":  true,
 				"should_have_tool_calls": true,
 				"tool_name":              "get_weather",
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider": testConfig.Provider,
 				"model":    testConfig.ChatModel,
 				"tools":    true,
@@ -610,7 +610,7 @@ func validateStreamingToolCalls(toolCalls []ToolCallInfo, apiName string) error 
 			return fmt.Errorf("%s: tool call %d missing arguments", apiName, i)
 		}
 		// Try to parse arguments as JSON to ensure they're valid
-		var args map[string]interface{}
+		var args map[string]any
 		if err := json.Unmarshal([]byte(toolCall.Arguments), &args); err != nil {
 			// Don't fail on invalid JSON - some providers might send partial JSON during streaming
 			// But we should at least have some content

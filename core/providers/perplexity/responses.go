@@ -3,7 +3,7 @@ package perplexity
 import (
 	"strings"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // isPerplexityResponsesSupported reports whether the model should use /v1/responses vs /chat/completions.
@@ -34,9 +34,9 @@ func ToPerplexityResponsesRequest(bifrostReq *schemas.BifrostResponsesRequest) *
 		// Handle reasoning effort mapping
 		if bifrostReq.Params.Reasoning != nil && bifrostReq.Params.Reasoning.Effort != nil {
 			if *bifrostReq.Params.Reasoning.Effort == "minimal" {
-				perplexityReq.ReasoningEffort = schemas.Ptr("low")
+				perplexityReq.ReasoningEffort = new("low")
 			} else {
-				perplexityReq.ReasoningEffort = schemas.Ptr(*bifrostReq.Params.Reasoning.Effort)
+				perplexityReq.ReasoningEffort = new(*bifrostReq.Params.Reasoning.Effort)
 			}
 		}
 
@@ -142,10 +142,10 @@ func ToPerplexityResponsesRequest(bifrostReq *schemas.BifrostResponsesRequest) *
 
 			// Handle web_search_options
 			if webSearchOptionsParam, ok := schemas.SafeExtractFromMap(bifrostReq.Params.ExtraParams, "web_search_options"); ok {
-				if webSearchOptionsSlice, ok := webSearchOptionsParam.([]interface{}); ok {
+				if webSearchOptionsSlice, ok := webSearchOptionsParam.([]any); ok {
 					var webSearchOptions []WebSearchOption
 					for _, optionInterface := range webSearchOptionsSlice {
-						if optionMap, ok := optionInterface.(map[string]interface{}); ok {
+						if optionMap, ok := optionInterface.(map[string]any); ok {
 							option := WebSearchOption{}
 
 							if searchContextSize, ok := schemas.SafeExtractStringPointer(optionMap["search_context_size"]); ok {
@@ -162,7 +162,7 @@ func ToPerplexityResponsesRequest(bifrostReq *schemas.BifrostResponsesRequest) *
 
 							// Handle user_location
 							if userLocationParam, ok := schemas.SafeExtractFromMap(optionMap, "user_location"); ok {
-								if userLocationMap, ok := userLocationParam.(map[string]interface{}); ok {
+								if userLocationMap, ok := userLocationParam.(map[string]any); ok {
 									userLocation := &WebSearchOptionUserLocation{}
 
 									if latitude, ok := schemas.SafeExtractFloat64Pointer(userLocationMap["latitude"]); ok {
@@ -194,11 +194,11 @@ func ToPerplexityResponsesRequest(bifrostReq *schemas.BifrostResponsesRequest) *
 
 			// Handle media_response
 			if mediaResponseParam, ok := schemas.SafeExtractFromMap(bifrostReq.Params.ExtraParams, "media_response"); ok {
-				if mediaResponseMap, ok := mediaResponseParam.(map[string]interface{}); ok {
+				if mediaResponseMap, ok := mediaResponseParam.(map[string]any); ok {
 					mediaResponse := &MediaResponse{}
 
 					if overridesParam, ok := schemas.SafeExtractFromMap(mediaResponseMap, "overrides"); ok {
-						if overridesMap, ok := overridesParam.(map[string]interface{}); ok {
+						if overridesMap, ok := overridesParam.(map[string]any); ok {
 							overrides := MediaResponseOverrides{}
 
 							if returnVideos, ok := schemas.SafeExtractBoolPointer(overridesMap["return_videos"]); ok {

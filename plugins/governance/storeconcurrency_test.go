@@ -40,10 +40,10 @@ func TestBumpBudgetUsage_NoLostIncrements(t *testing.T) {
 
 	var wg sync.WaitGroup
 	wg.Add(goroutines)
-	for i := 0; i < goroutines; i++ {
+	for range goroutines {
 		go func() {
 			defer wg.Done()
-			for j := 0; j < perGoroutine; j++ {
+			for range perGoroutine {
 				assert.NoError(t, store.BumpBudgetUsage(context.Background(), budgetID, cost))
 			}
 		}()
@@ -69,10 +69,10 @@ func TestBumpRateLimitUsage_NoLostIncrements(t *testing.T) {
 
 	var wg sync.WaitGroup
 	wg.Add(goroutines)
-	for i := 0; i < goroutines; i++ {
+	for range goroutines {
 		go func() {
 			defer wg.Done()
-			for j := 0; j < perGoroutine; j++ {
+			for range perGoroutine {
 				assert.NoError(t, store.BumpRateLimitUsage(context.Background(), rlID, tokensPerCall, true, true))
 			}
 		}()
@@ -105,7 +105,7 @@ func TestResetBudgetAt_ConcurrentResettersCollapse(t *testing.T) {
 	var successes atomic.Int64
 	var wg sync.WaitGroup
 	wg.Add(goroutines)
-	for i := 0; i < goroutines; i++ {
+	for range goroutines {
 		go func() {
 			defer wg.Done()
 			if _, ok := store.ResetBudgetAt(context.Background(), budgetID, newLastReset); ok {

@@ -7,8 +7,8 @@ import (
 	"testing"
 
 	"github.com/bytedance/sonic"
-	"github.com/maximhq/bifrost/core/providers/openai"
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/providers/openai"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 func TestToAnthropicChatRequest_PreservesPropertyOrder(t *testing.T) {
@@ -105,7 +105,7 @@ func TestToAnthropicChatRequest_OpenAICompatibleFileIDUsesFileSource(t *testing.
 		t.Fatalf("unmarshal OpenAI-compatible request: %v", err)
 	}
 
-	ctx := schemas.NewBifrostContext(nil, schemas.NoDeadline)
+	ctx := schemas.NewBifrostContext(context.TODO, schemas.NoDeadline)
 	bifrostReq := openAIReq.ToBifrostChatRequest(ctx)
 	result, err := ToAnthropicChatRequest(ctx, bifrostReq)
 	if err != nil {
@@ -797,7 +797,7 @@ func TestToAnthropicChatRequest_Opus47_ReasoningEffort_AdaptiveWithEffort(t *tes
 		},
 	}
 
-	ctx, cancel := schemas.NewBifrostContextWithCancel(nil)
+	ctx, cancel := schemas.NewBifrostContextWithCancel(context.TODO)
 	defer cancel()
 	result, err := ToAnthropicChatRequest(ctx, bifrostReq)
 	if err != nil {

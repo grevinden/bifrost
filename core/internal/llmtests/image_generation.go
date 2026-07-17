@@ -13,8 +13,8 @@ import (
 	"testing"
 	"time"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // RunImageGenerationTest executes the end-to-end image generation test (non-streaming)
@@ -37,14 +37,14 @@ func RunImageGenerationTest(t *testing.T, client *bifrost.Bifrost, ctx context.C
 		retryConfig := GetTestRetryConfigForScenario("ImageGeneration", testConfig)
 		retryContext := TestRetryContext{
 			ScenarioName:     "ImageGeneration",
-			ExpectedBehavior: map[string]interface{}{},
-			TestMetadata: map[string]interface{}{
+			ExpectedBehavior: map[string]any{},
+			TestMetadata: map[string]any{
 				"provider": testConfig.Provider,
 				"model":    testConfig.ImageGenerationModel,
 			},
 		}
 
-		expectations := GetExpectationsForScenario("ImageGeneration", testConfig, map[string]interface{}{
+		expectations := GetExpectationsForScenario("ImageGeneration", testConfig, map[string]any{
 			"min_images":    1,
 			"expected_size": "1024x1024",
 		})
@@ -66,8 +66,8 @@ func RunImageGenerationTest(t *testing.T, client *bifrost.Bifrost, ctx context.C
 					Prompt: "A serene Japanese garden with cherry blossoms in spring",
 				},
 				Params: &schemas.ImageGenerationParameters{
-					Size: bifrost.Ptr("1024x1024"),
-					N:    bifrost.Ptr(1),
+					Size: new("1024x1024"),
+					N:    new(1),
 				},
 				Fallbacks: testConfig.ImageGenerationFallbacks,
 			}
@@ -174,10 +174,10 @@ func RunImageGenerationStreamTest(t *testing.T, client *bifrost.Bifrost, ctx con
 		retryConfig := GetTestRetryConfigForScenario("ImageGenerationStream", testConfig)
 		retryContext := TestRetryContext{
 			ScenarioName: "ImageGenerationStream",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"should_generate_images": true,
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider": testConfig.Provider,
 				"model":    testConfig.ImageGenerationModel,
 			},
@@ -190,8 +190,8 @@ func RunImageGenerationStreamTest(t *testing.T, client *bifrost.Bifrost, ctx con
 				Prompt: "A futuristic cityscape at sunset with flying cars",
 			},
 			Params: &schemas.ImageGenerationParameters{
-				Size:    bifrost.Ptr("1024x1024"),
-				Quality: bifrost.Ptr("low"),
+				Size:    new("1024x1024"),
+				Quality: new("low"),
 			},
 			Fallbacks: testConfig.ImageGenerationFallbacks,
 		}

@@ -3,7 +3,7 @@ package mcp
 import (
 	"fmt"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // agentAPIAdapter defines the interface for API-specific operations in agent mode.
@@ -22,49 +22,49 @@ import (
 //  4. The agent loop remains API-neutral
 type agentAPIAdapter interface {
 	// Extract conversation history from the original request
-	getConversationHistory() []interface{}
+	getConversationHistory() []any
 
 	// Get original request
-	getOriginalRequest() interface{}
+	getOriginalRequest() any
 
 	// Get initial response
-	getInitialResponse() interface{}
+	getInitialResponse() any
 
 	// Check if response has tool calls
-	hasToolCalls(response interface{}) bool
+	hasToolCalls(response any) bool
 
 	// Extract tool calls from response.
 	// For Chat API: Returns tool calls directly from the response.
 	// For Responses API: Converts ResponsesMessage tool calls to ChatAssistantMessageToolCall for processing.
-	extractToolCalls(response interface{}) []schemas.ChatAssistantMessageToolCall
+	extractToolCalls(response any) []schemas.ChatAssistantMessageToolCall
 
 	// Add assistant message with tool calls to conversation
-	addAssistantMessage(conversation []interface{}, response interface{}) []interface{}
+	addAssistantMessage(conversation []any, response any) []any
 
 	// Add tool results to conversation.
 	// For Chat API: Adds ChatMessage results directly.
 	// For Responses API: Converts ChatMessage results to ResponsesMessage via ToResponsesToolMessage().
-	addToolResults(conversation []interface{}, toolResults []*schemas.ChatMessage) []interface{}
+	addToolResults(conversation []any, toolResults []*schemas.ChatMessage) []any
 
 	// Create new request with updated conversation
-	createNewRequest(conversation []interface{}) interface{}
+	createNewRequest(conversation []any) any
 
 	// Make LLM call
-	makeLLMCall(ctx *schemas.BifrostContext, request interface{}) (interface{}, *schemas.BifrostError)
+	makeLLMCall(ctx *schemas.BifrostContext, request any) (any, *schemas.BifrostError)
 
 	// Create response with executed tools and non-auto-executable calls
 	createResponseWithExecutedTools(
-		response interface{},
+		response any,
 		executedToolResults []*schemas.ChatMessage,
 		executedToolCalls []schemas.ChatAssistantMessageToolCall,
 		nonAutoExecutableToolCalls []schemas.ChatAssistantMessageToolCall,
-	) interface{}
+	) any
 
 	// extractUsage returns the token usage from a response as BifrostLLMUsage.
-	extractUsage(response interface{}) *schemas.BifrostLLMUsage
+	extractUsage(response any) *schemas.BifrostLLMUsage
 
 	// applyUsage sets accumulated usage on the response in place.
-	applyUsage(response interface{}, usage *schemas.BifrostLLMUsage)
+	applyUsage(response any, usage *schemas.BifrostLLMUsage)
 }
 
 // chatAPIAdapter implements agentAPIAdapter for Chat API
@@ -95,8 +95,8 @@ type responsesAPIAdapter struct {
 }
 
 // Chat API adapter implementations
-func (c *chatAPIAdapter) getConversationHistory() []interface{} {
-	history := make([]interface{}, 0)
+func (c *chatAPIAdapter) getConversationHistory() []any {
+	history := make([]any, 0)
 	if c.originalReq.Input != nil {
 		for _, msg := range c.originalReq.Input {
 			history = append(history, msg)
@@ -105,25 +105,25 @@ func (c *chatAPIAdapter) getConversationHistory() []interface{} {
 	return history
 }
 
-func (c *chatAPIAdapter) getOriginalRequest() interface{} {
+func (c *chatAPIAdapter) getOriginalRequest() any {
 	return c.originalReq
 }
 
-func (c *chatAPIAdapter) getInitialResponse() interface{} {
+func (c *chatAPIAdapter) getInitialResponse() any {
 	return c.initialResponse
 }
 
-func (c *chatAPIAdapter) hasToolCalls(response interface{}) bool {
+func (c *chatAPIAdapter) hasToolCalls(response any) bool {
 	chatResponse := response.(*schemas.BifrostChatResponse)
 	return hasToolCallsForChatResponse(chatResponse)
 }
 
-func (c *chatAPIAdapter) extractToolCalls(response interface{}) []schemas.ChatAssistantMessageToolCall {
+func (c *chatAPIAdapter) extractToolCalls(response any) []schemas.ChatAssistantMessageToolCall {
 	chatResponse := response.(*schemas.BifrostChatResponse)
 	return extractToolCalls(chatResponse)
 }
 
-func (c *chatAPIAdapter) addAssistantMessage(conversation []interface{}, response interface{}) []interface{} {
+func (c *chatAPIAdapter) addAssistantMessage(conversation []any, response any) []any {
 	chatResponse := response.(*schemas.BifrostChatResponse)
 	for _, choice := range chatResponse.Choices {
 		if choice.ChatNonStreamResponseChoice != nil && choice.ChatNonStreamResponseChoice.Message != nil {
@@ -133,14 +133,14 @@ func (c *chatAPIAdapter) addAssistantMessage(conversation []interface{}, respons
 	return conversation
 }
 
-func (c *chatAPIAdapter) addToolResults(conversation []interface{}, toolResults []*schemas.ChatMessage) []interface{} {
+func (c *chatAPIAdapter) addToolResults(conversation []any, toolResults []*schemas.ChatMessage) []any {
 	for _, toolResult := range toolResults {
 		conversation = append(conversation, *toolResult)
 	}
 	return conversation
 }
 
-func (c *chatAPIAdapter) createNewRequest(conversation []interface{}) interface{} {
+func (c *chatAPIAdapter) createNewRequest(conversation []any) any {
 	// Convert conversation back to ChatMessage slice
 	chatMessages := make([]schemas.ChatMessage, 0, len(conversation))
 	for _, msg := range conversation {
@@ -161,17 +161,17 @@ func (c *chatAPIAdapter) createNewRequest(conversation []interface{}) interface{
 	}
 }
 
-func (c *chatAPIAdapter) makeLLMCall(ctx *schemas.BifrostContext, request interface{}) (interface{}, *schemas.BifrostError) {
+func (c *chatAPIAdapter) makeLLMCall(ctx *schemas.BifrostContext, request any) (any, *schemas.BifrostError) {
 	chatRequest := request.(*schemas.BifrostChatRequest)
 	return c.makeReq(ctx, chatRequest)
 }
 
 func (c *chatAPIAdapter) createResponseWithExecutedTools(
-	response interface{},
+	response any,
 	executedToolResults []*schemas.ChatMessage,
 	executedToolCalls []schemas.ChatAssistantMessageToolCall,
 	nonAutoExecutableToolCalls []schemas.ChatAssistantMessageToolCall,
-) interface{} {
+) any {
 	chatResponse := response.(*schemas.BifrostChatResponse)
 	return createChatResponseWithExecutedToolsAndNonAutoExecutableCalls(
 		chatResponse,
@@ -181,11 +181,11 @@ func (c *chatAPIAdapter) createResponseWithExecutedTools(
 	)
 }
 
-func (c *chatAPIAdapter) extractUsage(response interface{}) *schemas.BifrostLLMUsage {
+func (c *chatAPIAdapter) extractUsage(response any) *schemas.BifrostLLMUsage {
 	return response.(*schemas.BifrostChatResponse).Usage
 }
 
-func (c *chatAPIAdapter) applyUsage(response interface{}, usage *schemas.BifrostLLMUsage) {
+func (c *chatAPIAdapter) applyUsage(response any, usage *schemas.BifrostLLMUsage) {
 	response.(*schemas.BifrostChatResponse).Usage = usage
 }
 
@@ -237,7 +237,7 @@ func createChatResponseWithExecutedToolsAndNonAutoExecutableCalls(
 	var contentText string
 	if len(executedToolResults) > 0 {
 		// Format tool results as JSON-like structure
-		toolResultsMap := make(map[string]interface{})
+		toolResultsMap := make(map[string]any)
 		for _, toolResult := range executedToolResults {
 			// Get tool name from tool call ID mapping
 			var toolName string
@@ -253,15 +253,15 @@ func createChatResponseWithExecutedToolsAndNonAutoExecutableCalls(
 			}
 
 			// Extract output from tool result
-			var output interface{}
+			var output any
 			if toolResult.Content != nil {
 				if toolResult.Content.ContentStr != nil {
 					output = *toolResult.Content.ContentStr
 				} else if toolResult.Content.ContentBlocks != nil {
 					// Convert content blocks to a readable format
-					blocks := make([]map[string]interface{}, 0)
+					blocks := make([]map[string]any, 0)
 					for _, block := range toolResult.Content.ContentBlocks {
-						blockMap := make(map[string]interface{})
+						blockMap := make(map[string]any)
 						blockMap["type"] = string(block.Type)
 						if block.Text != nil {
 							blockMap["text"] = *block.Text
@@ -317,8 +317,8 @@ func createChatResponseWithExecutedToolsAndNonAutoExecutableCalls(
 }
 
 // Responses API adapter implementations
-func (r *responsesAPIAdapter) getConversationHistory() []interface{} {
-	history := make([]interface{}, 0)
+func (r *responsesAPIAdapter) getConversationHistory() []any {
+	history := make([]any, 0)
 	if r.originalReq.Input != nil {
 		for _, msg := range r.originalReq.Input {
 			history = append(history, msg)
@@ -327,27 +327,27 @@ func (r *responsesAPIAdapter) getConversationHistory() []interface{} {
 	return history
 }
 
-func (r *responsesAPIAdapter) getOriginalRequest() interface{} {
+func (r *responsesAPIAdapter) getOriginalRequest() any {
 	return r.originalReq
 }
 
-func (r *responsesAPIAdapter) getInitialResponse() interface{} {
+func (r *responsesAPIAdapter) getInitialResponse() any {
 	return r.initialResponse
 }
 
-func (r *responsesAPIAdapter) hasToolCalls(response interface{}) bool {
+func (r *responsesAPIAdapter) hasToolCalls(response any) bool {
 	responsesResponse := response.(*schemas.BifrostResponsesResponse)
 	return hasToolCallsForResponsesResponse(responsesResponse)
 }
 
-func (r *responsesAPIAdapter) extractToolCalls(response interface{}) []schemas.ChatAssistantMessageToolCall {
+func (r *responsesAPIAdapter) extractToolCalls(response any) []schemas.ChatAssistantMessageToolCall {
 	responsesResponse := response.(*schemas.BifrostResponsesResponse)
 	// Convert to Chat format and extract tool calls using existing logic
 	chatResponse := responsesResponse.ToBifrostChatResponse()
 	return extractToolCalls(chatResponse)
 }
 
-func (r *responsesAPIAdapter) addAssistantMessage(conversation []interface{}, response interface{}) []interface{} {
+func (r *responsesAPIAdapter) addAssistantMessage(conversation []any, response any) []any {
 	responsesResponse := response.(*schemas.BifrostResponsesResponse)
 	for _, output := range responsesResponse.Output {
 		conversation = append(conversation, output)
@@ -355,7 +355,7 @@ func (r *responsesAPIAdapter) addAssistantMessage(conversation []interface{}, re
 	return conversation
 }
 
-func (r *responsesAPIAdapter) addToolResults(conversation []interface{}, toolResults []*schemas.ChatMessage) []interface{} {
+func (r *responsesAPIAdapter) addToolResults(conversation []any, toolResults []*schemas.ChatMessage) []any {
 	for _, toolResult := range toolResults {
 		// Convert using existing converter
 		responsesMessages := toolResult.ToResponsesMessages()
@@ -366,7 +366,7 @@ func (r *responsesAPIAdapter) addToolResults(conversation []interface{}, toolRes
 	return conversation
 }
 
-func (r *responsesAPIAdapter) createNewRequest(conversation []interface{}) interface{} {
+func (r *responsesAPIAdapter) createNewRequest(conversation []any) any {
 	// Convert conversation back to ResponsesMessage slice
 	responsesMessages := make([]schemas.ResponsesMessage, 0, len(conversation))
 	for _, msg := range conversation {
@@ -382,17 +382,17 @@ func (r *responsesAPIAdapter) createNewRequest(conversation []interface{}) inter
 	}
 }
 
-func (r *responsesAPIAdapter) makeLLMCall(ctx *schemas.BifrostContext, request interface{}) (interface{}, *schemas.BifrostError) {
+func (r *responsesAPIAdapter) makeLLMCall(ctx *schemas.BifrostContext, request any) (any, *schemas.BifrostError) {
 	responsesRequest := request.(*schemas.BifrostResponsesRequest)
 	return r.makeReq(ctx, responsesRequest)
 }
 
 func (r *responsesAPIAdapter) createResponseWithExecutedTools(
-	response interface{},
+	response any,
 	executedToolResults []*schemas.ChatMessage,
 	executedToolCalls []schemas.ChatAssistantMessageToolCall,
 	nonAutoExecutableToolCalls []schemas.ChatAssistantMessageToolCall,
-) interface{} {
+) any {
 	responsesResponse := response.(*schemas.BifrostResponsesResponse)
 
 	// Create response with executed tools directly on Responses schema
@@ -404,11 +404,11 @@ func (r *responsesAPIAdapter) createResponseWithExecutedTools(
 	)
 }
 
-func (r *responsesAPIAdapter) extractUsage(response interface{}) *schemas.BifrostLLMUsage {
+func (r *responsesAPIAdapter) extractUsage(response any) *schemas.BifrostLLMUsage {
 	return response.(*schemas.BifrostResponsesResponse).Usage.ToBifrostLLMUsage()
 }
 
-func (r *responsesAPIAdapter) applyUsage(response interface{}, usage *schemas.BifrostLLMUsage) {
+func (r *responsesAPIAdapter) applyUsage(response any, usage *schemas.BifrostLLMUsage) {
 	response.(*schemas.BifrostResponsesResponse).Usage = usage.ToResponsesResponseUsage()
 }
 
@@ -483,7 +483,7 @@ func createResponsesResponseWithExecutedToolsAndNonAutoExecutableCalls(
 	var contentText string
 	if len(executedToolResults) > 0 {
 		// Format tool results as JSON-like structure
-		toolResultsMap := make(map[string]interface{})
+		toolResultsMap := make(map[string]any)
 		for _, toolResult := range executedToolResults {
 			// Get tool name from tool call ID mapping
 			var toolName string
@@ -499,15 +499,15 @@ func createResponsesResponseWithExecutedToolsAndNonAutoExecutableCalls(
 			}
 
 			// Extract output from tool result
-			var output interface{}
+			var output any
 			if toolResult.Content != nil {
 				if toolResult.Content.ContentStr != nil {
 					output = *toolResult.Content.ContentStr
 				} else if toolResult.Content.ContentBlocks != nil {
 					// Convert content blocks to a readable format
-					blocks := make([]map[string]interface{}, 0)
+					blocks := make([]map[string]any, 0)
 					for _, block := range toolResult.Content.ContentBlocks {
-						blockMap := make(map[string]interface{})
+						blockMap := make(map[string]any)
 						blockMap["type"] = string(block.Type)
 						if block.Text != nil {
 							blockMap["text"] = *block.Text

@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // TestResponsesAPIBasicFunctionality tests the core caching functionality with Responses API
@@ -438,7 +438,7 @@ func TestResponsesAPIComplexParameters(t *testing.T) {
 	// Create request with various complex parameters
 	serviceTier := schemas.BifrostServiceTierDefault
 	request := CreateBasicResponsesRequest("Test complex parameters", 0.8, 500)
-	request.Params.TopP = PtrFloat64(0.9)
+	request.Params.TopP = new(0.9)
 	request.Params.Background = &[]bool{true}[0]
 	request.Params.ParallelToolCalls = &[]bool{false}[0]
 	request.Params.ServiceTier = &serviceTier
@@ -455,7 +455,7 @@ func TestResponsesAPIComplexParameters(t *testing.T) {
 
 	// Create identical request
 	request2 := CreateBasicResponsesRequest("Test complex parameters", 0.8, 500)
-	request2.Params.TopP = PtrFloat64(0.9)
+	request2.Params.TopP = new(0.9)
 	request2.Params.Background = &[]bool{true}[0]
 	request2.Params.ParallelToolCalls = &[]bool{false}[0]
 	request2.Params.ServiceTier = &serviceTier

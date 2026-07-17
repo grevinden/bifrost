@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/maximhq/bifrost/core/providers/utils"
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/providers/utils"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // ToBifrostImageGenerationRequest converts a Gemini generation request to a Bifrost image generation request
@@ -51,7 +51,7 @@ func (request *GeminiGenerationRequest) ToBifrostImageGenerationRequest(ctx *sch
 
 			// Map additional parameters to ExtraParams if not in Bifrost schema
 			if bifrostReq.Params.ExtraParams == nil {
-				bifrostReq.Params.ExtraParams = make(map[string]interface{})
+				bifrostReq.Params.ExtraParams = make(map[string]any)
 			}
 
 			if request.Parameters.PersonGeneration != nil {
@@ -128,7 +128,7 @@ func (request *GeminiGenerationRequest) ToBifrostImageEditRequest(ctx *schemas.B
 
 	// Initialize ExtraParams if not present
 	if bifrostReq.Params.ExtraParams == nil {
-		bifrostReq.Params.ExtraParams = make(map[string]interface{})
+		bifrostReq.Params.ExtraParams = make(map[string]any)
 	}
 
 	// First, try to extract prompt from Imagen format (instances)
@@ -393,7 +393,7 @@ func (response *GenerateContentResponse) ToBifrostImageGenerationResponse() (*sc
 				IsBifrostError: false,
 				Error: &schemas.ErrorField{
 					Message: candidate.FinishMessage,
-					Code:    schemas.Ptr(string(candidate.FinishReason)),
+					Code:    new(string(candidate.FinishReason)),
 				},
 			}
 		}
@@ -472,7 +472,7 @@ func ToGeminiImageGenerationRequest(bifrostReq *schemas.BifrostImageGenerationRe
 				case map[string]string:
 					delete(geminiReq.ExtraParams, "labels")
 					geminiReq.Labels = m
-				case map[string]interface{}:
+				case map[string]any:
 					out := make(map[string]string, len(m))
 					for k, v := range m {
 						if s, ok := schemas.SafeExtractString(v); ok {
@@ -818,7 +818,7 @@ func ToGeminiImageEditRequest(bifrostReq *schemas.BifrostImageEditRequest) *Gemi
 				case map[string]string:
 					delete(geminiReq.ExtraParams, "labels")
 					geminiReq.Labels = m
-				case map[string]interface{}:
+				case map[string]any:
 					out := make(map[string]string, len(m))
 					for k, v := range m {
 						if s, ok := schemas.SafeExtractString(v); ok {
@@ -872,13 +872,13 @@ func ToGeminiImageEditRequest(bifrostReq *schemas.BifrostImageEditRequest) *Gemi
 }
 
 // extractIntArray safely extracts an array of integers from an interface{} value
-func extractIntArray(v interface{}) []int {
+func extractIntArray(v any) []int {
 	if v == nil {
 		return nil
 	}
 
 	// Handle []interface{} (common JSON unmarshaling result)
-	if arr, ok := v.([]interface{}); ok {
+	if arr, ok := v.([]any); ok {
 		result := make([]int, 0, len(arr))
 		for _, item := range arr {
 			switch val := item.(type) {

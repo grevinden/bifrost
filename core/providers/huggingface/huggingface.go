@@ -12,9 +12,9 @@ import (
 	"time"
 
 	"github.com/bytedance/sonic"
-	"github.com/maximhq/bifrost/core/providers/openai"
-	providerUtils "github.com/maximhq/bifrost/core/providers/utils"
-	schemas "github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/providers/openai"
+	providerUtils "github.com/grevinden/bifrost/core/providers/utils"
+	schemas "github.com/grevinden/bifrost/core/schemas"
 	"github.com/valyala/fasthttp"
 )
 
@@ -279,7 +279,7 @@ func (provider *HuggingFaceProvider) listModelsByKey(ctx *schemas.BifrostContext
 		provider inferenceProvider
 		response *HuggingFaceListModelsResponse
 		latency  int64
-		rawResp  map[string]interface{}
+		rawResp  map[string]any
 		err      *schemas.BifrostError
 	}
 
@@ -333,23 +333,23 @@ func (provider *HuggingFaceProvider) listModelsByKey(ctx *schemas.BifrostContext
 			}
 
 			var huggingfaceAPIResponse HuggingFaceListModelsResponse
-			var rawResponse interface{}
-			var rawRequest interface{}
+			var rawResponse any
+			var rawRequest any
 			rawRequest, rawResponse, bifrostErr = providerUtils.HandleProviderResponse(body, &huggingfaceAPIResponse, nil, providerUtils.ShouldSendBackRawRequest(ctx, provider.sendBackRawRequest), providerUtils.ShouldSendBackRawResponse(ctx, provider.sendBackRawResponse))
 			if bifrostErr != nil {
 				resultsChan <- providerResult{provider: inferProvider, err: bifrostErr}
 				return
 			}
-			var rawRespMap map[string]interface{}
+			var rawRespMap map[string]any
 			if rawResponse != nil {
-				if converted, ok := rawResponse.(map[string]interface{}); ok {
+				if converted, ok := rawResponse.(map[string]any); ok {
 					rawRespMap = converted
 				}
 			}
 			// If raw request was requested, attach it to the raw response map
 			if providerUtils.ShouldSendBackRawRequest(ctx, provider.sendBackRawRequest) && rawRequest != nil {
 				if rawRespMap == nil {
-					rawRespMap = make(map[string]interface{})
+					rawRespMap = make(map[string]any)
 				}
 				rawRespMap["raw_request"] = rawRequest
 			}
@@ -376,7 +376,7 @@ func (provider *HuggingFaceProvider) listModelsByKey(ctx *schemas.BifrostContext
 	var totalLatency int64
 	var successCount int
 	var firstError *schemas.BifrostError
-	var rawResponses []map[string]interface{}
+	var rawResponses []map[string]any
 
 	for result := range resultsChan {
 		if result.err != nil {
@@ -411,7 +411,7 @@ func (provider *HuggingFaceProvider) listModelsByKey(ctx *schemas.BifrostContext
 
 	if providerUtils.ShouldSendBackRawResponse(ctx, provider.sendBackRawResponse) && len(rawResponses) > 0 {
 		// Combine all raw responses into a single map
-		combinedRaw := make(map[string]interface{})
+		combinedRaw := make(map[string]any)
 		for i, raw := range rawResponses {
 			combinedRaw[fmt.Sprintf("provider_%d", i)] = raw
 		}
@@ -479,7 +479,7 @@ func (provider *HuggingFaceProvider) ChatCompletion(ctx *schemas.BifrostContext,
 				return nil, err
 			}
 			if reqBody != nil {
-				reqBody.Stream = schemas.Ptr(false)
+				reqBody.Stream = new(false)
 			}
 			return reqBody, nil
 		})
@@ -499,8 +499,8 @@ func (provider *HuggingFaceProvider) ChatCompletion(ctx *schemas.BifrostContext,
 
 	bifrostResponse := &schemas.BifrostChatResponse{}
 
-	var rawResponse interface{}
-	var rawRequest interface{}
+	var rawResponse any
+	var rawRequest any
 	rawRequest, rawResponse, bifrostErr := providerUtils.HandleProviderResponse(responseBody, bifrostResponse, jsonBody, providerUtils.ShouldSendBackRawRequest(ctx, provider.sendBackRawRequest), providerUtils.ShouldSendBackRawResponse(ctx, provider.sendBackRawResponse))
 	if bifrostErr != nil {
 		return nil, providerUtils.EnrichError(ctx, bifrostErr, jsonBody, responseBody, provider.sendBackRawRequest, provider.sendBackRawResponse, latency)
@@ -559,7 +559,7 @@ func (provider *HuggingFaceProvider) ChatCompletionStream(ctx *schemas.BifrostCo
 			return nil, err
 		}
 		if reqBody != nil {
-			reqBody.Stream = schemas.Ptr(true)
+			reqBody.Stream = new(true)
 		}
 		return reqBody, nil
 	}
@@ -663,8 +663,8 @@ func (provider *HuggingFaceProvider) Embedding(ctx *schemas.BifrostContext, key 
 	}
 
 	// Handle raw request/response for tracking
-	var rawResponse interface{}
-	var rawRequest interface{}
+	var rawResponse any
+	var rawRequest any
 	if providerUtils.ShouldSendBackRawRequest(ctx, provider.sendBackRawRequest) {
 		if err := sonic.Unmarshal(jsonBody, &rawRequest); err != nil {
 			rawRequest = string(jsonBody)
@@ -747,8 +747,8 @@ func (provider *HuggingFaceProvider) Speech(ctx *schemas.BifrostContext, key sch
 	response := acquireHuggingFaceSpeechResponse()
 	defer releaseHuggingFaceSpeechResponse(response)
 
-	var rawResponse interface{}
-	var rawRequest interface{}
+	var rawResponse any
+	var rawRequest any
 	rawRequest, rawResponse, bifrostErr := providerUtils.HandleProviderResponse(responseBody, response, jsonData, providerUtils.ShouldSendBackRawRequest(ctx, provider.sendBackRawRequest), providerUtils.ShouldSendBackRawResponse(ctx, provider.sendBackRawResponse))
 	if bifrostErr != nil {
 		return nil, providerUtils.EnrichError(ctx, bifrostErr, jsonData, responseBody, provider.sendBackRawRequest, provider.sendBackRawResponse, latency)
@@ -858,8 +858,8 @@ func (provider *HuggingFaceProvider) Transcription(ctx *schemas.BifrostContext, 
 	response := acquireHuggingFaceTranscriptionResponse()
 	defer releaseHuggingFaceTranscriptionResponse(response)
 
-	var rawResponse interface{}
-	var rawRequest interface{}
+	var rawResponse any
+	var rawRequest any
 	// Only pass jsonData if it's not raw audio bytes
 	var requestBodyForHandling []byte
 	if !isHFInferenceAudioRequest {
@@ -945,8 +945,8 @@ func (provider *HuggingFaceProvider) ImageGeneration(ctx *schemas.BifrostContext
 	}
 
 	// Handle raw request/response for tracking
-	var rawResponse interface{}
-	var rawRequest interface{}
+	var rawResponse any
+	var rawRequest any
 	if providerUtils.ShouldSendBackRawRequest(ctx, provider.sendBackRawRequest) {
 		if err := sonic.Unmarshal(jsonBody, &rawRequest); err != nil {
 			rawRequest = string(jsonBody)
@@ -1078,7 +1078,7 @@ func (provider *HuggingFaceProvider) ImageGenerationStream(ctx *schemas.BifrostC
 		// Request failed before the first response byte (server closed an idle/pooled connection,
 		// broken pipe, connection refused, DNS failure, etc.). Surface as a retriable upstream
 		// connection error (502) so executeRequestWithRetries honors max_retries, matching the
-		// non-streaming path - see https://github.com/maximhq/bifrost/issues/4496.
+		// non-streaming path - see https://github.com/grevinden/bifrost/issues/4496.
 		return nil, providerUtils.SetErrorLatency(providerUtils.NewBifrostUpstreamConnectionError(schemas.ErrProviderDoRequest, err), latency)
 	}
 
@@ -1320,8 +1320,8 @@ func (provider *HuggingFaceProvider) ImageEdit(ctx *schemas.BifrostContext, key 
 	}
 
 	// Handle raw request/response for tracking
-	var rawResponse interface{}
-	var rawRequest interface{}
+	var rawResponse any
+	var rawRequest any
 	if providerUtils.ShouldSendBackRawRequest(ctx, provider.sendBackRawRequest) {
 		if err := sonic.Unmarshal(jsonBody, &rawRequest); err != nil {
 			rawRequest = string(jsonBody)
@@ -1462,7 +1462,7 @@ func (provider *HuggingFaceProvider) ImageEditStream(ctx *schemas.BifrostContext
 		// Request failed before the first response byte (server closed an idle/pooled connection,
 		// broken pipe, connection refused, DNS failure, etc.). Surface as a retriable upstream
 		// connection error (502) so executeRequestWithRetries honors max_retries, matching the
-		// non-streaming path - see https://github.com/maximhq/bifrost/issues/4496.
+		// non-streaming path - see https://github.com/grevinden/bifrost/issues/4496.
 		return nil, providerUtils.SetErrorLatency(providerUtils.NewBifrostUpstreamConnectionError(schemas.ErrProviderDoRequest, err), latency)
 	}
 

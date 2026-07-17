@@ -3,8 +3,8 @@ package replicate
 import (
 	"strings"
 
-	providerUtils "github.com/maximhq/bifrost/core/providers/utils"
-	"github.com/maximhq/bifrost/core/schemas"
+	providerUtils "github.com/grevinden/bifrost/core/providers/utils"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // ToBifrostListModelsResponse converts Replicate deployments to a Bifrost list models response.
@@ -44,19 +44,19 @@ func ToBifrostListModelsResponse(
 			if deployment.CurrentRelease != nil && deployment.CurrentRelease.CreatedAt != "" {
 				createdTimestamp := ParseReplicateTimestamp(deployment.CurrentRelease.CreatedAt)
 				if createdTimestamp > 0 {
-					created = schemas.Ptr(createdTimestamp)
+					created = new(createdTimestamp)
 				}
 			}
 
 			for _, result := range pipeline.FilterModel(deploymentID) {
 				bifrostModel := schemas.Model{
 					ID:      string(providerKey) + "/" + result.ResolvedID,
-					Name:    schemas.Ptr(deployment.Name),
-					OwnedBy: schemas.Ptr(deployment.Owner),
+					Name:    new(deployment.Name),
+					OwnedBy: new(deployment.Owner),
 					Created: created,
 				}
 				if result.AliasValue != "" {
-					bifrostModel.Alias = schemas.Ptr(result.AliasValue)
+					bifrostModel.Alias = new(result.AliasValue)
 				}
 				bifrostResponse.Data = append(bifrostResponse.Data, bifrostModel)
 				included[strings.ToLower(result.ResolvedID)] = true

@@ -51,10 +51,10 @@ type RunwareInferenceRequest struct {
 	// ExtraParams carries provider-native fields with no Bifrost equivalent
 	// (CFGScale, scheduler, strength, maskMargin, outpaint, fps, lora, ...). Merged into
 	// the request body by the transport layer when passthrough is enabled.
-	ExtraParams map[string]interface{} `json:"-"`
+	ExtraParams map[string]any `json:"-"`
 }
 
-func (r *RunwareInferenceRequest) GetExtraParams() map[string]interface{} {
+func (r *RunwareInferenceRequest) GetExtraParams() map[string]any {
 	return r.ExtraParams
 }
 

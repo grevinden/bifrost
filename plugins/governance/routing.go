@@ -9,9 +9,9 @@ import (
 
 	"github.com/google/cel-go/cel"
 	"github.com/google/cel-go/common/types"
-	"github.com/maximhq/bifrost/core/schemas"
-	configstoreTables "github.com/maximhq/bifrost/framework/configstore/tables"
-	"github.com/maximhq/bifrost/plugins/governance/complexity"
+	"github.com/grevinden/bifrost/core/schemas"
+	configstoreTables "github.com/grevinden/bifrost/framework/configstore/tables"
+	"github.com/grevinden/bifrost/plugins/governance/complexity"
 )
 
 // DefaultRoutingChainMaxDepth is the default maximum depth for routing rule chain evaluation.
@@ -435,12 +435,12 @@ func evaluateCELExpression(program cel.Program, variables map[string]any, unknow
 
 // extractRoutingVariables builds a map of CEL variables from routing context
 // This map is used to evaluate CEL expressions in routing rules
-func extractRoutingVariables(ctx *RoutingContext) (map[string]interface{}, error) {
+func extractRoutingVariables(ctx *RoutingContext) (map[string]any, error) {
 	if ctx == nil {
 		return nil, fmt.Errorf("routing context cannot be nil")
 	}
 
-	variables := make(map[string]interface{})
+	variables := make(map[string]any)
 
 	// Basic request context
 	variables["model"] = ctx.Model

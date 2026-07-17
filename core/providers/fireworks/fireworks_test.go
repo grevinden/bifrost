@@ -9,10 +9,10 @@ import (
 	"strings"
 	"testing"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/internal/llmtests"
-	fireworksprovider "github.com/maximhq/bifrost/core/providers/fireworks"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/internal/llmtests"
+	fireworksprovider "github.com/grevinden/bifrost/core/providers/fireworks"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 func TestFireworks(t *testing.T) {
@@ -92,7 +92,7 @@ func resolveFireworksModels(t *testing.T, client *bifrost.Bifrost, ctx context.C
 
 	if chatModel == "" || textModel == "" || embeddingModel == "" {
 		pageToken := ""
-		for page := 0; page < 5; page++ {
+		for range 5 {
 			req := &schemas.BifrostListModelsRequest{
 				Provider:  schemas.Fireworks,
 				PageSize:  200,
@@ -165,7 +165,7 @@ func fireworksModelSupportsTextCompletions(t *testing.T, client *bifrost.Bifrost
 			PromptStr: &prompt,
 		},
 		Params: &schemas.TextCompletionParameters{
-			MaxTokens: schemas.Ptr(8),
+			MaxTokens: new(8),
 		},
 	})
 	if bifrostErr != nil {
@@ -309,9 +309,9 @@ func TestFireworksProviderUsesNativeEndpoints(t *testing.T) {
 						llmtests.CreateBasicResponsesMessage("hello"),
 					},
 					Params: &schemas.ResponsesParameters{
-						PreviousResponseID: schemas.Ptr("resp_previous"),
-						MaxToolCalls:       schemas.Ptr(2),
-						Store:              schemas.Ptr(true),
+						PreviousResponseID: new("resp_previous"),
+						MaxToolCalls:       new(2),
+						Store:              new(true),
 					},
 				})
 				if err != nil {
@@ -330,7 +330,7 @@ func TestFireworksProviderUsesNativeEndpoints(t *testing.T) {
 					Provider: schemas.Fireworks,
 					Model:    "accounts/fireworks/models/nomic-embed-text-v1.5",
 					Input: &schemas.EmbeddingInput{
-						Text: schemas.Ptr("embedding test"),
+						Text: new("embedding test"),
 					},
 				})
 				if err != nil {

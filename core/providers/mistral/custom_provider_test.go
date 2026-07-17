@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/bytedance/sonic"
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/valyala/fasthttp"
@@ -30,8 +30,8 @@ func TestParseMistralError_UsesExportedConverterMetadata(t *testing.T) {
 	require.NotNil(t, bifrostErr.Error)
 
 	assert.Equal(t, "invalid request", bifrostErr.Error.Message)
-	assert.Equal(t, schemas.Ptr("invalid_request_error"), bifrostErr.Error.Type)
-	assert.Equal(t, schemas.Ptr("bad_request"), bifrostErr.Error.Code)
+	assert.Equal(t, new("invalid_request_error"), bifrostErr.Error.Type)
+	assert.Equal(t, new("bad_request"), bifrostErr.Error.Code)
 	// Note: ExtraFields.Provider is populated by bifrost.go's dispatcher via
 	// PopulateExtraFields, not by ParseMistralError called in isolation.
 }
@@ -76,11 +76,11 @@ func TestMistralProvider_CustomAliasChatStreamUsesBaseCompatibilityAndAliasMetad
 		Input: []schemas.ChatMessage{{
 			Role: schemas.ChatMessageRoleUser,
 			Content: &schemas.ChatMessageContent{
-				ContentStr: schemas.Ptr("hello"),
+				ContentStr: new("hello"),
 			},
 		}},
 		Params: &schemas.ChatParameters{
-			MaxCompletionTokens: schemas.Ptr(32),
+			MaxCompletionTokens: new(32),
 			ToolChoice: &schemas.ChatToolChoice{
 				ChatToolChoiceStruct: &schemas.ChatToolChoiceStruct{
 					Type: schemas.ChatToolChoiceTypeFunction,

@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -79,10 +79,10 @@ func TestProtocol_BasicToolExecution(t *testing.T) {
 
 	// Test echo tool (use prefixed name)
 	toolCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call_echo_001"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call_echo_001"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("TestToolsServer-echo"),
+			Name:      new("TestToolsServer-echo"),
 			Arguments: `{"message": "Hello from protocol test"}`,
 		},
 	}
@@ -94,7 +94,7 @@ func TestProtocol_BasicToolExecution(t *testing.T) {
 
 	// Verify response
 	if result.Content != nil && result.Content.ContentStr != nil {
-		var echoResponse map[string]interface{}
+		var echoResponse map[string]any
 		err := json.Unmarshal([]byte(*result.Content.ContentStr), &echoResponse)
 		require.NoError(t, err, "Should parse JSON response")
 		assert.Equal(t, "Hello from protocol test", echoResponse["message"])
@@ -102,10 +102,10 @@ func TestProtocol_BasicToolExecution(t *testing.T) {
 
 	// Test calculator tool (use prefixed name)
 	toolCall = schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call_calc_001"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call_calc_001"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("TestToolsServer-calculator"),
+			Name:      new("TestToolsServer-calculator"),
 			Arguments: `{"operation": "add", "x": 42, "y": 58}`,
 		},
 	}
@@ -116,7 +116,7 @@ func TestProtocol_BasicToolExecution(t *testing.T) {
 
 	// Verify calculation
 	if result.Content != nil && result.Content.ContentStr != nil {
-		var calcResponse map[string]interface{}
+		var calcResponse map[string]any
 		err := json.Unmarshal([]byte(*result.Content.ContentStr), &calcResponse)
 		require.NoError(t, err, "Should parse JSON response")
 		assert.Equal(t, float64(100), calcResponse["result"])
@@ -165,10 +165,10 @@ func TestProtocol_ParallelExecution(t *testing.T) {
 	for _, tt := range testTools {
 		t.Run(tt.name, func(t *testing.T) {
 			toolCall := schemas.ChatAssistantMessageToolCall{
-				ID:   schemas.Ptr("call_" + tt.id),
-				Type: schemas.Ptr("function"),
+				ID:   new("call_" + tt.id),
+				Type: new("function"),
 				Function: schemas.ChatAssistantMessageToolCallFunction{
-					Name:      schemas.Ptr(tt.name),
+					Name:      new(tt.name),
 					Arguments: tt.toolArg,
 				},
 			}
@@ -179,7 +179,7 @@ func TestProtocol_ParallelExecution(t *testing.T) {
 
 			// Parse and verify response
 			if result.Content != nil && result.Content.ContentStr != nil {
-				var response map[string]interface{}
+				var response map[string]any
 				err := json.Unmarshal([]byte(*result.Content.ContentStr), &response)
 				require.NoError(t, err, "Should parse JSON response")
 
@@ -222,10 +222,10 @@ func TestProtocol_ErrorHandling(t *testing.T) {
 	t.Run("IntermittentFailure", func(t *testing.T) {
 		// Test intermittent_fail tool with 100% fail rate
 		toolCall := schemas.ChatAssistantMessageToolCall{
-			ID:   schemas.Ptr("call_fail_001"),
-			Type: schemas.Ptr("function"),
+			ID:   new("call_fail_001"),
+			Type: new("function"),
 			Function: schemas.ChatAssistantMessageToolCallFunction{
-				Name:      schemas.Ptr("ErrorTestServer-intermittent_fail"),
+				Name:      new("ErrorTestServer-intermittent_fail"),
 				Arguments: `{"id": "fail1", "fail_rate": 1.0}`,
 			},
 		}
@@ -243,10 +243,10 @@ func TestProtocol_ErrorHandling(t *testing.T) {
 
 	t.Run("NetworkError", func(t *testing.T) {
 		toolCall := schemas.ChatAssistantMessageToolCall{
-			ID:   schemas.Ptr("call_network_001"),
-			Type: schemas.Ptr("function"),
+			ID:   new("call_network_001"),
+			Type: new("function"),
 			Function: schemas.ChatAssistantMessageToolCallFunction{
-				Name:      schemas.Ptr("ErrorTestServer-network_error"),
+				Name:      new("ErrorTestServer-network_error"),
 				Arguments: `{"id": "net1", "error_type": "timeout"}`,
 			},
 		}
@@ -263,10 +263,10 @@ func TestProtocol_ErrorHandling(t *testing.T) {
 	t.Run("LargePayload", func(t *testing.T) {
 		// Test large_payload tool with 100KB payload
 		toolCall := schemas.ChatAssistantMessageToolCall{
-			ID:   schemas.Ptr("call_large_001"),
-			Type: schemas.Ptr("function"),
+			ID:   new("call_large_001"),
+			Type: new("function"),
 			Function: schemas.ChatAssistantMessageToolCallFunction{
-				Name:      schemas.Ptr("ErrorTestServer-large_payload"),
+				Name:      new("ErrorTestServer-large_payload"),
 				Arguments: `{"id": "large1", "size_kb": 100}`,
 			},
 		}
@@ -277,7 +277,7 @@ func TestProtocol_ErrorHandling(t *testing.T) {
 
 		// Verify large payload was received
 		if result.Content != nil && result.Content.ContentStr != nil {
-			var response map[string]interface{}
+			var response map[string]any
 			err := json.Unmarshal([]byte(*result.Content.ContentStr), &response)
 			require.NoError(t, err, "Should parse large payload JSON")
 			assert.Equal(t, float64(100), response["size_kb"])
@@ -314,10 +314,10 @@ func TestProtocol_EdgeCases(t *testing.T) {
 
 	t.Run("UnicodeText", func(t *testing.T) {
 		toolCall := schemas.ChatAssistantMessageToolCall{
-			ID:   schemas.Ptr("call_unicode_001"),
-			Type: schemas.Ptr("function"),
+			ID:   new("call_unicode_001"),
+			Type: new("function"),
 			Function: schemas.ChatAssistantMessageToolCallFunction{
-				Name:      schemas.Ptr("EdgeCaseServer-unicode_tool"),
+				Name:      new("EdgeCaseServer-unicode_tool"),
 				Arguments: `{"id": "unicode1", "include_emojis": true, "include_rtl": true}`,
 			},
 		}
@@ -328,7 +328,7 @@ func TestProtocol_EdgeCases(t *testing.T) {
 
 		// Verify Unicode was preserved
 		if result.Content != nil && result.Content.ContentStr != nil {
-			var response map[string]interface{}
+			var response map[string]any
 			err := json.Unmarshal([]byte(*result.Content.ContentStr), &response)
 			require.NoError(t, err, "Should parse Unicode JSON")
 			unicodeText := response["unicode_text"].(string)
@@ -339,10 +339,10 @@ func TestProtocol_EdgeCases(t *testing.T) {
 
 	t.Run("DeeplyNested", func(t *testing.T) {
 		toolCall := schemas.ChatAssistantMessageToolCall{
-			ID:   schemas.Ptr("call_nested_001"),
-			Type: schemas.Ptr("function"),
+			ID:   new("call_nested_001"),
+			Type: new("function"),
 			Function: schemas.ChatAssistantMessageToolCallFunction{
-				Name:      schemas.Ptr("EdgeCaseServer-deeply_nested"),
+				Name:      new("EdgeCaseServer-deeply_nested"),
 				Arguments: `{"id": "nested1", "depth": 15}`,
 			},
 		}
@@ -353,7 +353,7 @@ func TestProtocol_EdgeCases(t *testing.T) {
 
 		// Verify nested structure
 		if result.Content != nil && result.Content.ContentStr != nil {
-			var response map[string]interface{}
+			var response map[string]any
 			err := json.Unmarshal([]byte(*result.Content.ContentStr), &response)
 			require.NoError(t, err, "Should parse nested JSON")
 			assert.Equal(t, float64(15), response["depth"])
@@ -363,10 +363,10 @@ func TestProtocol_EdgeCases(t *testing.T) {
 
 	t.Run("EmptyResponse", func(t *testing.T) {
 		toolCall := schemas.ChatAssistantMessageToolCall{
-			ID:   schemas.Ptr("call_empty_001"),
-			Type: schemas.Ptr("function"),
+			ID:   new("call_empty_001"),
+			Type: new("function"),
 			Function: schemas.ChatAssistantMessageToolCallFunction{
-				Name:      schemas.Ptr("EdgeCaseServer-empty_response"),
+				Name:      new("EdgeCaseServer-empty_response"),
 				Arguments: `{"id": "empty1", "type": "empty_object"}`,
 			},
 		}
@@ -377,7 +377,7 @@ func TestProtocol_EdgeCases(t *testing.T) {
 
 		// Verify empty object
 		if result.Content != nil && result.Content.ContentStr != nil {
-			var response map[string]interface{}
+			var response map[string]any
 			err := json.Unmarshal([]byte(*result.Content.ContentStr), &response)
 			require.NoError(t, err, "Should parse empty response JSON")
 			assert.NotNil(t, response["data"], "Should have data field")
@@ -386,10 +386,10 @@ func TestProtocol_EdgeCases(t *testing.T) {
 
 	t.Run("NullFields", func(t *testing.T) {
 		toolCall := schemas.ChatAssistantMessageToolCall{
-			ID:   schemas.Ptr("call_null_001"),
-			Type: schemas.Ptr("function"),
+			ID:   new("call_null_001"),
+			Type: new("function"),
 			Function: schemas.ChatAssistantMessageToolCallFunction{
-				Name:      schemas.Ptr("EdgeCaseServer-null_fields"),
+				Name:      new("EdgeCaseServer-null_fields"),
 				Arguments: `{"id": "null1", "null_count": 5}`,
 			},
 		}
@@ -400,7 +400,7 @@ func TestProtocol_EdgeCases(t *testing.T) {
 
 		// Verify null fields are preserved
 		if result.Content != nil && result.Content.ContentStr != nil {
-			var response map[string]interface{}
+			var response map[string]any
 			err := json.Unmarshal([]byte(*result.Content.ContentStr), &response)
 			require.NoError(t, err, "Should parse null fields JSON")
 
@@ -417,10 +417,10 @@ func TestProtocol_EdgeCases(t *testing.T) {
 
 	t.Run("SpecialCharacters", func(t *testing.T) {
 		toolCall := schemas.ChatAssistantMessageToolCall{
-			ID:   schemas.Ptr("call_special_001"),
-			Type: schemas.Ptr("function"),
+			ID:   new("call_special_001"),
+			Type: new("function"),
 			Function: schemas.ChatAssistantMessageToolCallFunction{
-				Name:      schemas.Ptr("EdgeCaseServer-special_chars"),
+				Name:      new("EdgeCaseServer-special_chars"),
 				Arguments: `{"id": "special1", "char_type": "all"}`,
 			},
 		}
@@ -431,7 +431,7 @@ func TestProtocol_EdgeCases(t *testing.T) {
 
 		// Verify special characters are properly escaped
 		if result.Content != nil && result.Content.ContentStr != nil {
-			var response map[string]interface{}
+			var response map[string]any
 			err := json.Unmarshal([]byte(*result.Content.ContentStr), &response)
 			require.NoError(t, err, "Should parse special chars JSON")
 			text := response["text"].(string)
@@ -479,10 +479,10 @@ func TestProtocol_ToolCallIDPreservation(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			toolCall := schemas.ChatAssistantMessageToolCall{
-				ID:   schemas.Ptr(tc.callID),
-				Type: schemas.Ptr("function"),
+				ID:   new(tc.callID),
+				Type: new("function"),
 				Function: schemas.ChatAssistantMessageToolCallFunction{
-					Name:      schemas.Ptr("IDTestServer-echo"),
+					Name:      new("IDTestServer-echo"),
 					Arguments: `{"message": "test"}`,
 				},
 			}

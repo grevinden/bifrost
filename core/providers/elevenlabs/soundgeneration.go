@@ -4,8 +4,8 @@ import (
 	"math"
 	"net/http"
 
-	providerUtils "github.com/maximhq/bifrost/core/providers/utils"
-	schemas "github.com/maximhq/bifrost/core/schemas"
+	providerUtils "github.com/grevinden/bifrost/core/providers/utils"
+	schemas "github.com/grevinden/bifrost/core/schemas"
 	"github.com/valyala/fasthttp"
 )
 

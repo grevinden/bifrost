@@ -19,9 +19,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/configstore"
-	configstoreTables "github.com/maximhq/bifrost/framework/configstore/tables"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/configstore"
+	configstoreTables "github.com/grevinden/bifrost/framework/configstore/tables"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -63,8 +63,8 @@ func newPluginForMCPStamping(t *testing.T, vk *configstoreTables.TableVirtualKey
 	require.NoError(t, err)
 
 	plugin, err := InitFromStore(context.Background(), &Config{
-		IsVkMandatory:         boolPtr(false),
-		DisableAutoToolInject: boolPtr(disableAutoToolInject),
+		IsVkMandatory:         new(false),
+		DisableAutoToolInject: new(disableAutoToolInject),
 	}, logger, store, nil, nil, nil, nil)
 	require.NoError(t, err)
 	t.Cleanup(func() { require.NoError(t, plugin.Cleanup()) })

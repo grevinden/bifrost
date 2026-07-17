@@ -8,10 +8,10 @@ import (
 	"strings"
 	"time"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/logstore"
-	"github.com/maximhq/bifrost/framework/streaming"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/logstore"
+	"github.com/grevinden/bifrost/framework/streaming"
 )
 
 // KeyPair represents an ID-Name pair for keys
@@ -623,7 +623,7 @@ func extractRealtimeInputHistory(input []schemas.ResponsesMessage) []schemas.Cha
 			messages = append(messages, schemas.ChatMessage{
 				Role: mapRealtimeResponsesRole(*item.Role),
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr(content),
+					ContentStr: new(content),
 				},
 			})
 		case schemas.ResponsesMessageTypeFunctionCallOutput,
@@ -637,7 +637,7 @@ func extractRealtimeInputHistory(input []schemas.ResponsesMessage) []schemas.Cha
 			messages = append(messages, schemas.ChatMessage{
 				Role: schemas.ChatMessageRoleTool,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr(content),
+					ContentStr: new(content),
 				},
 				ChatToolMessage: &schemas.ChatToolMessage{
 					ToolCallID: item.ResponsesToolMessage.CallID,
@@ -767,14 +767,14 @@ func convertToProcessedStreamResponse(result *schemas.StreamAccumulatorResult, r
 	return resp
 }
 
-func mergeRealtimeMetadata(metadata map[string]interface{}, ctx *schemas.BifrostContext) map[string]interface{} {
+func mergeRealtimeMetadata(metadata map[string]any, ctx *schemas.BifrostContext) map[string]any {
 	if ctx == nil {
 		return metadata
 	}
 	set := func(key string, ctxKey schemas.BifrostContextKey) {
 		if value := bifrost.GetStringFromContext(ctx, ctxKey); value != "" {
 			if metadata == nil {
-				metadata = make(map[string]interface{})
+				metadata = make(map[string]any)
 			}
 			metadata[key] = value
 		}
@@ -788,7 +788,7 @@ func mergeRealtimeMetadata(metadata map[string]interface{}, ctx *schemas.Bifrost
 	set("realtime_voice", schemas.BifrostContextKeyRealtimeVoice)
 	if bifrost.GetStringFromContext(ctx, schemas.BifrostContextKeyRealtimeSessionID) != "" {
 		if metadata == nil {
-			metadata = make(map[string]interface{})
+			metadata = make(map[string]any)
 		}
 		metadata["realtime"] = true
 	}

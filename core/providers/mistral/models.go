@@ -3,8 +3,8 @@ package mistral
 import (
 	"strings"
 
-	providerUtils "github.com/maximhq/bifrost/core/providers/utils"
-	"github.com/maximhq/bifrost/core/schemas"
+	providerUtils "github.com/grevinden/bifrost/core/providers/utils"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 func (response *MistralListModelsResponse) ToBifrostListModelsResponse(allowedModels schemas.WhiteList, blacklistedModels schemas.BlackList, aliases schemas.KeyAliases, unfiltered bool) *schemas.BifrostListModelsResponse {
@@ -34,14 +34,14 @@ func (response *MistralListModelsResponse) ToBifrostListModelsResponse(allowedMo
 		for _, result := range pipeline.FilterModel(model.ID) {
 			entry := schemas.Model{
 				ID:            string(schemas.Mistral) + "/" + result.ResolvedID,
-				Name:          schemas.Ptr(model.Name),
-				Description:   schemas.Ptr(model.Description),
-				Created:       schemas.Ptr(model.Created),
-				ContextLength: schemas.Ptr(int(model.MaxContextLength)),
-				OwnedBy:       schemas.Ptr(model.OwnedBy),
+				Name:          new(model.Name),
+				Description:   new(model.Description),
+				Created:       new(model.Created),
+				ContextLength: new(int(model.MaxContextLength)),
+				OwnedBy:       new(model.OwnedBy),
 			}
 			if result.AliasValue != "" {
-				entry.Alias = schemas.Ptr(result.AliasValue)
+				entry.Alias = new(result.AliasValue)
 			}
 			bifrostResponse.Data = append(bifrostResponse.Data, entry)
 			included[strings.ToLower(result.ResolvedID)] = true

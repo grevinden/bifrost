@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // RunTextCompletionStreamTest executes the text completion streaming test scenario
@@ -42,7 +42,7 @@ func RunTextCompletionStreamTest(t *testing.T, client *bifrost.Bifrost, ctx cont
 			Model:    model,
 			Input:    input,
 			Params: &schemas.TextCompletionParameters{
-				MaxTokens: bifrost.Ptr(150),
+				MaxTokens: new(150),
 			},
 			Fallbacks: testConfig.TextCompletionFallbacks,
 		}
@@ -51,12 +51,12 @@ func RunTextCompletionStreamTest(t *testing.T, client *bifrost.Bifrost, ctx cont
 		retryConfig := StreamingRetryConfig()
 		retryContext := TestRetryContext{
 			ScenarioName: "TextCompletionStream",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"should_stream_content": true,
 				"should_tell_story":     true,
 				"topic":                 "robot painting",
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider": testConfig.Provider,
 				"model":    model,
 			},
@@ -156,7 +156,7 @@ func RunTextCompletionStreamTest(t *testing.T, client *bifrost.Bifrost, ctx cont
 		consolidatedResponse := createConsolidatedTextCompletionResponse(finalContent, lastResponse, testConfig.Provider)
 
 		// Enhanced validation expectations for text completion streaming
-		expectations := GetExpectationsForScenario("TextCompletionStream", testConfig, map[string]interface{}{})
+		expectations := GetExpectationsForScenario("TextCompletionStream", testConfig, map[string]any{})
 		expectations = ModifyExpectationsForProvider(expectations, testConfig.Provider)
 		expectations.ShouldContainKeywords = append(expectations.ShouldContainKeywords, []string{"robot"}...) // Should include story elements
 
@@ -243,8 +243,8 @@ func RunTextCompletionStreamTest(t *testing.T, client *bifrost.Bifrost, ctx cont
 					Model:    model,
 					Input:    input,
 					Params: &schemas.TextCompletionParameters{
-						MaxTokens:   bifrost.Ptr(50),
-						Temperature: bifrost.Ptr(0.7),
+						MaxTokens:   new(50),
+						Temperature: new(0.7),
 					},
 					Fallbacks: testConfig.TextCompletionFallbacks,
 				}
@@ -253,11 +253,11 @@ func RunTextCompletionStreamTest(t *testing.T, client *bifrost.Bifrost, ctx cont
 				retryConfig := StreamingRetryConfig()
 				retryContext := TestRetryContext{
 					ScenarioName: fmt.Sprintf("TextCompletionStreamVariedPrompts_%s", testCase.name),
-					ExpectedBehavior: map[string]interface{}{
+					ExpectedBehavior: map[string]any{
 						"should_stream_content": true,
 						"prompt_type":           testCase.name,
 					},
-					TestMetadata: map[string]interface{}{
+					TestMetadata: map[string]any{
 						"provider": testConfig.Provider,
 						"model":    model,
 					},
@@ -352,21 +352,21 @@ func RunTextCompletionStreamTest(t *testing.T, client *bifrost.Bifrost, ctx cont
 		}{
 			{
 				name:        "HighCreativity",
-				temperature: bifrost.Ptr(0.9),
-				maxTokens:   bifrost.Ptr(100),
-				topP:        bifrost.Ptr(0.9),
+				temperature: new(0.9),
+				maxTokens:   new(100),
+				topP:        new(0.9),
 			},
 			{
 				name:        "LowCreativity",
-				temperature: bifrost.Ptr(0.1),
-				maxTokens:   bifrost.Ptr(50),
-				topP:        bifrost.Ptr(0.5),
+				temperature: new(0.1),
+				maxTokens:   new(50),
+				topP:        new(0.5),
 			},
 			{
 				name:        "Balanced",
-				temperature: bifrost.Ptr(0.5),
-				maxTokens:   bifrost.Ptr(75),
-				topP:        bifrost.Ptr(0.8),
+				temperature: new(0.5),
+				maxTokens:   new(75),
+				topP:        new(0.8),
 			},
 		}
 
@@ -396,11 +396,11 @@ func RunTextCompletionStreamTest(t *testing.T, client *bifrost.Bifrost, ctx cont
 				retryConfig := StreamingRetryConfig()
 				retryContext := TestRetryContext{
 					ScenarioName: fmt.Sprintf("TextCompletionStreamParameters_%s", paramTest.name),
-					ExpectedBehavior: map[string]interface{}{
+					ExpectedBehavior: map[string]any{
 						"should_stream_content": true,
 						"parameter_test":        paramTest.name,
 					},
-					TestMetadata: map[string]interface{}{
+					TestMetadata: map[string]any{
 						"provider": testConfig.Provider,
 						"model":    model,
 					},

@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // RunTranscriptionStreamTest executes the streaming transcription test scenario
@@ -43,14 +43,14 @@ func RunTranscriptionStreamTest(t *testing.T, client *bifrost.Bifrost, ctx conte
 				text:           TTSTestTextMedium,
 				voiceType:      "secondary",
 				format:         "mp3",
-				responseFormat: bifrost.Ptr("json"),
+				responseFormat: new("json"),
 			},
 			{
 				name:           "StreamRoundTrip_Technical_MP3",
 				text:           TTSTestTextTechnical,
 				voiceType:      "tertiary",
 				format:         "mp3",
-				responseFormat: bifrost.Ptr("json"),
+				responseFormat: new("json"),
 			},
 		}
 
@@ -89,10 +89,10 @@ func RunTranscriptionStreamTest(t *testing.T, client *bifrost.Bifrost, ctx conte
 				ttsRetryConfig := GetTestRetryConfigForScenario("SpeechSynthesis", testConfig)
 				ttsRetryContext := TestRetryContext{
 					ScenarioName: "TranscriptionStream_TTS",
-					ExpectedBehavior: map[string]interface{}{
+					ExpectedBehavior: map[string]any{
 						"should_generate_audio": true,
 					},
-					TestMetadata: map[string]interface{}{
+					TestMetadata: map[string]any{
 						"provider": speechSynthesisProvider,
 						"model":    speechSynthesisModel,
 					},
@@ -143,8 +143,8 @@ func RunTranscriptionStreamTest(t *testing.T, client *bifrost.Bifrost, ctx conte
 						File: ttsResponse.Audio,
 					},
 					Params: &schemas.TranscriptionParameters{
-						Language:       bifrost.Ptr("en"),
-						Format:         bifrost.Ptr(tc.format),
+						Language:       new("en"),
+						Format:         new(tc.format),
 						ResponseFormat: tc.responseFormat,
 					},
 					Fallbacks: testConfig.TranscriptionFallbacks,
@@ -154,12 +154,12 @@ func RunTranscriptionStreamTest(t *testing.T, client *bifrost.Bifrost, ctx conte
 				retryConfig := GetTestRetryConfigForScenario("TranscriptionStream", testConfig)
 				retryContext := TestRetryContext{
 					ScenarioName: "TranscriptionStream_" + tc.name,
-					ExpectedBehavior: map[string]interface{}{
+					ExpectedBehavior: map[string]any{
 						"transcribe_streaming_audio": true,
 						"round_trip_test":            true,
 						"original_text":              tc.text,
 					},
-					TestMetadata: map[string]interface{}{
+					TestMetadata: map[string]any{
 						"provider":     testConfig.Provider,
 						"model":        testConfig.TranscriptionModel,
 						"audio_format": tc.format,
@@ -180,7 +180,7 @@ func RunTranscriptionStreamTest(t *testing.T, client *bifrost.Bifrost, ctx conte
 				streamCtx, cancel := context.WithTimeout(ctx, 60*time.Second)
 				defer cancel()
 
-				fullTranscriptionText := ""
+				var fullTranscriptionText strings.Builder
 				lastResponse := &schemas.BifrostStreamChunk{}
 				streamErrors := []string{}
 				lastTokenLatency := int64(0)
@@ -234,7 +234,7 @@ func RunTranscriptionStreamTest(t *testing.T, client *bifrost.Bifrost, ctx conte
 						if transcribeData.Delta != nil {
 							// This is a delta chunk
 							deltaText := *transcribeData.Delta
-							fullTranscriptionText += deltaText
+							fullTranscriptionText.WriteString(deltaText)
 							t.Logf("✅ Received transcription delta chunk %d with latency %d ms: '%s'", chunkIndex, response.BifrostTranscriptionStreamResponse.ExtraFields.Latency, deltaText)
 						}
 
@@ -268,7 +268,7 @@ func RunTranscriptionStreamTest(t *testing.T, client *bifrost.Bifrost, ctx conte
 					t.Fatal("Should have received at least one response")
 				}
 
-				if fullTranscriptionText == "" {
+				if fullTranscriptionText.String() == "" {
 					t.Fatal("Transcribed text should not be empty")
 				}
 
@@ -278,7 +278,7 @@ func RunTranscriptionStreamTest(t *testing.T, client *bifrost.Bifrost, ctx conte
 
 				// Normalize for comparison (lowercase, remove punctuation)
 				originalWords := strings.Fields(strings.ToLower(tc.text))
-				transcribedWords := strings.Fields(strings.ToLower(fullTranscriptionText))
+				transcribedWords := strings.Fields(strings.ToLower(fullTranscriptionText.String()))
 
 				// Check that at least 50% of original words are found in transcription
 				foundWords := 0
@@ -303,7 +303,7 @@ func RunTranscriptionStreamTest(t *testing.T, client *bifrost.Bifrost, ctx conte
 				if foundWords < minExpectedWords {
 					t.Logf("❌ Stream round-trip validation failed:")
 					t.Logf("   Original: '%s'", tc.text)
-					t.Logf("   Transcribed: '%s'", fullTranscriptionText)
+					t.Logf("   Transcribed: '%s'", fullTranscriptionText.String())
 					t.Logf("   Found %d/%d words (expected at least %d)", foundWords, len(originalWords), minExpectedWords)
 
 					// Log word-by-word comparison for debugging
@@ -366,9 +366,9 @@ func RunTranscriptionStreamAdvancedTest(t *testing.T, client *bifrost.Bifrost, c
 					File: audioData,
 				},
 				Params: &schemas.TranscriptionParameters{
-					Language:       bifrost.Ptr("en"),
-					Format:         bifrost.Ptr("mp3"),
-					ResponseFormat: bifrost.Ptr("json"),
+					Language:       new("en"),
+					Format:         new("mp3"),
+					ResponseFormat: new("json"),
 				},
 				Fallbacks: testConfig.TranscriptionFallbacks,
 			}
@@ -376,11 +376,11 @@ func RunTranscriptionStreamAdvancedTest(t *testing.T, client *bifrost.Bifrost, c
 			retryConfig := GetTestRetryConfigForScenario("TranscriptionStreamJSON", testConfig)
 			retryContext := TestRetryContext{
 				ScenarioName: "TranscriptionStream_JSON",
-				ExpectedBehavior: map[string]interface{}{
+				ExpectedBehavior: map[string]any{
 					"transcribe_streaming_audio": true,
 					"json_format":                true,
 				},
-				TestMetadata: map[string]interface{}{
+				TestMetadata: map[string]any{
 					"provider": testConfig.Provider,
 					"model":    testConfig.TranscriptionModel,
 					"format":   "json",
@@ -474,11 +474,11 @@ func RunTranscriptionStreamAdvancedTest(t *testing.T, client *bifrost.Bifrost, c
 					retryConfig := GetTestRetryConfigForScenario("TranscriptionStreamLang", testConfig)
 					retryContext := TestRetryContext{
 						ScenarioName: "TranscriptionStream_Lang_" + lang,
-						ExpectedBehavior: map[string]interface{}{
+						ExpectedBehavior: map[string]any{
 							"transcribe_streaming_audio": true,
 							"language":                   lang,
 						},
-						TestMetadata: map[string]interface{}{
+						TestMetadata: map[string]any{
 							"provider": testConfig.Provider,
 							"language": lang,
 						},
@@ -556,8 +556,8 @@ func RunTranscriptionStreamAdvancedTest(t *testing.T, client *bifrost.Bifrost, c
 					File: audioData,
 				},
 				Params: &schemas.TranscriptionParameters{
-					Language: bifrost.Ptr("en"),
-					Prompt:   bifrost.Ptr("This audio contains technical terms, proper nouns, and streaming-related vocabulary."),
+					Language: new("en"),
+					Prompt:   new("This audio contains technical terms, proper nouns, and streaming-related vocabulary."),
 				},
 				Fallbacks: testConfig.TranscriptionFallbacks,
 			}
@@ -565,12 +565,12 @@ func RunTranscriptionStreamAdvancedTest(t *testing.T, client *bifrost.Bifrost, c
 			retryConfig := GetTestRetryConfigForScenario("TranscriptionStreamPrompt", testConfig)
 			retryContext := TestRetryContext{
 				ScenarioName: "TranscriptionStream_CustomPrompt",
-				ExpectedBehavior: map[string]interface{}{
+				ExpectedBehavior: map[string]any{
 					"transcribe_streaming_audio": true,
 					"custom_prompt":              true,
 					"technical_content":          true,
 				},
-				TestMetadata: map[string]interface{}{
+				TestMetadata: map[string]any{
 					"provider":   testConfig.Provider,
 					"model":      testConfig.TranscriptionModel,
 					"has_prompt": true,
@@ -586,7 +586,7 @@ func RunTranscriptionStreamAdvancedTest(t *testing.T, client *bifrost.Bifrost, c
 
 			var chunkCount int
 			var streamErrors []string
-			var receivedText string
+			var receivedText strings.Builder
 			var lastTokenLatency int64
 
 			for response := range responseChannel {
@@ -607,7 +607,7 @@ func RunTranscriptionStreamAdvancedTest(t *testing.T, client *bifrost.Bifrost, c
 				if response.BifrostTranscriptionStreamResponse != nil && response.BifrostTranscriptionStreamResponse.Text != "" {
 					chunkCount++
 					chunkText := response.BifrostTranscriptionStreamResponse.Text
-					receivedText += chunkText
+					receivedText.WriteString(chunkText)
 					t.Logf("✅ Custom prompt chunk %d: '%s'", chunkCount, chunkText)
 				}
 			}
@@ -621,8 +621,8 @@ func RunTranscriptionStreamAdvancedTest(t *testing.T, client *bifrost.Bifrost, c
 			}
 
 			// Additional validation for custom prompt effectiveness
-			if receivedText != "" {
-				t.Logf("✅ Custom prompt produced transcription: '%s'", receivedText)
+			if receivedText.String() != "" {
+				t.Logf("✅ Custom prompt produced transcription: '%s'", receivedText.String())
 			} else {
 				t.Logf("⚠️ Custom prompt produced empty transcription")
 			}

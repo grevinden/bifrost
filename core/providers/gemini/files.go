@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // Gemini Files API types
@@ -125,8 +125,8 @@ func safeDerefInt64(ptr *int64) int64 {
 }
 
 // ToGeminiFileUploadResponse converts a Bifrost file upload response to Gemini format.
-func ToGeminiFileUploadResponse(resp *schemas.BifrostFileUploadResponse) map[string]interface{} {
-	file := map[string]interface{}{
+func ToGeminiFileUploadResponse(resp *schemas.BifrostFileUploadResponse) map[string]any {
+	file := map[string]any{
 		"name":        resp.ID,
 		"displayName": resp.Filename,
 		"mimeType":    "application/octet-stream",
@@ -139,7 +139,7 @@ func ToGeminiFileUploadResponse(resp *schemas.BifrostFileUploadResponse) map[str
 	if exp := formatGeminiTimestamp(safeDerefInt64(resp.ExpiresAt)); exp != "" {
 		file["expirationTime"] = exp
 	}
-	return map[string]interface{}{
+	return map[string]any{
 		"file": file,
 	}
 }

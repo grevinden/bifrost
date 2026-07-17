@@ -165,7 +165,7 @@ docker run -p 8080:8080 -v $(pwd)/data:/app/data maximhq/bifrost
 **Best for:** Direct Go integration with maximum performance and control
 
 ```bash
-go get github.com/maximhq/bifrost/core
+go get github.com/grevinden/bifrost/core
 ```
 
 **Features:** Native Go APIs, embedded deployment, custom middleware integration

@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	schemas "github.com/maximhq/bifrost/core/schemas"
+	schemas "github.com/grevinden/bifrost/core/schemas"
 )
 
 // TestWithMantleProject verifies the project header is added only when a project ID is present,

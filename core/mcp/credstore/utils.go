@@ -1,6 +1,6 @@
 package credstore
 
-import "github.com/maximhq/bifrost/core/schemas"
+import "github.com/grevinden/bifrost/core/schemas"
 
 // identityForMCPAuthMode returns the identity string to look up by, given the
 // derived mode. Mirrors the priority used by ctx.MCPAuthMode().

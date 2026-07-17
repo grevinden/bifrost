@@ -8,9 +8,9 @@ import (
 	"strings"
 
 	"github.com/bytedance/sonic"
-	nebiusProvider "github.com/maximhq/bifrost/core/providers/nebius"
-	providerUtils "github.com/maximhq/bifrost/core/providers/utils"
-	schemas "github.com/maximhq/bifrost/core/schemas"
+	nebiusProvider "github.com/grevinden/bifrost/core/providers/nebius"
+	providerUtils "github.com/grevinden/bifrost/core/providers/utils"
+	schemas "github.com/grevinden/bifrost/core/schemas"
 )
 
 // Models that support multiple images (image_urls)
@@ -73,7 +73,7 @@ func ToHuggingFaceImageGenerationRequest(bifrostReq *schemas.BifrostImageGenerat
 
 			// Handle nebius inconsistency - normalize ResponseExtension case-insensitively
 			if req.ResponseExtension != nil && strings.ToLower(*req.ResponseExtension) == "jpeg" {
-				req.ResponseExtension = schemas.Ptr("jpg")
+				req.ResponseExtension = new("jpg")
 			}
 
 			// Map seed from direct field
@@ -104,9 +104,9 @@ func ToHuggingFaceImageGenerationRequest(bifrostReq *schemas.BifrostImageGenerat
 				// Map loras
 				if lorasValue, exists := bifrostReq.Params.ExtraParams["loras"]; exists && lorasValue != nil {
 					delete(req.ExtraParams, "loras")
-					if lorasArray, ok := lorasValue.([]interface{}); ok {
+					if lorasArray, ok := lorasValue.([]any); ok {
 						for _, item := range lorasArray {
-							if loraMap, ok := item.(map[string]interface{}); ok {
+							if loraMap, ok := item.(map[string]any); ok {
 								if url, ok := schemas.SafeExtractString(loraMap["url"]); ok {
 									if scale, ok := schemas.SafeExtractInt(loraMap["scale"]); ok {
 										req.Loras = append(req.Loras, nebiusProvider.NebiusLora{URL: url, Scale: scale})
@@ -148,7 +148,7 @@ func ToHuggingFaceImageGenerationRequest(bifrostReq *schemas.BifrostImageGenerat
 			// Pass through output_format
 			if bifrostReq.Params.OutputFormat != nil {
 				if strings.ToLower(*bifrostReq.Params.OutputFormat) == "jpg" {
-					req.OutputFormat = schemas.Ptr("jpeg")
+					req.OutputFormat = new("jpeg")
 				} else {
 					req.OutputFormat = bifrostReq.Params.OutputFormat
 				}
@@ -172,11 +172,11 @@ func ToHuggingFaceImageGenerationRequest(bifrostReq *schemas.BifrostImageGenerat
 			}
 
 			if bifrostReq.Params.ResponseFormat != nil && *bifrostReq.Params.ResponseFormat == "b64_json" {
-				req.SyncMode = schemas.Ptr(true)
+				req.SyncMode = new(true)
 			}
 
 			if bifrostReq.Params.Moderation != nil && *bifrostReq.Params.Moderation == "low" {
-				req.EnableSafetyChecker = schemas.Ptr(false)
+				req.EnableSafetyChecker = new(false)
 			}
 
 			// Map seed from direct field
@@ -244,7 +244,7 @@ func ToHuggingFaceImageGenerationRequest(bifrostReq *schemas.BifrostImageGenerat
 				req.N = bifrostReq.Params.N
 			}
 			if bifrostReq.Params.ResponseFormat != nil && *bifrostReq.Params.ResponseFormat == "b64_json" {
-				req.ResponseFormat = schemas.Ptr("base64")
+				req.ResponseFormat = new("base64")
 			}
 			if bifrostReq.Params.NumInferenceSteps != nil {
 				req.Steps = bifrostReq.Params.NumInferenceSteps
@@ -283,7 +283,7 @@ func ToHuggingFaceImageStreamRequest(bifrostReq *schemas.BifrostImageGenerationR
 		// Convert "jpg" to "jpeg" for fal-ai (fal-ai only accepts "jpeg", "png", "webp")
 		if bifrostReq.Params.OutputFormat != nil {
 			if strings.ToLower(*bifrostReq.Params.OutputFormat) == "jpg" {
-				req.OutputFormat = schemas.Ptr("jpeg")
+				req.OutputFormat = new("jpeg")
 			} else {
 				req.OutputFormat = bifrostReq.Params.OutputFormat
 			}
@@ -312,10 +312,10 @@ func ToHuggingFaceImageStreamRequest(bifrostReq *schemas.BifrostImageGenerationR
 			req.NumInferenceSteps = bifrostReq.Params.NumInferenceSteps
 		}
 		if bifrostReq.Params.ResponseFormat != nil && *bifrostReq.Params.ResponseFormat == "b64_json" {
-			req.SyncMode = schemas.Ptr(true)
+			req.SyncMode = new(true)
 		}
 		if bifrostReq.Params.Moderation != nil && *bifrostReq.Params.Moderation == "low" {
-			req.EnableSafetyChecker = schemas.Ptr(false)
+			req.EnableSafetyChecker = new(false)
 		}
 
 		// Parse fal-ai specific params from ExtraParams
@@ -455,14 +455,14 @@ func mapFalAIImageEditParams(bifrostReq *schemas.BifrostImageEditRequest, req *H
 	// Pass through output_format
 	if bifrostReq.Params.OutputFormat != nil {
 		if strings.ToLower(*bifrostReq.Params.OutputFormat) == "jpg" {
-			req.OutputFormat = schemas.Ptr("jpeg")
+			req.OutputFormat = new("jpeg")
 		} else {
 			req.OutputFormat = bifrostReq.Params.OutputFormat
 		}
 	}
 
 	if bifrostReq.Params.ResponseFormat != nil && *bifrostReq.Params.ResponseFormat == "b64_json" {
-		req.SyncMode = schemas.Ptr(true)
+		req.SyncMode = new(true)
 	}
 
 	// Convert size from "WxH" format to fal-ai's image_size object

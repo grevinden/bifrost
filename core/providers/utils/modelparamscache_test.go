@@ -6,12 +6,13 @@ import (
 	"testing"
 )
 
-func intPtr(v int) *int { return &v }
+//go:fix inline
+func intPtr(v int) *int { return new(v) }
 
 func TestModelParamsCacheGetSet(t *testing.T) {
 	cache := newModelParamsCache(10)
 
-	cache.Set("claude-sonnet-4-20250514", ModelParams{MaxOutputTokens: intPtr(8192)})
+	cache.Set("claude-sonnet-4-20250514", ModelParams{MaxOutputTokens: new(8192)})
 	val, ok := cache.Get("claude-sonnet-4-20250514")
 	if !ok || val.MaxOutputTokens == nil || *val.MaxOutputTokens != 8192 {
 		t.Errorf("expected 8192, got %+v (ok=%v)", val, ok)
@@ -30,8 +31,8 @@ func TestModelParamsCacheMiss(t *testing.T) {
 func TestModelParamsCacheUpdate(t *testing.T) {
 	cache := newModelParamsCache(10)
 
-	cache.Set("claude-sonnet-4", ModelParams{MaxOutputTokens: intPtr(8192)})
-	cache.Set("claude-sonnet-4", ModelParams{MaxOutputTokens: intPtr(16384)})
+	cache.Set("claude-sonnet-4", ModelParams{MaxOutputTokens: new(8192)})
+	cache.Set("claude-sonnet-4", ModelParams{MaxOutputTokens: new(16384)})
 
 	val, ok := cache.Get("claude-sonnet-4")
 	if !ok || val.MaxOutputTokens == nil || *val.MaxOutputTokens != 16384 {
@@ -42,11 +43,11 @@ func TestModelParamsCacheUpdate(t *testing.T) {
 func TestModelParamsCacheEviction(t *testing.T) {
 	cache := newModelParamsCache(3)
 
-	cache.Set("model-a", ModelParams{MaxOutputTokens: intPtr(1000)})
-	cache.Set("model-b", ModelParams{MaxOutputTokens: intPtr(2000)})
-	cache.Set("model-c", ModelParams{MaxOutputTokens: intPtr(3000)})
+	cache.Set("model-a", ModelParams{MaxOutputTokens: new(1000)})
+	cache.Set("model-b", ModelParams{MaxOutputTokens: new(2000)})
+	cache.Set("model-c", ModelParams{MaxOutputTokens: new(3000)})
 	// This should evict model-a (oldest insertion)
-	cache.Set("model-d", ModelParams{MaxOutputTokens: intPtr(4000)})
+	cache.Set("model-d", ModelParams{MaxOutputTokens: new(4000)})
 
 	if _, ok := cache.Get("model-a"); ok {
 		t.Error("model-a should have been evicted")
@@ -63,10 +64,10 @@ func TestModelParamsCacheBulkSet(t *testing.T) {
 	cache := newModelParamsCache(100)
 
 	entries := map[string]ModelParams{
-		"claude-sonnet-4":  {MaxOutputTokens: intPtr(8192)},
-		"claude-opus-4":    {MaxOutputTokens: intPtr(4096)},
-		"gpt-4o":           {MaxOutputTokens: intPtr(16384)},
-		"gemini-2.0-flash": {MaxOutputTokens: intPtr(8192)},
+		"claude-sonnet-4":  {MaxOutputTokens: new(8192)},
+		"claude-opus-4":    {MaxOutputTokens: new(4096)},
+		"gpt-4o":           {MaxOutputTokens: new(16384)},
+		"gemini-2.0-flash": {MaxOutputTokens: new(8192)},
 	}
 	cache.BulkSet(entries)
 
@@ -82,11 +83,11 @@ func TestModelParamsCacheBulkSetOverflow(t *testing.T) {
 	cache := newModelParamsCache(3)
 
 	entries := map[string]ModelParams{
-		"model-1": {MaxOutputTokens: intPtr(1000)},
-		"model-2": {MaxOutputTokens: intPtr(2000)},
-		"model-3": {MaxOutputTokens: intPtr(3000)},
-		"model-4": {MaxOutputTokens: intPtr(4000)},
-		"model-5": {MaxOutputTokens: intPtr(5000)},
+		"model-1": {MaxOutputTokens: new(1000)},
+		"model-2": {MaxOutputTokens: new(2000)},
+		"model-3": {MaxOutputTokens: new(3000)},
+		"model-4": {MaxOutputTokens: new(4000)},
+		"model-5": {MaxOutputTokens: new(5000)},
 	}
 	cache.BulkSet(entries)
 
@@ -98,9 +99,9 @@ func TestModelParamsCacheBulkSetOverflow(t *testing.T) {
 func TestModelParamsCacheBulkSetUpdate(t *testing.T) {
 	cache := newModelParamsCache(10)
 
-	cache.Set("claude-sonnet-4", ModelParams{MaxOutputTokens: intPtr(4096)})
+	cache.Set("claude-sonnet-4", ModelParams{MaxOutputTokens: new(4096)})
 	cache.BulkSet(map[string]ModelParams{
-		"claude-sonnet-4": {MaxOutputTokens: intPtr(8192)},
+		"claude-sonnet-4": {MaxOutputTokens: new(8192)},
 	})
 
 	val, ok := cache.Get("claude-sonnet-4")
@@ -113,12 +114,12 @@ func TestModelParamsCacheConcurrency(t *testing.T) {
 	cache := newModelParamsCache(100)
 
 	var wg sync.WaitGroup
-	for i := 0; i < 50; i++ {
+	for i := range 50 {
 		wg.Add(1)
 		go func(i int) {
 			defer wg.Done()
 			model := fmt.Sprintf("model-%d", i)
-			cache.Set(model, ModelParams{MaxOutputTokens: intPtr(i * 1000)})
+			cache.Set(model, ModelParams{MaxOutputTokens: new(i * 1000)})
 			cache.Get(model)
 		}(i)
 	}
@@ -131,7 +132,7 @@ func TestModelParamsCacheConcurrency(t *testing.T) {
 
 func TestGetMaxOutputTokens(t *testing.T) {
 	cache := getModelParamsCache()
-	cache.Set("test-max-output", ModelParams{MaxOutputTokens: intPtr(16384)})
+	cache.Set("test-max-output", ModelParams{MaxOutputTokens: new(16384)})
 
 	val, ok := GetMaxOutputTokens("test-max-output")
 	if !ok || val != 16384 {
@@ -156,7 +157,7 @@ func TestGetMaxOutputTokensNilField(t *testing.T) {
 
 func TestGetMaxOutputTokensOrDefault(t *testing.T) {
 	cache := getModelParamsCache()
-	cache.Set("test-or-default", ModelParams{MaxOutputTokens: intPtr(16384)})
+	cache.Set("test-or-default", ModelParams{MaxOutputTokens: new(16384)})
 
 	val := GetMaxOutputTokensOrDefault("test-or-default", 4096)
 	if val != 16384 {
@@ -175,7 +176,7 @@ func TestCacheMissHandler(t *testing.T) {
 	cache.cacheMissHandler = func(model string) *ModelParams {
 		called = true
 		if model == "db-model" {
-			return &ModelParams{MaxOutputTokens: intPtr(32000)}
+			return &ModelParams{MaxOutputTokens: new(32000)}
 		}
 		return nil
 	}

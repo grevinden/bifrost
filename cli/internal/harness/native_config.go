@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/bytedance/sonic"
-	"github.com/maximhq/bifrost/cli/internal/config"
+	"github.com/grevinden/bifrost/cli/internal/config"
 )
 
 // claudePreLaunch pins the selected model across Claude Code's model tiers.

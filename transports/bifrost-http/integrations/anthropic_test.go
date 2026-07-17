@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/maximhq/bifrost/core/providers/anthropic"
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/providers/anthropic"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // TestMustConvertInPassthrough pins the passthrough routing decision that fixes

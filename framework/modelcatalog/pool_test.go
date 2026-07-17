@@ -6,10 +6,10 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/modelcatalog/datasheet"
-	"github.com/maximhq/bifrost/framework/modelcatalog/keyconfig"
-	"github.com/maximhq/bifrost/framework/modelcatalog/live"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/modelcatalog/datasheet"
+	"github.com/grevinden/bifrost/framework/modelcatalog/keyconfig"
+	"github.com/grevinden/bifrost/framework/modelcatalog/live"
 )
 
 // TestUpsertLiveFromResponse_NilRespIsNoop guards the API surface: handing a
@@ -112,7 +112,7 @@ func TestGetModelsForProvider_DeprecatedDatasheetModelsRespectAllowBlock(t *test
 			// though the key otherwise allows everything (wildcard).
 			name: "blocklisted deprecated model is excluded",
 			keys: []schemas.Key{
-				{ID: "k1", Enabled: ptrBool(true), Models: schemas.WhiteList{"*"}, BlacklistedModels: schemas.BlackList{"deprecated-model"}},
+				{ID: "k1", Enabled: new(true), Models: schemas.WhiteList{"*"}, BlacklistedModels: schemas.BlackList{"deprecated-model"}},
 			},
 			want: []string{"live-model"},
 		},
@@ -120,7 +120,7 @@ func TestGetModelsForProvider_DeprecatedDatasheetModelsRespectAllowBlock(t *test
 			// explicit allowlist omits deprecated-model → excluded.
 			name: "deprecated model absent from allowlist is excluded",
 			keys: []schemas.Key{
-				{ID: "k1", Enabled: ptrBool(true), Models: schemas.WhiteList{"live-model"}},
+				{ID: "k1", Enabled: new(true), Models: schemas.WhiteList{"live-model"}},
 			},
 			want: []string{"live-model"},
 		},
@@ -128,7 +128,7 @@ func TestGetModelsForProvider_DeprecatedDatasheetModelsRespectAllowBlock(t *test
 			// explicit allowlist names deprecated-model → included.
 			name: "deprecated model present in allowlist is included",
 			keys: []schemas.Key{
-				{ID: "k1", Enabled: ptrBool(true), Models: schemas.WhiteList{"live-model", "deprecated-model"}},
+				{ID: "k1", Enabled: new(true), Models: schemas.WhiteList{"live-model", "deprecated-model"}},
 			},
 			want: []string{"deprecated-model", "live-model"},
 		},
@@ -198,7 +198,9 @@ func TestGetModelsForProvider_PartialListModelsProviderUnionsDatasheet(t *testin
 }
 
 // ptrBool returns a pointer to b, for building schemas.Key fixtures.
-func ptrBool(b bool) *bool { return &b }
+//
+//go:fix inline
+func ptrBool(b bool) *bool { return new(b) }
 
 // TestExtractModelIDs_StripsOwningProviderPrefix verifies the canonical
 // shape returned by every provider's ListModels — an ID prefixed with its

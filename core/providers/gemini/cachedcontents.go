@@ -12,8 +12,8 @@ import (
 	"github.com/tidwall/sjson"
 	"github.com/valyala/fasthttp"
 
-	providerUtils "github.com/maximhq/bifrost/core/providers/utils"
-	"github.com/maximhq/bifrost/core/schemas"
+	providerUtils "github.com/grevinden/bifrost/core/providers/utils"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // geminiCachedContent mirrors the Gemini API CachedContent resource shape
@@ -77,7 +77,7 @@ func cachedContentObjectToWire(obj schemas.CachedContentObject) geminiCachedCont
 
 // ToGeminiCachedContentCreateResponse renders a Bifrost create response as the
 // Gemini camelCase wire shape (https://ai.google.dev/api/caching#CachedContent).
-func ToGeminiCachedContentCreateResponse(resp *schemas.BifrostCachedContentCreateResponse) interface{} {
+func ToGeminiCachedContentCreateResponse(resp *schemas.BifrostCachedContentCreateResponse) any {
 	if resp == nil {
 		return nil
 	}
@@ -98,7 +98,7 @@ func ToGeminiCachedContentCreateResponse(resp *schemas.BifrostCachedContentCreat
 
 // ToGeminiCachedContentListResponse renders a Bifrost list response as the
 // Gemini wire shape (cachedContents/nextPageToken).
-func ToGeminiCachedContentListResponse(resp *schemas.BifrostCachedContentListResponse) interface{} {
+func ToGeminiCachedContentListResponse(resp *schemas.BifrostCachedContentListResponse) any {
 	if resp == nil {
 		return nil
 	}
@@ -117,7 +117,7 @@ func ToGeminiCachedContentListResponse(resp *schemas.BifrostCachedContentListRes
 
 // ToGeminiCachedContentRetrieveResponse renders a Bifrost retrieve response as
 // the Gemini camelCase wire shape.
-func ToGeminiCachedContentRetrieveResponse(resp *schemas.BifrostCachedContentRetrieveResponse) interface{} {
+func ToGeminiCachedContentRetrieveResponse(resp *schemas.BifrostCachedContentRetrieveResponse) any {
 	if resp == nil {
 		return nil
 	}
@@ -138,7 +138,7 @@ func ToGeminiCachedContentRetrieveResponse(resp *schemas.BifrostCachedContentRet
 
 // ToGeminiCachedContentUpdateResponse renders a Bifrost update response as the
 // Gemini camelCase wire shape.
-func ToGeminiCachedContentUpdateResponse(resp *schemas.BifrostCachedContentUpdateResponse) interface{} {
+func ToGeminiCachedContentUpdateResponse(resp *schemas.BifrostCachedContentUpdateResponse) any {
 	if resp == nil {
 		return nil
 	}
@@ -160,7 +160,7 @@ func ToGeminiCachedContentUpdateResponse(resp *schemas.BifrostCachedContentUpdat
 // ToGeminiCachedContentDeleteResponse renders a Bifrost delete response. Gemini
 // returns an empty body on success; mirror that with an empty struct so the
 // payload is serialized as `{}` rather than the bifrost-internal shape.
-func ToGeminiCachedContentDeleteResponse(_ *schemas.BifrostCachedContentDeleteResponse) interface{} {
+func ToGeminiCachedContentDeleteResponse(_ *schemas.BifrostCachedContentDeleteResponse) any {
 	return struct{}{}
 }
 

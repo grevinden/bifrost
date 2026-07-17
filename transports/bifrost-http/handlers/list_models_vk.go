@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/configstore"
-	governanceplugin "github.com/maximhq/bifrost/plugins/governance"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/configstore"
+	governanceplugin "github.com/grevinden/bifrost/plugins/governance"
 	"github.com/valyala/fasthttp"
 )
 

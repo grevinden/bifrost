@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // RunCountTokenTest validates the CountTokens API for the configured provider/model.
@@ -37,19 +37,19 @@ func RunCountTokenTest(t *testing.T, client *bifrost.Bifrost, ctx context.Contex
 		retryConfig := GetTestRetryConfigForScenario("CountTokens", testConfig)
 		retryContext := TestRetryContext{
 			ScenarioName: "CountTokens",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"should_return_token_counts": true,
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider": testConfig.Provider,
 				"model":    testConfig.ChatModel,
 			},
 		}
 
-		expectations := GetExpectationsForScenario("CountTokens", testConfig, map[string]interface{}{})
+		expectations := GetExpectationsForScenario("CountTokens", testConfig, map[string]any{})
 		expectations = ModifyExpectationsForProvider(expectations, testConfig.Provider)
 		if expectations.ProviderSpecific == nil {
-			expectations.ProviderSpecific = make(map[string]interface{})
+			expectations.ProviderSpecific = make(map[string]any)
 		}
 		expectations.ProviderSpecific["expected_provider"] = string(testConfig.Provider)
 

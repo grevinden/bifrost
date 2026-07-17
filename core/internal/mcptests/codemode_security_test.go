@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -78,10 +78,10 @@ func TestReadToolFile_PathTraversalAttacks(t *testing.T) {
 	for _, tc := range pathTraversalTests {
 		t.Run(tc.name, func(t *testing.T) {
 			toolCall := schemas.ChatAssistantMessageToolCall{
-				ID:   schemas.Ptr("call-" + tc.name),
-				Type: schemas.Ptr("function"),
+				ID:   new("call-" + tc.name),
+				Type: new("function"),
 				Function: schemas.ChatAssistantMessageToolCallFunction{
-					Name:      schemas.Ptr("readToolFile"),
+					Name:      new("readToolFile"),
 					Arguments: `{"fileName": "` + tc.fileName + `"}`,
 				},
 			}
@@ -137,10 +137,10 @@ func TestReadToolFile_InvalidToolNames(t *testing.T) {
 			}
 
 			toolCall := schemas.ChatAssistantMessageToolCall{
-				ID:   schemas.Ptr("call-" + tc.name),
-				Type: schemas.Ptr("function"),
+				ID:   new("call-" + tc.name),
+				Type: new("function"),
 				Function: schemas.ChatAssistantMessageToolCallFunction{
-					Name:      schemas.Ptr("readToolFile"),
+					Name:      new("readToolFile"),
 					Arguments: string(argsJSON),
 				},
 			}
@@ -217,10 +217,10 @@ func TestExecuteToolCode_CodeInjectionAttempts(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			codeJSON, _ := json.Marshal(tc.code)
 			toolCall := schemas.ChatAssistantMessageToolCall{
-				ID:   schemas.Ptr("call-" + tc.name),
-				Type: schemas.Ptr("function"),
+				ID:   new("call-" + tc.name),
+				Type: new("function"),
 				Function: schemas.ChatAssistantMessageToolCallFunction{
-					Name:      schemas.Ptr("executeToolCode"),
+					Name:      new("executeToolCode"),
 					Arguments: `{"code": ` + string(codeJSON) + `}`,
 				},
 			}
@@ -241,7 +241,7 @@ func TestExecuteToolCode_CodeInjectionAttempts(t *testing.T) {
 						executionFailed = true
 						failureReason = fmt.Sprintf("ParseCodeModeResponse error: %s", errorMsg)
 					} else if returnValue != nil {
-						if returnObj, ok := returnValue.(map[string]interface{}); ok {
+						if returnObj, ok := returnValue.(map[string]any); ok {
 							if errorField, ok := returnObj["error"]; ok {
 								executionFailed = true
 								failureReason = fmt.Sprintf("return value error field: %v", errorField)
@@ -297,10 +297,10 @@ func TestListToolFiles_InputValidation(t *testing.T) {
 
 	// Test listToolFiles with no parameters (should succeed)
 	toolCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-list"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-list"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("listToolFiles"),
+			Name:      new("listToolFiles"),
 			Arguments: `{}`,
 		},
 	}
@@ -338,10 +338,10 @@ func TestReadToolFile_EmptyFileName(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			toolCall := schemas.ChatAssistantMessageToolCall{
-				ID:   schemas.Ptr("call-" + tc.name),
-				Type: schemas.Ptr("function"),
+				ID:   new("call-" + tc.name),
+				Type: new("function"),
 				Function: schemas.ChatAssistantMessageToolCallFunction{
-					Name:      schemas.Ptr("readToolFile"),
+					Name:      new("readToolFile"),
 					Arguments: tc.arguments,
 				},
 			}
@@ -357,8 +357,8 @@ func TestReadToolFile_EmptyFileName(t *testing.T) {
 					assert.True(t, strings.Contains(content, "error") ||
 						strings.Contains(content, "required") ||
 						strings.Contains(content, "invalid") ||
-						strings.Contains(content, "found") ||  // Updated to just "found" not "not found"
-						strings.Contains(content, "Available virtual files"),  // Also accept list of available files
+						strings.Contains(content, "found") || // Updated to just "found" not "not found"
+						strings.Contains(content, "Available virtual files"), // Also accept list of available files
 						"Should return error message, got: %s", content)
 				}
 			}
@@ -394,10 +394,10 @@ func TestExecuteToolCode_EmptyCodeSecurity(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			toolCall := schemas.ChatAssistantMessageToolCall{
-				ID:   schemas.Ptr("call-" + tc.name),
-				Type: schemas.Ptr("function"),
+				ID:   new("call-" + tc.name),
+				Type: new("function"),
 				Function: schemas.ChatAssistantMessageToolCallFunction{
-					Name:      schemas.Ptr("executeToolCode"),
+					Name:      new("executeToolCode"),
 					Arguments: tc.arguments,
 				},
 			}
@@ -440,10 +440,10 @@ func TestExecuteToolCode_UnicodeInCode(t *testing.T) {
 	codeJSON, _ := json.Marshal(unicodeCode)
 
 	toolCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-unicode"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-unicode"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("executeToolCode"),
+			Name:      new("executeToolCode"),
 			Arguments: `{"code": ` + string(codeJSON) + `}`,
 		},
 	}
@@ -495,10 +495,10 @@ func TestExecuteToolCode_MalformedJSON(t *testing.T) {
 	for _, tc := range malformedTests {
 		t.Run(tc.name, func(t *testing.T) {
 			toolCall := schemas.ChatAssistantMessageToolCall{
-				ID:   schemas.Ptr("call-" + tc.name),
-				Type: schemas.Ptr("function"),
+				ID:   new("call-" + tc.name),
+				Type: new("function"),
 				Function: schemas.ChatAssistantMessageToolCallFunction{
-					Name:      schemas.Ptr("executeToolCode"),
+					Name:      new("executeToolCode"),
 					Arguments: tc.arguments,
 				},
 			}
@@ -542,10 +542,10 @@ func TestReadToolFile_LineNumberBoundaries(t *testing.T) {
 
 	// First, list available files to get a real server name
 	listCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-list"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-list"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("listToolFiles"),
+			Name:      new("listToolFiles"),
 			Arguments: `{}`,
 		},
 	}
@@ -567,8 +567,8 @@ func TestReadToolFile_LineNumberBoundaries(t *testing.T) {
 	for _, line := range lines {
 		if strings.Contains(line, ".pyi") {
 			// Extract just the filename
-			parts := strings.Fields(line)
-			for _, part := range parts {
+			parts := strings.FieldsSeq(line)
+			for part := range parts {
 				if strings.HasSuffix(part, ".pyi") {
 					firstFile = strings.Trim(part, "[]\"',")
 					break
@@ -621,7 +621,7 @@ func TestReadToolFile_LineNumberBoundaries(t *testing.T) {
 
 	for _, tc := range boundaryTests {
 		t.Run(tc.name, func(t *testing.T) {
-			args := map[string]interface{}{
+			args := map[string]any{
 				"fileName":  firstFile,
 				"startLine": tc.startLine,
 				"endLine":   tc.endLine,
@@ -629,10 +629,10 @@ func TestReadToolFile_LineNumberBoundaries(t *testing.T) {
 			argsJSON, _ := json.Marshal(args)
 
 			toolCall := schemas.ChatAssistantMessageToolCall{
-				ID:   schemas.Ptr("call-" + tc.name),
-				Type: schemas.Ptr("function"),
+				ID:   new("call-" + tc.name),
+				Type: new("function"),
 				Function: schemas.ChatAssistantMessageToolCallFunction{
-					Name:      schemas.Ptr("readToolFile"),
+					Name:      new("readToolFile"),
 					Arguments: string(argsJSON),
 				},
 			}

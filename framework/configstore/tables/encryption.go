@@ -1,8 +1,8 @@
 package tables
 
 import (
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/encrypt"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/encrypt"
 )
 
 const (

@@ -52,7 +52,7 @@ Runway ML provides video generation via an asynchronous task-based API. Bifrost 
 - **Image-to-video**: `prompt` + `input_reference`
 - **Video-to-video**: `prompt` + `video_uri` - **gen4_aleph only**
 
-**Response**: [`BifrostVideoGenerationResponse`](https://github.com/maximhq/bifrost/blob/main/core/schemas/videos.go) with `id`, `status`, `videos[]`
+**Response**: [`BifrostVideoGenerationResponse`](https://github.com/grevinden/bifrost/blob/main/core/schemas/videos.go) with `id`, `status`, `videos[]`
 
 **Bifrost statuses** (normalized): `queued` → `in_progress` → `completed` / `failed`
 

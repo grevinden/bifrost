@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -56,10 +56,10 @@ func executeToolViaManager(t *testing.T, manager interface {
 
 	ctx := createTestContext()
 	toolCall := &schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-1"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-1"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr(toolName),
+			Name:      new(toolName),
 			Arguments: `{}`,
 		},
 	}

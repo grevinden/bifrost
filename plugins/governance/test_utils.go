@@ -10,10 +10,10 @@ import (
 	"testing"
 	"time"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
-	configstoreTables "github.com/maximhq/bifrost/framework/configstore/tables"
-	"github.com/maximhq/bifrost/framework/modelcatalog"
+	_ "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
+	configstoreTables "github.com/grevinden/bifrost/framework/configstore/tables"
+	"github.com/grevinden/bifrost/framework/modelcatalog"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -41,31 +41,31 @@ func (ml *MockLogger) SetLevel(level schemas.LogLevel) {}
 
 func (ml *MockLogger) SetOutputType(outputType schemas.LoggerOutputType) {}
 
-func (ml *MockLogger) Error(format string, args ...interface{}) {
+func (ml *MockLogger) Error(format string, args ...any) {
 	ml.mu.Lock()
 	defer ml.mu.Unlock()
 	ml.errors = append(ml.errors, format)
 }
 
-func (ml *MockLogger) Warn(format string, args ...interface{}) {
+func (ml *MockLogger) Warn(format string, args ...any) {
 	ml.mu.Lock()
 	defer ml.mu.Unlock()
 	ml.warnings = append(ml.warnings, format)
 }
 
-func (ml *MockLogger) Info(format string, args ...interface{}) {
+func (ml *MockLogger) Info(format string, args ...any) {
 	ml.mu.Lock()
 	defer ml.mu.Unlock()
 	ml.infos = append(ml.infos, format)
 }
 
-func (ml *MockLogger) Debug(format string, args ...interface{}) {
+func (ml *MockLogger) Debug(format string, args ...any) {
 	ml.mu.Lock()
 	defer ml.mu.Unlock()
 	ml.debugs = append(ml.debugs, format)
 }
 
-func (ml *MockLogger) Fatal(format string, args ...interface{}) {
+func (ml *MockLogger) Fatal(format string, args ...any) {
 	ml.mu.Lock()
 	defer ml.mu.Unlock()
 	ml.errors = append(ml.errors, format)
@@ -194,7 +194,7 @@ func buildProviderConfig(provider string, allowedModels []string) configstoreTab
 	return configstoreTables.TableVirtualKeyProviderConfig{
 		Provider:      provider,
 		AllowedModels: allowedModels,
-		Weight:        bifrost.Ptr(1.0),
+		Weight:        new(1.0),
 		RateLimit:     nil,
 		Keys:          []configstoreTables.TableKey{},
 	}
@@ -288,8 +288,9 @@ func buildProviderWithGovernance(name string, budget *configstoreTables.TableBud
 	return provider
 }
 
+//go:fix inline
 func boolPtr(b bool) *bool {
-	return &b
+	return new(b)
 }
 
 // Datasheet is fetched once per test binary run via sync.Once.

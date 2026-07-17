@@ -13,11 +13,11 @@ import (
 	"unicode"
 
 	"github.com/google/uuid"
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/configstore/tables"
-	"github.com/maximhq/bifrost/framework/encrypt"
-	"github.com/maximhq/bifrost/framework/migrator"
+	_ "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/configstore/tables"
+	"github.com/grevinden/bifrost/framework/encrypt"
+	"github.com/grevinden/bifrost/framework/migrator"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -770,7 +770,7 @@ func migrationAddStoreRawRequestResponseColumn(ctx context.Context, db *gorm.DB,
 				if err != nil {
 					return fmt.Errorf("failed to generate hash for provider %s: %w", provider.Name, err)
 				}
-				if err := tx.Model(&provider).Updates(map[string]interface{}{
+				if err := tx.Model(&provider).Updates(map[string]any{
 					"config_hash":                hash,
 					"store_raw_request_response": providerConfig.StoreRawRequestResponse,
 				}).Error; err != nil {
@@ -2500,7 +2500,7 @@ func migrationMoveKeysToProviderConfig(ctx context.Context, db *gorm.DB, logger 
 								providerConfig = tables.TableVirtualKeyProviderConfig{
 									VirtualKeyID:  assoc.VirtualKeyID,
 									Provider:      keyData.Provider,
-									Weight:        bifrost.Ptr(1.0),
+									Weight:        new(1.0),
 									AllowedModels: []string{},
 								}
 								if err := tx.Create(&providerConfig).Error; err != nil {
@@ -3250,8 +3250,8 @@ func migrationRemoveServerPrefixFromMCPTools(ctx context.Context, db *gorm.DB, l
 	// Handles both exact matches and legacy normalized forms
 	hasClientPrefix := func(toolName, clientName string) (bool, string) {
 		prefix := clientName + "_"
-		if strings.HasPrefix(toolName, prefix) {
-			return true, strings.TrimPrefix(toolName, prefix)
+		if after, ok := strings.CutPrefix(toolName, prefix); ok {
+			return true, after
 		}
 		// Legacy prefix: normalize the substring before first underscore
 		if idx := strings.IndexByte(toolName, '_'); idx > 0 {
@@ -3415,7 +3415,7 @@ func migrationRemoveServerPrefixFromMCPTools(ctx context.Context, db *gorm.DB, l
 				// Save the updated client if any changes were made
 				if needsUpdate {
 					// Use Model + Updates to ensure changes are persisted
-					result := tx.Model(&tables.TableMCPClient{}).Where("id = ?", client.ID).Updates(map[string]interface{}{
+					result := tx.Model(&tables.TableMCPClient{}).Where("id = ?", client.ID).Updates(map[string]any{
 						"tools_to_execute_json":      client.ToolsToExecuteJSON,
 						"tools_to_auto_execute_json": client.ToolsToAutoExecuteJSON,
 						"tool_pricing_json":          client.ToolPricingJSON,
@@ -5116,7 +5116,7 @@ func migrationBackfillEmptyVirtualKeyConfigs(ctx context.Context, db *gorm.DB, l
 						providerConfig := tables.TableVirtualKeyProviderConfig{
 							VirtualKeyID:  vk.ID,
 							Provider:      provider.Name,
-							Weight:        bifrost.Ptr(1.0),
+							Weight:        new(1.0),
 							AllowedModels: []string{},
 							AllowAllKeys:  true,
 						}
@@ -5456,7 +5456,7 @@ func migrationAddEncryptionColumns(ctx context.Context, db *gorm.DB, logger sche
 			tx = tx.WithContext(ctx)
 
 			type encryptionTable struct {
-				table   interface{}
+				table   any
 				columns []string
 			}
 
@@ -5529,7 +5529,7 @@ func migrationAddEncryptionColumns(ctx context.Context, db *gorm.DB, logger sche
 			tx = tx.WithContext(ctx)
 
 			type dropInfo struct {
-				table   interface{}
+				table   any
 				columns []string
 			}
 
@@ -6178,7 +6178,7 @@ func migrationAddRoutingTargetsTable(ctx context.Context, db *gorm.DB, logger sc
 				if t.Model != nil {
 					model = *t.Model
 				}
-				if err := tx.Table("routing_rules").Where("id = ?", ruleID).Updates(map[string]interface{}{
+				if err := tx.Table("routing_rules").Where("id = ?", ruleID).Updates(map[string]any{
 					"provider": provider,
 					"model":    model,
 				}).Error; err != nil {
@@ -8955,7 +8955,7 @@ func migrationReplaceOauthSessionTokenWithSessionID(ctx context.Context, db *gor
 					_ = err
 				}
 			}
-			for _, model := range []interface{}{&tables.TableOauthUserSession{}, &tables.TableOauthUserToken{}} {
+			for _, model := range []any{&tables.TableOauthUserSession{}, &tables.TableOauthUserToken{}} {
 				if mg.HasTable(model) && mg.HasColumn(model, "session_id") {
 					if err := dropColumnIfExists(tx, logger, model, "SessionID"); err != nil {
 						return fmt.Errorf("drop session_id from %T: %w", model, err)

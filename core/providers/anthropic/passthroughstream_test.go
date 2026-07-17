@@ -1,12 +1,13 @@
 package anthropic
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
 
 	"github.com/bytedance/sonic"
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/tidwall/gjson"
 )
 
@@ -175,7 +176,7 @@ type ptFrame struct {
 // except ContentPartAdded) to prove the bug reproduces.
 func runAnthropicPassthrough(t *testing.T, raws []string, applyFix bool) ([]ptFrame, *schemas.BifrostContext) {
 	t.Helper()
-	ctx := schemas.NewBifrostContext(nil, time.Time{})
+	ctx := schemas.NewBifrostContext(context.TODO, time.Time{})
 	// This harness always models the passthrough path (raw frames interleaved), so
 	// mark the reverse converter accordingly — mirroring the transport, which calls
 	// SetResponsesStreamPassthrough when shouldUsePassthrough is true. This drives

@@ -52,14 +52,8 @@ func detectError(clean string, ignore []string) (pattern, snippet string, ok boo
 		if loc == nil {
 			continue
 		}
-		start := loc[0] - 80
-		if start < 0 {
-			start = 0
-		}
-		end := loc[1] + 160
-		if end > len(haystack) {
-			end = len(haystack)
-		}
+		start := max(loc[0]-80, 0)
+		end := min(loc[1]+160, len(haystack))
 		return re.String(), haystack[start:end], true
 	}
 	return "", "", false

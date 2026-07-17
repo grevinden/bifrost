@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // BaseAccount implements the schemas.Account interface for testing purposes.
@@ -80,7 +80,7 @@ func TestMockerPlugin_Disabled(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: bifrost.Ptr("Hello, test message"),
+					ContentStr: new("Hello, test message"),
 				},
 			},
 		},
@@ -122,7 +122,7 @@ func TestMockerPlugin_DefaultMockRule(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: bifrost.Ptr("Hello, test message"),
+					ContentStr: new("Hello, test message"),
 				},
 			},
 		},
@@ -198,7 +198,7 @@ func TestMockerPlugin_CustomSuccessRule(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: bifrost.Ptr("Hello, test message"),
+					ContentStr: new("Hello, test message"),
 				},
 			},
 		},
@@ -245,9 +245,9 @@ func TestMockerPlugin_ErrorResponse(t *testing.T) {
 						AllowFallbacks: &allowFallbacks,
 						Error: &ErrorResponse{
 							Message:    "Rate limit exceeded",
-							Type:       bifrost.Ptr("rate_limit"),
-							Code:       bifrost.Ptr("429"),
-							StatusCode: bifrost.Ptr(429),
+							Type:       new("rate_limit"),
+							Code:       new("429"),
+							StatusCode: new(429),
 						},
 					},
 				},
@@ -277,7 +277,7 @@ func TestMockerPlugin_ErrorResponse(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: bifrost.Ptr("Hello, test message"),
+					ContentStr: new("Hello, test message"),
 				},
 			},
 		},
@@ -310,7 +310,7 @@ func TestMockerPlugin_MessageTemplate(t *testing.T) {
 					{
 						Type: ResponseTypeSuccess,
 						Content: &SuccessResponse{
-							MessageTemplate: bifrost.Ptr("Hello from {{provider}} using model {{model}}"),
+							MessageTemplate: new("Hello from {{provider}} using model {{model}}"),
 						},
 					},
 				},
@@ -340,7 +340,7 @@ func TestMockerPlugin_MessageTemplate(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: bifrost.Ptr("Hello, test message"),
+					ContentStr: new("Hello, test message"),
 				},
 			},
 		},
@@ -404,7 +404,7 @@ func TestMockerPlugin_Statistics(t *testing.T) {
 	defer client.Shutdown()
 
 	// Make multiple requests
-	for i := 0; i < 3; i++ {
+	for range 3 {
 		_, _ = client.ChatCompletionRequest(ctx, &schemas.BifrostChatRequest{
 			Provider: schemas.OpenAI,
 			Model:    "gpt-4",
@@ -412,7 +412,7 @@ func TestMockerPlugin_Statistics(t *testing.T) {
 				{
 					Role: schemas.ChatMessageRoleUser,
 					Content: &schemas.ChatMessageContent{
-						ContentStr: bifrost.Ptr("Hello, test message"),
+						ContentStr: new("Hello, test message"),
 					},
 				},
 			},

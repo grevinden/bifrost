@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/configstore/tables"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/configstore/tables"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gorm.io/driver/sqlite"
@@ -867,7 +867,7 @@ func TestCreateVirtualKey(t *testing.T) {
 		ID:       "vk-test",
 		Name:     "Test Virtual Key",
 		Value:    *schemas.NewSecretVar("vk-test-value-123"),
-		IsActive: schemas.Ptr(true),
+		IsActive: new(true),
 	}
 
 	err := store.CreateVirtualKey(ctx, vk)
@@ -912,7 +912,7 @@ func TestCreateVirtualKey_WithBudgetAndRateLimit(t *testing.T) {
 		ID:          vkID,
 		Name:        "VK With References",
 		Value:       *schemas.NewSecretVar("vk-refs-value"),
-		IsActive:    schemas.Ptr(true),
+		IsActive:    new(true),
 		RateLimitID: &rateLimitID,
 	}
 
@@ -940,7 +940,7 @@ func TestCreateVirtualKey_DuplicateName(t *testing.T) {
 		ID:       "vk-1",
 		Name:     "Same Name",
 		Value:    *schemas.NewSecretVar("vk-value-1"),
-		IsActive: schemas.Ptr(true),
+		IsActive: new(true),
 	}
 	err := store.CreateVirtualKey(ctx, vk1)
 	require.NoError(t, err)
@@ -949,7 +949,7 @@ func TestCreateVirtualKey_DuplicateName(t *testing.T) {
 		ID:       "vk-2",
 		Name:     "Same Name", // Duplicate name
 		Value:    *schemas.NewSecretVar("vk-value-2"),
-		IsActive: schemas.Ptr(true),
+		IsActive: new(true),
 	}
 	err = store.CreateVirtualKey(ctx, vk2)
 	assert.Error(t, err, "Should fail with duplicate name")
@@ -963,7 +963,7 @@ func TestGetVirtualKeyByValue(t *testing.T) {
 		ID:       "vk-lookup",
 		Name:     "Lookup Key",
 		Value:    *schemas.NewSecretVar("vk-unique-value-xyz"),
-		IsActive: schemas.Ptr(true),
+		IsActive: new(true),
 	}
 	err := store.CreateVirtualKey(ctx, vk)
 	require.NoError(t, err)
@@ -981,14 +981,14 @@ func TestUpdateVirtualKey(t *testing.T) {
 		ID:       "vk-update",
 		Name:     "Original Name",
 		Value:    *schemas.NewSecretVar("vk-update-value"),
-		IsActive: schemas.Ptr(true),
+		IsActive: new(true),
 	}
 	err := store.CreateVirtualKey(ctx, vk)
 	require.NoError(t, err)
 
 	// Update
 	vk.Name = "Updated Name"
-	vk.IsActive = schemas.Ptr(false)
+	vk.IsActive = new(false)
 	err = store.UpdateVirtualKey(ctx, vk)
 	require.NoError(t, err)
 
@@ -1006,7 +1006,7 @@ func TestDeleteVirtualKey(t *testing.T) {
 		ID:       "vk-delete",
 		Name:     "Delete Me",
 		Value:    *schemas.NewSecretVar("vk-delete-value"),
-		IsActive: schemas.Ptr(true),
+		IsActive: new(true),
 	}
 	err := store.CreateVirtualKey(ctx, vk)
 	require.NoError(t, err)
@@ -1026,7 +1026,7 @@ func TestDeleteVirtualKey_RevokesInboundVKGrants(t *testing.T) {
 		ID:       "vk-grant",
 		Name:     "Grant VK",
 		Value:    *schemas.NewSecretVar("vk-grant-value"),
-		IsActive: schemas.Ptr(true),
+		IsActive: new(true),
 	}
 	require.NoError(t, store.CreateVirtualKey(ctx, vk))
 
@@ -1060,7 +1060,7 @@ func TestDeleteVirtualKey_CleansUpScopedModelConfigs(t *testing.T) {
 		ID:       "vk-scoped",
 		Name:     "Scoped VK",
 		Value:    *schemas.NewSecretVar("vk-scoped-value"),
-		IsActive: schemas.Ptr(true),
+		IsActive: new(true),
 	}
 	require.NoError(t, store.CreateVirtualKey(ctx, vk))
 
@@ -1068,8 +1068,8 @@ func TestDeleteVirtualKey_CleansUpScopedModelConfigs(t *testing.T) {
 	require.NoError(t, store.CreateBudget(ctx, budget))
 	rateLimit := &tables.TableRateLimit{
 		ID:                 "rl-scoped",
-		TokenMaxLimit:      schemas.Ptr(int64(1000)),
-		TokenResetDuration: schemas.Ptr("1h"),
+		TokenMaxLimit:      new(int64(1000)),
+		TokenResetDuration: new("1h"),
 	}
 	require.NoError(t, store.CreateRateLimit(ctx, rateLimit))
 
@@ -1077,7 +1077,7 @@ func TestDeleteVirtualKey_CleansUpScopedModelConfigs(t *testing.T) {
 		ID:          "mc-scoped",
 		ModelName:   "gpt-4",
 		Scope:       tables.ModelConfigScopeVirtualKey,
-		ScopeID:     schemas.Ptr(vk.ID),
+		ScopeID:     new(vk.ID),
 		BudgetID:    &budget.ID,
 		RateLimitID: &rateLimit.ID,
 	}
@@ -1114,14 +1114,14 @@ func TestDeleteVirtualKey_CleansUpMultiBudgetScopedModelConfigs(t *testing.T) {
 		ID:       "vk-multibudget",
 		Name:     "MultiBudget VK",
 		Value:    *schemas.NewSecretVar("vk-multibudget-value"),
-		IsActive: schemas.Ptr(true),
+		IsActive: new(true),
 	}
 	require.NoError(t, store.CreateVirtualKey(ctx, vk))
 
 	rateLimit := &tables.TableRateLimit{
 		ID:                 "rl-mb",
-		TokenMaxLimit:      schemas.Ptr(int64(1000)),
-		TokenResetDuration: schemas.Ptr("1h"),
+		TokenMaxLimit:      new(int64(1000)),
+		TokenResetDuration: new("1h"),
 	}
 	require.NoError(t, store.CreateRateLimit(ctx, rateLimit))
 
@@ -1129,7 +1129,7 @@ func TestDeleteVirtualKey_CleansUpMultiBudgetScopedModelConfigs(t *testing.T) {
 		ID:          "mc-multibudget",
 		ModelName:   "gpt-4",
 		Scope:       tables.ModelConfigScopeVirtualKey,
-		ScopeID:     schemas.Ptr(vk.ID),
+		ScopeID:     new(vk.ID),
 		RateLimitID: &rateLimit.ID,
 	}
 	require.NoError(t, store.CreateModelConfig(ctx, mc))
@@ -1174,7 +1174,7 @@ func TestCreateModelConfig_RejectsMissingScopeOwner(t *testing.T) {
 		ID:        "mc-orphan",
 		ModelName: "gpt-4",
 		Scope:     tables.ModelConfigScopeVirtualKey,
-		ScopeID:   schemas.Ptr("vk-does-not-exist"),
+		ScopeID:   new("vk-does-not-exist"),
 	}
 	err := store.CreateModelConfig(ctx, mc)
 	assert.ErrorIs(t, err, ErrNotFound, "creating a VK-scoped config for a missing VK should be rejected")
@@ -1190,7 +1190,7 @@ func TestDeleteProvider_CleansUpProviderModelConfigs(t *testing.T) {
 	now := time.Now()
 	require.NoError(t, store.DB().Create(&tables.TableProvider{Name: "openai", CreatedAt: now, UpdatedAt: now}).Error)
 	require.NoError(t, store.DB().Create(&tables.TableBudget{ID: "pb", MaxLimit: 100, ResetDuration: "1M", LastReset: now, CreatedAt: now, UpdatedAt: now}).Error)
-	require.NoError(t, store.DB().Create(&tables.TableRateLimit{ID: "prl", TokenMaxLimit: schemas.Ptr(int64(1000)), TokenResetDuration: schemas.Ptr("1h"), TokenLastReset: now, RequestLastReset: now, CreatedAt: now, UpdatedAt: now}).Error)
+	require.NoError(t, store.DB().Create(&tables.TableRateLimit{ID: "prl", TokenMaxLimit: new(int64(1000)), TokenResetDuration: new("1h"), TokenLastReset: now, RequestLastReset: now, CreatedAt: now, UpdatedAt: now}).Error)
 
 	providerName := "openai"
 	mc := &tables.TableModelConfig{
@@ -1198,8 +1198,8 @@ func TestDeleteProvider_CleansUpProviderModelConfigs(t *testing.T) {
 		ModelName:   tables.ModelConfigAllModels,
 		Provider:    &providerName,
 		Scope:       tables.ModelConfigScopeGlobal,
-		BudgetID:    schemas.Ptr("pb"),
-		RateLimitID: schemas.Ptr("prl"),
+		BudgetID:    new("pb"),
+		RateLimitID: new("prl"),
 		CreatedAt:   now,
 		UpdatedAt:   now,
 	}
@@ -1237,7 +1237,7 @@ func TestCreateVirtualKeyProviderConfig(t *testing.T) {
 		ID:       "vk-for-pc",
 		Name:     "VK For Provider Config",
 		Value:    *schemas.NewSecretVar("vk-pc-value"),
-		IsActive: schemas.Ptr(true),
+		IsActive: new(true),
 	}
 	err := store.CreateVirtualKey(ctx, vk)
 	require.NoError(t, err)
@@ -1280,7 +1280,7 @@ func TestCreateVirtualKeyProviderConfig_WithKeys(t *testing.T) {
 		ID:       "vk-with-keys",
 		Name:     "VK With Keys",
 		Value:    *schemas.NewSecretVar("vk-keys-value"),
-		IsActive: schemas.Ptr(true),
+		IsActive: new(true),
 	}
 	err = store.CreateVirtualKey(ctx, vk)
 	require.NoError(t, err)
@@ -1320,7 +1320,7 @@ func TestCreateVirtualKeyProviderConfig_UnresolvedKeys(t *testing.T) {
 		ID:       "vk-unresolved",
 		Name:     "VK Unresolved",
 		Value:    *schemas.NewSecretVar("vk-unresolved-value"),
-		IsActive: schemas.Ptr(true),
+		IsActive: new(true),
 	}
 	err := store.CreateVirtualKey(ctx, vk)
 	require.NoError(t, err)
@@ -1362,7 +1362,7 @@ func TestUpdateProvider_RemovesStaleVirtualKeyProviderConfigKeyAssociations(t *t
 		ID:       "vk-update-provider-cleanup",
 		Name:     "VK Update Provider Cleanup",
 		Value:    *schemas.NewSecretVar("vk-update-provider-cleanup-value"),
-		IsActive: schemas.Ptr(true),
+		IsActive: new(true),
 	}
 	err = store.CreateVirtualKey(ctx, vk)
 	require.NoError(t, err)
@@ -1411,7 +1411,7 @@ func TestDeleteProvider_RemovesVirtualKeyProviderConfigs(t *testing.T) {
 		ID:       "vk-delete-provider-cleanup",
 		Name:     "VK Delete Provider Cleanup",
 		Value:    *schemas.NewSecretVar("vk-delete-provider-cleanup-value"),
-		IsActive: schemas.Ptr(true),
+		IsActive: new(true),
 	}
 	err = store.CreateVirtualKey(ctx, vk)
 	require.NoError(t, err)
@@ -1807,7 +1807,7 @@ func TestFullVirtualKeyFlow(t *testing.T) {
 		ID:          integrationVKID,
 		Name:        "Integration Virtual Key",
 		Value:       *schemas.NewSecretVar("vk-integration-xyz"),
-		IsActive:    schemas.Ptr(true),
+		IsActive:    new(true),
 		RateLimitID: &rateLimitID,
 	}
 	err = store.CreateVirtualKey(ctx, vk)
@@ -1853,12 +1853,12 @@ func TestGetVirtualKeysUsesInternalPagination(t *testing.T) {
 
 	totalVirtualKeys := virtualKeyInternalPageSize + 5
 	createdAt := time.Date(2026, time.January, 1, 0, 0, 0, 0, time.UTC)
-	for i := 0; i < totalVirtualKeys; i++ {
+	for i := range totalVirtualKeys {
 		vk := &tables.TableVirtualKey{
 			ID:        fmt.Sprintf("vk-page-%04d", i),
 			Name:      fmt.Sprintf("Virtual Key %04d", i),
 			Value:     *schemas.NewSecretVar(fmt.Sprintf("vk-value-%04d", i)),
-			IsActive:  schemas.Ptr(true),
+			IsActive:  new(true),
 			CreatedAt: createdAt,
 			UpdatedAt: createdAt,
 		}
@@ -1908,7 +1908,7 @@ func TestMultipleBudgetUpdates(t *testing.T) {
 	require.NoError(t, err)
 
 	// Simulate multiple sequential updates
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		b := &tables.TableBudget{
 			ID:            "multi-update-budget",
 			MaxLimit:      100.0 + float64(i),
@@ -1994,7 +1994,7 @@ func createTestPromptTree(t *testing.T, store *RDBConfigStore, ctx context.Conte
 		tree.PromptIDs = append(tree.PromptIDs, promptID)
 
 		// Create 2 versions with messages
-		for v := 0; v < 2; v++ {
+		for range 2 {
 			version := &tables.TablePromptVersion{
 				PromptID:      promptID,
 				CommitMessage: "version commit",
@@ -2022,7 +2022,7 @@ func createTestPromptTree(t *testing.T, store *RDBConfigStore, ctx context.Conte
 }
 
 // countRows returns the number of rows in a table
-func countRows(t *testing.T, store *RDBConfigStore, model interface{}) int64 {
+func countRows(t *testing.T, store *RDBConfigStore, model any) int64 {
 	t.Helper()
 	var count int64
 	require.NoError(t, store.DB().Model(model).Count(&count).Error)

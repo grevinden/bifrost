@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/maximhq/maxim-go/logging"
 )
 
@@ -23,7 +23,8 @@ var (
 	testImageBase64 = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAIAAoDASIAAhEBAxEB/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAb/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="
 )
 
-func strPtr(s string) *string { return &s }
+//go:fix inline
+func strPtr(s string) *string { return new(s) }
 
 func responsesUserRole() *schemas.ResponsesMessageRoleType {
 	r := schemas.ResponsesInputMessageRoleUser
@@ -117,7 +118,7 @@ func TestExtractAttachmentsFromRequest_ChatFileUrl(t *testing.T) {
 								Type: schemas.ChatContentBlockTypeFile,
 								File: &schemas.ChatInputFile{
 									FileURL:  &fileURL,
-									Filename: strPtr("2024ltr.pdf"),
+									Filename: new("2024ltr.pdf"),
 								},
 							},
 						},
@@ -153,8 +154,8 @@ func TestExtractAttachmentsFromRequest_ChatFileData(t *testing.T) {
 								Type: schemas.ChatContentBlockTypeFile,
 								File: &schemas.ChatInputFile{
 									FileData: &b64,
-									Filename: strPtr("doc.pdf"),
-									FileType: strPtr("application/pdf"),
+									Filename: new("doc.pdf"),
+									FileType: new("application/pdf"),
 								},
 							},
 						},
@@ -260,8 +261,8 @@ func TestExtractAttachmentsFromRequest_ResponsesInputFile(t *testing.T) {
 								Type: schemas.ResponsesInputMessageContentBlockTypeFile,
 								ResponsesInputMessageContentBlockFile: &schemas.ResponsesInputMessageContentBlockFile{
 									FileURL:  &fileURL,
-									Filename: strPtr("2024ltr.pdf"),
-									FileType: strPtr("application/pdf"),
+									Filename: new("2024ltr.pdf"),
+									FileType: new("application/pdf"),
 								},
 							},
 						},
@@ -326,7 +327,7 @@ func TestExtractAttachmentsFromRequest_NoAttachments(t *testing.T) {
 				{
 					Role: schemas.ChatMessageRoleUser,
 					Content: &schemas.ChatMessageContent{
-						ContentStr: strPtr("Hello, world!"),
+						ContentStr: new("Hello, world!"),
 					},
 				},
 			},
@@ -408,11 +409,11 @@ func TestExtractAttachmentsFromRequest_ImageGenerationInputImagesDataURL(t *test
 }
 
 func TestExtractAttachmentsFromRequest_ImageGenerationInputImagesRawBase64(t *testing.T) {
-	idx := strings.Index(testImageBase64, ";base64,")
-	if idx == -1 {
+	_, after, ok := strings.Cut(testImageBase64, ";base64,")
+	if !ok {
 		t.Fatal("invalid testImageBase64 format")
 	}
-	rawB64 := testImageBase64[idx+8:]
+	rawB64 := after
 	req := &schemas.BifrostRequest{
 		RequestType: schemas.ImageGenerationRequest,
 		ImageGenerationRequest: &schemas.BifrostImageGenerationRequest{
@@ -463,11 +464,11 @@ func TestExtractAttachmentsFromRequest_NilRequest(t *testing.T) {
 // and verifies FileData extraction from base64-encoded content.
 func TestExtractAttachmentsFromRequest_ChatFileDataFromBase64(t *testing.T) {
 	// Extract base64 from data URL (format: data:image/jpeg;base64,...)
-	idx := strings.Index(testImageBase64, ";base64,")
-	if idx == -1 {
+	_, after, ok := strings.Cut(testImageBase64, ";base64,")
+	if !ok {
 		t.Fatal("invalid testImageBase64 format")
 	}
-	b64 := testImageBase64[idx+8:]
+	b64 := after
 	data, err := base64.StdEncoding.DecodeString(b64)
 	if err != nil {
 		t.Fatalf("failed to decode test image base64: %v", err)
@@ -485,8 +486,8 @@ func TestExtractAttachmentsFromRequest_ChatFileDataFromBase64(t *testing.T) {
 								Type: schemas.ChatContentBlockTypeFile,
 								File: &schemas.ChatInputFile{
 									FileData: &b64ForRequest,
-									Filename: strPtr("grey_solid.jpg"),
-									FileType: strPtr("image/jpeg"),
+									Filename: new("grey_solid.jpg"),
+									FileType: new("image/jpeg"),
 								},
 							},
 						},
@@ -557,7 +558,7 @@ func TestVisionWithImageUrl_Integration(t *testing.T) {
 					ContentBlocks: []schemas.ChatContentBlock{
 						{
 							Type: schemas.ChatContentBlockTypeText,
-							Text: bifrost.Ptr("Describe this image in one sentence."),
+							Text: new("Describe this image in one sentence."),
 						},
 						{
 							Type: schemas.ChatContentBlockTypeImage,
@@ -628,7 +629,7 @@ func TestVisionWithImageData_Integration(t *testing.T) {
 					ContentBlocks: []schemas.ChatContentBlock{
 						{
 							Type: schemas.ChatContentBlockTypeText,
-							Text: bifrost.Ptr("What do you see in this image? One sentence."),
+							Text: new("What do you see in this image? One sentence."),
 						},
 						{
 							Type: schemas.ChatContentBlockTypeImage,

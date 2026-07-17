@@ -8,7 +8,7 @@ Reference the module directly from GitHub. Pin to a specific release tag using `
 
 ```hcl
 module "bifrost" {
-  source         = "github.com/maximhq/bifrost//terraform/modules/bifrost?ref=terraform/v0.1.0"
+  source         = "github.com/grevinden/bifrost//terraform/modules/bifrost?ref=terraform/v0.1.0"
   cloud_provider = "aws"       # "aws" | "gcp" | "azure" | "kubernetes"
   service        = "ecs"       # AWS: "ecs" | "eks", GCP: "gke" | "cloud-run", Azure: "aks" | "aci", K8s: "deployment"
   region         = "us-east-1"

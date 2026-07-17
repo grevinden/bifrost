@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
 
-	schemas "github.com/maximhq/bifrost/core/schemas"
+	schemas "github.com/grevinden/bifrost/core/schemas"
 	"github.com/valyala/fasthttp"
 )
 
@@ -27,14 +28,14 @@ func newTestVLLMProvider() *VLLMProvider {
 
 // modelsJSON returns a minimal OpenAI-compatible /v1/models response listing the given model IDs.
 func modelsJSON(ids ...string) string {
-	data := ""
+	var data strings.Builder
 	for i, id := range ids {
 		if i > 0 {
-			data += ","
+			data.WriteString(",")
 		}
-		data += fmt.Sprintf(`{"id":%q,"object":"model","owned_by":"vllm"}`, id)
+		data.WriteString(fmt.Sprintf(`{"id":%q,"object":"model","owned_by":"vllm"}`, id))
 	}
-	return fmt.Sprintf(`{"object":"list","data":[%s]}`, data)
+	return fmt.Sprintf(`{"object":"list","data":[%s]}`, data.String())
 }
 
 func TestListModels_QueriesAllBackends(t *testing.T) {

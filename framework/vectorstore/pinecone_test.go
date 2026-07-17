@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -14,7 +14,7 @@ import (
 const (
 	PineconeTestTimeout          = 30 * time.Second
 	PineconeTestNamespace        = "bifrost-test-namespace"
-	PineconeTestDimension        = 1536 // Matches text-embedding-3-small dimension
+	PineconeTestDimension        = 1536             // Matches text-embedding-3-small dimension
 	PineconeTestDefaultAPIKey    = "pclocal"        // Pinecone Local doesn't validate API keys
 	PineconeTestDefaultIndexHost = "localhost:5081" // Pinecone Local default port
 )
@@ -216,42 +216,42 @@ func TestBuildPineconeCondition(t *testing.T) {
 	tests := []struct {
 		name     string
 		query    Query
-		expected map[string]interface{}
+		expected map[string]any
 	}{
 		{
 			name:     "equal operator",
 			query:    Query{Field: "category", Operator: QueryOperatorEqual, Value: "tech"},
-			expected: map[string]interface{}{"$eq": "tech"},
+			expected: map[string]any{"$eq": "tech"},
 		},
 		{
 			name:     "not equal operator",
 			query:    Query{Field: "status", Operator: QueryOperatorNotEqual, Value: "deleted"},
-			expected: map[string]interface{}{"$ne": "deleted"},
+			expected: map[string]any{"$ne": "deleted"},
 		},
 		{
 			name:     "greater than operator",
 			query:    Query{Field: "count", Operator: QueryOperatorGreaterThan, Value: 10},
-			expected: map[string]interface{}{"$gt": 10},
+			expected: map[string]any{"$gt": 10},
 		},
 		{
 			name:     "greater than or equal operator",
 			query:    Query{Field: "count", Operator: QueryOperatorGreaterThanOrEqual, Value: 10},
-			expected: map[string]interface{}{"$gte": 10},
+			expected: map[string]any{"$gte": 10},
 		},
 		{
 			name:     "less than operator",
 			query:    Query{Field: "score", Operator: QueryOperatorLessThan, Value: 100},
-			expected: map[string]interface{}{"$lt": 100},
+			expected: map[string]any{"$lt": 100},
 		},
 		{
 			name:     "less than or equal operator",
 			query:    Query{Field: "score", Operator: QueryOperatorLessThanOrEqual, Value: 100},
-			expected: map[string]interface{}{"$lte": 100},
+			expected: map[string]any{"$lte": 100},
 		},
 		{
 			name:     "contains any operator",
 			query:    Query{Field: "tags", Operator: QueryOperatorContainsAny, Value: []string{"a", "b"}},
-			expected: map[string]interface{}{"$in": []string{"a", "b"}},
+			expected: map[string]any{"$in": []string{"a", "b"}},
 		},
 	}
 
@@ -266,49 +266,49 @@ func TestBuildPineconeCondition(t *testing.T) {
 func TestMatchesQueries(t *testing.T) {
 	tests := []struct {
 		name     string
-		props    map[string]interface{}
+		props    map[string]any
 		queries  []Query
 		expected bool
 	}{
 		{
 			name:     "empty queries matches all",
-			props:    map[string]interface{}{"type": "document"},
+			props:    map[string]any{"type": "document"},
 			queries:  []Query{},
 			expected: true,
 		},
 		{
 			name:     "equal match",
-			props:    map[string]interface{}{"type": "document"},
+			props:    map[string]any{"type": "document"},
 			queries:  []Query{{Field: "type", Operator: QueryOperatorEqual, Value: "document"}},
 			expected: true,
 		},
 		{
 			name:     "equal no match",
-			props:    map[string]interface{}{"type": "document"},
+			props:    map[string]any{"type": "document"},
 			queries:  []Query{{Field: "type", Operator: QueryOperatorEqual, Value: "image"}},
 			expected: false,
 		},
 		{
 			name:     "not equal match",
-			props:    map[string]interface{}{"type": "document"},
+			props:    map[string]any{"type": "document"},
 			queries:  []Query{{Field: "type", Operator: QueryOperatorNotEqual, Value: "image"}},
 			expected: true,
 		},
 		{
 			name:     "is null match",
-			props:    map[string]interface{}{"type": "document"},
+			props:    map[string]any{"type": "document"},
 			queries:  []Query{{Field: "author", Operator: QueryOperatorIsNull, Value: nil}},
 			expected: true,
 		},
 		{
 			name:     "is not null match",
-			props:    map[string]interface{}{"type": "document", "author": "alice"},
+			props:    map[string]any{"type": "document", "author": "alice"},
 			queries:  []Query{{Field: "author", Operator: QueryOperatorIsNotNull, Value: nil}},
 			expected: true,
 		},
 		{
 			name:  "multiple queries all match",
-			props: map[string]interface{}{"type": "document", "public": true},
+			props: map[string]any{"type": "document", "public": true},
 			queries: []Query{
 				{Field: "type", Operator: QueryOperatorEqual, Value: "document"},
 				{Field: "public", Operator: QueryOperatorEqual, Value: true},
@@ -317,7 +317,7 @@ func TestMatchesQueries(t *testing.T) {
 		},
 		{
 			name:  "multiple queries one fails",
-			props: map[string]interface{}{"type": "document", "public": false},
+			props: map[string]any{"type": "document", "public": false},
 			queries: []Query{
 				{Field: "type", Operator: QueryOperatorEqual, Value: "document"},
 				{Field: "public", Operator: QueryOperatorEqual, Value: true},
@@ -335,7 +335,7 @@ func TestMatchesQueries(t *testing.T) {
 }
 
 func TestFilterPropertiesPinecone(t *testing.T) {
-	props := map[string]interface{}{
+	props := map[string]any{
 		"type":   "document",
 		"author": "alice",
 		"size":   1024,
@@ -345,7 +345,7 @@ func TestFilterPropertiesPinecone(t *testing.T) {
 	tests := []struct {
 		name         string
 		selectFields []string
-		expected     map[string]interface{}
+		expected     map[string]any
 	}{
 		{
 			name:         "empty select returns all",
@@ -355,17 +355,17 @@ func TestFilterPropertiesPinecone(t *testing.T) {
 		{
 			name:         "select single field",
 			selectFields: []string{"type"},
-			expected:     map[string]interface{}{"type": "document"},
+			expected:     map[string]any{"type": "document"},
 		},
 		{
 			name:         "select multiple fields",
 			selectFields: []string{"type", "author"},
-			expected:     map[string]interface{}{"type": "document", "author": "alice"},
+			expected:     map[string]any{"type": "document", "author": "alice"},
 		},
 		{
 			name:         "select non-existent field",
 			selectFields: []string{"missing"},
-			expected:     map[string]interface{}{},
+			expected:     map[string]any{},
 		},
 	}
 
@@ -396,7 +396,7 @@ func TestPineconeStore_Integration(t *testing.T) {
 	// Test Add and GetChunk
 	key := generateUUID()
 	embedding := generateTestEmbedding(PineconeTestDimension)
-	metadata := map[string]interface{}{
+	metadata := map[string]any{
 		"type":   "document",
 		"author": "test",
 	}
@@ -415,7 +415,7 @@ func TestPineconeStore_Integration(t *testing.T) {
 
 	// Test GetChunks
 	key2 := generateUUID()
-	err = setup.Store.Add(setup.ctx, PineconeTestNamespace, key2, generateTestEmbedding(PineconeTestDimension), map[string]interface{}{"type": "image"})
+	err = setup.Store.Add(setup.ctx, PineconeTestNamespace, key2, generateTestEmbedding(PineconeTestDimension), map[string]any{"type": "image"})
 	require.NoError(t, err)
 
 	time.Sleep(2 * time.Second)
@@ -435,10 +435,10 @@ func TestPineconeStore_VectorSearch(t *testing.T) {
 
 	// Add test vectors
 	emb := generateTestEmbedding(PineconeTestDimension)
-	err := setup.Store.Add(setup.ctx, PineconeTestNamespace, generateUUID(), emb, map[string]interface{}{"type": "tech"})
+	err := setup.Store.Add(setup.ctx, PineconeTestNamespace, generateUUID(), emb, map[string]any{"type": "tech"})
 	require.NoError(t, err)
 
-	err = setup.Store.Add(setup.ctx, PineconeTestNamespace, generateUUID(), generateTestEmbedding(PineconeTestDimension), map[string]interface{}{"type": "sports"})
+	err = setup.Store.Add(setup.ctx, PineconeTestNamespace, generateUUID(), generateTestEmbedding(PineconeTestDimension), map[string]any{"type": "sports"})
 	require.NoError(t, err)
 
 	// Wait for eventual consistency
@@ -472,7 +472,7 @@ func TestPineconeStore_Delete(t *testing.T) {
 
 	// Add a vector
 	key := generateUUID()
-	err := setup.Store.Add(setup.ctx, PineconeTestNamespace, key, generateTestEmbedding(PineconeTestDimension), map[string]interface{}{"type": "to-delete"})
+	err := setup.Store.Add(setup.ctx, PineconeTestNamespace, key, generateTestEmbedding(PineconeTestDimension), map[string]any{"type": "to-delete"})
 	require.NoError(t, err)
 
 	time.Sleep(2 * time.Second)
@@ -507,7 +507,7 @@ func TestPineconeStore_ErrorHandling(t *testing.T) {
 	assert.Contains(t, err.Error(), "not found")
 
 	// Test Add with empty ID
-	err = setup.Store.Add(setup.ctx, PineconeTestNamespace, "", generateTestEmbedding(PineconeTestDimension), map[string]interface{}{"type": "test"})
+	err = setup.Store.Add(setup.ctx, PineconeTestNamespace, "", generateTestEmbedding(PineconeTestDimension), map[string]any{"type": "test"})
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "id is required")
 
@@ -529,12 +529,12 @@ func TestPineconeStore_SemanticCacheWorkflow(t *testing.T) {
 	cacheEntries := []struct {
 		key       string
 		embedding []float32
-		metadata  map[string]interface{}
+		metadata  map[string]any
 	}{
 		{
 			generateUUID(),
 			generateTestEmbedding(PineconeTestDimension),
-			map[string]interface{}{
+			map[string]any{
 				"request_hash": "abc123",
 				"user":         "u1",
 				"lang":         "en",
@@ -544,7 +544,7 @@ func TestPineconeStore_SemanticCacheWorkflow(t *testing.T) {
 		{
 			generateUUID(),
 			generateTestEmbedding(PineconeTestDimension),
-			map[string]interface{}{
+			map[string]any{
 				"request_hash": "def456",
 				"user":         "u1",
 				"lang":         "es",

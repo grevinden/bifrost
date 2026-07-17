@@ -117,7 +117,7 @@ func TestChooserSummaryArrowEnterOpensSelectedOption(t *testing.T) {
 			return []string{"gpt-4o-mini"}, nil
 		},
 	})
-	for i := 0; i < 2; i++ {
+	for range 2 {
 		next, _ = m.Update(tea.KeyMsg{Type: tea.KeyDown})
 		m = next.(chooserModel)
 	}
@@ -191,10 +191,10 @@ func TestChooserModelLoadingRendersInsidePopupWhenOpenedFromSummary(t *testing.T
 	m.loading = true
 
 	view := m.View()
-	loadingIdx := strings.Index(view, "loading models from /v1/models...")
-	popupIdx := strings.Index(view, "Model")
+	found := strings.Contains(view, "loading models from /v1/models...")
+	found := strings.Contains(view, "Model")
 
-	if loadingIdx == -1 || popupIdx == -1 {
+	if !found || !found {
 		t.Fatalf("expected loading message inside model popup, got %q", view)
 	}
 	if strings.Count(view, "┌") > 1 {

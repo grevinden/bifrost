@@ -1,12 +1,13 @@
 package vertex
 
 import (
+	"context"
 	"reflect"
 	"testing"
 
-	"github.com/maximhq/bifrost/core/providers/gemini"
-	providerUtils "github.com/maximhq/bifrost/core/providers/utils"
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/providers/gemini"
+	providerUtils "github.com/grevinden/bifrost/core/providers/utils"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 func TestGetVertexAPIHost(t *testing.T) {
@@ -426,7 +427,7 @@ func TestResolveVertexProjectID_AliasOverride(t *testing.T) {
 		t.Errorf("nil ctx: got %q, want key-level %q", got, keyProject)
 	}
 
-	ctx := schemas.NewBifrostContext(nil, schemas.NoDeadline)
+	ctx := schemas.NewBifrostContext(context.TODO, schemas.NoDeadline)
 	if got := resolveVertexProjectID(ctx, key); got != keyProject {
 		t.Errorf("empty ctx: got %q, want key-level %q", got, keyProject)
 	}

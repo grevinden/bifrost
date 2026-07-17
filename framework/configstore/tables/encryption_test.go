@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/encrypt"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/encrypt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gorm.io/driver/postgres"
@@ -178,7 +178,7 @@ func TestTableKey_BedrockFieldsEncryptDecrypt(t *testing.T) {
 		Provider:   "bedrock",
 		KeyID:      "bedrock-uuid-1",
 		Value:      *schemas.NewSecretVar("bedrock-val"),
-		Aliases:    schemas.KeyAliases{"model-a": {ModelID: "profile-a"}},
+		Aliases:    schemas.KeyAliases{"model-a": schemas.AliasConfig{ModelID: "profile-a"}},
 		BedrockKeyConfig: &schemas.BedrockKeyConfig{
 			AccessKey: *schemas.NewSecretVar("AKIAIOSFODNN7EXAMPLE"),
 			SecretKey: *schemas.NewSecretVar("wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"),
@@ -413,7 +413,7 @@ func TestTableVirtualKey_EncryptDecrypt(t *testing.T) {
 		ID:       "vk-1",
 		Name:     "test-vk",
 		Value:    *schemas.NewSecretVar("vk-secret-value-xyz"),
-		IsActive: bifrost.Ptr(true),
+		IsActive: new(true),
 	}
 
 	require.NoError(t, db.Create(vk).Error)
@@ -439,7 +439,7 @@ func TestTableVirtualKey_HashComputedBeforeEncryption(t *testing.T) {
 		ID:       "vk-hash",
 		Name:     "hash-test",
 		Value:    *schemas.NewSecretVar("plaintext-value"),
-		IsActive: bifrost.Ptr(true),
+		IsActive: new(true),
 	}
 
 	require.NoError(t, db.Create(vk).Error)
@@ -553,7 +553,7 @@ func TestTableOauthToken_EncryptDecrypt(t *testing.T) {
 		AccessToken:  "access-token-secret-value",
 		RefreshToken: "refresh-token-secret-value",
 		TokenType:    "Bearer",
-		ExpiresAt:    bifrost.Ptr(time.Now().Add(time.Hour)),
+		ExpiresAt:    new(time.Now().Add(time.Hour)),
 	}
 
 	require.NoError(t, db.Create(token).Error)
@@ -576,7 +576,7 @@ func TestTableOauthToken_EmptyRefreshToken(t *testing.T) {
 		ID:          "oauth-tok-norefresh",
 		AccessToken: "access-only-token",
 		TokenType:   "Bearer",
-		ExpiresAt:   bifrost.Ptr(time.Now().Add(time.Hour)),
+		ExpiresAt:   new(time.Now().Add(time.Hour)),
 	}
 
 	require.NoError(t, db.Create(token).Error)
@@ -930,7 +930,7 @@ func TestTableVirtualKey_UpdatePreservesDecryption(t *testing.T) {
 		ID:       "vk-update",
 		Name:     "update-vk",
 		Value:    *schemas.NewSecretVar("original-vk-value"),
-		IsActive: bifrost.Ptr(true),
+		IsActive: new(true),
 	}
 	require.NoError(t, db.Create(vk).Error)
 
@@ -982,7 +982,7 @@ func TestTableOauthToken_UpdatePreservesDecryption(t *testing.T) {
 		AccessToken:  "original-access",
 		RefreshToken: "original-refresh",
 		TokenType:    "Bearer",
-		ExpiresAt:    bifrost.Ptr(time.Now().Add(time.Hour)),
+		ExpiresAt:    new(time.Now().Add(time.Hour)),
 	}
 	require.NoError(t, db.Create(token).Error)
 
@@ -1164,7 +1164,7 @@ func TestTableOauthToken_FindMultipleDecryptsAll(t *testing.T) {
 			AccessToken:  "access-" + id,
 			RefreshToken: "refresh-" + id,
 			TokenType:    "Bearer",
-			ExpiresAt:    bifrost.Ptr(time.Now().Add(time.Hour)),
+			ExpiresAt:    new(time.Now().Add(time.Hour)),
 		}
 		require.NoError(t, db.Create(token).Error)
 	}
@@ -1193,7 +1193,7 @@ func TestTableKey_AllProviderConfigs_EncryptDecrypt(t *testing.T) {
 		Provider:   "custom",
 		KeyID:      "multi-uuid",
 		Value:      *schemas.NewSecretVar("multi-api-key"),
-		Aliases:    schemas.KeyAliases{"claude-3": {ModelID: "profile-claude"}},
+		Aliases:    schemas.KeyAliases{"claude-3": schemas.AliasConfig{ModelID: "profile-claude"}},
 		AzureKeyConfig: &schemas.AzureKeyConfig{
 			Endpoint:     *schemas.NewSecretVar("https://azure.endpoint.com"),
 			ClientID:     schemas.NewSecretVar("multi-azure-cid"),
@@ -1367,7 +1367,7 @@ func TestTableVirtualKey_EncryptionDisabled_StoresPlaintext(t *testing.T) {
 		ID:       "vk-dis-1",
 		Name:     "disabled-vk",
 		Value:    *schemas.NewSecretVar("vk-plaintext-value"),
-		IsActive: bifrost.Ptr(true),
+		IsActive: new(true),
 	}
 
 	require.NoError(t, db.Create(vk).Error)
@@ -1447,7 +1447,7 @@ func TestTableOauthToken_EncryptionDisabled_StoresPlaintext(t *testing.T) {
 		AccessToken:  "access-plain",
 		RefreshToken: "refresh-plain",
 		TokenType:    "Bearer",
-		ExpiresAt:    bifrost.Ptr(time.Now().Add(time.Hour)),
+		ExpiresAt:    new(time.Now().Add(time.Hour)),
 	}
 
 	require.NoError(t, db.Create(token).Error)
@@ -1659,7 +1659,6 @@ func TestEncryptedColumns_VertexRegion_FitsAfterWidening(t *testing.T) {
 	// "northamerica-northeast1" is 23 chars — encrypts to ~68 chars.
 	// Longer regions would have overflowed the old varchar(100).
 	for _, ndb := range forEachDB(t) {
-		ndb := ndb
 		t.Run(ndb.name, func(t *testing.T) {
 			providerID := createTestProvider(t, ndb.db, "vertex-region-provider-"+ndb.name)
 			key := &TableKey{
@@ -1691,7 +1690,6 @@ func TestEncryptedColumns_BedrockRegion_FitsAfterWidening(t *testing.T) {
 	region := schemas.NewSecretVar("ap-southeast-2")
 
 	for _, ndb := range forEachDB(t) {
-		ndb := ndb
 		t.Run(ndb.name, func(t *testing.T) {
 			providerID := createTestProvider(t, ndb.db, "bedrock-region-provider-"+ndb.name)
 			key := &TableKey{
@@ -1732,7 +1730,6 @@ func TestPostgres_EncryptedColumns_AreText(t *testing.T) {
 
 	columns := []string{"vertex_region", "bedrock_region"}
 	for _, col := range columns {
-		col := col
 		t.Run(col, func(t *testing.T) {
 			var info colInfo
 			err := db.Raw(`
@@ -1961,8 +1958,8 @@ func TestTableKey_AliasesJSON_LegacyWireShape(t *testing.T) {
 		KeyID:      "openai-uuid-aliases-legacy",
 		Value:      *schemas.NewSecretVar("sk-test"),
 		Aliases: schemas.KeyAliases{
-			"best-model": {ModelID: "gpt-4o-deployment"},
-			"backup":     {ModelID: "gpt-3.5-turbo"},
+			"best-model": schemas.AliasConfig{ModelID: "gpt-4o-deployment"},
+			"backup":     schemas.AliasConfig{ModelID: "gpt-3.5-turbo"},
 		},
 	}
 	require.NoError(t, db.Create(key).Error)
@@ -2006,7 +2003,7 @@ func TestTableKey_AliasesJSON_RichRoundTrip(t *testing.T) {
 		KeyID:      "azure-uuid-aliases-rich",
 		Value:      *schemas.NewSecretVar("sk-test"),
 		Aliases: schemas.KeyAliases{
-			"best-model": {
+			"best-model": schemas.AliasConfig{
 				ModelID:     "azure-deployment-xyz",
 				ModelName:   &canonical,
 				ModelFamily: &family,
@@ -2015,7 +2012,7 @@ func TestTableKey_AliasesJSON_RichRoundTrip(t *testing.T) {
 					APIVersion: &apiVersion,
 				},
 			},
-			"plain": {ModelID: "gpt-4o-fallback"},
+			"plain": schemas.AliasConfig{ModelID: "gpt-4o-fallback"},
 		},
 		AzureKeyConfig: &schemas.AzureKeyConfig{
 			Endpoint: *schemas.NewSecretVar("https://example.openai.azure.com"),

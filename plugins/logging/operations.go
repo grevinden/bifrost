@@ -8,10 +8,10 @@ import (
 	"time"
 
 	"github.com/bytedance/sonic"
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/logstore"
-	"github.com/maximhq/bifrost/framework/modelcatalog"
-	"github.com/maximhq/bifrost/framework/streaming"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/logstore"
+	"github.com/grevinden/bifrost/framework/modelcatalog"
+	"github.com/grevinden/bifrost/framework/streaming"
 )
 
 const realtimeMissingTranscriptText = "[Audio transcription unavailable]"
@@ -107,7 +107,7 @@ func (p *LoggerPlugin) insertInitialLogEntry(
 // applySerializedLogUpdates copies serialized fields from a temporary log entry
 // into the GORM update map, respecting content-logging gates.
 func applySerializedLogUpdates(
-	updates map[string]interface{},
+	updates map[string]any,
 	entry *logstore.Log,
 	data *UpdateLogData,
 	cacheDebug *schemas.BifrostCacheDebug,
@@ -195,7 +195,7 @@ func (p *LoggerPlugin) updateLogEntry(
 	data *UpdateLogData,
 	contentLoggingEnabled bool,
 ) error {
-	updates := make(map[string]interface{})
+	updates := make(map[string]any)
 	if selectedKeyID != "" {
 		updates["selected_key_id"] = selectedKeyID
 	}
@@ -718,7 +718,7 @@ func extractRealtimeInputHistoryFromRawRequest(rawRequest string) []schemas.Chat
 				messages = append(messages, schemas.ChatMessage{
 					Role: schemas.ChatMessageRoleUser,
 					Content: &schemas.ChatMessageContent{
-						ContentStr: schemas.Ptr(transcript),
+						ContentStr: new(transcript),
 					},
 				})
 			}
@@ -727,7 +727,7 @@ func extractRealtimeInputHistoryFromRawRequest(rawRequest string) []schemas.Chat
 				messages = append(messages, schemas.ChatMessage{
 					Role: schemas.ChatMessageRoleUser,
 					Content: &schemas.ChatMessageContent{
-						ContentStr: schemas.Ptr(content),
+						ContentStr: new(content),
 					},
 				})
 			}
@@ -736,10 +736,10 @@ func extractRealtimeInputHistoryFromRawRequest(rawRequest string) []schemas.Chat
 				messages = append(messages, schemas.ChatMessage{
 					Role: schemas.ChatMessageRoleTool,
 					Content: &schemas.ChatMessageContent{
-						ContentStr: schemas.Ptr(content),
+						ContentStr: new(content),
 					},
 					ChatToolMessage: &schemas.ChatToolMessage{
-						ToolCallID: schemas.Ptr(event.Item.CallID),
+						ToolCallID: new(event.Item.CallID),
 					},
 				})
 			}
@@ -950,9 +950,9 @@ func extractRealtimeOutputMessage(output []schemas.ResponsesMessage) *schemas.Ch
 				},
 			}
 			if item.CallID != nil && strings.TrimSpace(*item.CallID) != "" {
-				toolCall.ID = schemas.Ptr(strings.TrimSpace(*item.CallID))
+				toolCall.ID = new(strings.TrimSpace(*item.CallID))
 			} else if item.ID != nil && strings.TrimSpace(*item.ID) != "" {
-				toolCall.ID = schemas.Ptr(strings.TrimSpace(*item.ID))
+				toolCall.ID = new(strings.TrimSpace(*item.ID))
 			}
 			toolCalls = append(toolCalls, toolCall)
 		}

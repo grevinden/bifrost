@@ -3,9 +3,9 @@ package lib
 import (
 	"testing"
 
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/configstore"
-	"github.com/maximhq/bifrost/plugins/semanticcache"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/configstore"
+	"github.com/grevinden/bifrost/plugins/semanticcache"
 	"github.com/stretchr/testify/require"
 )
 
@@ -13,7 +13,7 @@ func TestValidateSemanticCacheConfig_DirectOnlyMode(t *testing.T) {
 	config := &Config{}
 	pluginConfig := &schemas.PluginConfig{
 		Name: semanticcache.PluginName,
-		Config: map[string]interface{}{
+		Config: map[string]any{
 			"dimension": 1,
 			"ttl":       "5m",
 		},
@@ -22,7 +22,7 @@ func TestValidateSemanticCacheConfig_DirectOnlyMode(t *testing.T) {
 	err := config.ValidateSemanticCacheConfig(pluginConfig)
 	require.NoError(t, err)
 
-	configMap, ok := pluginConfig.Config.(map[string]interface{})
+	configMap, ok := pluginConfig.Config.(map[string]any)
 	require.True(t, ok)
 	_, hasKeys := configMap["keys"]
 	require.False(t, hasKeys, "direct-only mode should not inject provider keys")
@@ -32,7 +32,7 @@ func TestValidateSemanticCacheConfig_DirectOnlyModeRemovesStaleProviderBackedFie
 	config := &Config{}
 	pluginConfig := &schemas.PluginConfig{
 		Name: semanticcache.PluginName,
-		Config: map[string]interface{}{
+		Config: map[string]any{
 			"dimension":       1,
 			"keys":            []schemas.Key{{Name: "stale-key"}},
 			"embedding_model": "text-embedding-3-small",
@@ -42,7 +42,7 @@ func TestValidateSemanticCacheConfig_DirectOnlyModeRemovesStaleProviderBackedFie
 	err := config.ValidateSemanticCacheConfig(pluginConfig)
 	require.NoError(t, err)
 
-	configMap, ok := pluginConfig.Config.(map[string]interface{})
+	configMap, ok := pluginConfig.Config.(map[string]any)
 	require.True(t, ok)
 	_, hasEmbeddingModel := configMap["embedding_model"]
 	require.False(t, hasEmbeddingModel, "direct-only mode should remove stale embedding_model")
@@ -64,7 +64,7 @@ func TestValidateSemanticCacheConfig_ProviderBackedModeValidationPasses(t *testi
 	}
 	pluginConfig := &schemas.PluginConfig{
 		Name: semanticcache.PluginName,
-		Config: map[string]interface{}{
+		Config: map[string]any{
 			"provider":        "openai",
 			"embedding_model": "text-embedding-3-small",
 			"dimension":       1536,
@@ -74,7 +74,7 @@ func TestValidateSemanticCacheConfig_ProviderBackedModeValidationPasses(t *testi
 	err := config.ValidateSemanticCacheConfig(pluginConfig)
 	require.NoError(t, err)
 
-	configMap, ok := pluginConfig.Config.(map[string]interface{})
+	configMap, ok := pluginConfig.Config.(map[string]any)
 	require.True(t, ok)
 	_, hasKeys := configMap["keys"]
 	require.False(t, hasKeys, "keys are inherited from global client; they must not be injected into the plugin config")
@@ -85,7 +85,7 @@ func TestValidateSemanticCacheConfig_SemanticModeMissingProvider(t *testing.T) {
 	config := &Config{}
 	pluginConfig := &schemas.PluginConfig{
 		Name: semanticcache.PluginName,
-		Config: map[string]interface{}{
+		Config: map[string]any{
 			"dimension": 1536,
 		},
 	}
@@ -99,7 +99,7 @@ func TestValidateSemanticCacheConfig_ProviderBackedModeMissingDimension(t *testi
 	config := &Config{}
 	pluginConfig := &schemas.PluginConfig{
 		Name: semanticcache.PluginName,
-		Config: map[string]interface{}{
+		Config: map[string]any{
 			"provider":        "openai",
 			"embedding_model": "text-embedding-3-small",
 		},
@@ -114,7 +114,7 @@ func TestValidateSemanticCacheConfig_ProviderBackedModeDimensionOne(t *testing.T
 	config := &Config{}
 	pluginConfig := &schemas.PluginConfig{
 		Name: semanticcache.PluginName,
-		Config: map[string]interface{}{
+		Config: map[string]any{
 			"provider":        "openai",
 			"embedding_model": "text-embedding-3-small",
 			"dimension":       1,
@@ -130,7 +130,7 @@ func TestValidateSemanticCacheConfig_ProviderBackedModeMissingEmbeddingModel(t *
 	config := &Config{}
 	pluginConfig := &schemas.PluginConfig{
 		Name: semanticcache.PluginName,
-		Config: map[string]interface{}{
+		Config: map[string]any{
 			"provider":  "openai",
 			"dimension": 1536,
 		},
@@ -145,7 +145,7 @@ func TestValidateSemanticCacheConfig_InvalidDimensionZero(t *testing.T) {
 	config := &Config{}
 	pluginConfig := &schemas.PluginConfig{
 		Name: semanticcache.PluginName,
-		Config: map[string]interface{}{
+		Config: map[string]any{
 			"dimension": 0,
 		},
 	}
@@ -159,7 +159,7 @@ func TestValidateSemanticCacheConfig_InvalidDimensionNegative(t *testing.T) {
 	config := &Config{}
 	pluginConfig := &schemas.PluginConfig{
 		Name: semanticcache.PluginName,
-		Config: map[string]interface{}{
+		Config: map[string]any{
 			"dimension": -1,
 		},
 	}

@@ -11,10 +11,10 @@ import (
 	"time"
 
 	"github.com/bytedance/sonic"
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/tidwall/gjson"
 
-	providerUtils "github.com/maximhq/bifrost/core/providers/utils"
+	providerUtils "github.com/grevinden/bifrost/core/providers/utils"
 )
 
 // AnthropicResponsesStreamState tracks state during streaming conversion for responses API

@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -36,10 +36,10 @@ func TestListToolFiles_ServerBinding(t *testing.T) {
 
 	// Call listToolFiles
 	toolCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-list-files"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-list-files"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("listToolFiles"),
+			Name:      new("listToolFiles"),
 			Arguments: `{}`,
 		},
 	}
@@ -81,10 +81,10 @@ func TestListToolFiles_ToolBinding(t *testing.T) {
 
 	// Call listToolFiles
 	toolCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-list-tool-files"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-list-tool-files"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("listToolFiles"),
+			Name:      new("listToolFiles"),
 			Arguments: `{}`,
 		},
 	}
@@ -127,10 +127,10 @@ func TestListToolFiles_WithFiltering(t *testing.T) {
 
 	// Call listToolFiles
 	toolCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-list-filtered"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-list-filtered"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("listToolFiles"),
+			Name:      new("listToolFiles"),
 			Arguments: `{}`,
 		},
 	}
@@ -175,10 +175,10 @@ func TestListToolFiles_MultipleServers(t *testing.T) {
 
 	// Call listToolFiles
 	toolCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-list-multi"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-list-multi"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("listToolFiles"),
+			Name:      new("listToolFiles"),
 			Arguments: `{}`,
 		},
 	}
@@ -222,10 +222,10 @@ func TestReadToolFile_Basic(t *testing.T) {
 
 	// Read a known tool file directly
 	readCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-read"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-read"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("readToolFile"),
+			Name:      new("readToolFile"),
 			Arguments: `{"fileName": "servers/TestCodeModeServer.pyi"}`,
 		},
 	}
@@ -271,10 +271,10 @@ func TestReadToolFile_WithFiltering(t *testing.T) {
 
 	// Read file for server (should work - files can be read even with filtering)
 	readCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-read"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-read"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("readToolFile"),
+			Name:      new("readToolFile"),
 			Arguments: `{"fileName": "servers/TestCodeModeServer.pyi"}`,
 		},
 	}
@@ -310,10 +310,10 @@ func TestReadToolFile_NotFound(t *testing.T) {
 
 	// Try to read non-existent file
 	readCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-read-404"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-read-404"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("readToolFile"),
+			Name:      new("readToolFile"),
 			Arguments: `{"fileName": "servers/nonexistent.pyi"}`,
 		},
 	}
@@ -361,10 +361,10 @@ func TestReadToolFile_TypescriptDefinitions(t *testing.T) {
 
 	// Read a known server file
 	readCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-read"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-read"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("readToolFile"),
+			Name:      new("readToolFile"),
 			Arguments: `{"fileName": "servers/TestCodeModeServer.pyi"}`,
 		},
 	}
@@ -432,10 +432,10 @@ result = {
 `
 
 	toolCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-list-in-code"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-list-in-code"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("executeToolCode"),
+			Name:      new("executeToolCode"),
 			Arguments: fmt.Sprintf(`{"code": %s}`, mustJSONString(code)),
 		},
 	}
@@ -447,11 +447,11 @@ result = {
 	returnValue, hasError, errorMsg := ParseCodeModeResponse(t, *result.Content.ContentStr)
 	require.False(t, hasError, "should not have execution error: %s", errorMsg)
 
-	resultObj, ok := returnValue.(map[string]interface{})
+	resultObj, ok := returnValue.(map[string]any)
 	require.True(t, ok)
 
 	// Verify TestCodeModeServer is available in code execution context
-	servers := resultObj["availableServers"].([]interface{})
+	servers := resultObj["availableServers"].([]any)
 	t.Logf("Available servers in code: %v", servers)
 	assert.NotEmpty(t, servers)
 	assert.True(t, resultObj["hasTestCodeModeServer"].(bool), "TestCodeModeServer should have methods")
@@ -486,10 +486,10 @@ result = {
 `
 
 	toolCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-read-in-code"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-read-in-code"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("executeToolCode"),
+			Name:      new("executeToolCode"),
 			Arguments: fmt.Sprintf(`{"code": %s}`, mustJSONString(code)),
 		},
 	}
@@ -501,7 +501,7 @@ result = {
 	returnValue, hasError, errorMsg := ParseCodeModeResponse(t, *result.Content.ContentStr)
 	require.False(t, hasError, "should not have execution error: %s", errorMsg)
 
-	resultObj, ok := returnValue.(map[string]interface{})
+	resultObj, ok := returnValue.(map[string]any)
 	require.True(t, ok)
 
 	// Verify tool methods are accessible
@@ -536,10 +536,10 @@ func TestCodeModeFiles_ChatFormat(t *testing.T) {
 
 	// Call listToolFiles in Chat format
 	toolCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-chat-list"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-chat-list"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("listToolFiles"),
+			Name:      new("listToolFiles"),
 			Arguments: `{}`,
 		},
 	}
@@ -579,10 +579,10 @@ func TestCodeModeFiles_ResponsesFormat(t *testing.T) {
 
 	// Call listToolFiles using Chat format (internal code mode tool)
 	listCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-responses-list"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-responses-list"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("listToolFiles"),
+			Name:      new("listToolFiles"),
 			Arguments: `{}`,
 		},
 	}
@@ -625,10 +625,10 @@ func TestCodeModeFiles_FullWorkflow(t *testing.T) {
 
 	// Step 1: List tool files (returns a tree structure as text)
 	listCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-1-list"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-1-list"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("listToolFiles"),
+			Name:      new("listToolFiles"),
 			Arguments: `{}`,
 		},
 	}
@@ -646,10 +646,10 @@ func TestCodeModeFiles_FullWorkflow(t *testing.T) {
 	// Step 2: Read a tool file using readToolFile
 	// Extract a filename from the tree output (e.g., "servers/TestCodeModeServer.pyi")
 	readCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-2-read"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-2-read"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("readToolFile"),
+			Name:      new("readToolFile"),
 			Arguments: `{"fileName": "servers/TestCodeModeServer.pyi"}`,
 		},
 	}
@@ -670,10 +670,10 @@ func TestCodeModeFiles_FullWorkflow(t *testing.T) {
 result = {"completed": True, "servers": ["TestCodeModeServer"], "methodCount": len(server_methods)}`
 
 	execCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-3-execute"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-3-execute"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("executeToolCode"),
+			Name:      new("executeToolCode"),
 			Arguments: fmt.Sprintf(`{"code": %s}`, mustJSONString(code)),
 		},
 	}
@@ -685,7 +685,7 @@ result = {"completed": True, "servers": ["TestCodeModeServer"], "methodCount": l
 	returnValue, hasError, errorMsg := ParseCodeModeResponse(t, *execResult.Content.ContentStr)
 	require.False(t, hasError, "should not have execution error: %s", errorMsg)
 
-	resultObj, ok := returnValue.(map[string]interface{})
+	resultObj, ok := returnValue.(map[string]any)
 	require.True(t, ok)
 	assert.True(t, resultObj["completed"].(bool))
 	assert.NotNil(t, resultObj["servers"])

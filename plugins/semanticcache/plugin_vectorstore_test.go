@@ -6,9 +6,9 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/vectorstore"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/vectorstore"
 )
 
 // requiresVectors returns true if the vector store requires vectors for storage.
@@ -81,13 +81,13 @@ func TestSemanticCache_AllVectorStores_BasicFlow(t *testing.T) {
 						{
 							Role: schemas.ChatMessageRoleUser,
 							Content: &schemas.ChatMessageContent{
-								ContentStr: bifrost.Ptr("Hello from " + tc.Name + " test!"),
+								ContentStr: new("Hello from " + tc.Name + " test!"),
 							},
 						},
 					},
 					Params: &schemas.ChatParameters{
-						Temperature:         bifrost.Ptr(0.7),
-						MaxCompletionTokens: bifrost.Ptr(100),
+						Temperature:         new(0.7),
+						MaxCompletionTokens: new(100),
 					},
 				},
 			}
@@ -121,7 +121,7 @@ func TestSemanticCache_AllVectorStores_BasicFlow(t *testing.T) {
 								Message: &schemas.ChatMessage{
 									Role: schemas.ChatMessageRoleAssistant,
 									Content: &schemas.ChatMessageContent{
-										ContentStr: bifrost.Ptr("Hello! Response from " + tc.Name + " test."),
+										ContentStr: new("Hello! Response from " + tc.Name + " test."),
 									}},
 							},
 						},
@@ -291,13 +291,13 @@ func TestSemanticCache_AllVectorStores_ParameterFiltering(t *testing.T) {
 						{
 							Role: schemas.ChatMessageRoleUser,
 							Content: &schemas.ChatMessageContent{
-								ContentStr: bifrost.Ptr("Parameter test for " + tc.Name),
+								ContentStr: new("Parameter test for " + tc.Name),
 							},
 						},
 					},
 					Params: &schemas.ChatParameters{
-						Temperature:         bifrost.Ptr(0.7),
-						MaxCompletionTokens: bifrost.Ptr(100),
+						Temperature:         new(0.7),
+						MaxCompletionTokens: new(100),
 					},
 				},
 			}
@@ -323,7 +323,7 @@ func TestSemanticCache_AllVectorStores_ParameterFiltering(t *testing.T) {
 								Message: &schemas.ChatMessage{
 									Role: schemas.ChatMessageRoleAssistant,
 									Content: &schemas.ChatMessageContent{
-										ContentStr: bifrost.Ptr("Response for " + tc.Name),
+										ContentStr: new("Response for " + tc.Name),
 									}},
 							},
 						},
@@ -359,13 +359,13 @@ func TestSemanticCache_AllVectorStores_ParameterFiltering(t *testing.T) {
 						{
 							Role: schemas.ChatMessageRoleUser,
 							Content: &schemas.ChatMessageContent{
-								ContentStr: bifrost.Ptr("Parameter test for " + tc.Name),
+								ContentStr: new("Parameter test for " + tc.Name),
 							},
 						},
 					},
 					Params: &schemas.ChatParameters{
-						Temperature:         bifrost.Ptr(0.5), // Different temperature
-						MaxCompletionTokens: bifrost.Ptr(100),
+						Temperature:         new(0.5), // Different temperature
+						MaxCompletionTokens: new(100),
 					},
 				},
 			}

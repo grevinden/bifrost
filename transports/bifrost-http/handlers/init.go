@@ -1,6 +1,6 @@
 package handlers
 
-import "github.com/maximhq/bifrost/core/schemas"
+import "github.com/grevinden/bifrost/core/schemas"
 
 var version string
 var logger schemas.Logger

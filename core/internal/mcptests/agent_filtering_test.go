@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -46,7 +46,7 @@ func TestAgent_ToolAllowedNotAutoExecute(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Test"),
+					ContentStr: new("Test"),
 				},
 			},
 		},
@@ -105,7 +105,7 @@ func TestAgent_ToolAllowedAndAutoExecute(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Test"),
+					ContentStr: new("Test"),
 				},
 			},
 		},
@@ -157,7 +157,7 @@ func TestAgent_ToolNotAllowed(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Test"),
+					ContentStr: new("Test"),
 				},
 			},
 		},
@@ -215,7 +215,7 @@ func TestAgent_ToolNotInAutoExecuteList(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Test"),
+					ContentStr: new("Test"),
 				},
 			},
 		},
@@ -284,7 +284,7 @@ func TestAgent_ComplexFiltering_Scenario1(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Multi-step"),
+					ContentStr: new("Multi-step"),
 				},
 			},
 		},
@@ -348,7 +348,7 @@ func TestAgent_ComplexFiltering_Scenario2(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Test"),
+					ContentStr: new("Test"),
 				},
 			},
 		},
@@ -411,7 +411,7 @@ func TestAgent_ComplexFiltering_Scenario3(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Test"),
+					ContentStr: new("Test"),
 				},
 			},
 		},
@@ -465,7 +465,7 @@ func TestAgent_ComplexFiltering_ContextOverride(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Test"),
+					ContentStr: new("Test"),
 				},
 			},
 		},
@@ -526,10 +526,10 @@ func TestAgent_FilteringWithMultipleClients(t *testing.T) {
 			}),
 			CreateChatResponseWithToolCalls([]schemas.ChatAssistantMessageToolCall{
 				{
-					ID:   schemas.Ptr("call-2"),
-					Type: schemas.Ptr("function"),
+					ID:   new("call-2"),
+					Type: new("function"),
 					Function: schemas.ChatAssistantMessageToolCallFunction{
-						Name:      schemas.Ptr("bifrostInternal-get_temperature"),
+						Name:      new("bifrostInternal-get_temperature"),
 						Arguments: `{"location": "New York"}`,
 					},
 				},
@@ -547,7 +547,7 @@ func TestAgent_FilteringWithMultipleClients(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Test"),
+					ContentStr: new("Test"),
 				},
 			},
 		},
@@ -609,10 +609,10 @@ func TestAgent_ToolConflictInAgentMode(t *testing.T) {
 		chatResponses: []*schemas.BifrostChatResponse{
 			CreateChatResponseWithToolCalls([]schemas.ChatAssistantMessageToolCall{
 				{
-					ID:   schemas.Ptr("call-1"),
-					Type: schemas.Ptr("function"),
+					ID:   new("call-1"),
+					Type: new("function"),
 					Function: schemas.ChatAssistantMessageToolCallFunction{
-						Name:      schemas.Ptr("bifrostInternal-get_temperature"),
+						Name:      new("bifrostInternal-get_temperature"),
 						Arguments: `{"location": "New York"}`,
 					},
 				},
@@ -631,7 +631,7 @@ func TestAgent_ToolConflictInAgentMode(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Test"),
+					ContentStr: new("Test"),
 				},
 			},
 		},
@@ -684,7 +684,6 @@ func TestAgent_AllAutoExecuteScenarios(t *testing.T) {
 	scenarios := GetAutoExecuteScenarios()
 
 	for _, scenario := range scenarios {
-		scenario := scenario
 		t.Run(scenario.Name, func(t *testing.T) {
 			t.Parallel()
 
@@ -717,7 +716,7 @@ func TestAgent_AllAutoExecuteScenarios(t *testing.T) {
 					{
 						Role: schemas.ChatMessageRoleUser,
 						Content: &schemas.ChatMessageContent{
-							ContentStr: schemas.Ptr("Test"),
+							ContentStr: new("Test"),
 						},
 					},
 				},
@@ -787,7 +786,7 @@ func TestAgent_Filtering_ChatFormat(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Test"),
+					ContentStr: new("Test"),
 				},
 			},
 		},
@@ -823,9 +822,9 @@ func TestAgent_Filtering_ResponsesFormat(t *testing.T) {
 		responsesResponses: []*schemas.BifrostResponsesResponse{
 			CreateResponsesResponseWithToolCalls([]schemas.ResponsesToolMessage{
 				{
-					CallID:    schemas.Ptr("call-1"),
-					Name:      schemas.Ptr("bifrostInternal-echo"),
-					Arguments: schemas.Ptr(`{"message": "responses format"}`),
+					CallID:    new("call-1"),
+					Name:      new("bifrostInternal-echo"),
+					Arguments: new(`{"message": "responses format"}`),
 				},
 			}),
 			CreateResponsesResponseWithText("Responses format complete"),
@@ -843,7 +842,7 @@ func TestAgent_Filtering_ResponsesFormat(t *testing.T) {
 				Type: schemas.Ptr(schemas.ResponsesMessageTypeMessage),
 				Role: schemas.Ptr(schemas.ResponsesInputMessageRoleUser),
 				Content: &schemas.ResponsesMessageContent{
-					ContentStr: schemas.Ptr("Test"),
+					ContentStr: new("Test"),
 				},
 			},
 		},

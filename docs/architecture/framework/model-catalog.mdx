@@ -193,7 +193,7 @@ The Model Catalog is designed to be shared across all Bifrost plugins, providing
 In Bifrost's gateway, the `ModelCatalog` is initialized once at the start and shared across all plugins:
 
 ```go
-import "github.com/maximhq/bifrost/framework/modelcatalog"
+import "github.com/grevinden/bifrost/framework/modelcatalog"
 
 // Initialize model catalog with config store and logger
 modelCatalog, err := modelcatalog.Init(context.Background(), &modelcatalog.Config{}, configStore, logger)

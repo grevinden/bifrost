@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // getFakeBatchID returns a provider-specific fake batch ID for testing
@@ -42,10 +42,10 @@ func RunBatchCreateTest(t *testing.T, client *bifrost.Bifrost, ctx context.Conte
 		retryConfig := GetTestRetryConfigForScenario("BatchCreate", testConfig)
 		retryContext := TestRetryContext{
 			ScenarioName: "BatchCreate",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"should_return_batch_id": true,
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider": testConfig.Provider,
 			},
 		}
@@ -61,7 +61,7 @@ func RunBatchCreateTest(t *testing.T, client *bifrost.Bifrost, ctx context.Conte
 
 		expectations := ResponseExpectations{
 			ShouldHaveLatency: true,
-			ProviderSpecific: map[string]interface{}{
+			ProviderSpecific: map[string]any{
 				"expected_provider": string(testConfig.Provider),
 			},
 		}
@@ -69,12 +69,12 @@ func RunBatchCreateTest(t *testing.T, client *bifrost.Bifrost, ctx context.Conte
 		response, err := WithBatchCreateTestRetry(t, batchCreateRetryConfig, retryContext, expectations, "BatchCreate", func() (*schemas.BifrostBatchCreateResponse, *schemas.BifrostError) {
 			request := &schemas.BifrostBatchCreateRequest{
 				Provider: testConfig.Provider,
-				Model:    schemas.Ptr(testConfig.ChatModel),
+				Model:    new(testConfig.ChatModel),
 				Endpoint: schemas.BatchEndpointChatCompletions,
 				Requests: []schemas.BatchRequestItem{
 					{
 						CustomID: "test-request-1",
-						Body: map[string]interface{}{
+						Body: map[string]any{
 							"model": testConfig.ChatModel,
 							"messages": []map[string]string{
 								{"role": "user", "content": "Say hello"},
@@ -125,10 +125,10 @@ func RunBatchListTest(t *testing.T, client *bifrost.Bifrost, ctx context.Context
 		retryConfig := GetTestRetryConfigForScenario("BatchList", testConfig)
 		retryContext := TestRetryContext{
 			ScenarioName: "BatchList",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"should_return_list": true,
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider": testConfig.Provider,
 			},
 		}
@@ -144,7 +144,7 @@ func RunBatchListTest(t *testing.T, client *bifrost.Bifrost, ctx context.Context
 
 		expectations := ResponseExpectations{
 			ShouldHaveLatency: true,
-			ProviderSpecific: map[string]interface{}{
+			ProviderSpecific: map[string]any{
 				"expected_provider": string(testConfig.Provider),
 			},
 		}
@@ -190,10 +190,10 @@ func RunBatchRetrieveTest(t *testing.T, client *bifrost.Bifrost, ctx context.Con
 
 		createRetryContext := TestRetryContext{
 			ScenarioName: "BatchRetrieve_Create",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"should_return_batch_id": true,
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider": testConfig.Provider,
 			},
 		}
@@ -209,7 +209,7 @@ func RunBatchRetrieveTest(t *testing.T, client *bifrost.Bifrost, ctx context.Con
 
 		createExpectations := ResponseExpectations{
 			ShouldHaveLatency: true,
-			ProviderSpecific: map[string]interface{}{
+			ProviderSpecific: map[string]any{
 				"expected_provider": string(testConfig.Provider),
 			},
 		}
@@ -217,12 +217,12 @@ func RunBatchRetrieveTest(t *testing.T, client *bifrost.Bifrost, ctx context.Con
 		createResponse, createErr := WithBatchCreateTestRetry(t, batchCreateRetryConfig, createRetryContext, createExpectations, "BatchRetrieve_Create", func() (*schemas.BifrostBatchCreateResponse, *schemas.BifrostError) {
 			createRequest := &schemas.BifrostBatchCreateRequest{
 				Provider: testConfig.Provider,
-				Model:    schemas.Ptr(testConfig.ChatModel),
+				Model:    new(testConfig.ChatModel),
 				Endpoint: schemas.BatchEndpointChatCompletions,
 				Requests: []schemas.BatchRequestItem{
 					{
 						CustomID: "test-retrieve-1",
-						Body: map[string]interface{}{
+						Body: map[string]any{
 							"model": testConfig.ChatModel,
 							"messages": []map[string]string{
 								{"role": "user", "content": "Say hello"},
@@ -253,11 +253,11 @@ func RunBatchRetrieveTest(t *testing.T, client *bifrost.Bifrost, ctx context.Con
 		// Now retrieve the batch using retry framework
 		retrieveRetryContext := TestRetryContext{
 			ScenarioName: "BatchRetrieve",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"should_return_batch": true,
 				"expected_batch_id":   createResponse.ID,
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider": testConfig.Provider,
 			},
 		}
@@ -273,7 +273,7 @@ func RunBatchRetrieveTest(t *testing.T, client *bifrost.Bifrost, ctx context.Con
 
 		retrieveExpectations := ResponseExpectations{
 			ShouldHaveLatency: true,
-			ProviderSpecific: map[string]interface{}{
+			ProviderSpecific: map[string]any{
 				"expected_provider": string(testConfig.Provider),
 			},
 		}
@@ -318,10 +318,10 @@ func RunBatchCancelTest(t *testing.T, client *bifrost.Bifrost, ctx context.Conte
 
 		createRetryContext := TestRetryContext{
 			ScenarioName: "BatchCancel_Create",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"should_return_batch_id": true,
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider": testConfig.Provider,
 			},
 		}
@@ -337,7 +337,7 @@ func RunBatchCancelTest(t *testing.T, client *bifrost.Bifrost, ctx context.Conte
 
 		createExpectations := ResponseExpectations{
 			ShouldHaveLatency: true,
-			ProviderSpecific: map[string]interface{}{
+			ProviderSpecific: map[string]any{
 				"expected_provider": string(testConfig.Provider),
 			},
 		}
@@ -345,12 +345,12 @@ func RunBatchCancelTest(t *testing.T, client *bifrost.Bifrost, ctx context.Conte
 		createResponse, createErr := WithBatchCreateTestRetry(t, batchCreateRetryConfig, createRetryContext, createExpectations, "BatchCancel_Create", func() (*schemas.BifrostBatchCreateResponse, *schemas.BifrostError) {
 			createRequest := &schemas.BifrostBatchCreateRequest{
 				Provider: testConfig.Provider,
-				Model:    schemas.Ptr(testConfig.ChatModel),
+				Model:    new(testConfig.ChatModel),
 				Endpoint: schemas.BatchEndpointChatCompletions,
 				Requests: []schemas.BatchRequestItem{
 					{
 						CustomID: "test-cancel-1",
-						Body: map[string]interface{}{
+						Body: map[string]any{
 							"model": testConfig.ChatModel,
 							"messages": []map[string]string{
 								{"role": "user", "content": "Say hello"},
@@ -381,10 +381,10 @@ func RunBatchCancelTest(t *testing.T, client *bifrost.Bifrost, ctx context.Conte
 		// Now cancel the batch using retry framework
 		cancelRetryContext := TestRetryContext{
 			ScenarioName: "BatchCancel",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"should_cancel_batch": true,
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider": testConfig.Provider,
 				"batch_id": createResponse.ID,
 			},
@@ -401,7 +401,7 @@ func RunBatchCancelTest(t *testing.T, client *bifrost.Bifrost, ctx context.Conte
 
 		cancelExpectations := ResponseExpectations{
 			ShouldHaveLatency: true,
-			ProviderSpecific: map[string]interface{}{
+			ProviderSpecific: map[string]any{
 				"expected_provider": string(testConfig.Provider),
 			},
 		}
@@ -525,12 +525,12 @@ func RunBatchUnsupportedTest(t *testing.T, client *bifrost.Bifrost, ctx context.
 		// Try to create a batch - should fail with unsupported error
 		request := &schemas.BifrostBatchCreateRequest{
 			Provider: testConfig.Provider,
-			Model:    schemas.Ptr(testConfig.ChatModel),
+			Model:    new(testConfig.ChatModel),
 			Endpoint: schemas.BatchEndpointChatCompletions,
 			Requests: []schemas.BatchRequestItem{
 				{
 					CustomID: "test-unsupported-1",
-					Body: map[string]interface{}{
+					Body: map[string]any{
 						"model": testConfig.ChatModel,
 						"messages": []map[string]string{
 							{"role": "user", "content": "Say hello"},
@@ -575,10 +575,10 @@ func RunFileUploadTest(t *testing.T, client *bifrost.Bifrost, ctx context.Contex
 		retryConfig := GetTestRetryConfigForScenario("FileUpload", testConfig)
 		retryContext := TestRetryContext{
 			ScenarioName: "FileUpload",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"should_return_file_id": true,
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider": testConfig.Provider,
 			},
 		}
@@ -594,7 +594,7 @@ func RunFileUploadTest(t *testing.T, client *bifrost.Bifrost, ctx context.Contex
 
 		expectations := ResponseExpectations{
 			ShouldHaveLatency: true,
-			ProviderSpecific: map[string]interface{}{
+			ProviderSpecific: map[string]any{
 				"expected_provider": string(testConfig.Provider),
 			},
 		}
@@ -604,8 +604,8 @@ func RunFileUploadTest(t *testing.T, client *bifrost.Bifrost, ctx context.Contex
 			fileContent := []byte(`{"custom_id": "test-1", "method": "POST", "url": "/v1/chat/completions", "body": {"model": "gpt-4o-mini", "messages": [{"role": "user", "content": "Hello"}]}}
 `)
 			request := &schemas.BifrostFileUploadRequest{
-				Provider:    testConfig.Provider,
-				File:        fileContent,
+				Provider:      testConfig.Provider,
+				File:          fileContent,
 				Filename:      "test_batch.jsonl",
 				Purpose:       "batch",
 				ExtraParams:   testConfig.FileExtraParams,
@@ -650,10 +650,10 @@ func RunFileListTest(t *testing.T, client *bifrost.Bifrost, ctx context.Context,
 		retryConfig := GetTestRetryConfigForScenario("FileList", testConfig)
 		retryContext := TestRetryContext{
 			ScenarioName: "FileList",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"should_return_list": true,
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider": testConfig.Provider,
 			},
 		}
@@ -669,7 +669,7 @@ func RunFileListTest(t *testing.T, client *bifrost.Bifrost, ctx context.Context,
 
 		expectations := ResponseExpectations{
 			ShouldHaveLatency: true,
-			ProviderSpecific: map[string]interface{}{
+			ProviderSpecific: map[string]any{
 				"expected_provider": string(testConfig.Provider),
 			},
 		}
@@ -717,10 +717,10 @@ func RunFileRetrieveTest(t *testing.T, client *bifrost.Bifrost, ctx context.Cont
 
 		uploadRetryContext := TestRetryContext{
 			ScenarioName: "FileRetrieve_Upload",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"should_return_file_id": true,
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider": testConfig.Provider,
 			},
 		}
@@ -736,7 +736,7 @@ func RunFileRetrieveTest(t *testing.T, client *bifrost.Bifrost, ctx context.Cont
 
 		uploadExpectations := ResponseExpectations{
 			ShouldHaveLatency: true,
-			ProviderSpecific: map[string]interface{}{
+			ProviderSpecific: map[string]any{
 				"expected_provider": string(testConfig.Provider),
 			},
 		}
@@ -745,8 +745,8 @@ func RunFileRetrieveTest(t *testing.T, client *bifrost.Bifrost, ctx context.Cont
 			fileContent := []byte(`{"custom_id": "test-retrieve-1", "method": "POST", "url": "/v1/chat/completions", "body": {"model": "gpt-4o-mini", "messages": [{"role": "user", "content": "Hello"}]}}
 `)
 			uploadRequest := &schemas.BifrostFileUploadRequest{
-				Provider:    testConfig.Provider,
-				File:        fileContent,
+				Provider:      testConfig.Provider,
+				File:          fileContent,
 				Filename:      "test_retrieve.jsonl",
 				Purpose:       "batch",
 				ExtraParams:   testConfig.FileExtraParams,
@@ -771,11 +771,11 @@ func RunFileRetrieveTest(t *testing.T, client *bifrost.Bifrost, ctx context.Cont
 		// Now retrieve the file using retry framework
 		retrieveRetryContext := TestRetryContext{
 			ScenarioName: "FileRetrieve",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"should_return_file": true,
 				"expected_file_id":   uploadResponse.ID,
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider": testConfig.Provider,
 			},
 		}
@@ -791,7 +791,7 @@ func RunFileRetrieveTest(t *testing.T, client *bifrost.Bifrost, ctx context.Cont
 
 		retrieveExpectations := ResponseExpectations{
 			ShouldHaveLatency: true,
-			ProviderSpecific: map[string]interface{}{
+			ProviderSpecific: map[string]any{
 				"expected_provider": string(testConfig.Provider),
 			},
 		}
@@ -836,10 +836,10 @@ func RunFileDeleteTest(t *testing.T, client *bifrost.Bifrost, ctx context.Contex
 
 		uploadRetryContext := TestRetryContext{
 			ScenarioName: "FileDelete_Upload",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"should_return_file_id": true,
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider": testConfig.Provider,
 			},
 		}
@@ -855,7 +855,7 @@ func RunFileDeleteTest(t *testing.T, client *bifrost.Bifrost, ctx context.Contex
 
 		uploadExpectations := ResponseExpectations{
 			ShouldHaveLatency: true,
-			ProviderSpecific: map[string]interface{}{
+			ProviderSpecific: map[string]any{
 				"expected_provider": string(testConfig.Provider),
 			},
 		}
@@ -864,8 +864,8 @@ func RunFileDeleteTest(t *testing.T, client *bifrost.Bifrost, ctx context.Contex
 			fileContent := []byte(`{"custom_id": "test-delete-1", "method": "POST", "url": "/v1/chat/completions", "body": {"model": "gpt-4o-mini", "messages": [{"role": "user", "content": "Hello"}]}}
 `)
 			uploadRequest := &schemas.BifrostFileUploadRequest{
-				Provider:    testConfig.Provider,
-				File:        fileContent,
+				Provider:      testConfig.Provider,
+				File:          fileContent,
 				Filename:      "test_delete.jsonl",
 				Purpose:       "batch",
 				ExtraParams:   testConfig.FileExtraParams,
@@ -890,10 +890,10 @@ func RunFileDeleteTest(t *testing.T, client *bifrost.Bifrost, ctx context.Contex
 		// Now delete the file using retry framework
 		deleteRetryContext := TestRetryContext{
 			ScenarioName: "FileDelete",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"should_delete_file": true,
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider": testConfig.Provider,
 				"file_id":  uploadResponse.ID,
 			},
@@ -910,7 +910,7 @@ func RunFileDeleteTest(t *testing.T, client *bifrost.Bifrost, ctx context.Contex
 
 		deleteExpectations := ResponseExpectations{
 			ShouldHaveLatency: true,
-			ProviderSpecific: map[string]interface{}{
+			ProviderSpecific: map[string]any{
 				"expected_provider": string(testConfig.Provider),
 			},
 		}
@@ -955,10 +955,10 @@ func RunFileContentTest(t *testing.T, client *bifrost.Bifrost, ctx context.Conte
 
 		uploadRetryContext := TestRetryContext{
 			ScenarioName: "FileContent_Upload",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"should_return_file_id": true,
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider": testConfig.Provider,
 			},
 		}
@@ -974,7 +974,7 @@ func RunFileContentTest(t *testing.T, client *bifrost.Bifrost, ctx context.Conte
 
 		uploadExpectations := ResponseExpectations{
 			ShouldHaveLatency: true,
-			ProviderSpecific: map[string]interface{}{
+			ProviderSpecific: map[string]any{
 				"expected_provider": string(testConfig.Provider),
 			},
 		}
@@ -983,8 +983,8 @@ func RunFileContentTest(t *testing.T, client *bifrost.Bifrost, ctx context.Conte
 			originalContent := []byte(`{"custom_id": "test-content-1", "method": "POST", "url": "/v1/chat/completions", "body": {"model": "gpt-4o-mini", "messages": [{"role": "user", "content": "Hello"}]}}
 `)
 			uploadRequest := &schemas.BifrostFileUploadRequest{
-				Provider:    testConfig.Provider,
-				File:        originalContent,
+				Provider:      testConfig.Provider,
+				File:          originalContent,
 				Filename:      "test_content.jsonl",
 				Purpose:       "batch",
 				ExtraParams:   testConfig.FileExtraParams,
@@ -1009,10 +1009,10 @@ func RunFileContentTest(t *testing.T, client *bifrost.Bifrost, ctx context.Conte
 		// Now download the file content using retry framework
 		contentRetryContext := TestRetryContext{
 			ScenarioName: "FileContent",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"should_return_content": true,
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider": testConfig.Provider,
 				"file_id":  uploadResponse.ID,
 			},
@@ -1029,7 +1029,7 @@ func RunFileContentTest(t *testing.T, client *bifrost.Bifrost, ctx context.Conte
 
 		contentExpectations := ResponseExpectations{
 			ShouldHaveLatency: true,
-			ProviderSpecific: map[string]interface{}{
+			ProviderSpecific: map[string]any{
 				"expected_provider": string(testConfig.Provider),
 			},
 		}
@@ -1123,8 +1123,8 @@ func RunFileAndBatchIntegrationTest(t *testing.T, client *bifrost.Bifrost, ctx c
 `)
 
 		uploadRequest := &schemas.BifrostFileUploadRequest{
-			Provider:    testConfig.Provider,
-			File:        fileContent,
+			Provider:      testConfig.Provider,
+			File:          fileContent,
 			Filename:      "integration_test_batch.jsonl",
 			Purpose:       "batch",
 			ExtraParams:   testConfig.FileExtraParams,
@@ -1152,7 +1152,7 @@ func RunFileAndBatchIntegrationTest(t *testing.T, client *bifrost.Bifrost, ctx c
 		// Step 2: Create a batch using the uploaded file
 		batchRequest := &schemas.BifrostBatchCreateRequest{
 			Provider:         testConfig.Provider,
-			Model:            schemas.Ptr(testConfig.ChatModel),
+			Model:            new(testConfig.ChatModel),
 			InputFileID:      uploadResponse.ID,
 			Endpoint:         schemas.BatchEndpointChatCompletions,
 			CompletionWindow: "24h",

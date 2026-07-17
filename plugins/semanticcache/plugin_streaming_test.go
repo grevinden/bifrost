@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // TestStreamingCacheBasicFunctionality tests streaming response caching
@@ -161,7 +161,7 @@ func TestStreamingVsNonStreaming(t *testing.T) {
 	streamCached := false
 	for _, response := range streamResponses {
 		if response.ExtraFields.RawResponse != nil {
-			if rawMap, ok := response.ExtraFields.RawResponse.(map[string]interface{}); ok {
+			if rawMap, ok := response.ExtraFields.RawResponse.(map[string]any); ok {
 				if cachedFlag, exists := rawMap["bifrost_cached"]; exists {
 					if cachedBool, ok := cachedFlag.(bool); ok && cachedBool {
 						streamCached = true

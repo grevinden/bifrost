@@ -13,11 +13,11 @@ import (
 	textInput "github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/maximhq/bifrost/cli/internal/ui/logo"
+	"github.com/grevinden/bifrost/cli/internal/ui/logo"
 )
 
-const issuesURL = "https://github.com/maximhq/bifrost/issues/new"
-const repoURL = "https://github.com/maximhq/bifrost"
+const issuesURL = "https://github.com/grevinden/bifrost/issues/new"
+const repoURL = "https://github.com/grevinden/bifrost"
 const docsURL = "https://docs.getbifrost.ai/quickstart/cli/getting-started"
 
 // HarnessOption represents a selectable coding harness (e.g. Claude Code, Codex)
@@ -275,10 +275,7 @@ func (m chooserModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
-		m.height = msg.Height - m.cfg.ReservedRows
-		if m.height < 10 {
-			m.height = 10
-		}
+		m.height = max(msg.Height-m.cfg.ReservedRows, 10)
 		return m, tea.ClearScreen
 
 	case tea.KeyMsg:
@@ -921,14 +918,8 @@ func (m chooserModel) View() string {
 	if logoBlock != "" {
 		bodyHeight += 2 // meta line and blank gap after logo
 	}
-	topPad := (h - bodyHeight - footerLines) / 2
-	if topPad < 0 {
-		topPad = 0
-	}
-	bottomPad := h - topPad - bodyHeight - footerLines
-	if bottomPad < 1 {
-		bottomPad = 1
-	}
+	topPad := max((h-bodyHeight-footerLines)/2, 0)
+	bottomPad := max(h-topPad-bodyHeight-footerLines, 1)
 
 	centeredMeta := centerLine(meta, w)
 
@@ -1368,10 +1359,7 @@ func scrollWindow(cursor, total, maxVisible int) (start, end int) {
 		return 0, total
 	}
 	half := maxVisible / 2
-	start = cursor - half
-	if start < 0 {
-		start = 0
-	}
+	start = max(cursor-half, 0)
 	end = start + maxVisible
 	if end > total {
 		end = total

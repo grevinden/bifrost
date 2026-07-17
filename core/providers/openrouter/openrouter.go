@@ -8,9 +8,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/maximhq/bifrost/core/providers/openai"
-	providerUtils "github.com/maximhq/bifrost/core/providers/utils"
-	schemas "github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/providers/openai"
+	providerUtils "github.com/grevinden/bifrost/core/providers/utils"
+	schemas "github.com/grevinden/bifrost/core/schemas"
 	"github.com/valyala/fasthttp"
 )
 
@@ -234,7 +234,7 @@ func (provider *OpenRouterProvider) listModelsByKey(ctx *schemas.BifrostContext,
 				entry := openrouterResponse.Data[i]
 				entry.ID = providerPrefix + result.ResolvedID
 				if result.AliasValue != "" {
-					entry.Alias = schemas.Ptr(result.AliasValue)
+					entry.Alias = new(result.AliasValue)
 				} else {
 					entry.Alias = nil
 				}

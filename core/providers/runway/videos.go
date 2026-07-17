@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	providerUtils "github.com/maximhq/bifrost/core/providers/utils"
-	schemas "github.com/maximhq/bifrost/core/schemas"
+	providerUtils "github.com/grevinden/bifrost/core/providers/utils"
+	schemas "github.com/grevinden/bifrost/core/schemas"
 )
 
 func ToRunwayVideoGenerationRequest(bifrostReq *schemas.BifrostVideoGenerationRequest) (*RunwayVideoGenerationRequest, error) {
@@ -21,13 +21,13 @@ func ToRunwayVideoGenerationRequest(bifrostReq *schemas.BifrostVideoGenerationRe
 
 	request := &RunwayVideoGenerationRequest{
 		Model: bifrostReq.Model,
-		Ratio: schemas.Ptr("1280:720"),
+		Ratio: new("1280:720"),
 	}
 
 	if isRunwayVeoModel(bifrostReq.Model) {
-		request.Duration = schemas.Ptr(4)
+		request.Duration = new(4)
 	} else if isRunwayGenModel(bifrostReq.Model) {
-		request.Duration = schemas.Ptr(2)
+		request.Duration = new(2)
 	}
 
 	if bifrostReq.Input.Prompt != "" {
@@ -39,7 +39,7 @@ func ToRunwayVideoGenerationRequest(bifrostReq *schemas.BifrostVideoGenerationRe
 			return nil, fmt.Errorf("invalid input reference: %w", err)
 		}
 		request.PromptImage = &PromptImage{
-			PromptImageStr: schemas.Ptr(sanitizedURL),
+			PromptImageStr: new(sanitizedURL),
 		}
 	}
 
@@ -54,7 +54,7 @@ func ToRunwayVideoGenerationRequest(bifrostReq *schemas.BifrostVideoGenerationRe
 
 		if bifrostReq.Params.Size != "" {
 			// convert 1280x720 to 1280:720
-			request.Ratio = schemas.Ptr(strings.Replace(bifrostReq.Params.Size, "x", ":", 1))
+			request.Ratio = new(strings.Replace(bifrostReq.Params.Size, "x", ":", 1))
 		}
 
 		if isRunwayVeoModel(bifrostReq.Model) {
@@ -155,7 +155,7 @@ func ToBifrostVideoGenerationResponse(taskDetails *RunwayTaskDetailsResponse) (*
 		for i, url := range taskDetails.Output {
 			response.Videos[i] = schemas.VideoOutput{
 				Type:        schemas.VideoOutputTypeURL,
-				URL:         schemas.Ptr(url),
+				URL:         new(url),
 				ContentType: "video/mp4",
 			}
 		}

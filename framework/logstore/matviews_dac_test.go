@@ -122,10 +122,7 @@ func TestPerDimensionReaders_TargetTheirOwnMatview(t *testing.T) {
 		}
 		// Look at the next 1.5KB of the file — enough to span the
 		// short reader body without bleeding into siblings.
-		end := idx + 1500
-		if end > len(src) {
-			end = len(src)
-		}
+		end := min(idx+1500, len(src))
 		body := string(src[idx:end])
 		assert.Containsf(t, body, `Table("`+c.view+`")`,
 			"reader %s must target %s, not the legacy mv_logs_filterdata or another view",

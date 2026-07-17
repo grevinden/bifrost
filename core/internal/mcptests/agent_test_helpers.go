@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"testing"
 
-	"github.com/maximhq/bifrost/core/mcp"
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/mcp"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -107,17 +108,14 @@ func SetupAgentTest(t *testing.T, config AgentTestConfig) (*mcp.MCPManager, *Dyn
 
 	// Set auto-execute tools for STDIO clients if wildcard
 	if len(config.AutoExecuteTools) > 0 {
-		for _, autoTool := range config.AutoExecuteTools {
-			if autoTool == "*" {
-				// Set wildcard for all STDIO clients
-				clients := manager.GetClients()
-				for i := range clients {
-					if clients[i].ExecutionConfig.ConnectionType == schemas.MCPConnectionTypeSTDIO {
-						clients[i].ExecutionConfig.ToolsToAutoExecute = []string{"*"}
-						require.NoError(t, manager.UpdateClient(clients[i].ExecutionConfig.ID, clients[i].ExecutionConfig))
-					}
+		if slices.Contains(config.AutoExecuteTools, "*") {
+			// Set wildcard for all STDIO clients
+			clients := manager.GetClients()
+			for i := range clients {
+				if clients[i].ExecutionConfig.ConnectionType == schemas.MCPConnectionTypeSTDIO {
+					clients[i].ExecutionConfig.ToolsToAutoExecute = []string{"*"}
+					require.NoError(t, manager.UpdateClient(clients[i].ExecutionConfig.ID, clients[i].ExecutionConfig))
 				}
-				break
 			}
 		}
 	}
@@ -494,16 +492,16 @@ func AssertRequestIDPropagated(t *testing.T, ctx *schemas.BifrostContext) {
 // =============================================================================
 
 // CreateToolCall is a convenience function for creating tool calls in tests
-func CreateToolCall(id, toolName string, args map[string]interface{}) schemas.ChatAssistantMessageToolCall {
+func CreateToolCall(id, toolName string, args map[string]any) schemas.ChatAssistantMessageToolCall {
 	argsJSON, err := json.Marshal(args)
 	if err != nil {
 		panic(fmt.Sprintf("failed to marshal tool call args: %v", err))
 	}
 	return schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr(id),
-		Type: schemas.Ptr("function"),
+		ID:   new(id),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr(toolName),
+			Name:      new(toolName),
 			Arguments: string(argsJSON),
 		},
 	}
@@ -512,7 +510,7 @@ func CreateToolCall(id, toolName string, args map[string]interface{}) schemas.Ch
 // CreateSTDIOToolCall creates a tool call for a STDIO server tool (with server prefix)
 // Note: serverName should be the client Name (e.g., "GoTestServer"), not the ID
 // The tool name format is: {ServerName}-{tool_name} (e.g., "GoTestServer-uuid_generate")
-func CreateSTDIOToolCall(id, serverName, toolName string, args map[string]interface{}) schemas.ChatAssistantMessageToolCall {
+func CreateSTDIOToolCall(id, serverName, toolName string, args map[string]any) schemas.ChatAssistantMessageToolCall {
 	fullToolName := fmt.Sprintf("%s-%s", serverName, toolName)
 	return CreateToolCall(id, fullToolName, args)
 }
@@ -520,7 +518,7 @@ func CreateSTDIOToolCall(id, serverName, toolName string, args map[string]interf
 // CreateInProcessToolCall creates a tool call for an in-process tool
 // In-process tools are registered with "bifrostInternal-" prefix
 // The tool name format is: bifrostInternal-{tool_name} (e.g., "bifrostInternal-echo")
-func CreateInProcessToolCall(id, toolName string, args map[string]interface{}) schemas.ChatAssistantMessageToolCall {
+func CreateInProcessToolCall(id, toolName string, args map[string]any) schemas.ChatAssistantMessageToolCall {
 	fullToolName := fmt.Sprintf("bifrostInternal-%s", toolName)
 	return CreateToolCall(id, fullToolName, args)
 }
@@ -590,7 +588,7 @@ type AgentTurn struct {
 // AgentAssertion represents an assertion to make after agent execution
 type AgentAssertion struct {
 	Type     string // "turn_count", "tool_executed", "final_text", etc.
-	Expected interface{}
+	Expected any
 }
 
 // RunAgentScenario executes a complete agent scenario with setup, turns, and assertions

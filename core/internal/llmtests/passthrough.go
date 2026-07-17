@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/bytedance/sonic"
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // RunPassthroughExtraParamsTest executes the passthrough extraParams test scenario
@@ -48,13 +48,13 @@ func RunPassthroughExtraParamsTest(t *testing.T, client *bifrost.Bifrost, ctx co
 				CreateBasicChatMessage("Say hello in one word"),
 			},
 			Params: &schemas.ChatParameters{
-				MaxCompletionTokens: bifrost.Ptr(10),
+				MaxCompletionTokens: new(10),
 				// Set extraParams with custom_param and nested structure
-				ExtraParams: map[string]interface{}{
+				ExtraParams: map[string]any{
 					"custom_param": "test_value_123",
-					"custom_nested": map[string]interface{}{
+					"custom_nested": map[string]any{
 						"custom_field": "nested_custom_value_456",
-						"another_nested": map[string]interface{}{
+						"another_nested": map[string]any{
 							"deep_field": "deep_value_789",
 						},
 					},
@@ -94,7 +94,7 @@ func RunPassthroughExtraParamsTest(t *testing.T, client *bifrost.Bifrost, ctx co
 		}
 
 		// Parse raw request
-		var rawRequest map[string]interface{}
+		var rawRequest map[string]any
 		rawRequestBytes, marshalErr := sonic.Marshal(response.ExtraFields.RawRequest)
 		if marshalErr != nil {
 			t.Fatalf("❌ Failed to marshal raw request: %v", marshalErr)
@@ -122,7 +122,7 @@ func RunPassthroughExtraParamsTest(t *testing.T, client *bifrost.Bifrost, ctx co
 		if customNested, exists := rawRequest["custom_nested"]; !exists {
 			t.Errorf("❌ custom_nested not found in raw request")
 		} else {
-			customNestedMap, ok := customNested.(map[string]interface{})
+			customNestedMap, ok := customNested.(map[string]any)
 			if !ok {
 				t.Errorf("❌ custom_nested is not a map: %T", customNested)
 			} else {
@@ -141,7 +141,7 @@ func RunPassthroughExtraParamsTest(t *testing.T, client *bifrost.Bifrost, ctx co
 				if anotherNested, exists := customNestedMap["another_nested"]; !exists {
 					t.Errorf("❌ another_nested not found in custom_nested")
 				} else {
-					anotherNestedMap, ok := anotherNested.(map[string]interface{})
+					anotherNestedMap, ok := anotherNested.(map[string]any)
 					if !ok {
 						t.Errorf("❌ another_nested is not a map: %T", anotherNested)
 					} else {
@@ -170,7 +170,7 @@ func RunPassthroughExtraParamsTest(t *testing.T, client *bifrost.Bifrost, ctx co
 }
 
 // getMapKeys returns all keys from a map as a slice of strings
-func getMapKeys(m map[string]interface{}) []string {
+func getMapKeys(m map[string]any) []string {
 	keys := make([]string, 0, len(m))
 	for k := range m {
 		keys = append(keys, k)

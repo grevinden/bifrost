@@ -1,7 +1,7 @@
 package sarvam
 
 import (
-	schemas "github.com/maximhq/bifrost/core/schemas"
+	schemas "github.com/grevinden/bifrost/core/schemas"
 )
 
 // ToSarvamTranscriptionRequest maps a Bifrost transcription request onto Sarvam's speech-to-text fields.

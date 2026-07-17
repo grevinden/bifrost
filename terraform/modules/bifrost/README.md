@@ -1,12 +1,12 @@
 # Bifrost Terraform Module
 
-Single entry point for deploying [Bifrost](https://github.com/maximhq/bifrost) on AWS, GCP, Azure, or any Kubernetes cluster. This module handles configuration merging, image resolution, and routes to the appropriate cloud-provider sub-module based on your `cloud_provider` and `service` selections.
+Single entry point for deploying [Bifrost](https://github.com/grevinden/bifrost) on AWS, GCP, Azure, or any Kubernetes cluster. This module handles configuration merging, image resolution, and routes to the appropriate cloud-provider sub-module based on your `cloud_provider` and `service` selections.
 
 ## Usage
 
 ```hcl
 module "bifrost" {
-  source = "github.com/maximhq/bifrost//terraform/modules/bifrost"
+  source = "github.com/grevinden/bifrost//terraform/modules/bifrost"
 
   cloud_provider  = "aws"
   service         = "ecs"

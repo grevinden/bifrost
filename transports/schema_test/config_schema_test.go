@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/santhosh-tekuri/jsonschema/v6"
 )
 
@@ -30,12 +30,12 @@ func getSchemaPath(t *testing.T) string {
 
 // navigateJSON traverses a nested JSON structure using a sequence of keys.
 // Supports string keys for objects and int keys for arrays.
-func navigateJSON(data interface{}, keys ...interface{}) (interface{}, bool) {
+func navigateJSON(data any, keys ...any) (any, bool) {
 	current := data
 	for _, key := range keys {
 		switch k := key.(type) {
 		case string:
-			m, ok := current.(map[string]interface{})
+			m, ok := current.(map[string]any)
 			if !ok {
 				return nil, false
 			}
@@ -44,7 +44,7 @@ func navigateJSON(data interface{}, keys ...interface{}) (interface{}, bool) {
 				return nil, false
 			}
 		case int:
-			arr, ok := current.([]interface{})
+			arr, ok := current.([]any)
 			if !ok || k >= len(arr) {
 				return nil, false
 			}
@@ -58,21 +58,21 @@ func navigateJSON(data interface{}, keys ...interface{}) (interface{}, bool) {
 
 // findPostgresPortType finds the port type in a store's postgres config branch.
 // It handles both anyOf and oneOf schema patterns used by config_store and logs_store.
-func findPostgresPortType(schema map[string]interface{}, storeName string) (string, bool) {
+func findPostgresPortType(schema map[string]any, storeName string) (string, bool) {
 	configBlock, ok := navigateJSON(schema, "properties", storeName, "properties", "config")
 	if !ok {
 		return "", false
 	}
-	configMap, ok := configBlock.(map[string]interface{})
+	configMap, ok := configBlock.(map[string]any)
 	if !ok {
 		return "", false
 	}
 
-	var branches []interface{}
+	var branches []any
 	if anyOf, exists := configMap["anyOf"]; exists {
-		branches, _ = anyOf.([]interface{})
+		branches, _ = anyOf.([]any)
 	} else if oneOf, exists := configMap["oneOf"]; exists {
-		branches, _ = oneOf.([]interface{})
+		branches, _ = oneOf.([]any)
 	}
 
 	for _, branch := range branches {
@@ -98,7 +98,7 @@ func TestSchemaLogsStorePortType(t *testing.T) {
 		t.Fatalf("failed to read schema: %v", err)
 	}
 
-	var schema map[string]interface{}
+	var schema map[string]any
 	if err := json.Unmarshal(data, &schema); err != nil {
 		t.Fatalf("failed to parse schema: %v", err)
 	}
@@ -351,7 +351,7 @@ func compileSchema(t *testing.T) *jsonschema.Schema {
 // validateConfig unmarshals a JSON config string and validates it against the schema.
 func validateConfig(t *testing.T, schema *jsonschema.Schema, configJSON string) error {
 	t.Helper()
-	var v interface{}
+	var v any
 	if err := json.Unmarshal([]byte(configJSON), &v); err != nil {
 		t.Fatalf("invalid test JSON: %v", err)
 	}
@@ -504,7 +504,7 @@ func TestSchemaGovernanceModelConfigs(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to read schema: %v", err)
 	}
-	var schema map[string]interface{}
+	var schema map[string]any
 	if err := json.Unmarshal(data, &schema); err != nil {
 		t.Fatalf("failed to parse schema: %v", err)
 	}
@@ -531,13 +531,13 @@ func TestSchemaGovernanceModelConfigs(t *testing.T) {
 }
 
 // loadSchema reads and parses config.schema.json into a generic map.
-func loadSchema(t *testing.T) map[string]interface{} {
+func loadSchema(t *testing.T) map[string]any {
 	t.Helper()
 	data, err := os.ReadFile(getSchemaPath(t))
 	if err != nil {
 		t.Fatalf("failed to read schema: %v", err)
 	}
-	var schema map[string]interface{}
+	var schema map[string]any
 	if err := json.Unmarshal(data, &schema); err != nil {
 		t.Fatalf("failed to parse schema: %v", err)
 	}
@@ -803,7 +803,7 @@ func TestSchemaMCPConnectionTypeSSE(t *testing.T) {
 		if !found {
 			t.Fatal("could not find connection_type enum in mcp_client_config")
 		}
-		enumArr, ok := enumVal.([]interface{})
+		enumArr, ok := enumVal.([]any)
 		if !ok {
 			t.Fatal("connection_type enum is not an array")
 		}
@@ -826,7 +826,7 @@ func TestSchemaAllowedOriginsWildcard(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to read schema: %v", err)
 	}
-	var schema map[string]interface{}
+	var schema map[string]any
 	if err := json.Unmarshal(data, &schema); err != nil {
 		t.Fatalf("failed to parse schema: %v", err)
 	}
@@ -836,7 +836,7 @@ func TestSchemaAllowedOriginsWildcard(t *testing.T) {
 		if !found {
 			t.Fatal("could not find allowed_origins.items in schema")
 		}
-		itemsMap, ok := items.(map[string]interface{})
+		itemsMap, ok := items.(map[string]any)
 		if !ok {
 			t.Fatal("allowed_origins.items is not an object")
 		}

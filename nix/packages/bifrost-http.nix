@@ -17,15 +17,15 @@ let
     if [ -f transports/go.mod ]; then
       cat >> transports/go.mod <<'EOF'
 
-    replace github.com/maximhq/bifrost/core => ../core
-    replace github.com/maximhq/bifrost/framework => ../framework
-    replace github.com/maximhq/bifrost/plugins/governance => ../plugins/governance
-    replace github.com/maximhq/bifrost/plugins/compat => ../plugins/compat
-    replace github.com/maximhq/bifrost/plugins/logging => ../plugins/logging
-    replace github.com/maximhq/bifrost/plugins/maxim => ../plugins/maxim
-    replace github.com/maximhq/bifrost/plugins/otel => ../plugins/otel
-    replace github.com/maximhq/bifrost/plugins/semanticcache => ../plugins/semanticcache
-    replace github.com/maximhq/bifrost/plugins/telemetry => ../plugins/telemetry
+    replace github.com/grevinden/bifrost/core => ../core
+    replace github.com/grevinden/bifrost/framework => ../framework
+    replace github.com/grevinden/bifrost/plugins/governance => ../plugins/governance
+    replace github.com/grevinden/bifrost/plugins/compat => ../plugins/compat
+    replace github.com/grevinden/bifrost/plugins/logging => ../plugins/logging
+    replace github.com/grevinden/bifrost/plugins/maxim => ../plugins/maxim
+    replace github.com/grevinden/bifrost/plugins/otel => ../plugins/otel
+    replace github.com/grevinden/bifrost/plugins/semanticcache => ../plugins/semanticcache
+    replace github.com/grevinden/bifrost/plugins/telemetry => ../plugins/telemetry
     EOF
     fi
   '';
@@ -77,7 +77,7 @@ buildGoModule {
   meta = {
     mainProgram = "bifrost-http";
     description = "Bifrost HTTP gateway";
-    homepage = "https://github.com/maximhq/bifrost";
+    homepage = "https://github.com/grevinden/bifrost";
     license = lib.licenses.asl20;
   };
 }

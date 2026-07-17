@@ -3,7 +3,7 @@ package anthropic
 import (
 	"testing"
 
-	schemas "github.com/maximhq/bifrost/core/schemas"
+	schemas "github.com/grevinden/bifrost/core/schemas"
 )
 
 func TestToAnthropicChatCompletionError(t *testing.T) {

@@ -85,7 +85,6 @@ func TestCLIs(t *testing.T) {
 						t.Skipf("provider %q not configured in bifrost", provID)
 					}
 					for _, model := range prov.Models {
-						model := model
 						if modelFilter != "" && !strings.Contains(model.ID, modelFilter) {
 							continue
 						}
@@ -94,7 +93,6 @@ func TestCLIs(t *testing.T) {
 						}
 						t.Run(safeName(model.ID), func(t *testing.T) {
 							for _, sc := range scenarios {
-								sc := sc
 								t.Run(sc.ID, func(t *testing.T) {
 									if !sc.Supports(cli.ID, prov.ID, model) {
 										t.Skipf("scenario %q unsupported for %s/%s/%s", sc.ID, cli.ID, prov.ID, model.ID)
@@ -274,7 +272,7 @@ func sendMultiTurnWithRetry(ctx context.Context, t *testing.T, cli CLI, modelRef
 			// Replay turns can themselves be rate-limited under heavy throttling;
 			// wait+retry inline on the same driver rather than recursing into
 			// another restart-and-replay cycle.
-			for replayIndex := 0; replayIndex < turnIndex; replayIndex++ {
+			for replayIndex := range turnIndex {
 				var replayErr error
 				var replayOut string
 				var throttled bool

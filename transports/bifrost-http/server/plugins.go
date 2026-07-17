@@ -6,18 +6,19 @@ import (
 	"math"
 	"slices"
 
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/plugins/compat"
-	"github.com/maximhq/bifrost/plugins/governance"
-	"github.com/maximhq/bifrost/plugins/logging"
-	"github.com/maximhq/bifrost/plugins/maxim"
-	"github.com/maximhq/bifrost/plugins/modelcatalogresolver"
-	"github.com/maximhq/bifrost/plugins/otel"
-	"github.com/maximhq/bifrost/plugins/prompts"
-	"github.com/maximhq/bifrost/plugins/semanticcache"
-	"github.com/maximhq/bifrost/plugins/telemetry"
-	"github.com/maximhq/bifrost/transports/bifrost-http/handlers"
-	"github.com/maximhq/bifrost/transports/bifrost-http/lib"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/plugins/compat"
+	"github.com/grevinden/bifrost/plugins/governance"
+	"github.com/grevinden/bifrost/plugins/llmboster"
+	"github.com/grevinden/bifrost/plugins/logging"
+	"github.com/grevinden/bifrost/plugins/maxim"
+	"github.com/grevinden/bifrost/plugins/modelcatalogresolver"
+	"github.com/grevinden/bifrost/plugins/otel"
+	"github.com/grevinden/bifrost/plugins/prompts"
+	"github.com/grevinden/bifrost/plugins/semanticcache"
+	"github.com/grevinden/bifrost/plugins/telemetry"
+	"github.com/grevinden/bifrost/transports/bifrost-http/handlers"
+	"github.com/grevinden/bifrost/transports/bifrost-http/lib"
 )
 
 // InferPluginTypes determines which interface types a plugin implements
@@ -122,6 +123,13 @@ func loadBuiltinPlugin(ctx context.Context, name string, pluginConfig any, bifro
 		}
 		return compat.Init(*compatConfig, logger, bifrostConfig.ModelCatalog)
 
+	case llmboster.PluginName:
+		llmbosterConfig, err := MarshalPluginConfig[llmboster.Config](pluginConfig)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal llmboster plugin config: %w", err)
+		}
+		return llmboster.Init(llmbosterConfig, logger)
+
 	case modelcatalogresolver.PluginName:
 		return modelcatalogresolver.Init(bifrostConfig.ModelCatalog, logger)
 
@@ -183,7 +191,7 @@ func (s *BifrostHTTPServer) loadBuiltinPlugins(ctx context.Context) error {
 	} else {
 		s.markPluginDisabled(telemetry.PluginName)
 	}
-	s.Config.SetPluginOrderInfo(telemetry.PluginName, builtinPlacement, schemas.Ptr(1))
+	s.Config.SetPluginOrderInfo(telemetry.PluginName, builtinPlacement, new(1))
 
 	// 2. Prompts (requires config store for prompt repository; disabled in enterprise)
 	if s.Config.ConfigStore != nil && ctx.Value(schemas.BifrostContextKeyIsEnterprise) == nil {
@@ -191,7 +199,7 @@ func (s *BifrostHTTPServer) loadBuiltinPlugins(ctx context.Context) error {
 	} else {
 		s.markPluginDisabled(prompts.PluginName)
 	}
-	s.Config.SetPluginOrderInfo(prompts.PluginName, builtinPlacement, schemas.Ptr(2))
+	s.Config.SetPluginOrderInfo(prompts.PluginName, builtinPlacement, new(2))
 
 	// 3. Logging (if enabled)
 	if (s.Config.ClientConfig.EnableLogging == nil || *s.Config.ClientConfig.EnableLogging) && s.Config.LogsStore != nil {
@@ -206,7 +214,7 @@ func (s *BifrostHTTPServer) loadBuiltinPlugins(ctx context.Context) error {
 	} else {
 		s.markPluginDisabled(logging.PluginName)
 	}
-	s.Config.SetPluginOrderInfo(logging.PluginName, builtinPlacement, schemas.Ptr(3))
+	s.Config.SetPluginOrderInfo(logging.PluginName, builtinPlacement, new(3))
 
 	// 4. Governance (if enabled and not enterprise)
 	if ctx.Value(schemas.BifrostContextKeyIsEnterprise) == nil {
@@ -220,7 +228,7 @@ func (s *BifrostHTTPServer) loadBuiltinPlugins(ctx context.Context) error {
 	} else {
 		s.markPluginDisabled(governance.PluginName)
 	}
-	s.Config.SetPluginOrderInfo(governance.PluginName, builtinPlacement, schemas.Ptr(4))
+	s.Config.SetPluginOrderInfo(governance.PluginName, builtinPlacement, new(4))
 
 	// 5. OTEL (if configured in PluginConfigs)
 	otelConfig := s.getPluginConfig(otel.PluginName)
@@ -229,7 +237,7 @@ func (s *BifrostHTTPServer) loadBuiltinPlugins(ctx context.Context) error {
 	} else {
 		s.markPluginDisabled(otel.PluginName)
 	}
-	s.Config.SetPluginOrderInfo(otel.PluginName, builtinPlacement, schemas.Ptr(5))
+	s.Config.SetPluginOrderInfo(otel.PluginName, builtinPlacement, new(5))
 
 	// 6. Semantic Cache (if configured in PluginConfigs)
 	semanticCacheConfig := s.getPluginConfig(semanticcache.PluginName)
@@ -238,7 +246,7 @@ func (s *BifrostHTTPServer) loadBuiltinPlugins(ctx context.Context) error {
 	} else {
 		s.markPluginDisabled(semanticcache.PluginName)
 	}
-	s.Config.SetPluginOrderInfo(semanticcache.PluginName, builtinPlacement, schemas.Ptr(6))
+	s.Config.SetPluginOrderInfo(semanticcache.PluginName, builtinPlacement, new(6))
 
 	// 7. Compat (if any compat feature is enabled in ClientConfig)
 	cc := s.Config.ClientConfig.Compat
@@ -249,7 +257,7 @@ func (s *BifrostHTTPServer) loadBuiltinPlugins(ctx context.Context) error {
 		ShouldConvertParams:    cc.ShouldConvertParams,
 	}
 	s.registerPluginWithStatus(ctx, compat.PluginName, nil, compatCfg, false)
-	s.Config.SetPluginOrderInfo(compat.PluginName, builtinPlacement, schemas.Ptr(7))
+	s.Config.SetPluginOrderInfo(compat.PluginName, builtinPlacement, new(7))
 
 	// 8. Maxim (if configured in PluginConfigs)
 	maximConfig := s.getPluginConfig(maxim.PluginName)
@@ -258,7 +266,7 @@ func (s *BifrostHTTPServer) loadBuiltinPlugins(ctx context.Context) error {
 	} else {
 		s.markPluginDisabled(maxim.PluginName)
 	}
-	s.Config.SetPluginOrderInfo(maxim.PluginName, builtinPlacement, schemas.Ptr(8))
+	s.Config.SetPluginOrderInfo(maxim.PluginName, builtinPlacement, new(8))
 
 	// 9. ModelCatalogResolver (last routing layer — fills req.Provider from catalog only when
 	// no earlier routing plugin (governance routing rules, governance VK LB, enterprise LB)
@@ -273,6 +281,15 @@ func (s *BifrostHTTPServer) loadBuiltinPlugins(ctx context.Context) error {
 	// including post_builtin ones like the enterprise load balancer (which would otherwise run
 	// after this builtin and never get a chance to pick the provider first).
 	s.Config.SetPluginOrderInfo(modelcatalogresolver.PluginName, schemas.Ptr(schemas.PluginPlacementPostBuiltin), schemas.Ptr(math.MaxInt))
+
+	// 10. LLMBoster (if configured in PluginConfigs)
+	llmbosterCfg := s.getPluginConfig(llmboster.PluginName)
+	if llmbosterCfg != nil && llmbosterCfg.Enabled {
+		s.registerPluginWithStatus(ctx, llmboster.PluginName, nil, llmbosterCfg.Config, false)
+	} else {
+		s.markPluginDisabled(llmboster.PluginName)
+	}
+	s.Config.SetPluginOrderInfo(llmboster.PluginName, builtinPlacement, new(10))
 
 	return nil
 }

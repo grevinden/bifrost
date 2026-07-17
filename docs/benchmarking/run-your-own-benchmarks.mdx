@@ -6,7 +6,7 @@ icon: "stopwatch"
 
 ## Overview
 
-Want to see Bifrost's performance in your specific environment? The [**Bifrost Benchmarking Repository**](https://github.com/maximhq/bifrost-benchmarking) provides everything you need to conduct comprehensive performance tests tailored to your infrastructure and workload requirements.
+Want to see Bifrost's performance in your specific environment? The [**Bifrost Benchmarking Repository**](https://github.com/grevinden/bifrost-benchmarking) provides everything you need to conduct comprehensive performance tests tailored to your infrastructure and workload requirements.
 
 **What You Can Test:**
 - **Custom Instance Sizes** - Test on your preferred AWS/GCP/Azure instances  
@@ -16,8 +16,8 @@ Want to see Bifrost's performance in your specific environment? The [**Bifrost B
 - **Load Scenarios** - Test burst loads, sustained traffic, and endurance
 
 The repo also ships two companion tools:
-- **[mocker](https://github.com/maximhq/bifrost-benchmarking/tree/main/mocker)** — a mock LLM provider server with configurable latency, failures, and rate limits. Point your gateways at it to measure pure gateway overhead with zero API costs.
-- **[hitter](https://github.com/maximhq/bifrost-benchmarking/tree/main/hitter)** — a load generator for stress-testing a single Bifrost deployment with realistic multi-model/streaming traffic.
+- **[mocker](https://github.com/grevinden/bifrost-benchmarking/tree/main/mocker)** — a mock LLM provider server with configurable latency, failures, and rate limits. Point your gateways at it to measure pure gateway overhead with zero API costs.
+- **[hitter](https://github.com/grevinden/bifrost-benchmarking/tree/main/hitter)** — a load generator for stress-testing a single Bifrost deployment with realistic multi-model/streaming traffic.
 
 > **💡 Open Source**: The benchmarking tool is completely open source! Feel free to submit pull requests if you think anything is missing or could be improved.
 
@@ -29,7 +29,7 @@ Before running benchmarks, ensure you have:
 
 - **Go 1.24+** installed on your testing machine
 - **Bifrost instance** running and accessible
-- **Target providers** configured in Bifrost (real providers, or the [mocker](https://github.com/maximhq/bifrost-benchmarking/tree/main/mocker) for cost-free runs)
+- **Target providers** configured in Bifrost (real providers, or the [mocker](https://github.com/grevinden/bifrost-benchmarking/tree/main/mocker) for cost-free runs)
 - **Network access** between benchmark tool and Bifrost
 - **Sufficient resources** on the testing machine to generate load
 
@@ -40,7 +40,7 @@ Before running benchmarks, ensure you have:
 ### **1. Clone the Repository**
 
 ```bash
-git clone https://github.com/maximhq/bifrost-benchmarking.git
+git clone https://github.com/grevinden/bifrost-benchmarking.git
 cd bifrost-benchmarking
 ```
 
@@ -61,7 +61,7 @@ BIFROST_PORT=8080
 OPENAI_API_KEY=sk-...   # only needed when benchmarking raw OpenAI
 ```
 
-To compare against other gateways, add their port variables too — the [repo README](https://github.com/maximhq/bifrost-benchmarking#readme) lists every supported gateway and its `.env` variable.
+To compare against other gateways, add their port variables too — the [repo README](https://github.com/grevinden/bifrost-benchmarking#readme) lists every supported gateway and its `.env` variable.
 
 ### **4. Run Your First Benchmark**
 
@@ -87,7 +87,7 @@ Either `-rate` (fixed RPS) or `-users` (fixed concurrency) is required:
 |------|----------|-------------|---------|
 | `-rate <number>` | ✅* | Requests per second (mutually exclusive with `-users`) | None |
 | `-users <number>` | ✅* | Concurrent users to maintain (mutually exclusive with `-rate`) | None |
-| `-provider <name>` | ❌ | Gateway to benchmark: `bifrost`, `openai`, or another supported gateway (full list in the [repo README](https://github.com/maximhq/bifrost-benchmarking#readme)); empty runs all | None (all) |
+| `-provider <name>` | ❌ | Gateway to benchmark: `bifrost`, `openai`, or another supported gateway (full list in the [repo README](https://github.com/grevinden/bifrost-benchmarking#readme)); empty runs all | None (all) |
 | `-duration <seconds>` | ❌ | Test duration in seconds | `10` |
 | `-output <filename>` | ❌ | Results output file | `results.json` |
 | `-big-payload` | ❌ | Use a ~10KB request payload instead of the ~200B default | `false` |
@@ -376,7 +376,7 @@ netstat -an | grep 8080
 - Account for network variability  
 - Use longer test durations (60+ seconds)
 - Isolate testing environment
-- Point the gateway at the repo's [mock provider](https://github.com/maximhq/bifrost-benchmarking/tree/main/mocker) to eliminate upstream variability
+- Point the gateway at the repo's [mock provider](https://github.com/grevinden/bifrost-benchmarking/tree/main/mocker) to eliminate upstream variability
 
 ---
 
@@ -394,4 +394,4 @@ netstat -an | grep 8080
 - **[t3.medium Performance](./t3.medium)** - Compare against medium instance results
 - **[t3.xlarge Performance](./t3.xl)** - Compare against high-performance configuration
 
-**Ready to benchmark? Clone the [repository](https://github.com/maximhq/bifrost-benchmarking) and start testing!**
+**Ready to benchmark? Clone the [repository](https://github.com/grevinden/bifrost-benchmarking) and start testing!**

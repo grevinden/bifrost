@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/vectorstore"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/vectorstore"
 )
 
 // observableStore is a fuller mock than directFastPathStore — it records all
@@ -60,7 +60,7 @@ func (s *observableStore) GetNearest(ctx context.Context, ns string, v []float32
 	return nil, vectorstore.ErrNotSupported
 }
 func (s *observableStore) RequiresVectors() bool { return false }
-func (s *observableStore) Add(ctx context.Context, ns string, id string, e []float32, m map[string]interface{}) error {
+func (s *observableStore) Add(ctx context.Context, ns string, id string, e []float32, m map[string]any) error {
 	s.mu.Lock()
 	s.addIDs = append(s.addIDs, id)
 	s.chunks[id] = vectorstore.SearchResult{ID: id, Properties: m}
@@ -235,12 +235,10 @@ func TestCleanup_DrainsPendingWriters(t *testing.T) {
 	plugin := newTestPlugin(t, newObservableStore())
 
 	var done atomic.Bool
-	plugin.writersWg.Add(1)
-	go func() {
-		defer plugin.writersWg.Done()
+	plugin.writersWg.Go(func() {
 		time.Sleep(50 * time.Millisecond)
 		done.Store(true)
-	}()
+	})
 
 	if err := plugin.Cleanup(); err != nil {
 		t.Fatalf("Cleanup failed: %v", err)

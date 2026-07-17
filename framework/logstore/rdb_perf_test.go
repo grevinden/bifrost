@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 type testLogger struct{}
@@ -500,7 +500,7 @@ func TestBuildBulkUpdateCostPostgresSQL(t *testing.T) {
 
 	query, args := buildBulkUpdateCostPostgresSQL([]string{"log-a", "log-b"}, updates)
 	wantQuery := "UPDATE logs SET cost = v.cost FROM (VALUES ($1::text,$2::float8),($3::text,$4::float8)) AS v(id, cost) WHERE logs.id = v.id"
-	wantArgs := []interface{}{"log-a", 1.25, "log-b", 2.5}
+	wantArgs := []any{"log-a", 1.25, "log-b", 2.5}
 
 	if query != wantQuery {
 		t.Fatalf("query mismatch\n got: %s\nwant: %s", query, wantQuery)

@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/maximhq/bifrost/core/providers/anthropic"
-	providerUtils "github.com/maximhq/bifrost/core/providers/utils"
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/providers/anthropic"
+	providerUtils "github.com/grevinden/bifrost/core/providers/utils"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // ToCohereChatCompletionRequest converts a Bifrost request to Cohere v2 format
@@ -70,7 +70,7 @@ func ToCohereChatCompletionRequest(bifrostReq *schemas.BifrostChatRequest) (*Coh
 					functionName = toolCall.Function.Name
 				} else {
 					// Use empty string if Name is nil
-					functionName = schemas.Ptr("")
+					functionName = new("")
 				}
 
 				// Arguments is a string, not a pointer, so it's safe to access directly
@@ -144,7 +144,7 @@ func ToCohereChatCompletionRequest(bifrostReq *schemas.BifrostChatRequest) (*Coh
 					}
 					cohereReq.Thinking = &CohereThinking{
 						Type:        ThinkingTypeEnabled,
-						TokenBudget: schemas.Ptr(budgetTokens), // Max tokens for reasoning
+						TokenBudget: new(budgetTokens), // Max tokens for reasoning
 					}
 				} else {
 					cohereReq.Thinking = &CohereThinking{
@@ -164,7 +164,7 @@ func ToCohereChatCompletionRequest(bifrostReq *schemas.BifrostChatRequest) (*Coh
 			// Handle thinking parameter
 			cohereReq.ExtraParams = bifrostReq.Params.ExtraParams
 			if thinkingParam, ok := schemas.SafeExtractFromMap(bifrostReq.Params.ExtraParams, "thinking"); ok {
-				if thinkingMap, ok := thinkingParam.(map[string]interface{}); ok {
+				if thinkingMap, ok := thinkingParam.(map[string]any); ok {
 					thinking := &CohereThinking{}
 					if typeStr, ok := schemas.SafeExtractString(thinkingMap["type"]); ok {
 						delete(thinkingMap, "type")
@@ -289,11 +289,11 @@ func (req *CohereChatRequest) ToBifrostChatRequest(ctx *schemas.BifrostContext) 
 	if req.Thinking != nil {
 		if req.Thinking.Type == ThinkingTypeDisabled {
 			bifrostReq.Params.Reasoning = &schemas.ChatReasoning{
-				Effort: schemas.Ptr("none"),
+				Effort: new("none"),
 			}
 		} else {
 			bifrostReq.Params.Reasoning = &schemas.ChatReasoning{
-				Effort: schemas.Ptr("auto"),
+				Effort: new("auto"),
 			}
 			if req.Thinking.TokenBudget != nil {
 				bifrostReq.Params.Reasoning.MaxTokens = req.Thinking.TokenBudget
@@ -339,7 +339,7 @@ func (req *CohereChatRequest) ToBifrostChatRequest(ctx *schemas.BifrostContext) 
 	}
 
 	// Convert extra params
-	extraParams := make(map[string]interface{})
+	extraParams := make(map[string]any)
 	if req.SafetyMode != nil {
 		extraParams["safety_mode"] = *req.SafetyMode
 	}
@@ -350,7 +350,7 @@ func (req *CohereChatRequest) ToBifrostChatRequest(ctx *schemas.BifrostContext) 
 		extraParams["strict_tool_choice"] = *req.StrictToolChoice
 	}
 	if req.Thinking != nil {
-		thinkingMap := map[string]interface{}{
+		thinkingMap := map[string]any{
 			"type": string(req.Thinking.Type),
 		}
 		if req.Thinking.TokenBudget != nil {
@@ -394,7 +394,7 @@ func (response *CohereChatResponse) ToBifrostChatResponse(model string) *schemas
 	// Convert finish reason
 	if response.FinishReason != nil {
 		finishReason := ConvertCohereFinishReasonToBifrost(*response.FinishReason)
-		bifrostResponse.Choices[0].FinishReason = schemas.Ptr(finishReason)
+		bifrostResponse.Choices[0].FinishReason = new(finishReason)
 	}
 
 	// Convert usage information
@@ -475,12 +475,12 @@ func (chunk *CohereStreamEvent) ToBifrostChatCompletionStream() (*schemas.Bifros
 							Index: 0,
 							ChatStreamResponseChoice: &schemas.ChatStreamResponseChoice{
 								Delta: &schemas.ChatStreamResponseChoiceDelta{
-									Reasoning: schemas.Ptr(thinkingText),
+									Reasoning: new(thinkingText),
 									ReasoningDetails: []schemas.ChatReasoningDetails{
 										{
 											Index: 0,
 											Type:  schemas.BifrostReasoningDetailsTypeText,
-											Text:  schemas.Ptr(thinkingText),
+											Text:  new(thinkingText),
 										},
 									},
 								},
@@ -683,7 +683,7 @@ func (cm *CohereMessage) ToBifrostChatMessage() *schemas.ChatMessage {
 				functionName = toolCall.Function.Name
 			} else {
 				// Use empty string if Name is nil
-				functionName = schemas.Ptr("")
+				functionName = new("")
 			}
 
 			// Arguments is a string, not a pointer, so it's safe to access directly
@@ -714,7 +714,7 @@ func (cm *CohereMessage) ToBifrostChatMessage() *schemas.ChatMessage {
 			assistantMessage = &schemas.ChatAssistantMessage{}
 		}
 		assistantMessage.ReasoningDetails = reasoningDetails
-		assistantMessage.Reasoning = schemas.Ptr(reasoningText)
+		assistantMessage.Reasoning = new(reasoningText)
 	}
 
 	bifrostMessage := &schemas.ChatMessage{

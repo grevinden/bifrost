@@ -1,6 +1,7 @@
 package complexity
 
 import (
+	"slices"
 	"strings"
 
 	"github.com/blevesearch/go-porterstemmer"
@@ -432,10 +433,5 @@ func runesEqualString(runes []rune, text string) bool {
 }
 
 func keywordIDMatched(id int, matchedIDs []int) bool {
-	for _, matchedID := range matchedIDs {
-		if id == matchedID {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(matchedIDs, id)
 }

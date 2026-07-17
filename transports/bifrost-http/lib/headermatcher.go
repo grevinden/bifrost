@@ -3,7 +3,7 @@ package lib
 import (
 	"strings"
 
-	configstoreTables "github.com/maximhq/bifrost/framework/configstore/tables"
+	configstoreTables "github.com/grevinden/bifrost/framework/configstore/tables"
 )
 
 // HeaderMatchesPattern returns true if headerName matches the pattern.

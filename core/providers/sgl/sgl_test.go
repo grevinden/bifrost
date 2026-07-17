@@ -4,9 +4,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/maximhq/bifrost/core/internal/llmtests"
+	"github.com/grevinden/bifrost/core/internal/llmtests"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 func TestSGL(t *testing.T) {

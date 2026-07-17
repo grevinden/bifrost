@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )

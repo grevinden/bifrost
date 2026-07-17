@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/valyala/fasthttp"
 )
 
@@ -474,9 +474,7 @@ func TestMaxConnWaitTimeoutAlignedWithReadTimeout(t *testing.T) {
 	// Fire first request (occupies the only connection slot for 3s)
 	var wg sync.WaitGroup
 	firstReqErr := make(chan error, 1)
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		req := fasthttp.AcquireRequest()
 		resp := fasthttp.AcquireResponse()
 		defer fasthttp.ReleaseRequest(req)
@@ -487,7 +485,7 @@ func TestMaxConnWaitTimeoutAlignedWithReadTimeout(t *testing.T) {
 		req.SetBodyString(`{"slot": "occupied"}`)
 
 		firstReqErr <- client.Do(req, resp)
-	}()
+	})
 
 	// Brief pause to ensure first request is in-flight
 	time.Sleep(100 * time.Millisecond)

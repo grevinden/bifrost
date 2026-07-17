@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // retryAfterRegex is compiled once at package level for performance
@@ -76,7 +76,7 @@ func DeepCopyBifrostStreamChunk(original *schemas.BifrostStreamChunk) *schemas.B
 }
 
 // deepCopyReflect performs a deep copy using reflection
-func deepCopyReflect(original interface{}) interface{} {
+func deepCopyReflect(original any) any {
 	if original == nil {
 		return nil
 	}
@@ -88,7 +88,7 @@ func deepCopyReflect(original interface{}) interface{} {
 // deepCopyValue recursively copies a reflect.Value
 func deepCopyValue(original reflect.Value) reflect.Value {
 	switch original.Kind() {
-	case reflect.Ptr:
+	case reflect.Pointer:
 		if original.IsNil() {
 			return reflect.Zero(original.Type())
 		}
@@ -267,10 +267,10 @@ type FileContentRetryCondition interface {
 
 // TestRetryContext provides context information for retry decisions
 type TestRetryContext struct {
-	ScenarioName     string                 // Name of the test scenario
-	AttemptNumber    int                    // Current attempt number (1-based)
-	ExpectedBehavior map[string]interface{} // What we expected to happen
-	TestMetadata     map[string]interface{} // Additional context for retry decisions
+	ScenarioName     string         // Name of the test scenario
+	AttemptNumber    int            // Current attempt number (1-based)
+	ExpectedBehavior map[string]any // What we expected to happen
+	TestMetadata     map[string]any // Additional context for retry decisions
 }
 
 // TestRetryConfig configures retry behavior for test scenarios (DEPRECATED: Use specific retry configs)
@@ -3995,10 +3995,7 @@ func WithResponsesStreamValidationRetry(
 			var delay time.Duration
 			if isTimeout || isEmptyStream {
 				// Use shorter delay for transient errors (timeout or empty stream)
-				delay = config.BaseDelay / 2
-				if delay < 500*time.Millisecond {
-					delay = 500 * time.Millisecond
-				}
+				delay = max(config.BaseDelay/2, 500*time.Millisecond)
 				if isTimeout {
 					retryReason = fmt.Sprintf("❌ timeout error detected: %s", strings.Join(validationResult.Errors, "; "))
 				} else {

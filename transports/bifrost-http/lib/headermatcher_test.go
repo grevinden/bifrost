@@ -3,7 +3,7 @@ package lib
 import (
 	"testing"
 
-	configstoreTables "github.com/maximhq/bifrost/framework/configstore/tables"
+	configstoreTables "github.com/grevinden/bifrost/framework/configstore/tables"
 )
 
 func TestHeaderMatchesPattern(t *testing.T) {

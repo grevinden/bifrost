@@ -5,7 +5,7 @@ icon: "play"
 ---
 
 <video width="100%" controls>
-  <source src="https://github.com/maximhq/bifrost/raw/refs/heads/main/docs/media/package-demo.mp4" type="video/mp4" />
+  <source src="https://github.com/grevinden/bifrost/raw/refs/heads/main/docs/media/package-demo.mp4" type="video/mp4" />
   Your browser does not support the video tag.
 </video>
 
@@ -18,7 +18,7 @@ Get Bifrost running in your Go application with minimal setup. This guide shows 
 
 ```bash
 go mod init my-bifrost-app
-go get github.com/maximhq/bifrost/core
+go get github.com/grevinden/bifrost/core
 ```
 
 ### 2. Set Environment Variable
@@ -37,8 +37,8 @@ import (
     "fmt"
     "os"
 
-    "github.com/maximhq/bifrost/core"
-    "github.com/maximhq/bifrost/core/schemas"
+    "github.com/grevinden/bifrost/core"
+    "github.com/grevinden/bifrost/core/schemas"
 )
 
 type MyAccount struct{}

@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"slices"
 	"sort"
 	"strings"
 	"sync/atomic"
@@ -17,14 +18,14 @@ import (
 
 	"github.com/bytedance/sonic"
 	"github.com/google/uuid"
-	bifrost "github.com/maximhq/bifrost/core"
-	providerUtils "github.com/maximhq/bifrost/core/providers/utils"
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/configstore/tables"
-	"github.com/maximhq/bifrost/framework/encrypt"
-	"github.com/maximhq/bifrost/framework/logstore"
-	"github.com/maximhq/bifrost/framework/queryscope"
-	"github.com/maximhq/bifrost/framework/vectorstore"
+	_ "github.com/grevinden/bifrost/core"
+	providerUtils "github.com/grevinden/bifrost/core/providers/utils"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/configstore/tables"
+	"github.com/grevinden/bifrost/framework/encrypt"
+	"github.com/grevinden/bifrost/framework/logstore"
+	"github.com/grevinden/bifrost/framework/queryscope"
+	"github.com/grevinden/bifrost/framework/vectorstore"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -65,7 +66,7 @@ func sortedProviderNames(providers map[schemas.ModelProvider]ProviderConfig) []s
 // sortedUintCopy returns a sorted copy of ids without mutating the caller's slice.
 func sortedUintCopy(ids []uint) []uint {
 	sorted := append([]uint(nil), ids...)
-	sort.Slice(sorted, func(i, j int) bool { return sorted[i] < sorted[j] })
+	slices.Sort(sorted)
 	return sorted
 }
 
@@ -403,12 +404,12 @@ func (s *RDBConfigStore) parseGormError(err error) error {
 
 			// First try to extract from Detail
 			if strings.Contains(errMsg, "Key (") {
-				startIdx := strings.Index(errMsg, "Key (")
-				if startIdx != -1 {
-					rest := errMsg[startIdx+5:]
-					endIdx := strings.Index(rest, ")")
-					if endIdx != -1 {
-						columnName = rest[:endIdx]
+				_, after, ok := strings.Cut(errMsg, "Key (")
+				if ok {
+					rest := after
+					before, _, ok := strings.Cut(rest, ")")
+					if ok {
+						columnName = before
 					}
 				}
 			}
@@ -1475,7 +1476,7 @@ func (s *RDBConfigStore) UpdateStatus(ctx context.Context, provider schemas.Mode
 		result := s.DB().WithContext(ctx).
 			Model(&tables.TableKey{}).
 			Where("key_id = ?", keyID).
-			Updates(map[string]interface{}{
+			Updates(map[string]any{
 				"status":      status,
 				"description": description,
 			})
@@ -1493,7 +1494,7 @@ func (s *RDBConfigStore) UpdateStatus(ctx context.Context, provider schemas.Mode
 		result := s.DB().WithContext(ctx).
 			Model(&tables.TableProvider{}).
 			Where("name = ?", string(provider)).
-			Updates(map[string]interface{}{
+			Updates(map[string]any{
 				"status":      status,
 				"description": description,
 			})
@@ -2206,7 +2207,7 @@ func (s *RDBConfigStore) UpdateMCPClientConfig(ctx context.Context, id string, c
 			return fmt.Errorf("tool_execution_timeout must be non-negative, got %d", clientConfigCopy.ToolExecutionTimeout)
 		}
 
-		updates := map[string]interface{}{
+		updates := map[string]any{
 			"name":                       clientConfigCopy.Name,
 			"is_code_mode_client":        clientConfigCopy.IsCodeModeClient,
 			"tools_to_execute_json":      string(toolsToExecuteJSON),
@@ -3240,10 +3241,7 @@ func (s *RDBConfigStore) GetVirtualKeysPaginated(ctx context.Context, params Vir
 		}
 	}
 
-	offset := params.Offset
-	if offset < 0 {
-		offset = 0
-	}
+	offset := max(params.Offset, 0)
 
 	// Determine sort order
 	orderClause := "governance_virtual_keys.created_at ASC, governance_virtual_keys.id ASC"
@@ -4514,7 +4512,7 @@ func (s *RDBConfigStore) UpdateRateLimitUsage(ctx context.Context, id string, to
 		Session(&gorm.Session{SkipHooks: true}).
 		Model(&tables.TableRateLimit{}).
 		Where("id = ?", id).
-		Updates(map[string]interface{}{
+		Updates(map[string]any{
 			"token_current_usage":   tokenCurrentUsage,
 			"request_current_usage": requestCurrentUsage,
 		})
@@ -5222,9 +5220,9 @@ func (s *RDBConfigStore) GetGovernanceConfig(ctx context.Context) (*GovernanceCo
 		for _, entry := range governanceConfigs {
 			switch entry.Key {
 			case tables.ConfigAdminUsernameKey:
-				username = bifrost.Ptr(entry.Value)
+				username = new(entry.Value)
 			case tables.ConfigAdminPasswordKey:
-				password = bifrost.Ptr(entry.Value)
+				password = new(entry.Value)
 			case tables.ConfigIsAuthEnabledKey:
 				isEnabled = entry.Value == "true"
 			case tables.ConfigComplexityAnalyzerConfigKey:

@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // RunMultipleImagesTest executes the multiple images test scenario
@@ -46,7 +46,7 @@ func RunMultipleImagesTest(t *testing.T, client *bifrost.Bifrost, ctx context.Co
 					ContentBlocks: []schemas.ChatContentBlock{
 						{
 							Type: schemas.ChatContentBlockTypeText,
-							Text: bifrost.Ptr(prompt),
+							Text: new(prompt),
 						},
 						{
 							Type: schemas.ChatContentBlockTypeImage,
@@ -70,7 +70,7 @@ func RunMultipleImagesTest(t *testing.T, client *bifrost.Bifrost, ctx context.Co
 			Model:    testConfig.VisionModel,
 			Input:    messages,
 			Params: &schemas.ChatParameters{
-				MaxCompletionTokens: bifrost.Ptr(300),
+				MaxCompletionTokens: new(300),
 			},
 			Fallbacks: testConfig.Fallbacks,
 		}
@@ -79,17 +79,17 @@ func RunMultipleImagesTest(t *testing.T, client *bifrost.Bifrost, ctx context.Co
 		retryConfig := GetTestRetryConfigForScenario("MultipleImages", testConfig)
 		retryContext := TestRetryContext{
 			ScenarioName: "MultipleImages",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"should_compare_images":        true,
 				"should_identify_similarities": true,
 				"should_identify_differences":  true,
 				"multiple_image_processing":    true,
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider":          testConfig.Provider,
 				"model":             testConfig.VisionModel,
 				"image_count":       2,
-				"mixed_formats":     testConfig.Scenarios.ImageURL, // URL and base64 only when URL is supported
+				"mixed_formats":     testConfig.Scenarios.ImageURL,                                                                      // URL and base64 only when URL is supported
 				"expected_keywords": []string{"different", "differences", "contrast", "unlike", "comparison", "compare", "both", "two"}, // 🎯 Comparison-specific terms
 			},
 		}

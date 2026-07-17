@@ -78,7 +78,7 @@ type ComplexityAnalyzerConfig struct {
 type complexityAnalyzerConfigRecord struct {
 	TierBoundaries ComplexityTierBoundaries        `json:"tier_boundaries"`
 	Keywords       ComplexityEditableKeywordConfig `json:"keywords"`
-	ConfigHashes   ComplexityAnalyzerConfigHashes  `json:"_config_hashes,omitempty"`
+	ConfigHashes   ComplexityAnalyzerConfigHashes  `json:"_config_hashes"`
 }
 
 // Validate checks that the config is internally consistent.

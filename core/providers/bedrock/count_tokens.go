@@ -3,7 +3,7 @@ package bedrock
 import (
 	"strings"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 const estimatedBytesPerToken = 4

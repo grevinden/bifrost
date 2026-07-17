@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/bytedance/sonic"
-	bifrost "github.com/maximhq/bifrost/core"
+	_ "github.com/grevinden/bifrost/core"
 	"gorm.io/gorm"
 )
 
@@ -63,7 +63,7 @@ func (r *TableRoutingRule) BeforeSave(tx *gorm.DB) error {
 		if err != nil {
 			return err
 		}
-		r.Fallbacks = bifrost.Ptr(string(data))
+		r.Fallbacks = new(string(data))
 	} else {
 		r.Fallbacks = nil
 	}
@@ -72,7 +72,7 @@ func (r *TableRoutingRule) BeforeSave(tx *gorm.DB) error {
 		if err != nil {
 			return err
 		}
-		r.Query = bifrost.Ptr(string(data))
+		r.Query = new(string(data))
 	} else {
 		r.Query = nil
 	}

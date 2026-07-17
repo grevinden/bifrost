@@ -15,22 +15,22 @@ import (
 
 	"github.com/bytedance/sonic"
 
-	providerUtils "github.com/maximhq/bifrost/core/providers/utils"
-	schemas "github.com/maximhq/bifrost/core/schemas"
+	providerUtils "github.com/grevinden/bifrost/core/providers/utils"
+	schemas "github.com/grevinden/bifrost/core/schemas"
 
 	"github.com/valyala/fasthttp"
 )
 
 // cohereResponsePool provides a pool for Cohere v2 response objects.
 var cohereResponsePool = sync.Pool{
-	New: func() interface{} {
+	New: func() any {
 		return &CohereChatResponse{}
 	},
 }
 
 // cohereEmbeddingResponsePool provides a pool for Cohere embedding response objects.
 var cohereEmbeddingResponsePool = sync.Pool{
-	New: func() interface{} {
+	New: func() any {
 		return &CohereEmbeddingResponse{}
 	},
 }
@@ -51,7 +51,7 @@ func releaseCohereEmbeddingResponse(resp *CohereEmbeddingResponse) {
 
 // cohereRerankResponsePool provides a pool for Cohere rerank response objects.
 var cohereRerankResponsePool = sync.Pool{
-	New: func() interface{} {
+	New: func() any {
 		return &CohereRerankResponse{}
 	},
 }
@@ -420,7 +420,7 @@ func (provider *CohereProvider) ChatCompletionStream(ctx *schemas.BifrostContext
 			if err != nil {
 				return nil, err
 			}
-			reqBody.Stream = schemas.Ptr(true)
+			reqBody.Stream = new(true)
 			return reqBody, nil
 		})
 	if bifrostErr != nil {
@@ -479,7 +479,7 @@ func (provider *CohereProvider) ChatCompletionStream(ctx *schemas.BifrostContext
 		// Request failed before the first response byte (server closed an idle/pooled connection,
 		// broken pipe, connection refused, DNS failure, etc.). Surface as a retriable upstream
 		// connection error (502) so executeRequestWithRetries honors max_retries, matching the
-		// non-streaming path - see https://github.com/maximhq/bifrost/issues/4496.
+		// non-streaming path - see https://github.com/grevinden/bifrost/issues/4496.
 		return nil, providerUtils.EnrichError(ctx, providerUtils.NewBifrostUpstreamConnectionError(schemas.ErrProviderDoRequest, err), jsonBody, nil, sendBackRawRequest, sendBackRawResponse, latency)
 	}
 
@@ -702,7 +702,7 @@ func (provider *CohereProvider) ResponsesStream(ctx *schemas.BifrostContext, pos
 				return nil, err
 			}
 			if reqBody != nil {
-				reqBody.Stream = schemas.Ptr(true)
+				reqBody.Stream = new(true)
 			}
 			return reqBody, nil
 		})
@@ -760,7 +760,7 @@ func (provider *CohereProvider) ResponsesStream(ctx *schemas.BifrostContext, pos
 		// Request failed before the first response byte (server closed an idle/pooled connection,
 		// broken pipe, connection refused, DNS failure, etc.). Surface as a retriable upstream
 		// connection error (502) so executeRequestWithRetries honors max_retries, matching the
-		// non-streaming path - see https://github.com/maximhq/bifrost/issues/4496.
+		// non-streaming path - see https://github.com/grevinden/bifrost/issues/4496.
 		return nil, providerUtils.EnrichError(ctx, providerUtils.NewBifrostUpstreamConnectionError(schemas.ErrProviderDoRequest, err), jsonBody, nil, sendBackRawRequest, sendBackRawResponse, latency)
 	}
 

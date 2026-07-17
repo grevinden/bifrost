@@ -15,9 +15,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/maximhq/bifrost/core/mcp"
-	"github.com/maximhq/bifrost/core/network"
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/mcp"
+	"github.com/grevinden/bifrost/core/network"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 const (
@@ -108,8 +108,10 @@ func isModelRequired(reqType schemas.RequestType) bool {
 }
 
 // Ptr returns a pointer to the given value.
+//
+//go:fix inline
 func Ptr[T any](v T) *T {
-	return &v
+	return new(v)
 }
 
 // providerRequiresKey returns true if the given provider requires an API key for authentication.

@@ -10,11 +10,11 @@ import (
 	"time"
 
 	"github.com/google/cel-go/cel"
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/configstore"
-	configstoreTables "github.com/maximhq/bifrost/framework/configstore/tables"
-	"github.com/maximhq/bifrost/framework/modelcatalog"
-	"github.com/maximhq/bifrost/framework/routing"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/configstore"
+	configstoreTables "github.com/grevinden/bifrost/framework/configstore/tables"
+	"github.com/grevinden/bifrost/framework/modelcatalog"
+	"github.com/grevinden/bifrost/framework/routing"
 	"gorm.io/gorm"
 )
 
@@ -705,7 +705,7 @@ func (gs *LocalGovernanceStore) GetGovernanceData(ctx context.Context) *Governan
 		}
 	}
 	virtualKeys := make(map[string]*configstoreTables.TableVirtualKey)
-	gs.virtualKeys.Range(func(key, value interface{}) bool {
+	gs.virtualKeys.Range(func(key, value any) bool {
 		vk, ok := value.(*configstoreTables.TableVirtualKey)
 		if !ok || vk == nil {
 			return true // continue
@@ -716,7 +716,7 @@ func (gs *LocalGovernanceStore) GetGovernanceData(ctx context.Context) *Governan
 		return true // continue iteration
 	})
 	teams := make(map[string]*configstoreTables.TableTeam)
-	gs.teams.Range(func(key, value interface{}) bool {
+	gs.teams.Range(func(key, value any) bool {
 		team, ok := value.(*configstoreTables.TableTeam)
 		if !ok || team == nil {
 			return true // continue
@@ -730,7 +730,7 @@ func (gs *LocalGovernanceStore) GetGovernanceData(ctx context.Context) *Governan
 		return true // continue iteration
 	})
 	customers := make(map[string]*configstoreTables.TableCustomer)
-	gs.customers.Range(func(key, value interface{}) bool {
+	gs.customers.Range(func(key, value any) bool {
 		customer, ok := value.(*configstoreTables.TableCustomer)
 		if !ok || customer == nil {
 			return true // continue
@@ -815,7 +815,7 @@ func (gs *LocalGovernanceStore) GetGovernanceData(ctx context.Context) *Governan
 		})
 	}
 	budgets := make(map[string]*configstoreTables.TableBudget)
-	gs.budgets.Range(func(key, value interface{}) bool {
+	gs.budgets.Range(func(key, value any) bool {
 		budget, ok := value.(*configstoreTables.TableBudget)
 		if !ok || budget == nil {
 			return true // continue
@@ -824,7 +824,7 @@ func (gs *LocalGovernanceStore) GetGovernanceData(ctx context.Context) *Governan
 		return true // continue iteration
 	})
 	rateLimits := make(map[string]*configstoreTables.TableRateLimit)
-	gs.rateLimits.Range(func(key, value interface{}) bool {
+	gs.rateLimits.Range(func(key, value any) bool {
 		rateLimit, ok := value.(*configstoreTables.TableRateLimit)
 		if !ok || rateLimit == nil {
 			return true // continue
@@ -876,7 +876,7 @@ func (gs *LocalGovernanceStore) GetGovernanceData(ctx context.Context) *Governan
 		return true // continue iteration
 	})
 	var providersList []*configstoreTables.TableProvider
-	gs.providers.Range(func(key, value interface{}) bool {
+	gs.providers.Range(func(key, value any) bool {
 		p, ok := value.(*configstoreTables.TableProvider)
 		if !ok || p == nil {
 			return true // continue
@@ -2043,7 +2043,7 @@ func (gs *LocalGovernanceStore) ResetExpiredBudgets(ctx context.Context, resetBu
 					Session(&gorm.Session{SkipHooks: true}).
 					Model(&configstoreTables.TableBudget{}).
 					Where("id = ?", budget.ID).
-					Updates(map[string]interface{}{
+					Updates(map[string]any{
 						"current_usage": budget.CurrentUsage,
 						"last_reset":    budget.LastReset,
 					})
@@ -2067,7 +2067,7 @@ func (gs *LocalGovernanceStore) ResetExpiredRateLimits(ctx context.Context, rese
 		if err := gs.configStore.ExecuteTransaction(ctx, func(tx *gorm.DB) error {
 			for _, rateLimit := range resetRateLimits {
 				// Build update map with only the fields that were reset
-				updates := make(map[string]interface{})
+				updates := make(map[string]any)
 
 				// Check which fields were reset by comparing with current values
 				if rateLimit.TokenCurrentUsage == 0 && rateLimit.TokenResetDuration != nil {
@@ -2125,7 +2125,7 @@ func (gs *LocalGovernanceStore) DumpRateLimits(ctx context.Context, tokenBaselin
 		RequestLastReset    time.Time
 	}
 	var rateLimitUpdates []rateLimitUpdate
-	gs.rateLimits.Range(func(key, value interface{}) bool {
+	gs.rateLimits.Range(func(key, value any) bool {
 		rateLimit, ok := value.(*configstoreTables.TableRateLimit)
 		if !ok || rateLimit == nil {
 			return true
@@ -2160,7 +2160,7 @@ func (gs *LocalGovernanceStore) DumpRateLimits(ctx context.Context, tokenBaselin
 					Session(&gorm.Session{SkipHooks: true}).
 					Model(&configstoreTables.TableRateLimit{}).
 					Where("id = ?", update.ID).
-					Updates(map[string]interface{}{
+					Updates(map[string]any{
 						"token_current_usage":   update.TokenCurrentUsage,
 						"token_last_reset":      update.TokenLastReset,
 						"request_current_usage": update.RequestCurrentUsage,
@@ -2201,7 +2201,7 @@ func (gs *LocalGovernanceStore) DumpBudgets(ctx context.Context, baselines map[s
 		baselines = map[string]float64{}
 	}
 	budgets := make(map[string]*configstoreTables.TableBudget)
-	gs.budgets.Range(func(key, value interface{}) bool {
+	gs.budgets.Range(func(key, value any) bool {
 		// Type-safe conversion
 		keyStr, keyOk := key.(string)
 		budget, budgetOk := value.(*configstoreTables.TableBudget)
@@ -2234,7 +2234,7 @@ func (gs *LocalGovernanceStore) DumpBudgets(ctx context.Context, baselines map[s
 					Session(&gorm.Session{SkipHooks: true}).
 					Model(&configstoreTables.TableBudget{}).
 					Where("id = ?", inMemoryBudget.ID).
-					Updates(map[string]interface{}{
+					Updates(map[string]any{
 						"current_usage": newUsage,
 						"last_reset":    inMemoryBudget.LastReset,
 					})
@@ -2603,7 +2603,7 @@ func (gs *LocalGovernanceStore) rebuildInMemoryStructures(ctx context.Context, c
 	}
 
 	// Pre-compile all routing rule programs to avoid first-request latency
-	gs.routingRules.Range(func(key, value interface{}) bool {
+	gs.routingRules.Range(func(key, value any) bool {
 		if rules, ok := value.([]*configstoreTables.TableRoutingRule); ok {
 			for _, rule := range rules {
 				if _, err := gs.GetRoutingProgram(ctx, rule); err != nil {
@@ -3026,7 +3026,7 @@ func (gs *LocalGovernanceStore) UpdateVirtualKeyInMemory(ctx context.Context, vk
 		}
 	}
 	if !exists || existingVKValue == nil {
-		gs.virtualKeys.Range(func(key, value interface{}) bool {
+		gs.virtualKeys.Range(func(key, value any) bool {
 			existingVK, ok := value.(*configstoreTables.TableVirtualKey)
 			if !ok || existingVK == nil || existingVK.ID != vk.ID {
 				return true
@@ -3197,7 +3197,7 @@ func (gs *LocalGovernanceStore) DeleteVirtualKeyInMemory(ctx context.Context, vk
 	}
 
 	// Find and delete the VK by ID (lock-free)
-	gs.virtualKeys.Range(func(key, value interface{}) bool {
+	gs.virtualKeys.Range(func(key, value any) bool {
 		// Type-safe conversion
 		vk, ok := value.(*configstoreTables.TableVirtualKey)
 		if !ok || vk == nil {
@@ -3386,7 +3386,7 @@ func (gs *LocalGovernanceStore) DeleteTeamInMemory(ctx context.Context, teamID s
 
 	// Set team_id to null for all virtual keys associated with the team
 	// Iterate through all VKs since team.VirtualKeys may not be populated
-	gs.virtualKeys.Range(func(key, value interface{}) bool {
+	gs.virtualKeys.Range(func(key, value any) bool {
 		vk, ok := value.(*configstoreTables.TableVirtualKey)
 		if !ok || vk == nil {
 			return true // continue
@@ -3502,7 +3502,7 @@ func (gs *LocalGovernanceStore) DeleteCustomerInMemory(ctx context.Context, cust
 	}
 	// Set customer_id to null for all virtual keys associated with the customer
 	// Iterate through all VKs since customer.VirtualKeys may not be populated
-	gs.virtualKeys.Range(func(key, value interface{}) bool {
+	gs.virtualKeys.Range(func(key, value any) bool {
 		vk, ok := value.(*configstoreTables.TableVirtualKey)
 		if !ok || vk == nil {
 			return true // continue
@@ -3517,7 +3517,7 @@ func (gs *LocalGovernanceStore) DeleteCustomerInMemory(ctx context.Context, cust
 	})
 	// Set customer_id to null for all teams associated with the customer
 	// Iterate through all teams since customer.Teams may not be populated
-	gs.teams.Range(func(key, value interface{}) bool {
+	gs.teams.Range(func(key, value any) bool {
 		team, ok := value.(*configstoreTables.TableTeam)
 		if !ok || team == nil {
 			return true // continue
@@ -3629,7 +3629,7 @@ func (gs *LocalGovernanceStore) DeleteModelConfigInMemory(ctx context.Context, m
 	}
 
 	// Find and delete the model config by ID
-	gs.modelConfigs.Range(func(key, value interface{}) bool {
+	gs.modelConfigs.Range(func(key, value any) bool {
 		mc, ok := value.(*configstoreTables.TableModelConfig)
 		if !ok || mc == nil {
 			return true // continue iteration
@@ -3658,7 +3658,7 @@ func (gs *LocalGovernanceStore) DeleteModelConfigInMemory(ctx context.Context, m
 // evict stale entries via DeleteModelConfigInMemory.
 func (gs *LocalGovernanceStore) ScopedModelConfigIDs(scope, scopeID string) []string {
 	var ids []string
-	gs.modelConfigs.Range(func(key, value interface{}) bool {
+	gs.modelConfigs.Range(func(key, value any) bool {
 		mc, ok := value.(*configstoreTables.TableModelConfig)
 		if !ok || mc == nil {
 			return true
@@ -3754,7 +3754,7 @@ func (gs *LocalGovernanceStore) updateBudgetReferences(ctx context.Context, rese
 		}
 	}
 	// Update VKs that reference these budgets
-	gs.virtualKeys.Range(func(key, value interface{}) bool {
+	gs.virtualKeys.Range(func(key, value any) bool {
 		vk, ok := value.(*configstoreTables.TableVirtualKey)
 		if !ok || vk == nil {
 			return true // continue
@@ -3816,7 +3816,7 @@ func (gs *LocalGovernanceStore) updateBudgetReferences(ctx context.Context, rese
 		return true // continue
 	})
 	// Update teams that reference these budgets
-	gs.teams.Range(func(key, value interface{}) bool {
+	gs.teams.Range(func(key, value any) bool {
 		team, ok := value.(*configstoreTables.TableTeam)
 		if !ok || team == nil {
 			return true // continue
@@ -3842,7 +3842,7 @@ func (gs *LocalGovernanceStore) updateBudgetReferences(ctx context.Context, rese
 		return true // continue
 	})
 	// Update customers that own these budgets
-	gs.customers.Range(func(key, value interface{}) bool {
+	gs.customers.Range(func(key, value any) bool {
 		customer, ok := value.(*configstoreTables.TableCustomer)
 		if !ok || customer == nil {
 			return true // continue
@@ -3886,7 +3886,7 @@ func (gs *LocalGovernanceStore) updateRateLimitReferences(ctx context.Context, r
 		}
 	}
 	// Update VKs that reference these rate limits
-	gs.virtualKeys.Range(func(key, value interface{}) bool {
+	gs.virtualKeys.Range(func(key, value any) bool {
 		vk, ok := value.(*configstoreTables.TableVirtualKey)
 		if !ok || vk == nil {
 			return true // continue
@@ -3920,7 +3920,7 @@ func (gs *LocalGovernanceStore) updateRateLimitReferences(ctx context.Context, r
 		return true // continue
 	})
 	// Update teams that reference these rate limits
-	gs.teams.Range(func(key, value interface{}) bool {
+	gs.teams.Range(func(key, value any) bool {
 		team, ok := value.(*configstoreTables.TableTeam)
 		if !ok || team == nil {
 			return true // continue
@@ -3935,7 +3935,7 @@ func (gs *LocalGovernanceStore) updateRateLimitReferences(ctx context.Context, r
 		return true // continue
 	})
 	// Update customers that reference these rate limits
-	gs.customers.Range(func(key, value interface{}) bool {
+	gs.customers.Range(func(key, value any) bool {
 		customer, ok := value.(*configstoreTables.TableCustomer)
 		if !ok || customer == nil {
 			return true // continue
@@ -3955,7 +3955,7 @@ func (gs *LocalGovernanceStore) updateRateLimitReferences(ctx context.Context, r
 // Quick check to determine if we need to run routing evaluation at all
 func (gs *LocalGovernanceStore) HasRoutingRules(ctx context.Context) bool {
 	hasAny := false
-	gs.routingRules.Range(func(_, _ interface{}) bool {
+	gs.routingRules.Range(func(_, _ any) bool {
 		hasAny = true
 		return false // stop after first entry
 	})
@@ -3967,7 +3967,7 @@ func (gs *LocalGovernanceStore) GetAllRoutingRules(ctx context.Context) []*confi
 	var result []*configstoreTables.TableRoutingRule
 
 	// Iterate through all cached rules
-	gs.routingRules.Range(func(_, value interface{}) bool {
+	gs.routingRules.Range(func(_, value any) bool {
 		rules, ok := value.([]*configstoreTables.TableRoutingRule)
 		if !ok {
 			return true
@@ -4252,7 +4252,7 @@ func (gs *LocalGovernanceStore) UpdateRoutingRuleInMemory(ctx context.Context, r
 		return fmt.Errorf("routing rule cannot be nil")
 	}
 	// First, remove the rule from ALL scopes (in case it was moved from one scope to another)
-	gs.routingRules.Range(func(key, value interface{}) bool {
+	gs.routingRules.Range(func(key, value any) bool {
 		rules, ok := value.([]*configstoreTables.TableRoutingRule)
 		if !ok {
 			return true
@@ -4314,7 +4314,7 @@ func (gs *LocalGovernanceStore) UpdateRoutingRuleInMemory(ctx context.Context, r
 // DeleteRoutingRuleInMemory removes a routing rule from the in-memory cache
 func (gs *LocalGovernanceStore) DeleteRoutingRuleInMemory(ctx context.Context, id string) error {
 	// Loop over all rules and delete the one with the matching id
-	gs.routingRules.Range(func(key, value interface{}) bool {
+	gs.routingRules.Range(func(key, value any) bool {
 		rules, ok := value.([]*configstoreTables.TableRoutingRule)
 		if !ok {
 			return true

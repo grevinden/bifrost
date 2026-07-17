@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // getKeysFromMap returns the keys of a map[string]bool as a slice
@@ -50,11 +50,11 @@ func RunMultipleToolCallsTest(t *testing.T, client *bifrost.Bifrost, ctx context
 		retryConfig := MultiToolRetryConfig(2, []string{"weather", "calculate"})
 		retryContext := TestRetryContext{
 			ScenarioName: "MultipleToolCalls",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"expected_tool_count": 2,
 				"should_handle_both":  true,
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider": testConfig.Provider,
 				"model":    testConfig.ChatModel,
 			},
@@ -82,7 +82,7 @@ func RunMultipleToolCallsTest(t *testing.T, client *bifrost.Bifrost, ctx context
 				Model:    testConfig.ChatModel,
 				Params: &schemas.ChatParameters{
 					Tools:             []schemas.ChatTool{*chatWeatherTool, *chatCalculatorTool},
-					ParallelToolCalls: schemas.Ptr(true),
+					ParallelToolCalls: new(true),
 				},
 				Fallbacks: testConfig.Fallbacks,
 			}
@@ -97,7 +97,7 @@ func RunMultipleToolCallsTest(t *testing.T, client *bifrost.Bifrost, ctx context
 				Model:    testConfig.ChatModel,
 				Params: &schemas.ResponsesParameters{
 					Tools:             []schemas.ResponsesTool{*responsesWeatherTool, *responsesCalculatorTool},
-					ParallelToolCalls: schemas.Ptr(true),
+					ParallelToolCalls: new(true),
 				},
 				Fallbacks: testConfig.Fallbacks,
 			}
@@ -214,9 +214,9 @@ func RunMultipleToolCallsTest(t *testing.T, client *bifrost.Bifrost, ctx context
 			Model:    testConfig.ChatModel,
 			Input:    chatMessages,
 			Params: &schemas.ChatParameters{
-				MaxCompletionTokens: bifrost.Ptr(200),
+				MaxCompletionTokens: new(200),
 				Tools:               []schemas.ChatTool{*chatWeatherTool, *chatCalculatorTool},
-				ParallelToolCalls:   schemas.Ptr(true),
+				ParallelToolCalls:   new(true),
 			},
 			Fallbacks: testConfig.Fallbacks,
 		}
@@ -224,11 +224,11 @@ func RunMultipleToolCallsTest(t *testing.T, client *bifrost.Bifrost, ctx context
 		retryConfig := MultiToolRetryConfig(2, []string{"weather", "calculate"})
 		retryContext := TestRetryContext{
 			ScenarioName: "MultipleToolCallsStreamingChatCompletions",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"expected_tool_count": 2,
 				"should_handle_both":  true,
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider": testConfig.Provider,
 				"model":    testConfig.ChatModel,
 			},
@@ -365,7 +365,7 @@ func RunMultipleToolCallsTest(t *testing.T, client *bifrost.Bifrost, ctx context
 			Input:    responsesMessages,
 			Params: &schemas.ResponsesParameters{
 				Tools:             []schemas.ResponsesTool{*responsesWeatherTool, *responsesCalculatorTool},
-				ParallelToolCalls: schemas.Ptr(true),
+				ParallelToolCalls: new(true),
 			},
 			Fallbacks: testConfig.Fallbacks,
 		}
@@ -373,11 +373,11 @@ func RunMultipleToolCallsTest(t *testing.T, client *bifrost.Bifrost, ctx context
 		retryConfig := MultiToolRetryConfig(2, []string{"weather", "calculate"})
 		retryContext := TestRetryContext{
 			ScenarioName: "MultipleToolCallsStreamingResponses",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"expected_tool_count": 2,
 				"should_handle_both":  true,
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider": testConfig.Provider,
 				"model":    testConfig.ChatModel,
 			},

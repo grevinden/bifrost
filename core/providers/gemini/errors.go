@@ -4,8 +4,8 @@ import (
 	"strconv"
 	"strings"
 
-	providerUtils "github.com/maximhq/bifrost/core/providers/utils"
-	"github.com/maximhq/bifrost/core/schemas"
+	providerUtils "github.com/grevinden/bifrost/core/providers/utils"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/valyala/fasthttp"
 )
 
@@ -58,9 +58,9 @@ func parseGeminiError(resp *fasthttp.Response) *schemas.BifrostError {
 		}
 		// Set Code from first error if available
 		if firstError != nil {
-			bifrostErr.Error.Code = schemas.Ptr(strconv.Itoa(firstError.Code))
+			bifrostErr.Error.Code = new(strconv.Itoa(firstError.Code))
 			if firstError.Status != "" {
-				bifrostErr.Error.Type = schemas.Ptr(firstError.Status)
+				bifrostErr.Error.Type = new(firstError.Status)
 			}
 		}
 		// Set Message to trimmed concatenated message
@@ -75,10 +75,10 @@ func parseGeminiError(resp *fasthttp.Response) *schemas.BifrostError {
 		if bifrostErr.Error == nil {
 			bifrostErr.Error = &schemas.ErrorField{}
 		}
-		bifrostErr.Error.Code = schemas.Ptr(strconv.Itoa(errorResp.Error.Code))
+		bifrostErr.Error.Code = new(strconv.Itoa(errorResp.Error.Code))
 		bifrostErr.Error.Message = errorResp.Error.Message
 		if errorResp.Error.Status != "" {
-			bifrostErr.Error.Type = schemas.Ptr(errorResp.Error.Status)
+			bifrostErr.Error.Type = new(errorResp.Error.Status)
 		}
 	}
 	return bifrostErr

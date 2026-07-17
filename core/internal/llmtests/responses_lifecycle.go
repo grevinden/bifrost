@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // RunResponsesLifecycleTest exercises OpenAI Responses API lifecycle: create with store,
@@ -32,7 +32,7 @@ func RunResponsesLifecycleTest(t *testing.T, client *bifrost.Bifrost, ctx contex
 			{
 				Role: schemas.Ptr(schemas.ResponsesInputMessageRoleUser),
 				Content: &schemas.ResponsesMessageContent{
-					ContentStr: schemas.Ptr("Reply with exactly: lifecycle-ok"),
+					ContentStr: new("Reply with exactly: lifecycle-ok"),
 				},
 			},
 		},
@@ -70,7 +70,7 @@ func RunResponsesLifecycleTest(t *testing.T, client *bifrost.Bifrost, ctx contex
 	items, err := client.ResponsesInputItemsRequest(bfCtx, &schemas.BifrostResponsesInputItemsRequest{
 		Provider:   testConfig.Provider,
 		ResponseID: rid,
-		Limit:      schemas.Ptr(20),
+		Limit:      new(20),
 	})
 	if err != nil {
 		t.Fatalf("input_items: %v", err)

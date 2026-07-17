@@ -11,9 +11,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/maximhq/bifrost/core/providers/openai"
-	providerUtils "github.com/maximhq/bifrost/core/providers/utils"
-	schemas "github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/providers/openai"
+	providerUtils "github.com/grevinden/bifrost/core/providers/utils"
+	schemas "github.com/grevinden/bifrost/core/schemas"
 	"github.com/valyala/fasthttp"
 )
 
@@ -283,7 +283,7 @@ func (provider *VLLMProvider) callVLLMRerankEndpoint(
 	request *schemas.BifrostRerankRequest,
 	endpointPath string,
 	jsonData []byte,
-) (map[string]interface{}, interface{}, interface{}, []byte, int, time.Duration, *schemas.BifrostError) {
+) (map[string]any, any, any, []byte, int, time.Duration, *schemas.BifrostError) {
 	baseURL, bifrostErr := provider.baseURLOrError(key)
 	if bifrostErr != nil {
 		return nil, nil, nil, nil, 0, 0, bifrostErr
@@ -328,7 +328,7 @@ func (provider *VLLMProvider) callVLLMRerankEndpoint(
 	sendBackRawRequest := providerUtils.ShouldSendBackRawRequest(ctx, provider.sendBackRawRequest)
 	sendBackRawResponse := providerUtils.ShouldSendBackRawResponse(ctx, provider.sendBackRawResponse)
 
-	responsePayload := make(map[string]interface{})
+	responsePayload := make(map[string]any)
 	rawRequest, rawResponse, bifrostErr := HandleVLLMResponse(body, &responsePayload, jsonData, sendBackRawRequest, sendBackRawResponse)
 	if bifrostErr != nil {
 		return nil, nil, nil, body, statusCode, latency, bifrostErr
@@ -443,7 +443,7 @@ func (provider *VLLMProvider) TranscriptionStream(ctx *schemas.BifrostContext, p
 		if reqBody == nil {
 			return nil, providerUtils.NewBifrostOperationError("transcription input is not provided", nil)
 		}
-		reqBody.Stream = schemas.Ptr(true)
+		reqBody.Stream = new(true)
 
 		// Create multipart form
 		var body bytes.Buffer

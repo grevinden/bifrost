@@ -5,10 +5,10 @@ import (
 
 	"github.com/bytedance/sonic"
 	"github.com/fasthttp/router"
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/configstore"
-	"github.com/maximhq/bifrost/framework/featureflags"
-	"github.com/maximhq/bifrost/transports/bifrost-http/lib"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/configstore"
+	"github.com/grevinden/bifrost/framework/featureflags"
+	"github.com/grevinden/bifrost/transports/bifrost-http/lib"
 	"github.com/valyala/fasthttp"
 )
 

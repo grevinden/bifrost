@@ -3,7 +3,7 @@ package openai
 import (
 	"testing"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // TestToOpenAIResponsesRequest_DropsAdvisorTool verifies the Anthropic-only

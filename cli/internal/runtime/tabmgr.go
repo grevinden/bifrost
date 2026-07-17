@@ -430,10 +430,7 @@ func (tm *TabManager) readPTY(tab *Tab) {
 			screenChanged := false
 			if len(data) > 0 {
 				if idx := lastCursorShowIndex(data); idx >= 0 {
-					showEnd := idx + len("\x1b[?25h")
-					if showEnd > len(data) {
-						showEnd = len(data)
-					}
+					showEnd := min(idx+len("\x1b[?25h"), len(data))
 
 					// Capture the child's intended cursor position at the exact
 					// moment it shows the cursor, before any later bytes in the
@@ -841,8 +838,8 @@ func isPrefixSequence(seq []byte) bool {
 // isReleaseEvent checks if a kitty keyboard protocol modifier field indicates
 // a key release event (event_type 3, encoded as ":3" suffix).
 func isReleaseEvent(modField string) bool {
-	if idx := strings.IndexByte(modField, ':'); idx >= 0 {
-		return modField[idx+1:] == "3"
+	if _, after, ok := strings.Cut(modField, ":"); ok {
+		return after == "3"
 	}
 	return false
 }
@@ -1027,8 +1024,8 @@ func decodeCSIu(seq []byte) []byte {
 	if len(parts) >= 2 {
 		modField := parts[1]
 		// Check for release event type (:3)
-		if idx := strings.IndexByte(modField, ':'); idx >= 0 {
-			if evtStr := modField[idx+1:]; evtStr == "3" {
+		if _, after, ok := strings.Cut(modField, ":"); ok {
+			if evtStr := after; evtStr == "3" {
 				return nil // drop release events
 			}
 		}
@@ -1272,10 +1269,9 @@ func (tm *TabManager) adjustScrollOffset(delta int) {
 	if tab.sb != nil {
 		sbLen = tab.sb.length()
 	}
-	maxOffset := sbLen // can scroll up until the top of scrollback reaches the top of the view
-	if maxOffset < 0 {
-		maxOffset = 0
-	}
+	maxOffset := max(
+		// can scroll up until the top of scrollback reaches the top of the view
+		sbLen, 0)
 
 	tm.mu.Lock()
 	newOffset := tm.scrollOffset + delta
@@ -1307,10 +1303,7 @@ func (tm *TabManager) handleScrollKey(token []byte) bool {
 	if contentRows < 1 {
 		contentRows = 1
 	}
-	page := contentRows - 1
-	if page < 1 {
-		page = 1
-	}
+	page := max(contentRows-1, 1)
 
 	// Single-byte tokens.
 	if len(token) == 1 {
@@ -1712,10 +1705,7 @@ func (tm *TabManager) drawHomeOverlay() {
 		detail = "Press Ctrl+C again to quit, or Esc to cancel"
 	}
 
-	row := rows / 2
-	if row < 1 {
-		row = 1
-	}
+	row := max(rows/2, 1)
 	var b strings.Builder
 	fmt.Fprintf(&b, "\x1b[%d;%dH\x1b[1;36m%s\x1b[0m", row, centerColumn(cols, message), message)
 	fmt.Fprintf(&b, "\x1b[%d;%dH\x1b[2m%s\x1b[0m", row+1, centerColumn(cols, detail), detail)
@@ -2231,10 +2221,7 @@ func (tm *TabManager) renderFrame() {
 	cols := int(tm.cols)
 	tm.mu.Unlock()
 
-	contentRows := rows - 1
-	if contentRows < 1 {
-		contentRows = 1
-	}
+	contentRows := max(rows-1, 1)
 
 	// Read screen state from VT emulator under its lock.
 	// When cursor is visible, save its position — this is the child's
@@ -2339,13 +2326,13 @@ func renderVTScreen(vt vt10x.View, cols, rows int) string {
 	var prevMode int16
 	firstCell := true
 
-	for y := 0; y < rows; y++ {
+	for y := range rows {
 		if y > 0 {
 			b.WriteString("\x1b[0m\r\n")
 			prevFG, prevBG, prevMode = 0, 0, 0
 			firstCell = true
 		}
-		for x := 0; x < cols; x++ {
+		for x := range cols {
 			if y < vtRows && x < vtCols {
 				g := vt.Cell(x, y)
 
@@ -2393,10 +2380,7 @@ func (tm *TabManager) renderCommandPopup(rows, cols int) string {
 		selected = maxSelection
 	}
 
-	width := 56
-	if cols-4 < width {
-		width = cols - 4
-	}
+	width := min(cols-4, 56)
 	// Only enforce the 28-column minimum when the pane can fit it; otherwise
 	// clamp to the available width so the overlay never overflows a tiny pane.
 	if cols >= 32 && width < 28 {
@@ -2406,10 +2390,7 @@ func (tm *TabManager) renderCommandPopup(rows, cols int) string {
 		width = 1
 	}
 
-	maxTabRows := 9
-	if len(tabs) < maxTabRows {
-		maxTabRows = len(tabs)
-	}
+	maxTabRows := min(len(tabs), 9)
 	bodyRows := maxTabRows + 1
 	height := bodyRows + 4
 	contentRows := rows - 1
@@ -2433,21 +2414,12 @@ func (tm *TabManager) renderCommandPopup(rows, cols int) string {
 	}
 
 	inner := width - 2
-	visibleTabs := height - 5
-	if visibleTabs < 0 {
-		visibleTabs = 0
-	}
-	if visibleTabs > len(tabs) {
-		visibleTabs = len(tabs)
-	}
+	visibleTabs := min(max(height-5, 0), len(tabs))
 	start := 0
 	if selected < len(tabs) && visibleTabs > 0 {
 		start, _ = commandPopupScrollWindow(selected, len(tabs), visibleTabs)
 	}
-	end := start + visibleTabs
-	if end > len(tabs) {
-		end = len(tabs)
-	}
+	end := min(start+visibleTabs, len(tabs))
 
 	var b strings.Builder
 	writeAt := func(row int, text string) {
@@ -2528,10 +2500,7 @@ func commandPopupScrollWindow(cursor, total, maxVisible int) (start, end int) {
 		return 0, total
 	}
 	half := maxVisible / 2
-	start = cursor - half
-	if start < 0 {
-		start = 0
-	}
+	start = max(cursor-half, 0)
 	end = start + maxVisible
 	if end > total {
 		end = total
@@ -2702,7 +2671,7 @@ func hashVTScreen(vt vt10x.Terminal) uint64 {
 
 	var buf [8]byte
 	writeUint64 := func(v uint64) {
-		for i := 0; i < 8; i++ {
+		for i := range 8 {
 			buf[i] = byte(v >> (8 * i))
 		}
 		_, _ = h.Write(buf[:])
@@ -2718,8 +2687,8 @@ func hashVTScreen(vt vt10x.Terminal) uint64 {
 		_, _ = h.Write([]byte{0})
 	}
 
-	for y := 0; y < rows; y++ {
-		for x := 0; x < cols; x++ {
+	for y := range rows {
+		for x := range cols {
 			g := vt.Cell(x, y)
 			writeUint64(uint64(g.Char))
 			writeUint64(uint64(g.FG))
@@ -2818,10 +2787,7 @@ func (tm *TabManager) buildTabBarString() string {
 		hint += " Esc:resume "
 	}
 	contentWidth := tm.tabBarContentWidth(tabs)
-	availableHint := cols - contentWidth - len(versionLabel)
-	if availableHint < 0 {
-		availableHint = 0
-	}
+	availableHint := max(cols-contentWidth-len(versionLabel), 0)
 	hint = truncateCells(hint, availableHint)
 	used := contentWidth + len(hint) + len(versionLabel)
 	if cols > used {

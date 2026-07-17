@@ -9,9 +9,9 @@ import (
 	"testing"
 	"time"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/configstore/tables"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/configstore/tables"
 	"github.com/stretchr/testify/require"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -48,7 +48,7 @@ func TestPostgresRoutingRuleUpdateDeleteDoesNotDeadlock(t *testing.T) {
 	ctx := context.Background()
 	installRoutingRuleDeadlockAmplifier(t, store.DB())
 
-	for i := 0; i < 25; i++ {
+	for i := range 25 {
 		ruleID := fmt.Sprintf("route-deadlock-%02d", i)
 		require.NoError(t, store.CreateRoutingRule(ctx, routingRuleFixture(ruleID, i, "openai")))
 
@@ -91,7 +91,7 @@ func TestPostgresProviderGraphConcurrentMutationsDoNotDeadlock(t *testing.T) {
 
 	require.NoError(t, seedProviderGraph(ctx, store))
 
-	for i := 0; i < 20; i++ {
+	for i := range 20 {
 		start := make(chan struct{})
 		errs := make(chan error, 3)
 		var wg sync.WaitGroup
@@ -138,7 +138,7 @@ func TestPostgresVirtualKeyBudgetConcurrentMutationsDoNotDeadlock(t *testing.T) 
 	ctx := context.Background()
 	vkID, budgetID := seedVirtualKeyBudget(ctx, t, store)
 
-	for i := 0; i < 30; i++ {
+	for i := range 30 {
 		start := make(chan struct{})
 		errs := make(chan error, 3)
 		var wg sync.WaitGroup
@@ -163,7 +163,7 @@ func TestPostgresVirtualKeyBudgetConcurrentMutationsDoNotDeadlock(t *testing.T) 
 					ID:       vkID,
 					Name:     "PG VK Budget",
 					Value:    *schemas.NewSecretVar("pg-vk-budget-value"),
-					IsActive: schemas.Ptr(true),
+					IsActive: new(true),
 				}, tx); err != nil {
 					return err
 				}
@@ -248,7 +248,7 @@ func seedProviderGraph(ctx context.Context, store *RDBConfigStore) error {
 		ID:       "pg-vk",
 		Name:     "PG VK",
 		Value:    *schemas.NewSecretVar(fmt.Sprintf("pg-vk-value-%d", time.Now().UnixNano())),
-		IsActive: schemas.Ptr(true),
+		IsActive: new(true),
 	}); err != nil && !isUniqueRace(err) {
 		return err
 	}
@@ -272,7 +272,7 @@ func seedVirtualKeyBudget(ctx context.Context, t *testing.T, store *RDBConfigSto
 		ID:       vkID,
 		Name:     "PG VK Budget",
 		Value:    *schemas.NewSecretVar("pg-vk-budget-value"),
-		IsActive: schemas.Ptr(true),
+		IsActive: new(true),
 	}))
 	require.NoError(t, store.CreateBudget(ctx, &tables.TableBudget{
 		ID:            budgetID,

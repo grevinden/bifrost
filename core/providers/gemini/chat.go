@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // ToGeminiChatCompletionRequest converts a BifrostChatRequest to Gemini's generation request format for chat completion
@@ -212,7 +212,7 @@ func (response *GenerateContentResponse) ToBifrostChatResponse() *schemas.Bifros
 						Index:     len(reasoningDetails),
 						Type:      schemas.BifrostReasoningDetailsTypeEncrypted,
 						Signature: &thoughtSig,
-						ID:        schemas.Ptr(fmt.Sprintf("tool_call_%s", baseCallID)),
+						ID:        new(fmt.Sprintf("tool_call_%s", baseCallID)),
 					})
 				}
 			}
@@ -456,7 +456,7 @@ func (response *GenerateContentResponse) ToBifrostChatCompletionStream(state *Ge
 						Index:     len(reasoningDetails),
 						Type:      schemas.BifrostReasoningDetailsTypeEncrypted,
 						Signature: &thoughtSig,
-						ID:        schemas.Ptr(fmt.Sprintf("tool_call_%s", baseCallID)),
+						ID:        new(fmt.Sprintf("tool_call_%s", baseCallID)),
 					})
 				}
 
@@ -583,11 +583,11 @@ func convertGroundingMetadataToChatAnnotations(metadata *GroundingMetadata) []sc
 					StartIndex: int(support.Segment.StartIndex),
 					EndIndex:   int(support.Segment.EndIndex),
 					Title:      chunk.Web.Title,
-					URL:        schemas.Ptr(chunk.Web.URI),
+					URL:        new(chunk.Web.URI),
 				},
 			}
 			if support.Segment.Text != "" {
-				annotation.URLCitation.Text = schemas.Ptr(support.Segment.Text)
+				annotation.URLCitation.Text = new(support.Segment.Text)
 			}
 			annotations = append(annotations, annotation)
 		}

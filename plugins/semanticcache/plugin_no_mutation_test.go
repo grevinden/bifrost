@@ -8,9 +8,9 @@ import (
 	"sync"
 	"testing"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/vectorstore"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/vectorstore"
 )
 
 // requestCapturer is an LLMPlugin that records the request it sees in
@@ -132,19 +132,19 @@ func TestCachingDoesNotMutateRequestSentToProvider(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleSystem,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: bifrost.Ptr(systemContent),
+					ContentStr: new(systemContent),
 				},
 			},
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: bifrost.Ptr(userContent),
+					ContentStr: new(userContent),
 				},
 			},
 		},
 		Params: &schemas.ChatParameters{
-			Temperature:         bifrost.Ptr(0.0),
-			MaxCompletionTokens: bifrost.Ptr(5),
+			Temperature:         new(0.0),
+			MaxCompletionTokens: new(5),
 		},
 	}
 

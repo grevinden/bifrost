@@ -9,9 +9,9 @@ import (
 
 	"github.com/bytedance/sonic"
 	"github.com/google/uuid"
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
-	configstoreTables "github.com/maximhq/bifrost/framework/configstore/tables"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
+	configstoreTables "github.com/grevinden/bifrost/framework/configstore/tables"
 	"github.com/valyala/fasthttp"
 )
 
@@ -186,7 +186,7 @@ func (e *AsyncJobExecutor) executeJob(jobID string, resultTTL int, operation Asy
 		if bifrostErr.StatusCode != nil {
 			statusCode = *bifrostErr.StatusCode
 		}
-		if err := e.logstore.UpdateAsyncJob(ctx, jobID, map[string]interface{}{
+		if err := e.logstore.UpdateAsyncJob(ctx, jobID, map[string]any{
 			"status":       schemas.AsyncJobStatusFailed,
 			"status_code":  statusCode,
 			"error":        string(errJSON),
@@ -204,7 +204,7 @@ func (e *AsyncJobExecutor) executeJob(jobID string, resultTTL int, operation Asy
 		markFailed(fmt.Sprintf("failed to serialize result: %v", err))
 		return
 	}
-	if err := e.logstore.UpdateAsyncJob(ctx, jobID, map[string]interface{}{
+	if err := e.logstore.UpdateAsyncJob(ctx, jobID, map[string]any{
 		"status":       schemas.AsyncJobStatusCompleted,
 		"status_code":  fasthttp.StatusOK,
 		"response":     string(respJSON),

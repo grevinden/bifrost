@@ -13,13 +13,13 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/configstore"
-	configstoreTables "github.com/maximhq/bifrost/framework/configstore/tables"
-	"github.com/maximhq/bifrost/framework/mcpcatalog"
-	"github.com/maximhq/bifrost/framework/modelcatalog"
-	"github.com/maximhq/bifrost/plugins/governance/complexity"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/configstore"
+	configstoreTables "github.com/grevinden/bifrost/framework/configstore/tables"
+	"github.com/grevinden/bifrost/framework/mcpcatalog"
+	"github.com/grevinden/bifrost/framework/modelcatalog"
+	"github.com/grevinden/bifrost/plugins/governance/complexity"
 )
 
 // PluginName is the name of the governance plugin
@@ -1370,9 +1370,7 @@ func (p *GovernancePlugin) PostLLMHook(ctx *schemas.BifrostContext, result *sche
 		// Set by core on every retry iteration.
 		attemptNumber := bifrost.GetIntFromContext(ctx, schemas.BifrostContextKeyNumberOfRetries)
 
-		p.wg.Add(1)
-		go func() {
-			defer p.wg.Done()
+		p.wg.Go(func() {
 			// Recover so a billing panic (e.g. an unexpected nil deref) can never
 			// crash the process and lose in-memory counters.
 			defer func() {
@@ -1382,7 +1380,7 @@ func (p *GovernancePlugin) PostLLMHook(ctx *schemas.BifrostContext, result *sche
 			}()
 			// Use the requested model for usage tracking
 			p.postHookWorker(result, err, provider, requestedModel, requestType, effectiveVK, requestID, userID, isFinalChunk, attemptNumber, pricingScopes)
-		}()
+		})
 	}
 
 	return result, err, nil
@@ -1444,8 +1442,8 @@ func (p *GovernancePlugin) PreMCPHook(ctx *schemas.BifrostContext, req *schemas.
 			// VK became invalid after initial check - fail closed for security
 			ctx.SetValue(governanceRejectedContextKey, true)
 			return req, &schemas.MCPPluginShortCircuit{Error: &schemas.BifrostError{
-				Type:       bifrost.Ptr(string(DecisionVirtualKeyNotFound)),
-				StatusCode: bifrost.Ptr(403),
+				Type:       new(string(DecisionVirtualKeyNotFound)),
+				StatusCode: new(403),
 				Error: &schemas.ErrorField{
 					Message: "Virtual key not found",
 				},
@@ -1454,8 +1452,8 @@ func (p *GovernancePlugin) PreMCPHook(ctx *schemas.BifrostContext, req *schemas.
 		if !vk.IsActiveValue() {
 			ctx.SetValue(governanceRejectedContextKey, true)
 			return req, &schemas.MCPPluginShortCircuit{Error: &schemas.BifrostError{
-				Type:       bifrost.Ptr(string(DecisionVirtualKeyBlocked)),
-				StatusCode: bifrost.Ptr(403),
+				Type:       new(string(DecisionVirtualKeyBlocked)),
+				StatusCode: new(403),
 				Error: &schemas.ErrorField{
 					Message: "Virtual key is inactive",
 				},
@@ -1464,8 +1462,8 @@ func (p *GovernancePlugin) PreMCPHook(ctx *schemas.BifrostContext, req *schemas.
 		if vk.IsExpiredAt(time.Now().UTC()) {
 			ctx.SetValue(governanceRejectedContextKey, true)
 			return req, &schemas.MCPPluginShortCircuit{Error: &schemas.BifrostError{
-				Type:       bifrost.Ptr(string(DecisionVirtualKeyBlocked)),
-				StatusCode: bifrost.Ptr(403),
+				Type:       new(string(DecisionVirtualKeyBlocked)),
+				StatusCode: new(403),
 				Error: &schemas.ErrorField{
 					Message: "Virtual key has expired",
 				},
@@ -1474,8 +1472,8 @@ func (p *GovernancePlugin) PreMCPHook(ctx *schemas.BifrostContext, req *schemas.
 		if !p.isMCPToolAllowedByVK(vk, toolName) {
 			ctx.SetValue(governanceRejectedContextKey, true)
 			return req, &schemas.MCPPluginShortCircuit{Error: &schemas.BifrostError{
-				Type:       bifrost.Ptr(string(DecisionMCPToolBlocked)),
-				StatusCode: bifrost.Ptr(403),
+				Type:       new(string(DecisionMCPToolBlocked)),
+				StatusCode: new(403),
 				Error: &schemas.ErrorField{
 					Message: fmt.Sprintf("MCP tool '%s' is not allowed for virtual key '%s'", toolName, vk.Name),
 				},
@@ -1558,11 +1556,9 @@ func (p *GovernancePlugin) PostMCPHook(ctx *schemas.BifrostContext, resp *schema
 	}
 
 	// Queue usage update asynchronously using tracker
-	p.wg.Add(1)
-	go func() {
-		defer p.wg.Done()
+	p.wg.Go(func() {
 		p.tracker.UpdateUsage(p.ctx, usageUpdate)
-	}()
+	})
 
 	return resp, bifrostErr, nil
 }

@@ -4,7 +4,7 @@ package tracing
 import (
 	"context"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // GetTraceID retrieves the trace ID from the context

@@ -4,10 +4,10 @@ import (
 	"context"
 	"testing"
 
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/configstore"
-	"github.com/maximhq/bifrost/framework/modelcatalog"
-	"github.com/maximhq/bifrost/transports/bifrost-http/lib"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/configstore"
+	"github.com/grevinden/bifrost/framework/modelcatalog"
+	"github.com/grevinden/bifrost/transports/bifrost-http/lib"
 )
 
 // TestConfig is a sample config struct for testing
@@ -132,8 +132,8 @@ func TestKeyEnabled(t *testing.T) {
 		want bool
 	}{
 		{"nil Enabled defaults to enabled", schemas.Key{}, true},
-		{"explicit true is enabled", schemas.Key{Enabled: schemas.Ptr(true)}, true},
-		{"explicit false is disabled", schemas.Key{Enabled: schemas.Ptr(false)}, false},
+		{"explicit true is enabled", schemas.Key{Enabled: new(true)}, true},
+		{"explicit false is disabled", schemas.Key{Enabled: new(false)}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -163,8 +163,8 @@ func TestRefreshLiveModelsForProvider_AllKeysDisabled(t *testing.T) {
 	}
 
 	keys := []schemas.Key{
-		{ID: "key-1", Enabled: schemas.Ptr(false)},
-		{ID: "key-2", Enabled: schemas.Ptr(false)},
+		{ID: "key-1", Enabled: new(false)},
+		{ID: "key-2", Enabled: new(false)},
 	}
 
 	// Must return without panicking: s.Client is nil, so any scheduled fetch
@@ -184,7 +184,7 @@ func TestOnKeyAdded_DisabledKeySkipsFetch(t *testing.T) {
 	logger = noopTestLogger{}
 	defer func() { logger = prevLogger }()
 
-	disabledKey := schemas.Key{ID: "key-1", Enabled: schemas.Ptr(false)}
+	disabledKey := schemas.Key{ID: "key-1", Enabled: new(false)}
 	server := &BifrostHTTPServer{
 		Config: &lib.Config{
 			ModelCatalog: modelcatalog.NewTestCatalog(nil),
@@ -216,7 +216,7 @@ func TestOnKeyUpdated_DisabledKeySkipsFetchButInvalidatesCache(t *testing.T) {
 	catalog := modelcatalog.NewTestCatalog(nil)
 	catalog.UpsertLive("custom-provider", "key-1", false, []string{"custom-provider/some-model"})
 
-	disabledKey := schemas.Key{ID: "key-1", Enabled: schemas.Ptr(false)}
+	disabledKey := schemas.Key{ID: "key-1", Enabled: new(false)}
 	server := &BifrostHTTPServer{
 		Config: &lib.Config{
 			ModelCatalog: catalog,

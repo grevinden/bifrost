@@ -3,7 +3,7 @@ package mcptests
 import (
 	"testing"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -49,9 +49,9 @@ func TestAgent_MixedPermissions_ThreeClients(t *testing.T) {
 
 	// Turn 1: LLM calls tools from all 3 clients
 	mocker.AddChatResponse(CreateAgentTurnWithToolCalls(
-		GetSampleEchoToolCall("call-1", "test"),                                                         // Auto-execute
-		CreateSTDIOToolCall("call-2", "GoTestServer", "uuid_generate", map[string]interface{}{}),        // Needs approval
-		CreateSTDIOToolCall("call-3", "ParallelTestServer", "fast_operation", map[string]interface{}{}), // Needs approval
+		GetSampleEchoToolCall("call-1", "test"),                                                 // Auto-execute
+		CreateSTDIOToolCall("call-2", "GoTestServer", "uuid_generate", map[string]any{}),        // Needs approval
+		CreateSTDIOToolCall("call-3", "ParallelTestServer", "fast_operation", map[string]any{}), // Needs approval
 	))
 
 	// Execute agent
@@ -179,7 +179,7 @@ func TestAgent_MixedPermissions_WildcardAutoExecute(t *testing.T) {
 	mocker.AddChatResponse(CreateAgentTurnWithToolCalls(
 		GetSampleEchoToolCall("call-1", "test"),
 		GetSampleCalculatorToolCall("call-2", "add", 5, 3),
-		CreateSTDIOToolCall("call-3", "GoTestServer", "uuid_generate", map[string]interface{}{}),
+		CreateSTDIOToolCall("call-3", "GoTestServer", "uuid_generate", map[string]any{}),
 	))
 
 	// Turn 2: Final text
@@ -242,11 +242,11 @@ func TestAgent_MixedPermissions_PartialExecution(t *testing.T) {
 
 	// Turn 1: LLM calls tools from all clients (5 tools total)
 	mocker.AddChatResponse(CreateAgentTurnWithToolCalls(
-		GetSampleEchoToolCall("call-1", "test"),                                                         // Auto (InProcess)
-		GetSampleCalculatorToolCall("call-2", "add", 1, 2),                                              // Auto (InProcess)
-		GetSampleWeatherToolCall("call-3", "Tokyo", "celsius"),                                          // Needs approval (InProcess)
-		CreateSTDIOToolCall("call-4", "GoTestServer", "uuid_generate", map[string]interface{}{}),        // Auto (STDIO)
-		CreateSTDIOToolCall("call-5", "ParallelTestServer", "fast_operation", map[string]interface{}{}), // Needs approval (STDIO)
+		GetSampleEchoToolCall("call-1", "test"),                                                 // Auto (InProcess)
+		GetSampleCalculatorToolCall("call-2", "add", 1, 2),                                      // Auto (InProcess)
+		GetSampleWeatherToolCall("call-3", "Tokyo", "celsius"),                                  // Needs approval (InProcess)
+		CreateSTDIOToolCall("call-4", "GoTestServer", "uuid_generate", map[string]any{}),        // Auto (STDIO)
+		CreateSTDIOToolCall("call-5", "ParallelTestServer", "fast_operation", map[string]any{}), // Needs approval (STDIO)
 	))
 
 	// Execute agent
@@ -331,9 +331,9 @@ func TestAgent_MixedPermissions_MultipleSTDIOSamePermissions(t *testing.T) {
 	// Turn 1: Call tools from all 4 clients (1 InProcess + 3 STDIO)
 	mocker.AddChatResponse(CreateAgentTurnWithToolCalls(
 		GetSampleEchoToolCall("call-1", "test"),
-		CreateSTDIOToolCall("call-2", "GoTestServer", "uuid_generate", map[string]interface{}{}),
-		CreateSTDIOToolCall("call-3", "ParallelTestServer", "fast_operation", map[string]interface{}{}),
-		CreateSTDIOToolCall("call-4", "ErrorTestServer", "return_error", map[string]interface{}{
+		CreateSTDIOToolCall("call-2", "GoTestServer", "uuid_generate", map[string]any{}),
+		CreateSTDIOToolCall("call-3", "ParallelTestServer", "fast_operation", map[string]any{}),
+		CreateSTDIOToolCall("call-4", "ErrorTestServer", "return_error", map[string]any{
 			"error_type": "standard",
 			"message":    "test error",
 		}),
@@ -457,11 +457,11 @@ func TestAgent_MixedPermissions_SpecificToolNames(t *testing.T) {
 
 	// Turn 1: Call mix of auto and non-auto tools
 	mocker.AddChatResponse(CreateAgentTurnWithToolCalls(
-		GetSampleEchoToolCall("call-1", "test"),                                                  // Auto
-		GetSampleCalculatorToolCall("call-2", "add", 1, 2),                                       // Needs approval
-		GetSampleWeatherToolCall("call-3", "Tokyo", "celsius"),                                   // Needs approval
-		CreateSTDIOToolCall("call-4", "GoTestServer", "uuid_generate", map[string]interface{}{}), // Auto
-		CreateSTDIOToolCall("call-5", "GoTestServer", "string_transform", map[string]interface{}{ // Needs approval
+		GetSampleEchoToolCall("call-1", "test"),                                          // Auto
+		GetSampleCalculatorToolCall("call-2", "add", 1, 2),                               // Needs approval
+		GetSampleWeatherToolCall("call-3", "Tokyo", "celsius"),                           // Needs approval
+		CreateSTDIOToolCall("call-4", "GoTestServer", "uuid_generate", map[string]any{}), // Auto
+		CreateSTDIOToolCall("call-5", "GoTestServer", "string_transform", map[string]any{ // Needs approval
 			"input":     "test",
 			"operation": "uppercase",
 		}),
@@ -528,13 +528,13 @@ func TestAgent_MixedPermissions_AllAutoExecute(t *testing.T) {
 	mocker.AddChatResponse(CreateAgentTurnWithToolCalls(
 		GetSampleEchoToolCall("call-1", "first"),
 		GetSampleCalculatorToolCall("call-2", "add", 10, 20),
-		CreateSTDIOToolCall("call-3", "GoTestServer", "uuid_generate", map[string]interface{}{}),
+		CreateSTDIOToolCall("call-3", "GoTestServer", "uuid_generate", map[string]any{}),
 	))
 
 	// Turn 2: Call more tools
 	mocker.AddChatResponse(CreateAgentTurnWithToolCalls(
 		GetSampleEchoToolCall("call-4", "second"),
-		CreateSTDIOToolCall("call-5", "GoTestServer", "string_transform", map[string]interface{}{
+		CreateSTDIOToolCall("call-5", "GoTestServer", "string_transform", map[string]any{
 			"input":     "hello",
 			"operation": "uppercase",
 		}),

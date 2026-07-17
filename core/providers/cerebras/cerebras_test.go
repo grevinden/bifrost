@@ -5,9 +5,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/maximhq/bifrost/core/internal/llmtests"
+	"github.com/grevinden/bifrost/core/internal/llmtests"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 func TestCerebras(t *testing.T) {

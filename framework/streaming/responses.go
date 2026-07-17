@@ -3,14 +3,15 @@ package streaming
 import (
 	"encoding/json"
 	"fmt"
+	"maps"
 	"sort"
 	"strings"
 	"time"
 
 	"github.com/bytedance/sonic"
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/modelcatalog"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/modelcatalog"
 )
 
 // deepCopyResponsesStreamResponse creates a deep copy of BifrostResponsesStreamResponse
@@ -374,9 +375,7 @@ func deepCopyResponsesMessage(original schemas.ResponsesMessage) schemas.Respons
 					// Deep copy Attributes map if present
 					if result.Attributes != nil {
 						copyAttrs := make(map[string]any, len(*result.Attributes))
-						for k, v := range *result.Attributes {
-							copyAttrs[k] = v
-						}
+						maps.Copy(copyAttrs, *result.Attributes)
 						copyResult.Attributes = &copyAttrs
 					}
 					copyToolCall.Results[i] = copyResult
@@ -992,10 +991,10 @@ func (a *Accumulator) processResponsesStreamingResponse(ctx *schemas.BifrostCont
 	chunk.ErrorDetails = bifrostErr
 
 	if bifrostErr != nil {
-		chunk.FinishReason = bifrost.Ptr("error")
+		chunk.FinishReason = new("error")
 		if bifrostErr.ExtraFields.RawResponse != nil {
 			if rawBytes, marshalErr := sonic.Marshal(bifrostErr.ExtraFields.RawResponse); marshalErr == nil {
-				chunk.RawResponse = bifrost.Ptr(string(rawBytes))
+				chunk.RawResponse = new(string(rawBytes))
 			}
 		}
 		// Assign a stable trailing index; reuse on duplicate plugin calls so dedup fires correctly.
@@ -1005,7 +1004,7 @@ func (a *Accumulator) processResponsesStreamingResponse(ctx *schemas.BifrostCont
 		accumulator.mu.Unlock()
 	} else if result != nil && result.ResponsesStreamResponse != nil {
 		if result.ResponsesStreamResponse.ExtraFields.RawResponse != nil {
-			chunk.RawResponse = bifrost.Ptr(fmt.Sprintf("%v", result.ResponsesStreamResponse.ExtraFields.RawResponse))
+			chunk.RawResponse = new(fmt.Sprintf("%v", result.ResponsesStreamResponse.ExtraFields.RawResponse))
 		}
 		// Store a deep copy of the stream response to prevent shared data mutation between plugins
 		chunk.StreamResponse = deepCopyResponsesStreamResponse(result.ResponsesStreamResponse)
@@ -1018,7 +1017,7 @@ func (a *Accumulator) processResponsesStreamingResponse(ctx *schemas.BifrostCont
 		if isFinalChunk {
 			if a.pricingManager != nil {
 				cost := a.pricingManager.CalculateCost(result, modelcatalog.PricingLookupScopesFromContext(ctx, string(result.GetExtraFields().Provider)))
-				chunk.Cost = bifrost.Ptr(cost)
+				chunk.Cost = new(cost)
 			}
 			chunk.SemanticCacheDebug = result.GetExtraFields().CacheDebug
 		}
@@ -1047,7 +1046,7 @@ func (a *Accumulator) processResponsesStreamingResponse(ctx *schemas.BifrostCont
 			return nil, processErr
 		}
 
-		var rawRequest interface{}
+		var rawRequest any
 		if result != nil && result.ResponsesStreamResponse != nil && result.ResponsesStreamResponse.ExtraFields.RawRequest != nil {
 			rawRequest = result.ResponsesStreamResponse.ExtraFields.RawRequest
 		}

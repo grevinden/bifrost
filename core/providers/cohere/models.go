@@ -4,23 +4,23 @@ import (
 	"encoding/json"
 	"strings"
 
-	providerUtils "github.com/maximhq/bifrost/core/providers/utils"
-	"github.com/maximhq/bifrost/core/schemas"
+	providerUtils "github.com/grevinden/bifrost/core/providers/utils"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // CohereRerankRequest represents a Cohere rerank API request.
 type CohereRerankRequest struct {
-	Model           string                 `json:"model"`
-	Query           string                 `json:"query"`
-	Documents       []string               `json:"documents"`
-	TopN            *int                   `json:"top_n,omitempty"`
-	MaxTokensPerDoc *int                   `json:"max_tokens_per_doc,omitempty"`
-	Priority        *int                   `json:"priority,omitempty"`
-	ExtraParams     map[string]interface{} `json:"-"`
+	Model           string         `json:"model"`
+	Query           string         `json:"query"`
+	Documents       []string       `json:"documents"`
+	TopN            *int           `json:"top_n,omitempty"`
+	MaxTokensPerDoc *int           `json:"max_tokens_per_doc,omitempty"`
+	Priority        *int           `json:"priority,omitempty"`
+	ExtraParams     map[string]any `json:"-"`
 }
 
 // GetExtraParams returns extra parameters for the rerank request.
-func (r *CohereRerankRequest) GetExtraParams() map[string]interface{} {
+func (r *CohereRerankRequest) GetExtraParams() map[string]any {
 	return r.ExtraParams
 }
 
@@ -73,12 +73,12 @@ func (response *CohereListModelsResponse) ToBifrostListModelsResponse(providerKe
 		for _, result := range pipeline.FilterModel(model.Name) {
 			entry := schemas.Model{
 				ID:               string(providerKey) + "/" + result.ResolvedID,
-				Name:             schemas.Ptr(model.Name),
-				ContextLength:    schemas.Ptr(int(model.ContextLength)),
+				Name:             new(model.Name),
+				ContextLength:    new(int(model.ContextLength)),
 				SupportedMethods: model.Endpoints,
 			}
 			if result.AliasValue != "" {
-				entry.Alias = schemas.Ptr(result.AliasValue)
+				entry.Alias = new(result.AliasValue)
 			}
 			bifrostResponse.Data = append(bifrostResponse.Data, entry)
 			included[strings.ToLower(result.ResolvedID)] = true

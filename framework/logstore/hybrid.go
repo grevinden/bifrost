@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/bytedance/sonic"
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/objectstore"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/objectstore"
 	"gorm.io/gorm"
 )
 
@@ -76,7 +76,7 @@ func newHybridLogStore(inner LogStore, objects objectstore.ObjectStore, prefix s
 		excludedPayloadFields: excluded,
 	}
 	// Start upload workers.
-	for i := 0; i < defaultUploadWorkers; i++ {
+	for range defaultUploadWorkers {
 		h.wg.Add(1)
 		go h.uploadWorker()
 	}
@@ -134,13 +134,13 @@ func (h *HybridLogStore) processUpload(work *uploadWork) {
 	// Mark the DB row as having an object. Use a fresh context so that a slow
 	// Put doesn't starve the DB update of its deadline. Retry up to 3 times
 	// with exponential backoff to avoid orphaning the uploaded object.
-	for attempt := 0; attempt < 3; attempt++ {
+	for attempt := range 3 {
 		dbCtx, dbCancel := context.WithTimeout(context.Background(), 10*time.Second)
 		var err error
 		if work.mcp {
-			err = h.inner.UpdateMCPToolLog(dbCtx, work.logID, map[string]interface{}{"has_object": true})
+			err = h.inner.UpdateMCPToolLog(dbCtx, work.logID, map[string]any{"has_object": true})
 		} else {
-			err = h.inner.Update(dbCtx, work.logID, map[string]interface{}{"has_object": true})
+			err = h.inner.Update(dbCtx, work.logID, map[string]any{"has_object": true})
 		}
 		dbCancel()
 		if err == nil {
@@ -797,7 +797,7 @@ func (h *HybridLogStore) GetMCPTopTools(ctx context.Context, filters MCPToolLogS
 // applyMCPToolLogUpdate applies the updates from an entry to the target MCPToolLog entry.
 func applyMCPToolLogUpdate(target *MCPToolLog, entry any) error {
 	switch v := entry.(type) {
-	case map[string]interface{}:
+	case map[string]any:
 		return applyMCPToolLogUpdateMap(target, v)
 	case *MCPToolLog:
 		if v == nil {
@@ -820,7 +820,7 @@ func applyMCPToolLogUpdate(target *MCPToolLog, entry any) error {
 }
 
 // applyMCPToolLogUpdateMap applies the updates from a map to the target MCPToolLog entry.
-func applyMCPToolLogUpdateMap(target *MCPToolLog, updates map[string]interface{}) error {
+func applyMCPToolLogUpdateMap(target *MCPToolLog, updates map[string]any) error {
 	for key, value := range updates {
 		switch key {
 		case "request_id":
@@ -941,8 +941,8 @@ func applyMCPToolLogUpdateStruct(target *MCPToolLog, update *MCPToolLog) error {
 // prepareMCPToolLogDBUpdates prepares a map of DB updates from a MCPToolLog entry.
 func prepareMCPToolLogDBUpdates(entry any) (map[string]any, error) {
 	switch v := entry.(type) {
-	case map[string]interface{}:
-		out := make(map[string]interface{}, len(v))
+	case map[string]any:
+		out := make(map[string]any, len(v))
 		for key, value := range v {
 			switch key {
 			case "has_object":
@@ -1225,7 +1225,7 @@ func (h *HybridLogStore) FindAsyncJobByID(ctx context.Context, id string) (*Asyn
 }
 
 // UpdateAsyncJob updates an async job with the given ID using the provided updates.
-func (h *HybridLogStore) UpdateAsyncJob(ctx context.Context, id string, updates map[string]interface{}) error {
+func (h *HybridLogStore) UpdateAsyncJob(ctx context.Context, id string, updates map[string]any) error {
 	return h.inner.UpdateAsyncJob(ctx, id, updates)
 }
 

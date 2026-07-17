@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"github.com/bytedance/sonic"
+	codemcp "github.com/grevinden/bifrost/core/mcp"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/mark3labs/mcp-go/client"
-	codemcp "github.com/maximhq/bifrost/core/mcp"
-	"github.com/maximhq/bifrost/core/schemas"
 	"go.starlark.net/starlark"
 	"go.starlark.net/syntax"
 )
@@ -99,7 +99,7 @@ func TestStarlarkToGo(t *testing.T) {
 			starlark.MakeInt(3),
 		})
 		result := starlarkToGo(list)
-		arr, ok := result.([]interface{})
+		arr, ok := result.([]any)
 		if !ok {
 			t.Errorf("Expected []interface{}, got %T", result)
 		}
@@ -117,7 +117,7 @@ func TestStarlarkToGo(t *testing.T) {
 		dict.SetKey(starlark.String("key2"), starlark.MakeInt(42))
 
 		result := starlarkToGo(dict)
-		m, ok := result.(map[string]interface{})
+		m, ok := result.(map[string]any)
 		if !ok {
 			t.Errorf("Expected map[string]interface{}, got %T", result)
 		}
@@ -168,7 +168,7 @@ func TestGoToStarlark(t *testing.T) {
 	})
 
 	t.Run("Convert slice", func(t *testing.T) {
-		result := goToStarlark([]interface{}{1, "two", 3.0})
+		result := goToStarlark([]any{1, "two", 3.0})
 		list, ok := result.(*starlark.List)
 		if !ok {
 			t.Errorf("Expected *starlark.List, got %T", result)
@@ -179,7 +179,7 @@ func TestGoToStarlark(t *testing.T) {
 	})
 
 	t.Run("Convert map", func(t *testing.T) {
-		result := goToStarlark(map[string]interface{}{
+		result := goToStarlark(map[string]any{
 			"key1": "value1",
 			"key2": 42,
 		})
@@ -252,7 +252,7 @@ func TestHandleListToolFilesUsesCanonicalToolIdentifiers(t *testing.T) {
 	}
 
 	msg, err := mode.handleListToolFiles(context.Background(), schemas.ChatAssistantMessageToolCall{
-		ID: schemas.Ptr("tool-call-1"),
+		ID: new("tool-call-1"),
 	})
 	if err != nil {
 		t.Fatalf("handleListToolFiles returned error: %v", err)
@@ -416,7 +416,7 @@ func TestExtractResultFromResponsesMessage(t *testing.T) {
 			t.Errorf("Unexpected error: %v", err)
 		}
 
-		resultMap, ok := result.(map[string]interface{})
+		resultMap, ok := result.(map[string]any)
 		if !ok {
 			t.Errorf("Expected map, got %T", result)
 		}
@@ -468,7 +468,7 @@ func TestExtractResultFromResponsesMessage(t *testing.T) {
 			t.Errorf("Unexpected error: %v", err)
 		}
 
-		resultMap, ok := result.(map[string]interface{})
+		resultMap, ok := result.(map[string]any)
 		if !ok {
 			t.Errorf("Expected map, got %T", result)
 		}
@@ -542,7 +542,7 @@ func TestExtractResultFromChatMessage(t *testing.T) {
 		}
 
 		result := extractResultFromChatMessage(msg)
-		resultMap, ok := result.(map[string]interface{})
+		resultMap, ok := result.(map[string]any)
 		if !ok {
 			t.Errorf("Expected map, got %T", result)
 		}
@@ -584,11 +584,11 @@ func TestFormatResultForLog(t *testing.T) {
 	})
 
 	t.Run("Format map result", func(t *testing.T) {
-		input := map[string]interface{}{"key": "value"}
+		input := map[string]any{"key": "value"}
 		result := formatResultForLog(input)
 
 		// Parse it back to verify it's valid JSON
-		var parsed map[string]interface{}
+		var parsed map[string]any
 		err := sonic.Unmarshal([]byte(result), &parsed)
 		if err != nil {
 			t.Errorf("Result is not valid JSON: %v", err)
@@ -600,12 +600,12 @@ func TestFormatResultForLog(t *testing.T) {
 	})
 
 	t.Run("Truncate long result", func(t *testing.T) {
-		longString := ""
-		for i := 0; i < 300; i++ {
-			longString += "a"
+		var longString strings.Builder
+		for range 300 {
+			longString.WriteString("a")
 		}
 
-		result := formatResultForLog(longString)
+		result := formatResultForLog(longString.String())
 		if len(result) > 200 {
 			// Should be truncated to around 200 chars (plus quotes and ellipsis)
 			t.Logf("Result length: %d (truncated as expected)", len(result))
@@ -852,7 +852,7 @@ result = "hello" + nl + "world"
 		// End-to-end: simulate the exact flow from model JSON → sonic.Unmarshal → Starlark
 		jsonArgs := `{"code": "lines = [\"a\", \"b\", \"c\"]\nresult = \"\\n\".join(lines)"}`
 
-		var arguments map[string]interface{}
+		var arguments map[string]any
 		err := sonic.Unmarshal([]byte(jsonArgs), &arguments)
 		if err != nil {
 			t.Fatalf("JSON unmarshal failed: %v", err)

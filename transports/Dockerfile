@@ -22,7 +22,7 @@
 
   # Install dependencies including gcc for CGO and sqlite (with latest security patches)
   RUN apk upgrade --no-cache && \
-    apk add --no-cache gcc musl-dev sqlite-dev binutils binutils-gold
+    apk add --no-cache gcc sqlite-dev
 
   # Set environment for CGO-enabled build (required for go-sqlite3)
   ENV CGO_ENABLED=1 GOOS=linux
@@ -37,13 +37,13 @@
 
   COPY --from=ui-builder /app/out ./bifrost-http/ui
 
-  # Build the binary with CGO enabled and static SQLite linking
+  # Build the binary with CGO enabled (dynamic linking)
   ENV GOWORK=off
   ARG VERSION=unknown
   RUN go build \
-    -ldflags="-w -s -X main.Version=v${VERSION} -extldflags '-static'" \
+    -ldflags="-w -s -X main.Version=v${VERSION}" \
     -a -trimpath \
-    -tags "sqlite_static" \
+    CGO_CFLAGS="-Wno-discarded-qualifiers" \
     -o /app/main \
     ./bifrost-http
 
@@ -54,12 +54,10 @@
   FROM alpine:3.23.4@sha256:5b10f432ef3da1b8d4c7eb6c487f2f5a8f096bc91145e68878dd4a5019afde11
   WORKDIR /app
 
-  # Install runtime dependencies for CGO-enabled binary
-  # musl: C standard library (required for CGO binaries)
-  # libgcc: GCC runtime library
+  # Install runtime dependencies for CGO-enabled binary (dynamic linking)
   # ca-certificates: For HTTPS connections
   RUN apk upgrade --no-cache && \
-    apk add --no-cache musl libgcc ca-certificates zlib
+    apk add --no-cache ca-certificates zlib
 
   # Create data directory and set up user
   COPY --from=builder /app/main .

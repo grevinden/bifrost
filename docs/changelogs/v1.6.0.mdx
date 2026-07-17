@@ -47,20 +47,20 @@ description: "v1.6.0 changelog - 2026-06-25"
 
 ## 🐙 Closed GitHub Issues
 
-- [#2347](https://github.com/maximhq/bifrost/issues/2347) — MCP tool ordering is non-deterministic, breaking prefix-based prompt caching
-- [#3443](https://github.com/maximhq/bifrost/issues/3443) — Anthropic→OpenAI streaming tool_call deltas violate OpenAI spec on continuation chunks
-- [#4068](https://github.com/maximhq/bifrost/issues/4068) — Bedrock: mid-conversation system messages hoisted into top-level `system` block break prompt caching
-- [#4413](https://github.com/maximhq/bifrost/issues/4413) — OpenAI Responses streaming returns empty `error.message` on context_length_exceeded
-- [#4460](https://github.com/maximhq/bifrost/issues/4460) — GLM-5.2 `reasoning_effort` "max" silently downgraded to "high"
-- [#4496](https://github.com/maximhq/bifrost/issues/4496) — Frequent intermittent broken pipe / closed connection errors with vllm provider
-- [#4544](https://github.com/maximhq/bifrost/issues/4544) — Cerebras + `/anthropic` endpoint fails after first turn with 400 provider API error
-- [#4606](https://github.com/maximhq/bifrost/issues/4606) — Realtime socket request observability logs not recorded since v1.5.2
-- [#4608](https://github.com/maximhq/bifrost/issues/4608) — ResponsesMessage drops author/recipient/encrypted_content, breaking Codex multi_agent_v2 subagent spawning
-- [#4617](https://github.com/maximhq/bifrost/issues/4617) — idle-timeout timer goroutine can panic in `closeBodyStream` and crash the process
-- [#4622](https://github.com/maximhq/bifrost/issues/4622) — Bedrock Converse document blocks with format xlsx/xls/doc/docx silently rewritten to pdf
-- [#4627](https://github.com/maximhq/bifrost/issues/4627) — Gemini video reference fields sent under `parameters`
-- [#4640](https://github.com/maximhq/bifrost/issues/4640) — provider config `key_ids:["*"]` not synced to `allow_all_keys` for existing virtual keys
-- [#4648](https://github.com/maximhq/bifrost/issues/4648) — `PUT /api/providers/{provider}` silently discards `payload.Keys`
+- [#2347](https://github.com/grevinden/bifrost/issues/2347) — MCP tool ordering is non-deterministic, breaking prefix-based prompt caching
+- [#3443](https://github.com/grevinden/bifrost/issues/3443) — Anthropic→OpenAI streaming tool_call deltas violate OpenAI spec on continuation chunks
+- [#4068](https://github.com/grevinden/bifrost/issues/4068) — Bedrock: mid-conversation system messages hoisted into top-level `system` block break prompt caching
+- [#4413](https://github.com/grevinden/bifrost/issues/4413) — OpenAI Responses streaming returns empty `error.message` on context_length_exceeded
+- [#4460](https://github.com/grevinden/bifrost/issues/4460) — GLM-5.2 `reasoning_effort` "max" silently downgraded to "high"
+- [#4496](https://github.com/grevinden/bifrost/issues/4496) — Frequent intermittent broken pipe / closed connection errors with vllm provider
+- [#4544](https://github.com/grevinden/bifrost/issues/4544) — Cerebras + `/anthropic` endpoint fails after first turn with 400 provider API error
+- [#4606](https://github.com/grevinden/bifrost/issues/4606) — Realtime socket request observability logs not recorded since v1.5.2
+- [#4608](https://github.com/grevinden/bifrost/issues/4608) — ResponsesMessage drops author/recipient/encrypted_content, breaking Codex multi_agent_v2 subagent spawning
+- [#4617](https://github.com/grevinden/bifrost/issues/4617) — idle-timeout timer goroutine can panic in `closeBodyStream` and crash the process
+- [#4622](https://github.com/grevinden/bifrost/issues/4622) — Bedrock Converse document blocks with format xlsx/xls/doc/docx silently rewritten to pdf
+- [#4627](https://github.com/grevinden/bifrost/issues/4627) — Gemini video reference fields sent under `parameters`
+- [#4640](https://github.com/grevinden/bifrost/issues/4640) — provider config `key_ids:["*"]` not synced to `allow_all_keys` for existing virtual keys
+- [#4648](https://github.com/grevinden/bifrost/issues/4648) — `PUT /api/providers/{provider}` silently discards `payload.Keys`
 
 </Update>
 <Update label="Core" description="1.6.0">

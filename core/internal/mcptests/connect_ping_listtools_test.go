@@ -6,11 +6,11 @@ import (
 	"testing"
 	"time"
 
+	core "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/mcp"
+	"github.com/grevinden/bifrost/core/schemas"
 	mcpgo "github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
-	core "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/mcp"
-	"github.com/maximhq/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -336,7 +336,7 @@ func TestListToolsHook_PreHookShortCircuitWithSyntheticTools(t *testing.T) {
 				Type: schemas.ChatToolTypeFunction,
 				Function: &schemas.ChatToolFunction{
 					Name:        "synthetic-tool",
-					Description: schemas.Ptr("Plugin-injected tool"),
+					Description: new("Plugin-injected tool"),
 				},
 			},
 		},

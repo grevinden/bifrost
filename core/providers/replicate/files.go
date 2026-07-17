@@ -3,7 +3,7 @@ package replicate
 import (
 	"time"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // Replicate File API Converters
@@ -19,7 +19,7 @@ func ToBifrostFileStatus(fileResp *ReplicateFileResponse) schemas.FileStatus {
 }
 
 // ToBifrostFileUploadResponse converts Replicate file response to Bifrost file upload response.
-func (r *ReplicateFileResponse) ToBifrostFileUploadResponse(providerName schemas.ModelProvider, latency time.Duration, sendBackRawRequest bool, sendBackRawResponse bool, rawRequest interface{}, rawResponse interface{}) *schemas.BifrostFileUploadResponse {
+func (r *ReplicateFileResponse) ToBifrostFileUploadResponse(providerName schemas.ModelProvider, latency time.Duration, sendBackRawRequest bool, sendBackRawResponse bool, rawRequest any, rawResponse any) *schemas.BifrostFileUploadResponse {
 	resp := &schemas.BifrostFileUploadResponse{
 		ID:             r.ID,
 		Object:         "file",
@@ -30,7 +30,7 @@ func (r *ReplicateFileResponse) ToBifrostFileUploadResponse(providerName schemas
 		Status:         ToBifrostFileStatus(r),
 		StorageBackend: schemas.FileStorageAPI,
 		ExtraFields: schemas.BifrostResponseExtraFields{
-			Latency:     latency.Milliseconds(),
+			Latency: latency.Milliseconds(),
 		},
 	}
 
@@ -54,7 +54,7 @@ func (r *ReplicateFileResponse) ToBifrostFileUploadResponse(providerName schemas
 }
 
 // ToBifrostFileRetrieveResponse converts Replicate file response to Bifrost file retrieve response.
-func (r *ReplicateFileResponse) ToBifrostFileRetrieveResponse(providerName schemas.ModelProvider, latency time.Duration, sendBackRawRequest bool, sendBackRawResponse bool, rawRequest interface{}, rawResponse interface{}) *schemas.BifrostFileRetrieveResponse {
+func (r *ReplicateFileResponse) ToBifrostFileRetrieveResponse(providerName schemas.ModelProvider, latency time.Duration, sendBackRawRequest bool, sendBackRawResponse bool, rawRequest any, rawResponse any) *schemas.BifrostFileRetrieveResponse {
 	resp := &schemas.BifrostFileRetrieveResponse{
 		ID:             r.ID,
 		Object:         "file",
@@ -65,7 +65,7 @@ func (r *ReplicateFileResponse) ToBifrostFileRetrieveResponse(providerName schem
 		Status:         ToBifrostFileStatus(r),
 		StorageBackend: schemas.FileStorageAPI,
 		ExtraFields: schemas.BifrostResponseExtraFields{
-			Latency:     latency.Milliseconds(),
+			Latency: latency.Milliseconds(),
 		},
 	}
 

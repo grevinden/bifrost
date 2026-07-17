@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/bytedance/sonic"
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -40,11 +40,11 @@ func GetPromptCachingTools() []schemas.ChatTool {
 			Type: schemas.ChatToolTypeFunction,
 			Function: &schemas.ChatToolFunction{
 				Name:        "get_account_info",
-				Description: bifrost.Ptr("Retrieve account information for a given account ID"),
+				Description: new("Retrieve account information for a given account ID"),
 				Parameters: &schemas.ToolFunctionParameters{
 					Type: "object",
 					Properties: schemas.NewOrderedMapFromPairs(
-						schemas.KV("account_id", map[string]interface{}{
+						schemas.KV("account_id", map[string]any{
 							"type":        "string",
 							"description": "The unique account identifier",
 						}),
@@ -57,20 +57,20 @@ func GetPromptCachingTools() []schemas.ChatTool {
 			Type: schemas.ChatToolTypeFunction,
 			Function: &schemas.ChatToolFunction{
 				Name:        "calculate_usage_cost",
-				Description: bifrost.Ptr("Calculate the cost for cloud resource usage based on service type and quantity"),
+				Description: new("Calculate the cost for cloud resource usage based on service type and quantity"),
 				Parameters: &schemas.ToolFunctionParameters{
 					Type: "object",
 					Properties: schemas.NewOrderedMapFromPairs(
-						schemas.KV("service_type", map[string]interface{}{
+						schemas.KV("service_type", map[string]any{
 							"type":        "string",
 							"enum":        []string{"compute", "storage", "network", "database"},
 							"description": "The type of service being used",
 						}),
-						schemas.KV("quantity", map[string]interface{}{
+						schemas.KV("quantity", map[string]any{
 							"type":        "number",
 							"description": "The quantity of resources used",
 						}),
-						schemas.KV("unit", map[string]interface{}{
+						schemas.KV("unit", map[string]any{
 							"type":        "string",
 							"enum":        []string{"hours", "GB", "requests", "GB-hours"},
 							"description": "The unit of measurement",
@@ -84,11 +84,11 @@ func GetPromptCachingTools() []schemas.ChatTool {
 			Type: schemas.ChatToolTypeFunction,
 			Function: &schemas.ChatToolFunction{
 				Name:        "check_api_status",
-				Description: bifrost.Ptr("Check the current status and health of the API service"),
+				Description: new("Check the current status and health of the API service"),
 				Parameters: &schemas.ToolFunctionParameters{
 					Type: "object",
 					Properties: schemas.NewOrderedMapFromPairs(
-						schemas.KV("endpoint", map[string]interface{}{
+						schemas.KV("endpoint", map[string]any{
 							"type":        "string",
 							"description": "Optional specific API endpoint to check",
 						}),
@@ -101,24 +101,24 @@ func GetPromptCachingTools() []schemas.ChatTool {
 			Type: schemas.ChatToolTypeFunction,
 			Function: &schemas.ChatToolFunction{
 				Name:        "create_support_ticket",
-				Description: bifrost.Ptr("Create a new support ticket for a customer issue"),
+				Description: new("Create a new support ticket for a customer issue"),
 				Parameters: &schemas.ToolFunctionParameters{
 					Type: "object",
 					Properties: schemas.NewOrderedMapFromPairs(
-						schemas.KV("subject", map[string]interface{}{
+						schemas.KV("subject", map[string]any{
 							"type":        "string",
 							"description": "Brief subject line for the ticket",
 						}),
-						schemas.KV("description", map[string]interface{}{
+						schemas.KV("description", map[string]any{
 							"type":        "string",
 							"description": "Detailed description of the issue",
 						}),
-						schemas.KV("priority", map[string]interface{}{
+						schemas.KV("priority", map[string]any{
 							"type":        "string",
 							"enum":        []string{"low", "medium", "high", "urgent"},
 							"description": "Priority level of the ticket",
 						}),
-						schemas.KV("category", map[string]interface{}{
+						schemas.KV("category", map[string]any{
 							"type":        "string",
 							"enum":        []string{"technical", "billing", "account", "feature_request"},
 							"description": "Category of the support request",
@@ -132,15 +132,15 @@ func GetPromptCachingTools() []schemas.ChatTool {
 			Type: schemas.ChatToolTypeFunction,
 			Function: &schemas.ChatToolFunction{
 				Name:        "get_service_documentation",
-				Description: bifrost.Ptr("Retrieve documentation for a specific service or feature"),
+				Description: new("Retrieve documentation for a specific service or feature"),
 				Parameters: &schemas.ToolFunctionParameters{
 					Type: "object",
 					Properties: schemas.NewOrderedMapFromPairs(
-						schemas.KV("service_name", map[string]interface{}{
+						schemas.KV("service_name", map[string]any{
 							"type":        "string",
 							"description": "Name of the service or feature",
 						}),
-						schemas.KV("doc_type", map[string]interface{}{
+						schemas.KV("doc_type", map[string]any{
 							"type":        "string",
 							"enum":        []string{"api", "guide", "tutorial", "reference"},
 							"description": "Type of documentation requested",
@@ -154,11 +154,11 @@ func GetPromptCachingTools() []schemas.ChatTool {
 			Type: schemas.ChatToolTypeFunction,
 			Function: &schemas.ChatToolFunction{
 				Name:        "list_available_regions",
-				Description: bifrost.Ptr("Get a list of available cloud regions for deployment"),
+				Description: new("Get a list of available cloud regions for deployment"),
 				Parameters: &schemas.ToolFunctionParameters{
 					Type: "object",
 					Properties: schemas.NewOrderedMapFromPairs(
-						schemas.KV("service_type", map[string]interface{}{
+						schemas.KV("service_type", map[string]any{
 							"type":        "string",
 							"enum":        []string{"compute", "storage", "database", "all"},
 							"description": "Filter by service type or 'all' for all services",
@@ -172,23 +172,23 @@ func GetPromptCachingTools() []schemas.ChatTool {
 			Type: schemas.ChatToolTypeFunction,
 			Function: &schemas.ChatToolFunction{
 				Name:        "estimate_deployment_cost",
-				Description: bifrost.Ptr("Estimate the monthly cost for a cloud deployment configuration"),
+				Description: new("Estimate the monthly cost for a cloud deployment configuration"),
 				Parameters: &schemas.ToolFunctionParameters{
 					Type: "object",
 					Properties: schemas.NewOrderedMapFromPairs(
-						schemas.KV("instance_type", map[string]interface{}{
+						schemas.KV("instance_type", map[string]any{
 							"type":        "string",
 							"description": "Type of compute instance",
 						}),
-						schemas.KV("instance_count", map[string]interface{}{
+						schemas.KV("instance_count", map[string]any{
 							"type":        "integer",
 							"description": "Number of instances",
 						}),
-						schemas.KV("storage_gb", map[string]interface{}{
+						schemas.KV("storage_gb", map[string]any{
 							"type":        "number",
 							"description": "Storage in GB",
 						}),
-						schemas.KV("region", map[string]interface{}{
+						schemas.KV("region", map[string]any{
 							"type":        "string",
 							"description": "Deployment region",
 						}),
@@ -201,11 +201,11 @@ func GetPromptCachingTools() []schemas.ChatTool {
 			Type: schemas.ChatToolTypeFunction,
 			Function: &schemas.ChatToolFunction{
 				Name:        "validate_api_key",
-				Description: bifrost.Ptr("Validate an API key and return its permissions and status"),
+				Description: new("Validate an API key and return its permissions and status"),
 				Parameters: &schemas.ToolFunctionParameters{
 					Type: "object",
 					Properties: schemas.NewOrderedMapFromPairs(
-						schemas.KV("api_key", map[string]interface{}{
+						schemas.KV("api_key", map[string]any{
 							"type":        "string",
 							"description": "The API key to validate",
 						}),
@@ -218,23 +218,23 @@ func GetPromptCachingTools() []schemas.ChatTool {
 			Type: schemas.ChatToolTypeFunction,
 			Function: &schemas.ChatToolFunction{
 				Name:        "get_usage_analytics",
-				Description: bifrost.Ptr("Retrieve usage analytics and metrics for an account"),
+				Description: new("Retrieve usage analytics and metrics for an account"),
 				Parameters: &schemas.ToolFunctionParameters{
 					Type: "object",
 					Properties: schemas.NewOrderedMapFromPairs(
-						schemas.KV("account_id", map[string]interface{}{
+						schemas.KV("account_id", map[string]any{
 							"type":        "string",
 							"description": "Account ID to get analytics for",
 						}),
-						schemas.KV("start_date", map[string]interface{}{
+						schemas.KV("start_date", map[string]any{
 							"type":        "string",
 							"description": "Start date in YYYY-MM-DD format",
 						}),
-						schemas.KV("end_date", map[string]interface{}{
+						schemas.KV("end_date", map[string]any{
 							"type":        "string",
 							"description": "End date in YYYY-MM-DD format",
 						}),
-						schemas.KV("metric_type", map[string]interface{}{
+						schemas.KV("metric_type", map[string]any{
 							"type":        "string",
 							"enum":        []string{"requests", "cost", "latency", "errors", "all"},
 							"description": "Type of metrics to retrieve",
@@ -248,16 +248,16 @@ func GetPromptCachingTools() []schemas.ChatTool {
 			Type: schemas.ChatToolTypeFunction,
 			Function: &schemas.ChatToolFunction{
 				Name:        "check_compliance_status",
-				Description: bifrost.Ptr("Check compliance status and certifications for security and regulatory requirements"),
+				Description: new("Check compliance status and certifications for security and regulatory requirements"),
 				Parameters: &schemas.ToolFunctionParameters{
 					Type: "object",
 					Properties: schemas.NewOrderedMapFromPairs(
-						schemas.KV("compliance_type", map[string]interface{}{
+						schemas.KV("compliance_type", map[string]any{
 							"type":        "string",
 							"enum":        []string{"SOC2", "ISO27001", "GDPR", "HIPAA", "all"},
 							"description": "Type of compliance to check",
 						}),
-						schemas.KV("region", map[string]interface{}{
+						schemas.KV("region", map[string]any{
 							"type":        "string",
 							"description": "Optional region to check compliance for",
 						}),
@@ -309,7 +309,7 @@ func RunPromptCachingToolBlocksTest(t *testing.T, client *bifrost.Bifrost, ctx c
 				ContentBlocks: []schemas.ResponsesMessageContentBlock{
 					{
 						Type:         schemas.ResponsesInputMessageContentBlockTypeText,
-						Text:         bifrost.Ptr(longSharedPrefix),
+						Text:         new(longSharedPrefix),
 						CacheControl: cacheControl,
 					},
 				},
@@ -321,19 +321,19 @@ func RunPromptCachingToolBlocksTest(t *testing.T, client *bifrost.Bifrost, ctx c
 			Type: bifrost.Ptr(schemas.ResponsesMessageTypeMessage),
 			Role: bifrost.Ptr(schemas.ResponsesInputMessageRoleUser),
 			Content: &schemas.ResponsesMessageContent{
-				ContentStr: bifrost.Ptr("What's the weather in San Francisco?"),
+				ContentStr: new("What's the weather in San Francisco?"),
 			},
 		}
 
 		// Assistant responds with a tool call (function_call with cache_control)
 		toolCallMsg := schemas.ResponsesMessage{
 			Type:         bifrost.Ptr(schemas.ResponsesMessageTypeFunctionCall),
-			Status:       bifrost.Ptr("completed"),
+			Status:       new("completed"),
 			CacheControl: cacheControl,
 			ResponsesToolMessage: &schemas.ResponsesToolMessage{
-				CallID:    bifrost.Ptr("call_weather_001"),
-				Name:      bifrost.Ptr("weather"),
-				Arguments: bifrost.Ptr(`{"location":"San Francisco"}`),
+				CallID:    new("call_weather_001"),
+				Name:      new("weather"),
+				Arguments: new(`{"location":"San Francisco"}`),
 			},
 		}
 
@@ -342,9 +342,9 @@ func RunPromptCachingToolBlocksTest(t *testing.T, client *bifrost.Bifrost, ctx c
 			Type:         bifrost.Ptr(schemas.ResponsesMessageTypeFunctionCallOutput),
 			CacheControl: cacheControl,
 			ResponsesToolMessage: &schemas.ResponsesToolMessage{
-				CallID: bifrost.Ptr("call_weather_001"),
+				CallID: new("call_weather_001"),
 				Output: &schemas.ResponsesToolMessageOutputStruct{
-					ResponsesToolCallOutputStr: bifrost.Ptr(`{"temperature": 18, "unit": "celsius", "condition": "partly cloudy", "humidity": 72}`),
+					ResponsesToolCallOutputStr: new(`{"temperature": 18, "unit": "celsius", "condition": "partly cloudy", "humidity": 72}`),
 				},
 			},
 		}
@@ -354,7 +354,7 @@ func RunPromptCachingToolBlocksTest(t *testing.T, client *bifrost.Bifrost, ctx c
 			Type: bifrost.Ptr(schemas.ResponsesMessageTypeMessage),
 			Role: bifrost.Ptr(schemas.ResponsesInputMessageRoleUser),
 			Content: &schemas.ResponsesMessageContent{
-				ContentStr: bifrost.Ptr("Summarize the weather information you received."),
+				ContentStr: new("Summarize the weather information you received."),
 			},
 		}
 
@@ -370,7 +370,7 @@ func RunPromptCachingToolBlocksTest(t *testing.T, client *bifrost.Bifrost, ctx c
 			},
 			Params: &schemas.ResponsesParameters{
 				Tools:           []schemas.ResponsesTool{*weatherTool},
-				MaxOutputTokens: bifrost.Ptr(200),
+				MaxOutputTokens: new(200),
 			},
 		}
 
@@ -400,7 +400,7 @@ func RunPromptCachingToolBlocksTest(t *testing.T, client *bifrost.Bifrost, ctx c
 
 		retryContext := TestRetryContext{
 			ScenarioName: "PromptCachingToolBlocks",
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider": testConfig.Provider,
 				"model":    testConfig.PromptCachingModel,
 			},
@@ -505,7 +505,7 @@ func RunPromptCachingMultipleToolCallsTest(t *testing.T, client *bifrost.Bifrost
 				Type: bifrost.Ptr(schemas.ResponsesMessageTypeMessage),
 				Role: bifrost.Ptr(schemas.ResponsesInputMessageRoleUser),
 				Content: &schemas.ResponsesMessageContent{
-					ContentStr: bifrost.Ptr(text),
+					ContentStr: new(text),
 				},
 			}
 		}
@@ -516,7 +516,7 @@ func RunPromptCachingMultipleToolCallsTest(t *testing.T, client *bifrost.Bifrost
 				Type: bifrost.Ptr(schemas.ResponsesMessageTypeMessage),
 				Role: bifrost.Ptr(schemas.ResponsesInputMessageRoleAssistant),
 				Content: &schemas.ResponsesMessageContent{
-					ContentStr: bifrost.Ptr(text),
+					ContentStr: new(text),
 				},
 			}
 		}
@@ -525,11 +525,11 @@ func RunPromptCachingMultipleToolCallsTest(t *testing.T, client *bifrost.Bifrost
 		makeToolCall := func(callID, name, args string, withCacheControl bool) schemas.ResponsesMessage {
 			msg := schemas.ResponsesMessage{
 				Type:   bifrost.Ptr(schemas.ResponsesMessageTypeFunctionCall),
-				Status: bifrost.Ptr("completed"),
+				Status: new("completed"),
 				ResponsesToolMessage: &schemas.ResponsesToolMessage{
-					CallID:    bifrost.Ptr(callID),
-					Name:      bifrost.Ptr(name),
-					Arguments: bifrost.Ptr(args),
+					CallID:    new(callID),
+					Name:      new(name),
+					Arguments: new(args),
 				},
 			}
 			if withCacheControl {
@@ -543,9 +543,9 @@ func RunPromptCachingMultipleToolCallsTest(t *testing.T, client *bifrost.Bifrost
 			msg := schemas.ResponsesMessage{
 				Type: bifrost.Ptr(schemas.ResponsesMessageTypeFunctionCallOutput),
 				ResponsesToolMessage: &schemas.ResponsesToolMessage{
-					CallID: bifrost.Ptr(callID),
+					CallID: new(callID),
 					Output: &schemas.ResponsesToolMessageOutputStruct{
-						ResponsesToolCallOutputStr: bifrost.Ptr(output),
+						ResponsesToolCallOutputStr: new(output),
 					},
 				},
 			}
@@ -563,7 +563,7 @@ func RunPromptCachingMultipleToolCallsTest(t *testing.T, client *bifrost.Bifrost
 				ContentBlocks: []schemas.ResponsesMessageContentBlock{
 					{
 						Type:         schemas.ResponsesInputMessageContentBlockTypeText,
-						Text:         bifrost.Ptr(longSharedPrefix),
+						Text:         new(longSharedPrefix),
 						CacheControl: cacheControl,
 					},
 				},
@@ -597,8 +597,8 @@ func RunPromptCachingMultipleToolCallsTest(t *testing.T, client *bifrost.Bifrost
 		// Some turns include tool calls (with varying key orderings), others are plain chat.
 		// This simulates a real Claude Code session.
 		type turn struct {
-			name     string
-			query    string
+			name  string
+			query string
 			// If non-nil, these are tool call + result messages to inject before the query
 			// (simulating the assistant calling tools in the previous turn)
 			toolExchange []schemas.ResponsesMessage
@@ -619,10 +619,10 @@ func RunPromptCachingMultipleToolCallsTest(t *testing.T, client *bifrost.Bifrost
 				toolExchange: []schemas.ResponsesMessage{
 					// 2 more tool calls with different key orderings
 					// Keys: unit, location (non-alphabetical)
-				makeToolCall("call_weather_tokyo", "weather", `{"unit":"celsius","location":"Tokyo"}`, false),
-				makeToolCall("call_weather_sydney", "weather", `{"location":"Sydney","unit":"celsius"}`, false),
-				makeToolResult("call_weather_tokyo", `{"temperature":25,"condition":"sunny"}`, false),
-				makeToolResult("call_weather_sydney", `{"temperature":22,"condition":"clear"}`, false),
+					makeToolCall("call_weather_tokyo", "weather", `{"unit":"celsius","location":"Tokyo"}`, false),
+					makeToolCall("call_weather_sydney", "weather", `{"location":"Sydney","unit":"celsius"}`, false),
+					makeToolResult("call_weather_tokyo", `{"temperature":25,"condition":"sunny"}`, false),
+					makeToolResult("call_weather_sydney", `{"temperature":22,"condition":"clear"}`, false),
 				},
 			},
 			{
@@ -634,8 +634,8 @@ func RunPromptCachingMultipleToolCallsTest(t *testing.T, client *bifrost.Bifrost
 				query: "What's the weather in Berlin?",
 				toolExchange: []schemas.ResponsesMessage{
 					// Single tool call with keys in non-alphabetical order
-				makeToolCall("call_weather_berlin", "weather", `{"unit":"celsius","location":"Berlin"}`, false),
-				makeToolResult("call_weather_berlin", `{"temperature":8,"condition":"overcast"}`, false),
+					makeToolCall("call_weather_berlin", "weather", `{"unit":"celsius","location":"Berlin"}`, false),
+					makeToolResult("call_weather_berlin", `{"temperature":8,"condition":"overcast"}`, false),
 				},
 			},
 			{
@@ -651,10 +651,10 @@ func RunPromptCachingMultipleToolCallsTest(t *testing.T, client *bifrost.Bifrost
 				query: "Check Paris and Rome too.",
 				toolExchange: []schemas.ResponsesMessage{
 					// Keys: location, unit vs unit, location (mixed ordering)
-				makeToolCall("call_weather_paris", "weather", `{"location":"Paris","unit":"celsius"}`, false),
-				makeToolCall("call_weather_rome", "weather", `{"unit":"celsius","location":"Rome"}`, false),
-				makeToolResult("call_weather_paris", `{"temperature":15,"condition":"light rain"}`, false),
-				makeToolResult("call_weather_rome", `{"temperature":20,"condition":"partly sunny"}`, false),
+					makeToolCall("call_weather_paris", "weather", `{"location":"Paris","unit":"celsius"}`, false),
+					makeToolCall("call_weather_rome", "weather", `{"unit":"celsius","location":"Rome"}`, false),
+					makeToolResult("call_weather_paris", `{"temperature":15,"condition":"light rain"}`, false),
+					makeToolResult("call_weather_rome", `{"temperature":20,"condition":"partly sunny"}`, false),
 				},
 			},
 			{
@@ -708,83 +708,83 @@ func RunPromptCachingMultipleToolCallsTest(t *testing.T, client *bifrost.Bifrost
 					conversationHistory = append(conversationHistory, turn.toolExchange...)
 				}
 
-			// Build full input: conversation history + current user query
-			input := make([]schemas.ResponsesMessage, len(conversationHistory)+1)
-			copy(input, conversationHistory)
-			input[len(input)-1] = makeUserMsg(turn.query)
+				// Build full input: conversation history + current user query
+				input := make([]schemas.ResponsesMessage, len(conversationHistory)+1)
+				copy(input, conversationHistory)
+				input[len(input)-1] = makeUserMsg(turn.query)
 
-			// Advance the cache checkpoint so that cache_read grows with each turn.
-			// For providers with explicit caching (Anthropic, Vertex, Bedrock), place
-			// cache_control on the penultimate message to expand the cached prefix.
-			// For providers with automatic caching (OpenAI), skip this entirely —
-			// adding cache_control expands ContentStr to ContentBlocks which changes
-			// the serialization format and breaks prefix matching across turns.
-			if testConfig.Provider != schemas.OpenAI && len(input) >= 2 {
-				cacheTargetIdx := len(input) - 2 // default: penultimate
-				for j := len(input) - 2; j >= 0; j-- {
-					jType := schemas.ResponsesMessageTypeMessage
-					if input[j].Type != nil {
-						jType = *input[j].Type
-					}
-					if jType == schemas.ResponsesMessageTypeFunctionCall {
-						cacheTargetIdx = j
-						break
-					} else if jType == schemas.ResponsesMessageTypeFunctionCallOutput {
-						continue // skip tool results; keep searching for the last tool call
-					} else {
-						cacheTargetIdx = j // regular message — use it if no tool call found before it
-						break
-					}
-				}
-
-				target := input[cacheTargetIdx] // struct copy; does not alias conversationHistory
-				tType := schemas.ResponsesMessageTypeMessage
-				if target.Type != nil {
-					tType = *target.Type
-				}
-				switch tType {
-				case schemas.ResponsesMessageTypeFunctionCall,
-					schemas.ResponsesMessageTypeFunctionCallOutput:
-					// Message-level CacheControl is forwarded to the tool_use / tool_result block
-					target.CacheControl = cacheControl
-				default:
-					// Regular user/assistant message: set cc on the last content block.
-					// Create new Content objects to avoid mutating the shared pointer from conversationHistory.
-					if target.Content != nil {
-						if target.Content.ContentStr != nil {
-							// Use the correct content block type based on message role:
-							// assistant messages require "output_text", others use "input_text"
-							blockType := schemas.ResponsesInputMessageContentBlockTypeText
-							if target.Role != nil && *target.Role == schemas.ResponsesInputMessageRoleAssistant {
-								blockType = schemas.ResponsesOutputMessageContentTypeText
-							}
-							target.Content = &schemas.ResponsesMessageContent{
-								ContentBlocks: []schemas.ResponsesMessageContentBlock{
-									{
-										Type:         blockType,
-										Text:         target.Content.ContentStr,
-										CacheControl: cacheControl,
-									},
-								},
-							}
-						} else if len(target.Content.ContentBlocks) > 0 {
-							blocks := make([]schemas.ResponsesMessageContentBlock, len(target.Content.ContentBlocks))
-							copy(blocks, target.Content.ContentBlocks)
-							blocks[len(blocks)-1].CacheControl = cacheControl
-							target.Content = &schemas.ResponsesMessageContent{ContentBlocks: blocks}
+				// Advance the cache checkpoint so that cache_read grows with each turn.
+				// For providers with explicit caching (Anthropic, Vertex, Bedrock), place
+				// cache_control on the penultimate message to expand the cached prefix.
+				// For providers with automatic caching (OpenAI), skip this entirely —
+				// adding cache_control expands ContentStr to ContentBlocks which changes
+				// the serialization format and breaks prefix matching across turns.
+				if testConfig.Provider != schemas.OpenAI && len(input) >= 2 {
+					cacheTargetIdx := len(input) - 2 // default: penultimate
+					for j := len(input) - 2; j >= 0; j-- {
+						jType := schemas.ResponsesMessageTypeMessage
+						if input[j].Type != nil {
+							jType = *input[j].Type
+						}
+						if jType == schemas.ResponsesMessageTypeFunctionCall {
+							cacheTargetIdx = j
+							break
+						} else if jType == schemas.ResponsesMessageTypeFunctionCallOutput {
+							continue // skip tool results; keep searching for the last tool call
+						} else {
+							cacheTargetIdx = j // regular message — use it if no tool call found before it
+							break
 						}
 					}
-				}
-				input[cacheTargetIdx] = target
-			}
 
-			req := &schemas.BifrostResponsesRequest{
+					target := input[cacheTargetIdx] // struct copy; does not alias conversationHistory
+					tType := schemas.ResponsesMessageTypeMessage
+					if target.Type != nil {
+						tType = *target.Type
+					}
+					switch tType {
+					case schemas.ResponsesMessageTypeFunctionCall,
+						schemas.ResponsesMessageTypeFunctionCallOutput:
+						// Message-level CacheControl is forwarded to the tool_use / tool_result block
+						target.CacheControl = cacheControl
+					default:
+						// Regular user/assistant message: set cc on the last content block.
+						// Create new Content objects to avoid mutating the shared pointer from conversationHistory.
+						if target.Content != nil {
+							if target.Content.ContentStr != nil {
+								// Use the correct content block type based on message role:
+								// assistant messages require "output_text", others use "input_text"
+								blockType := schemas.ResponsesInputMessageContentBlockTypeText
+								if target.Role != nil && *target.Role == schemas.ResponsesInputMessageRoleAssistant {
+									blockType = schemas.ResponsesOutputMessageContentTypeText
+								}
+								target.Content = &schemas.ResponsesMessageContent{
+									ContentBlocks: []schemas.ResponsesMessageContentBlock{
+										{
+											Type:         blockType,
+											Text:         target.Content.ContentStr,
+											CacheControl: cacheControl,
+										},
+									},
+								}
+							} else if len(target.Content.ContentBlocks) > 0 {
+								blocks := make([]schemas.ResponsesMessageContentBlock, len(target.Content.ContentBlocks))
+								copy(blocks, target.Content.ContentBlocks)
+								blocks[len(blocks)-1].CacheControl = cacheControl
+								target.Content = &schemas.ResponsesMessageContent{ContentBlocks: blocks}
+							}
+						}
+					}
+					input[cacheTargetIdx] = target
+				}
+
+				req := &schemas.BifrostResponsesRequest{
 					Provider: testConfig.Provider,
 					Model:    testConfig.PromptCachingModel,
 					Input:    input,
 					Params: &schemas.ResponsesParameters{
 						Tools:           []schemas.ResponsesTool{*weatherTool},
-						MaxOutputTokens: bifrost.Ptr(200),
+						MaxOutputTokens: new(200),
 					},
 				}
 
@@ -795,7 +795,7 @@ func RunPromptCachingMultipleToolCallsTest(t *testing.T, client *bifrost.Bifrost
 
 				retryContext := TestRetryContext{
 					ScenarioName: "PromptCachingMultipleToolCalls_" + turnName,
-					TestMetadata: map[string]interface{}{
+					TestMetadata: map[string]any{
 						"provider": testConfig.Provider,
 						"model":    testConfig.PromptCachingModel,
 					},
@@ -882,11 +882,11 @@ func RunPromptCachingMultipleToolCallsTest(t *testing.T, client *bifrost.Bifrost
 
 						switch testConfig.Provider {
 						case schemas.Anthropic, schemas.Vertex:
-					// Verify cache_control markers survived: system block (1) + penultimate message (1) = 2
-					cacheControlCount := strings.Count(rawStr, `"cache_control"`)
-					t.Logf("  %s: found %d cache_control markers in raw request", testConfig.Provider, cacheControlCount)
-					require.GreaterOrEqual(t, cacheControlCount, 2,
-						"Expected at least 2 cache_control markers (system + penultimate), got %d", cacheControlCount)
+							// Verify cache_control markers survived: system block (1) + penultimate message (1) = 2
+							cacheControlCount := strings.Count(rawStr, `"cache_control"`)
+							t.Logf("  %s: found %d cache_control markers in raw request", testConfig.Provider, cacheControlCount)
+							require.GreaterOrEqual(t, cacheControlCount, 2,
+								"Expected at least 2 cache_control markers (system + penultimate), got %d", cacheControlCount)
 
 							// Verify key ordering: call_weather_ny has {"unit":...,"location":...}
 							nyCallIdx := strings.Index(rawStr, `call_weather_ny`)
@@ -903,11 +903,11 @@ func RunPromptCachingMultipleToolCallsTest(t *testing.T, client *bifrost.Bifrost
 								"Key order not preserved for call_weather_ny: expected unit before location")
 							t.Logf("  Key order preserved: 'unit' at %d, 'location' at %d", unitIdx, locIdx)
 
-					case schemas.Bedrock:
-						cachePointCount := strings.Count(rawStr, `"cachePoint"`)
-						t.Logf("  Bedrock: found %d cachePoint blocks", cachePointCount)
-						require.GreaterOrEqual(t, cachePointCount, 2,
-							"Expected at least 2 cachePoint blocks (system + last tool_use), got %d", cachePointCount)
+						case schemas.Bedrock:
+							cachePointCount := strings.Count(rawStr, `"cachePoint"`)
+							t.Logf("  Bedrock: found %d cachePoint blocks", cachePointCount)
+							require.GreaterOrEqual(t, cachePointCount, 2,
+								"Expected at least 2 cachePoint blocks (system + last tool_use), got %d", cachePointCount)
 						}
 					}
 				}
@@ -961,7 +961,7 @@ func RunPromptCachingTest(t *testing.T, client *bifrost.Bifrost, ctx context.Con
 				ContentBlocks: []schemas.ChatContentBlock{
 					{
 						Type: schemas.ChatContentBlockTypeText,
-						Text: bifrost.Ptr(longSharedPrefix),
+						Text: new(longSharedPrefix),
 						CacheControl: &schemas.CacheControl{
 							Type: schemas.CacheControlTypeEphemeral,
 						},
@@ -984,7 +984,7 @@ func RunPromptCachingTest(t *testing.T, client *bifrost.Bifrost, ctx context.Con
 				userMessage := schemas.ChatMessage{
 					Role: schemas.ChatMessageRoleUser,
 					Content: &schemas.ChatMessageContent{
-						ContentStr: bifrost.Ptr(query.message),
+						ContentStr: new(query.message),
 					},
 				}
 
@@ -998,7 +998,7 @@ func RunPromptCachingTest(t *testing.T, client *bifrost.Bifrost, ctx context.Con
 					Params: &schemas.ChatParameters{
 						Tools: tools,
 						ToolChoice: &schemas.ChatToolChoice{
-							ChatToolChoiceStr: bifrost.Ptr("auto"),
+							ChatToolChoiceStr: new("auto"),
 						},
 					},
 					Fallbacks: testConfig.Fallbacks,
@@ -1026,7 +1026,7 @@ func RunPromptCachingTest(t *testing.T, client *bifrost.Bifrost, ctx context.Con
 
 				// For the second query (index 1), add cached tokens validation
 				if i == 1 {
-					expectations.ProviderSpecific = map[string]interface{}{
+					expectations.ProviderSpecific = map[string]any{
 						"min_cached_tokens_percentage": 0.80, // 80% minimum
 						"query_index":                  i,
 					}
@@ -1034,11 +1034,11 @@ func RunPromptCachingTest(t *testing.T, client *bifrost.Bifrost, ctx context.Con
 
 				retryContext := TestRetryContext{
 					ScenarioName: "PromptCaching",
-					ExpectedBehavior: map[string]interface{}{
+					ExpectedBehavior: map[string]any{
 						"query_index": i,
 						"query_name":  query.name,
 					},
-					TestMetadata: map[string]interface{}{
+					TestMetadata: map[string]any{
 						"provider": testConfig.Provider,
 						"model":    testConfig.ChatModel,
 					},
@@ -1140,7 +1140,7 @@ func RunPromptCachingMultiTurnTest(t *testing.T, client *bifrost.Bifrost, ctx co
 				ContentBlocks: []schemas.ChatContentBlock{
 					{
 						Type: schemas.ChatContentBlockTypeText,
-						Text: bifrost.Ptr(longSharedPrefix),
+						Text: new(longSharedPrefix),
 						CacheControl: &schemas.CacheControl{
 							Type: schemas.CacheControlTypeEphemeral,
 						},
@@ -1172,7 +1172,7 @@ func RunPromptCachingMultiTurnTest(t *testing.T, client *bifrost.Bifrost, ctx co
 				userMessage := schemas.ChatMessage{
 					Role: schemas.ChatMessageRoleUser,
 					Content: &schemas.ChatMessageContent{
-						ContentStr: bifrost.Ptr(query),
+						ContentStr: new(query),
 					},
 				}
 
@@ -1189,7 +1189,7 @@ func RunPromptCachingMultiTurnTest(t *testing.T, client *bifrost.Bifrost, ctx co
 					Params: &schemas.ChatParameters{
 						Tools: tools,
 						ToolChoice: &schemas.ChatToolChoice{
-							ChatToolChoiceStr: bifrost.Ptr("none"),
+							ChatToolChoiceStr: new("none"),
 						},
 					},
 					Fallbacks: testConfig.Fallbacks,
@@ -1219,11 +1219,11 @@ func RunPromptCachingMultiTurnTest(t *testing.T, client *bifrost.Bifrost, ctx co
 
 				retryContext := TestRetryContext{
 					ScenarioName: "PromptCachingMultiTurn",
-					ExpectedBehavior: map[string]interface{}{
+					ExpectedBehavior: map[string]any{
 						"turn":  i + 1,
 						"query": query,
 					},
-					TestMetadata: map[string]interface{}{
+					TestMetadata: map[string]any{
 						"provider": testConfig.Provider,
 						"model":    testConfig.PromptCachingModel,
 					},
@@ -1263,27 +1263,27 @@ func RunPromptCachingMultiTurnTest(t *testing.T, client *bifrost.Bifrost, ctx co
 					}(),
 				)
 
-			// For turns 2+, verify cache is being used
-			if i >= 1 {
-				var cachedRead int
-				if response.Usage.PromptTokensDetails != nil {
-					cachedRead = response.Usage.PromptTokensDetails.CachedReadTokens
-				}
-				if testConfig.Provider == schemas.OpenAI {
-					// OpenAI uses best-effort automatic caching; individual turns may miss.
-					// Track hits for the aggregate assertion after the loop.
-					if cachedRead > 0 {
-						turnsWithCacheHit++
-						t.Logf("Turn %d: cache HIT confirmed (cached_read_tokens=%d)", i+1, cachedRead)
-					} else {
-						t.Logf("Turn %d: cache MISS (OpenAI best-effort, expected occasionally)", i+1)
+				// For turns 2+, verify cache is being used
+				if i >= 1 {
+					var cachedRead int
+					if response.Usage.PromptTokensDetails != nil {
+						cachedRead = response.Usage.PromptTokensDetails.CachedReadTokens
 					}
-				} else {
-					require.Greater(t, cachedRead, 0,
-						"Turn %d: cached_read_tokens should be > 0 (caching broken)", i+1)
-					t.Logf("Turn %d: cache HIT confirmed (cached_read_tokens=%d)", i+1, cachedRead)
+					if testConfig.Provider == schemas.OpenAI {
+						// OpenAI uses best-effort automatic caching; individual turns may miss.
+						// Track hits for the aggregate assertion after the loop.
+						if cachedRead > 0 {
+							turnsWithCacheHit++
+							t.Logf("Turn %d: cache HIT confirmed (cached_read_tokens=%d)", i+1, cachedRead)
+						} else {
+							t.Logf("Turn %d: cache MISS (OpenAI best-effort, expected occasionally)", i+1)
+						}
+					} else {
+						require.Greater(t, cachedRead, 0,
+							"Turn %d: cached_read_tokens should be > 0 (caching broken)", i+1)
+						t.Logf("Turn %d: cache HIT confirmed (cached_read_tokens=%d)", i+1, cachedRead)
+					}
 				}
-			}
 
 				// Log final turn percentage for observability (no assertion — conversation
 				// growth naturally dilutes the cached prefix percentage)

@@ -12,9 +12,9 @@ import (
 	"sync/atomic"
 	"time"
 
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/jaswdr/faker/v2"
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
 )
 
 const (
@@ -105,12 +105,12 @@ type Response struct {
 // SuccessResponse defines mock success response content
 // Either Message or MessageTemplate should be set (MessageTemplate takes precedence)
 type SuccessResponse struct {
-	Message         string                 `json:"message"`          // Static response message
-	Model           *string                `json:"model"`            // Override model name in response (optional)
-	Usage           *Usage                 `json:"usage"`            // Token usage info (optional, defaults applied if nil)
-	FinishReason    *string                `json:"finish_reason"`    // Completion reason (optional, defaults to "stop")
-	MessageTemplate *string                `json:"message_template"` // Template with variables like {{model}}, {{provider}} (overrides Message)
-	CustomFields    map[string]interface{} `json:"custom_fields"`    // Additional fields stored in response metadata
+	Message         string         `json:"message"`          // Static response message
+	Model           *string        `json:"model"`            // Override model name in response (optional)
+	Usage           *Usage         `json:"usage"`            // Token usage info (optional, defaults applied if nil)
+	FinishReason    *string        `json:"finish_reason"`    // Completion reason (optional, defaults to "stop")
+	MessageTemplate *string        `json:"message_template"` // Template with variables like {{model}}, {{provider}} (overrides Message)
+	CustomFields    map[string]any `json:"custom_fields"`    // Additional fields stored in response metadata
 }
 
 // ErrorResponse defines mock error response content
@@ -643,13 +643,7 @@ func (p *MockerPlugin) matchesConditionsFast(req *schemas.BifrostRequest, condit
 
 	// Check models - direct string comparison
 	if len(conditions.Models) > 0 {
-		found := false
-		for _, conditionModel := range conditions.Models {
-			if model == conditionModel {
-				found = true
-				break
-			}
-		}
+		found := slices.Contains(conditions.Models, model)
 		if !found {
 			return false
 		}
@@ -925,12 +919,10 @@ func (p *MockerPlugin) generateSuccessShortCircuit(req *schemas.BifrostRequest, 
 
 	// Only create raw response map if there are custom fields (avoid allocation)
 	if len(content.CustomFields) > 0 {
-		rawResponse := make(map[string]interface{}, len(content.CustomFields)+1)
+		rawResponse := make(map[string]any, len(content.CustomFields)+1)
 
 		// Add custom fields
-		for key, value := range content.CustomFields {
-			rawResponse[key] = value
-		}
+		maps.Copy(rawResponse, content.CustomFields)
 
 		// Add mock metadata
 		rawResponse["mock_rule"] = "success"
@@ -1080,7 +1072,7 @@ func (p *MockerPlugin) handleDefaultBehavior(req *schemas.BifrostRequest) (*sche
 								Message: &schemas.ChatMessage{
 									Role: schemas.ChatMessageRoleAssistant,
 									Content: &schemas.ChatMessageContent{
-										ContentStr: bifrost.Ptr("Mock plugin default response"),
+										ContentStr: new("Mock plugin default response"),
 									},
 								},
 							},

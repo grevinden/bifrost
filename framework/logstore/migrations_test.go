@@ -93,7 +93,7 @@ func insertTestLog(t *testing.T, db *gorm.DB, id string, metadata *string) {
 	t.Helper()
 	now := time.Now()
 
-	var metadataVal interface{}
+	var metadataVal any
 	if metadata != nil {
 		metadataVal = *metadata
 	}

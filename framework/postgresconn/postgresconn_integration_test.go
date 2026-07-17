@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/require"
 	gormlogger "gorm.io/gorm/logger"
 )

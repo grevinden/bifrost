@@ -11,8 +11,8 @@ import (
 	"github.com/bytedance/sonic"
 	"github.com/mark3labs/mcp-go/mcp"
 
-	codemcp "github.com/maximhq/bifrost/core/mcp"
-	"github.com/maximhq/bifrost/core/schemas"
+	codemcp "github.com/grevinden/bifrost/core/mcp"
+	"github.com/grevinden/bifrost/core/schemas"
 	"go.starlark.net/starlark"
 	"go.starlark.net/starlarkstruct"
 	"go.starlark.net/syntax"
@@ -20,7 +20,7 @@ import (
 
 // ExecutionResult represents the result of code execution
 type ExecutionResult struct {
-	Result      interface{}          `json:"result"`
+	Result      any                  `json:"result"`
 	Logs        []string             `json:"logs"`
 	Errors      *ExecutionError      `json:"errors,omitempty"`
 	Environment ExecutionEnvironment `json:"environment"`
@@ -51,7 +51,7 @@ type ExecutionEnvironment struct {
 // This tool allows executing Python (Starlark) code in a sandboxed interpreter with access to MCP server tools.
 func (s *StarlarkCodeMode) createExecuteToolCodeTool() schemas.ChatTool {
 	executeToolCodeProps := schemas.NewOrderedMapFromPairs(
-		schemas.KV("code", map[string]interface{}{
+		schemas.KV("code", map[string]any{
 			"type": "string",
 			"description": "Python (Starlark) code to execute. Tool calls are synchronous: result = server.tool(param=\"value\"). " +
 				"Use print() for logging. Assign to 'result' variable to return a value. " +
@@ -63,13 +63,12 @@ func (s *StarlarkCodeMode) createExecuteToolCodeTool() schemas.ChatTool {
 		Type: schemas.ChatToolTypeFunction,
 		Function: &schemas.ChatToolFunction{
 			Name: codemcp.ToolTypeExecuteToolCode,
-			Description: schemas.Ptr(
+			Description: new(
 				"Executes Python code in a sandboxed Starlark interpreter with MCP server tool access. " +
 					"Servers are exposed as global objects: result = serverName.toolName(param=\"value\"). " +
 					"This is the final step of the four-tool code mode workflow: listToolFiles -> readToolFile -> (optional) getToolDocs -> executeToolCode. " +
 					"If you have not already read a tool's .pyi stub in this conversation, do that before writing code. " +
 					"Do NOT guess callable tool names from natural language or stale assumptions; use the exact identifier returned by listToolFiles/readToolFile. " +
-
 					"STARLARK DIFFERENCES FROM PYTHON — READ BEFORE WRITING CODE: " +
 					"1. NO try/except/finally/raise — error handling is not supported, and tool failures cannot be caught inside Starlark. " +
 					"2. NO classes — use dicts and functions. " +
@@ -77,7 +76,6 @@ func (s *StarlarkCodeMode) createExecuteToolCodeTool() schemas.ChatTool {
 					"4. NO is operator — use == for comparison. " +
 					"5. NO f-strings — use % formatting: \"Hello %s, count=%d\" % (name, n). " +
 					"6. Each executeToolCode call runs in a FRESH ISOLATED SCOPE — no variables, functions, or state persist between calls. Re-fetch data or store it via MCP tools (e.g., SQLite, FileSystem) if needed across calls. " +
-
 					"SYNTAX NOTES: " +
 					"• Synchronous calls — NO async/await: result = server.tool(arg=\"value\") " +
 					"• Use keyword arguments: server.tool(param=\"value\") NOT server.tool({\"param\": \"value\"}) " +
@@ -89,10 +87,8 @@ func (s *StarlarkCodeMode) createExecuteToolCodeTool() schemas.ChatTool {
 					"• chr(10) for newline character, chr(9) for tab " +
 					"• To return a value, assign to 'result': result = computed_value " +
 					"• MCP tool calls are timeout-limited; avoid long or infinite loops " +
-
 					"AVAILABLE BUILTINS: print, len, range, enumerate, zip, sorted, reversed, min, max, " +
 					"int, float, str, bool, list, dict, tuple, set, hasattr, getattr, type, chr, ord, any, all, hash, repr. " +
-
 					"RETRY POLICY: Retry after fixing syntax or logic errors, especially for read-only flows. Before rerunning code that already made tool calls, inspect prior outputs and avoid replaying stateful operations.",
 			),
 
@@ -114,7 +110,7 @@ func (s *StarlarkCodeMode) handleExecuteToolCode(ctx *schemas.BifrostContext, to
 	s.logger.Debug("%s Handling executeToolCode tool call: %s", codemcp.CodeModeLogPrefix, toolName)
 
 	// Parse tool arguments
-	var arguments map[string]interface{}
+	var arguments map[string]any
 	if err := sonic.Unmarshal([]byte(toolCall.Function.Arguments), &arguments); err != nil {
 		s.logger.Debug("%s Failed to parse tool arguments: %v", codemcp.CodeModeLogPrefix, err)
 		return nil, fmt.Errorf("failed to parse tool arguments: %v", err)
@@ -266,7 +262,7 @@ func (s *StarlarkCodeMode) executeCode(ctx *schemas.BifrostContext, code string)
 			// Create a Starlark builtin function for this tool
 			toolFunc := starlark.NewBuiltin(parsedToolName, func(thread *starlark.Thread, fn *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
 				// Convert kwargs to Go map
-				goArgs := make(map[string]interface{})
+				goArgs := make(map[string]any)
 				for _, kwarg := range kwargs {
 					if len(kwarg) == 2 {
 						key := string(kwarg[0].(starlark.String))
@@ -376,7 +372,7 @@ func (s *StarlarkCodeMode) executeCode(ctx *schemas.BifrostContext, code string)
 	}
 
 	// Step 6: Extract result from globals
-	var result interface{}
+	var result any
 	if resultVal, ok := globals["result"]; ok && resultVal != starlark.None {
 		result = starlarkToGo(resultVal)
 	}
@@ -393,7 +389,7 @@ func (s *StarlarkCodeMode) executeCode(ctx *schemas.BifrostContext, code string)
 }
 
 // callMCPTool calls an MCP tool and returns the result.
-func (s *StarlarkCodeMode) callMCPTool(ctx *schemas.BifrostContext, clientName, toolName string, args map[string]interface{}, appendLog func(string)) (interface{}, error) {
+func (s *StarlarkCodeMode) callMCPTool(ctx *schemas.BifrostContext, clientName, toolName string, args map[string]any, appendLog func(string)) (any, error) {
 	// Get available tools per client
 	availableToolsPerClient := s.clientManager.GetToolPerClient(ctx)
 
@@ -453,9 +449,9 @@ func (s *StarlarkCodeMode) callMCPTool(ctx *schemas.BifrostContext, clientName, 
 
 	// Build tool call for MCP request
 	toolCallReq := schemas.ChatAssistantMessageToolCall{
-		ID: schemas.Ptr(newRequestID),
+		ID: new(newRequestID),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr(toolName),
+			Name:      new(toolName),
 			Arguments: string(argsJSON),
 		},
 	}
@@ -500,9 +496,9 @@ func (s *StarlarkCodeMode) callMCPTool(ctx *schemas.BifrostContext, clientName, 
 				effectiveToolName = stripClientPrefix(*toolCallReq.Function.Name, clientName)
 			}
 			if strings.TrimSpace(toolCallReq.Function.Arguments) == "" {
-				effectiveArgs = map[string]interface{}{}
+				effectiveArgs = map[string]any{}
 			} else {
-				var mutatedArgs map[string]interface{}
+				var mutatedArgs map[string]any
 				if err := sonic.Unmarshal([]byte(toolCallReq.Function.Arguments), &mutatedArgs); err != nil {
 					return nil, fmt.Errorf("failed to parse modified tool arguments for '%s': %v", effectiveToolName, err)
 				}

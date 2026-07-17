@@ -13,9 +13,9 @@ import (
 	"time"
 
 	"github.com/bytedance/sonic"
-	"github.com/maximhq/bifrost/core/providers/openai"
-	providerUtils "github.com/maximhq/bifrost/core/providers/utils"
-	schemas "github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/providers/openai"
+	providerUtils "github.com/grevinden/bifrost/core/providers/utils"
+	schemas "github.com/grevinden/bifrost/core/schemas"
 	"github.com/valyala/fasthttp"
 )
 
@@ -255,7 +255,7 @@ func (provider *SarvamProvider) Speech(ctx *schemas.BifrostContext, key schemas.
 		providerUtils.ParseAndSetRawRequest(&bifrostResponse.ExtraFields, jsonData)
 	}
 	if providerUtils.ShouldSendBackRawResponse(ctx, provider.sendBackRawResponse) {
-		var rawResponse interface{}
+		var rawResponse any
 		if err := sonic.Unmarshal(body, &rawResponse); err != nil {
 			rawResponse = string(body)
 		}
@@ -474,7 +474,7 @@ func (provider *SarvamProvider) Transcription(ctx *schemas.BifrostContext, key s
 	}
 
 	if providerUtils.ShouldSendBackRawResponse(ctx, provider.sendBackRawResponse) {
-		var rawResponse interface{}
+		var rawResponse any
 		if err := sonic.Unmarshal(responseBody, &rawResponse); err != nil {
 			rawResponse = string(responseBody)
 		}

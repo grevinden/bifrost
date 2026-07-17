@@ -120,12 +120,12 @@ const externalLinks = [
 	},
 	{
 		title: "GitHub Repository",
-		url: "https://github.com/maximhq/bifrost",
+		url: "https://github.com/grevinden/bifrost",
 		icon: GithubLogoIcon,
 	},
 	{
 		title: "Report a bug",
-		url: "https://github.com/maximhq/bifrost/issues/new?title=[Bug Report]&labels=bug&type=bug&projects=maximhq/1",
+		url: "https://github.com/grevinden/bifrost/issues/new?title=[Bug Report]&labels=bug&type=bug&projects=maximhq/1",
 		icon: BugIcon,
 		strokeWidth: 1.5,
 	},

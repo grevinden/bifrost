@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // RunInterleavedThinkingTest tests that the interleaved-thinking-2025-05-14 beta header
@@ -50,10 +50,10 @@ func RunInterleavedThinkingTest(t *testing.T, client *bifrost.Bifrost, ctx conte
 				Model:    model,
 				Input:    messages,
 				Params: &schemas.ResponsesParameters{
-					MaxOutputTokens: bifrost.Ptr(4096),
+					MaxOutputTokens: new(4096),
 					Tools:           []schemas.ResponsesTool{*weatherTool},
 					Reasoning: &schemas.ResponsesParametersReasoning{
-						Effort: bifrost.Ptr("low"),
+						Effort: new("low"),
 					},
 				},
 				Fallbacks: testConfig.Fallbacks,
@@ -70,7 +70,7 @@ func RunInterleavedThinkingTest(t *testing.T, client *bifrost.Bifrost, ctx conte
 			t.Logf("Interleaved thinking non-streaming passed: stop_reason=%v", response.StopReason)
 
 			// Validate that the response contains output
-			if response.Output == nil || len(response.Output) == 0 {
+			if len(response.Output) == 0 {
 				t.Fatal("Expected non-empty output for interleaved thinking response")
 			}
 
@@ -116,10 +116,10 @@ func RunInterleavedThinkingTest(t *testing.T, client *bifrost.Bifrost, ctx conte
 				Model:    model,
 				Input:    chatMessages,
 				Params: &schemas.ChatParameters{
-					MaxCompletionTokens: bifrost.Ptr(4096),
+					MaxCompletionTokens: new(4096),
 					Tools:               []schemas.ChatTool{*chatTool},
 					Reasoning: &schemas.ChatReasoning{
-						Effort: bifrost.Ptr("low"),
+						Effort: new("low"),
 					},
 				},
 				Fallbacks: testConfig.Fallbacks,

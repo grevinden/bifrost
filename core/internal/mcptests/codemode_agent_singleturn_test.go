@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -79,7 +79,7 @@ func TestCodeMode_Agent_AutoExecuteSingleTool(t *testing.T) {
 				}
 
 				// Also check if it's JSON with a result field
-				var execResult map[string]interface{}
+				var execResult map[string]any
 				if err := json.Unmarshal([]byte(content), &execResult); err == nil {
 					if returnValue, hasResult := execResult["result"]; hasResult {
 						returnStr := fmt.Sprintf("%v", returnValue)
@@ -103,7 +103,7 @@ func TestCodeMode_Agent_AutoExecuteSingleTool(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Get the temperature in London"),
+					ContentStr: new("Get the temperature in London"),
 				},
 			},
 		},
@@ -192,7 +192,7 @@ func TestCodeMode_Agent_NonAutoToolInCode(t *testing.T) {
 	// Turn 2: LLM returns non-auto tool (should stop agent)
 	mocker.AddChatResponse(CreateDynamicChatResponse(func(history []schemas.ChatMessage) *schemas.BifrostChatResponse {
 		return CreateChatResponseWithToolCalls([]schemas.ChatAssistantMessageToolCall{
-			CreateInProcessToolCall("call-2", "get_temperature", map[string]interface{}{
+			CreateInProcessToolCall("call-2", "get_temperature", map[string]any{
 				"location": "Paris",
 			}),
 		})
@@ -206,7 +206,7 @@ func TestCodeMode_Agent_NonAutoToolInCode(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Execute code and get temperature"),
+					ContentStr: new("Execute code and get temperature"),
 				},
 			},
 		},

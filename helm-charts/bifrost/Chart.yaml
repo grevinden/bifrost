@@ -12,7 +12,7 @@ keywords:
   - anthropic
 home: https://www.getmaxim.ai/bifrost
 sources:
-  - https://github.com/maximhq/bifrost
+  - https://github.com/grevinden/bifrost
 maintainers:
   - name: Bifrost Team
     email: support@getbifrost.ai

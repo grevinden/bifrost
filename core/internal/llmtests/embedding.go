@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // cosineSimilarity computes the cosine similarity between two vectors
@@ -22,7 +22,7 @@ func cosineSimilarity(a, b []float64) float64 {
 	var normA float64
 	var normB float64
 
-	for i := 0; i < len(a); i++ {
+	for i := range a {
 		dotProduct += a[i] * b[i]
 		normA += a[i] * a[i]
 		normB += b[i] * b[i]
@@ -65,7 +65,7 @@ func RunEmbeddingTest(t *testing.T, client *bifrost.Bifrost, ctx context.Context
 				Texts: testTexts,
 			},
 			Params: &schemas.EmbeddingParameters{
-				EncodingFormat: bifrost.Ptr("float"),
+				EncodingFormat: new("float"),
 			},
 			Fallbacks: testConfig.EmbeddingFallbacks,
 		}
@@ -74,11 +74,11 @@ func RunEmbeddingTest(t *testing.T, client *bifrost.Bifrost, ctx context.Context
 		retryConfig := GetTestRetryConfigForScenario("Embedding", testConfig)
 		retryContext := TestRetryContext{
 			ScenarioName: "Embedding",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"should_return_embeddings":  true,
 				"should_have_valid_vectors": true,
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider": testConfig.Provider,
 				"model":    testConfig.EmbeddingModel,
 			},

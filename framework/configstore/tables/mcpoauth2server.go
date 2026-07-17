@@ -3,8 +3,8 @@ package tables
 import (
 	"fmt"
 
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/encrypt"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/encrypt"
 )
 
 // MCPServerAuthMode controls how Bifrost's /mcp endpoint authenticates inbound

@@ -3,7 +3,7 @@ package tables
 import (
 	"time"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // TableMCPLibrary represents a single discoverable MCP server in the MCP

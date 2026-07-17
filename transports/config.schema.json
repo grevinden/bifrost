@@ -1996,7 +1996,7 @@
           },
           "name": {
             "type": "string",
-            "description": "Name of the plugin (built-in: telemetry, prompts, logging, governance, maxim, semantic_cache, otel, or custom plugin name)"
+            "description": "Name of the plugin (built-in: telemetry, prompts, logging, governance, maxim, semantic_cache, otel, llmboster, or custom plugin name)"
           },
           "config": {
             "type": "object",
@@ -2800,6 +2800,31 @@
                     }
                   },
                   "required": ["project_id", "topic_id"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "name": {
+                  "const": "llmboster"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "config": {
+                  "type": "object",
+                  "description": "Configuration for the llmboster plugin — forces the LLM to think step by step by modifying the system prompt and wrapping the response as a tool_call",
+                  "properties": {
+                    "prompt": {
+                      "type": "string",
+                      "description": "Thinking prompt appended to the system message. Default: 'Think step by step, write down your reasoning, then give a final answer.'",
+                      "default": "Think step by step, write down your reasoning, then give a final answer."
+                    }
+                  },
                   "additionalProperties": false
                 }
               }

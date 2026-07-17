@@ -4,7 +4,7 @@ import (
 	"log"
 	"reflect"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"gorm.io/gorm"
 )
 
@@ -41,7 +41,7 @@ func vaultStoreCallback(tx *gorm.DB) {
 	if !schemas.VaultStoreWriteEnabled() {
 		return
 	}
-	forEachModel(tx, func(model interface{}, keyer schemas.VaultPathKeyer) {
+	forEachModel(tx, func(model any, keyer schemas.VaultPathKeyer) {
 		if _, ok := model.(vaultStoreSelfManaged); ok {
 			return // model stores its own vault secrets inside BeforeSave
 		}
@@ -57,7 +57,7 @@ func vaultRemoveCallback(tx *gorm.DB) {
 	if !schemas.VaultStoreWriteEnabled() {
 		return
 	}
-	forEachModel(tx, func(model interface{}, keyer schemas.VaultPathKeyer) {
+	forEachModel(tx, func(model any, keyer schemas.VaultPathKeyer) {
 		tableName := tx.Statement.Table
 		base := schemas.VaultBasePath(tableName, keyer.VaultPathKey())
 		errs := schemas.RemoveOwnedVaultSecretVars(tx.Statement.Context, base, model)
@@ -70,7 +70,7 @@ func vaultRemoveCallback(tx *gorm.DB) {
 // forEachModel extracts the model(s) from the GORM statement and calls fn for
 // each one that implements VaultPathKeyer. Handles both single structs and
 // slices (batch operations).
-func forEachModel(tx *gorm.DB, fn func(model interface{}, keyer schemas.VaultPathKeyer)) {
+func forEachModel(tx *gorm.DB, fn func(model any, keyer schemas.VaultPathKeyer)) {
 	if tx.Statement == nil {
 		return
 	}
@@ -87,7 +87,7 @@ func forEachModel(tx *gorm.DB, fn func(model interface{}, keyer schemas.VaultPat
 	case reflect.Slice:
 		for i := 0; i < rv.Len(); i++ {
 			elem := rv.Index(i)
-			if elem.Kind() == reflect.Ptr {
+			if elem.Kind() == reflect.Pointer {
 				elem = elem.Elem()
 			}
 			if !elem.CanAddr() {

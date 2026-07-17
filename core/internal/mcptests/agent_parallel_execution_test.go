@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -27,7 +27,7 @@ func TestAgent_ParallelExecution_ResultOrdering(t *testing.T) {
 	manager := setupMCPManager(t)
 
 	// Register multiple tools that return identifiable results
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		toolName := fmt.Sprintf("tool_%d", i)
 		toolIndex := i // Capture for closure
 
@@ -41,7 +41,7 @@ func TestAgent_ParallelExecution_ResultOrdering(t *testing.T) {
 			Type: schemas.ChatToolTypeFunction,
 			Function: &schemas.ChatToolFunction{
 				Name:        toolName,
-				Description: schemas.Ptr(fmt.Sprintf("Test tool %d", i)),
+				Description: new(fmt.Sprintf("Test tool %d", i)),
 			},
 		}
 
@@ -57,8 +57,8 @@ func TestAgent_ParallelExecution_ResultOrdering(t *testing.T) {
 
 	// Create tool calls for all 5 tools
 	toolCalls := []schemas.ChatAssistantMessageToolCall{}
-	for i := 0; i < 5; i++ {
-		toolCalls = append(toolCalls, CreateInProcessToolCall(fmt.Sprintf("call-%d", i), fmt.Sprintf("tool_%d", i), map[string]interface{}{}))
+	for i := range 5 {
+		toolCalls = append(toolCalls, CreateInProcessToolCall(fmt.Sprintf("call-%d", i), fmt.Sprintf("tool_%d", i), map[string]any{}))
 	}
 
 	// Mock LLM that returns all tool calls, then stops
@@ -79,7 +79,7 @@ func TestAgent_ParallelExecution_ResultOrdering(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Execute all tools"),
+					ContentStr: new("Execute all tools"),
 				},
 			},
 		},
@@ -111,7 +111,7 @@ func TestAgent_ParallelExecution_PartialFailures(t *testing.T) {
 	manager := setupMCPManager(t)
 
 	// Register 5 tools: 3 succeed, 2 fail
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		toolName := fmt.Sprintf("tool_%d", i)
 		toolIndex := i
 
@@ -130,7 +130,7 @@ func TestAgent_ParallelExecution_PartialFailures(t *testing.T) {
 			Type: schemas.ChatToolTypeFunction,
 			Function: &schemas.ChatToolFunction{
 				Name:        toolName,
-				Description: schemas.Ptr(fmt.Sprintf("Test tool %d", i)),
+				Description: new(fmt.Sprintf("Test tool %d", i)),
 			},
 		}
 
@@ -145,8 +145,8 @@ func TestAgent_ParallelExecution_PartialFailures(t *testing.T) {
 
 	// Create tool calls for all 5 tools
 	toolCalls := []schemas.ChatAssistantMessageToolCall{}
-	for i := 0; i < 5; i++ {
-		toolCalls = append(toolCalls, CreateInProcessToolCall(fmt.Sprintf("call-%d", i), fmt.Sprintf("tool_%d", i), map[string]interface{}{}))
+	for i := range 5 {
+		toolCalls = append(toolCalls, CreateInProcessToolCall(fmt.Sprintf("call-%d", i), fmt.Sprintf("tool_%d", i), map[string]any{}))
 	}
 
 	mockLLM := &MockLLMCaller{
@@ -166,7 +166,7 @@ func TestAgent_ParallelExecution_PartialFailures(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Execute all tools"),
+					ContentStr: new("Execute all tools"),
 				},
 			},
 		},
@@ -198,7 +198,7 @@ func TestAgent_ParallelExecution_RaceConditions(t *testing.T) {
 	var accessLog []string
 	var accessLogMu sync.Mutex
 
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		toolName := fmt.Sprintf("tool_%d", i)
 		toolIndex := i
 
@@ -221,7 +221,7 @@ func TestAgent_ParallelExecution_RaceConditions(t *testing.T) {
 			Type: schemas.ChatToolTypeFunction,
 			Function: &schemas.ChatToolFunction{
 				Name:        toolName,
-				Description: schemas.Ptr(fmt.Sprintf("Race test tool %d", i)),
+				Description: new(fmt.Sprintf("Race test tool %d", i)),
 			},
 		}
 
@@ -236,8 +236,8 @@ func TestAgent_ParallelExecution_RaceConditions(t *testing.T) {
 
 	// Create 10 tool calls
 	toolCalls := []schemas.ChatAssistantMessageToolCall{}
-	for i := 0; i < 10; i++ {
-		toolCalls = append(toolCalls, CreateInProcessToolCall(fmt.Sprintf("call-%d", i), fmt.Sprintf("tool_%d", i), map[string]interface{}{}))
+	for i := range 10 {
+		toolCalls = append(toolCalls, CreateInProcessToolCall(fmt.Sprintf("call-%d", i), fmt.Sprintf("tool_%d", i), map[string]any{}))
 	}
 
 	mockLLM := &MockLLMCaller{
@@ -257,7 +257,7 @@ func TestAgent_ParallelExecution_RaceConditions(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Execute all tools"),
+					ContentStr: new("Execute all tools"),
 				},
 			},
 		},
@@ -296,7 +296,7 @@ func TestAgent_ParallelExecution_LargeBatch(t *testing.T) {
 	manager := setupMCPManager(t)
 
 	toolCount := 20
-	for i := 0; i < toolCount; i++ {
+	for i := range toolCount {
 		toolName := fmt.Sprintf("tool_%d", i)
 		toolIndex := i
 
@@ -311,7 +311,7 @@ func TestAgent_ParallelExecution_LargeBatch(t *testing.T) {
 			Type: schemas.ChatToolTypeFunction,
 			Function: &schemas.ChatToolFunction{
 				Name:        toolName,
-				Description: schemas.Ptr(fmt.Sprintf("Batch test tool %d", i)),
+				Description: new(fmt.Sprintf("Batch test tool %d", i)),
 			},
 		}
 
@@ -326,8 +326,8 @@ func TestAgent_ParallelExecution_LargeBatch(t *testing.T) {
 
 	// Create 20 tool calls
 	toolCalls := []schemas.ChatAssistantMessageToolCall{}
-	for i := 0; i < toolCount; i++ {
-		toolCalls = append(toolCalls, CreateInProcessToolCall(fmt.Sprintf("call-%d", i), fmt.Sprintf("tool_%d", i), map[string]interface{}{}))
+	for i := range toolCount {
+		toolCalls = append(toolCalls, CreateInProcessToolCall(fmt.Sprintf("call-%d", i), fmt.Sprintf("tool_%d", i), map[string]any{}))
 	}
 
 	mockLLM := &MockLLMCaller{
@@ -347,7 +347,7 @@ func TestAgent_ParallelExecution_LargeBatch(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Execute large batch"),
+					ContentStr: new("Execute large batch"),
 				},
 			},
 		},
@@ -404,7 +404,7 @@ func TestAgent_ParallelExecution_MixedOutcomes(t *testing.T) {
 			Type: schemas.ChatToolTypeFunction,
 			Function: &schemas.ChatToolFunction{
 				Name:        toolName,
-				Description: schemas.Ptr(fmt.Sprintf("Mixed outcome tool %d (%s)", i, outcomeType)),
+				Description: new(fmt.Sprintf("Mixed outcome tool %d (%s)", i, outcomeType)),
 			},
 		}
 
@@ -422,7 +422,7 @@ func TestAgent_ParallelExecution_MixedOutcomes(t *testing.T) {
 	// Create tool calls
 	toolCalls := []schemas.ChatAssistantMessageToolCall{}
 	for i := range outcomes {
-		toolCalls = append(toolCalls, CreateInProcessToolCall(fmt.Sprintf("call-%d", i), fmt.Sprintf("tool_%d", i), map[string]interface{}{}))
+		toolCalls = append(toolCalls, CreateInProcessToolCall(fmt.Sprintf("call-%d", i), fmt.Sprintf("tool_%d", i), map[string]any{}))
 	}
 
 	mockLLM := &MockLLMCaller{
@@ -442,7 +442,7 @@ func TestAgent_ParallelExecution_MixedOutcomes(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Execute mixed tools"),
+					ContentStr: new("Execute mixed tools"),
 				},
 			},
 		},
@@ -491,7 +491,7 @@ func TestAgent_ParallelExecution_ResultCollectionOrder(t *testing.T) {
 			Type: schemas.ChatToolTypeFunction,
 			Function: &schemas.ChatToolFunction{
 				Name:        toolName,
-				Description: schemas.Ptr(fmt.Sprintf("Delayed tool %d", i)),
+				Description: new(fmt.Sprintf("Delayed tool %d", i)),
 			},
 		}
 
@@ -508,10 +508,10 @@ func TestAgent_ParallelExecution_ResultCollectionOrder(t *testing.T) {
 	toolCalls := []schemas.ChatAssistantMessageToolCall{}
 	for i := range completionTimes {
 		toolCalls = append(toolCalls, schemas.ChatAssistantMessageToolCall{
-			ID:   schemas.Ptr(fmt.Sprintf("call-%d", i)),
-			Type: schemas.Ptr("function"),
+			ID:   new(fmt.Sprintf("call-%d", i)),
+			Type: new("function"),
 			Function: schemas.ChatAssistantMessageToolCallFunction{
-				Name:      schemas.Ptr(fmt.Sprintf("bifrostInternal-tool_%d", i)),
+				Name:      new(fmt.Sprintf("bifrostInternal-tool_%d", i)),
 				Arguments: "{}",
 			},
 		})
@@ -534,7 +534,7 @@ func TestAgent_ParallelExecution_ResultCollectionOrder(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Test order"),
+					ContentStr: new("Test order"),
 				},
 			},
 		},

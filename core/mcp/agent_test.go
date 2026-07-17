@@ -7,8 +7,8 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/mark3labs/mcp-go/client"
-	"github.com/maximhq/bifrost/core/schemas"
 )
 
 // MockLLMCaller implements schemas.BifrostLLMCaller for testing
@@ -79,7 +79,7 @@ func (m *MockClientManager) GetToolPerClient(ctx context.Context) map[string][]s
 }
 
 func (m *MockClientManager) GetPluginPipeline() PluginPipeline             { return nil }
-func (m *MockClientManager) ReleasePluginPipeline(pipeline PluginPipeline)  {}
+func (m *MockClientManager) ReleasePluginPipeline(pipeline PluginPipeline) {}
 func (m *MockClientManager) AcquireClientConn(ctx *schemas.BifrostContext, state *schemas.MCPClientState) (*client.Client, func(), error) {
 	return nil, func() {}, nil
 }
@@ -109,7 +109,7 @@ func TestHasToolCallsForChatResponse(t *testing.T) {
 	toolCallsResponse := &schemas.BifrostChatResponse{
 		Choices: []schemas.BifrostResponseChoice{
 			{
-				FinishReason: schemas.Ptr("tool_calls"),
+				FinishReason: new("tool_calls"),
 			},
 		},
 	}
@@ -127,7 +127,7 @@ func TestHasToolCallsForChatResponse(t *testing.T) {
 							ToolCalls: []schemas.ChatAssistantMessageToolCall{
 								{
 									Function: schemas.ChatAssistantMessageToolCallFunction{
-										Name: schemas.Ptr("test_tool"),
+										Name: new("test_tool"),
 									},
 								},
 							},
@@ -147,14 +147,14 @@ func TestHasToolCallsForChatResponse(t *testing.T) {
 	responseWithStopReason := &schemas.BifrostChatResponse{
 		Choices: []schemas.BifrostResponseChoice{
 			{
-				FinishReason: schemas.Ptr("stop"),
+				FinishReason: new("stop"),
 				ChatNonStreamResponseChoice: &schemas.ChatNonStreamResponseChoice{
 					Message: &schemas.ChatMessage{
 						ChatAssistantMessage: &schemas.ChatAssistantMessage{
 							ToolCalls: []schemas.ChatAssistantMessageToolCall{
 								{
 									Function: schemas.ChatAssistantMessageToolCallFunction{
-										Name: schemas.Ptr("test_tool"),
+										Name: new("test_tool"),
 									},
 								},
 							},
@@ -172,7 +172,7 @@ func TestHasToolCallsForChatResponse(t *testing.T) {
 	responseWithStopNoTools := &schemas.BifrostChatResponse{
 		Choices: []schemas.BifrostResponseChoice{
 			{
-				FinishReason: schemas.Ptr("stop"),
+				FinishReason: new("stop"),
 				ChatNonStreamResponseChoice: &schemas.ChatNonStreamResponseChoice{
 					Message: &schemas.ChatMessage{},
 				},
@@ -202,7 +202,7 @@ func TestHasToolCallsForChatResponse(t *testing.T) {
 							ToolCalls: []schemas.ChatAssistantMessageToolCall{
 								{
 									Function: schemas.ChatAssistantMessageToolCallFunction{
-										Name: schemas.Ptr("youtube_search"),
+										Name: new("youtube_search"),
 									},
 								},
 							},
@@ -222,7 +222,7 @@ func TestExtractToolCalls(t *testing.T) {
 	responseNoTools := &schemas.BifrostChatResponse{
 		Choices: []schemas.BifrostResponseChoice{
 			{
-				FinishReason: schemas.Ptr("stop"),
+				FinishReason: new("stop"),
 			},
 		},
 	}
@@ -235,9 +235,9 @@ func TestExtractToolCalls(t *testing.T) {
 	// Test response with tool calls
 	expectedToolCalls := []schemas.ChatAssistantMessageToolCall{
 		{
-			ID: schemas.Ptr("call_123"),
+			ID: new("call_123"),
 			Function: schemas.ChatAssistantMessageToolCallFunction{
-				Name:      schemas.Ptr("test_tool"),
+				Name:      new("test_tool"),
 				Arguments: `{"param": "value"}`,
 			},
 		},
@@ -272,12 +272,12 @@ func TestExecuteAgentForChatRequest(t *testing.T) {
 	responseNoTools := &schemas.BifrostChatResponse{
 		Choices: []schemas.BifrostResponseChoice{
 			{
-				FinishReason: schemas.Ptr("stop"),
+				FinishReason: new("stop"),
 				ChatNonStreamResponseChoice: &schemas.ChatNonStreamResponseChoice{
 					Message: &schemas.ChatMessage{
 						Role: schemas.ChatMessageRoleAssistant,
 						Content: &schemas.ChatMessageContent{
-							ContentStr: schemas.Ptr("Hello, how can I help you?"),
+							ContentStr: new("Hello, how can I help you?"),
 						},
 					},
 				},
@@ -296,7 +296,7 @@ func TestExecuteAgentForChatRequest(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Hello"),
+					ContentStr: new("Hello"),
 				},
 			},
 		},
@@ -321,19 +321,19 @@ func TestExecuteAgentForChatRequest_WithNonAutoExecutableTools(t *testing.T) {
 	responseWithNonAutoTools := &schemas.BifrostChatResponse{
 		Choices: []schemas.BifrostResponseChoice{
 			{
-				FinishReason: schemas.Ptr("tool_calls"),
+				FinishReason: new("tool_calls"),
 				ChatNonStreamResponseChoice: &schemas.ChatNonStreamResponseChoice{
 					Message: &schemas.ChatMessage{
 						Role: schemas.ChatMessageRoleAssistant,
 						Content: &schemas.ChatMessageContent{
-							ContentStr: schemas.Ptr("I need to call a tool"),
+							ContentStr: new("I need to call a tool"),
 						},
 						ChatAssistantMessage: &schemas.ChatAssistantMessage{
 							ToolCalls: []schemas.ChatAssistantMessageToolCall{
 								{
-									ID: schemas.Ptr("call_123"),
+									ID: new("call_123"),
 									Function: schemas.ChatAssistantMessageToolCallFunction{
-										Name:      schemas.Ptr("non_auto_executable_tool"),
+										Name:      new("non_auto_executable_tool"),
 										Arguments: `{"param": "value"}`,
 									},
 								},
@@ -356,7 +356,7 @@ func TestExecuteAgentForChatRequest_WithNonAutoExecutableTools(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Test message"),
+					ContentStr: new("Test message"),
 				},
 			},
 		},
@@ -405,8 +405,8 @@ func TestHasToolCallsForResponsesResponse(t *testing.T) {
 			{
 				Type: schemas.Ptr(schemas.ResponsesMessageTypeFunctionCall),
 				ResponsesToolMessage: &schemas.ResponsesToolMessage{
-					CallID: schemas.Ptr("call_123"),
-					Name:   schemas.Ptr("test_tool"),
+					CallID: new("call_123"),
+					Name:   new("test_tool"),
 				},
 			},
 		},
@@ -434,7 +434,7 @@ func TestHasToolCallsForResponsesResponse(t *testing.T) {
 			{
 				Type: schemas.Ptr(schemas.ResponsesMessageTypeMessage),
 				Content: &schemas.ResponsesMessageContent{
-					ContentStr: schemas.Ptr("Hello"),
+					ContentStr: new("Hello"),
 				},
 			},
 		},
@@ -453,7 +453,7 @@ func TestExecuteAgentForResponsesRequest(t *testing.T) {
 				Type: schemas.Ptr(schemas.ResponsesMessageTypeMessage),
 				Role: schemas.Ptr(schemas.ResponsesInputMessageRoleAssistant),
 				Content: &schemas.ResponsesMessageContent{
-					ContentStr: schemas.Ptr("Hello, how can I help you?"),
+					ContentStr: new("Hello, how can I help you?"),
 				},
 			},
 		},
@@ -471,7 +471,7 @@ func TestExecuteAgentForResponsesRequest(t *testing.T) {
 				Type: schemas.Ptr(schemas.ResponsesMessageTypeMessage),
 				Role: schemas.Ptr(schemas.ResponsesInputMessageRoleUser),
 				Content: &schemas.ResponsesMessageContent{
-					ContentStr: schemas.Ptr("Hello"),
+					ContentStr: new("Hello"),
 				},
 			},
 		},
@@ -499,9 +499,9 @@ func TestExecuteAgentForResponsesRequest_WithNonAutoExecutableTools(t *testing.T
 				Type: schemas.Ptr(schemas.ResponsesMessageTypeFunctionCall),
 				Role: schemas.Ptr(schemas.ResponsesInputMessageRoleAssistant),
 				ResponsesToolMessage: &schemas.ResponsesToolMessage{
-					CallID:    schemas.Ptr("call_123"),
-					Name:      schemas.Ptr("non_auto_executable_tool"),
-					Arguments: schemas.Ptr(`{"param": "value"}`),
+					CallID:    new("call_123"),
+					Name:      new("non_auto_executable_tool"),
+					Arguments: new(`{"param": "value"}`),
 				},
 			},
 		},
@@ -519,7 +519,7 @@ func TestExecuteAgentForResponsesRequest_WithNonAutoExecutableTools(t *testing.T
 				Type: schemas.Ptr(schemas.ResponsesMessageTypeMessage),
 				Role: schemas.Ptr(schemas.ResponsesInputMessageRoleUser),
 				Content: &schemas.ResponsesMessageContent{
-					ContentStr: schemas.Ptr("Test message"),
+					ContentStr: new("Test message"),
 				},
 			},
 		},
@@ -614,7 +614,7 @@ func TestParallelToolCallsHaveUniqueMCPLogIDs(t *testing.T) {
 	initialResponse := &schemas.BifrostChatResponse{
 		Choices: []schemas.BifrostResponseChoice{
 			{
-				FinishReason: schemas.Ptr("tool_calls"),
+				FinishReason: new("tool_calls"),
 				ChatNonStreamResponseChoice: &schemas.ChatNonStreamResponseChoice{
 					Message: &schemas.ChatMessage{
 						Role: schemas.ChatMessageRoleAssistant,
@@ -632,11 +632,11 @@ func TestParallelToolCallsHaveUniqueMCPLogIDs(t *testing.T) {
 		return &schemas.BifrostChatResponse{
 			Choices: []schemas.BifrostResponseChoice{
 				{
-					FinishReason: schemas.Ptr("stop"),
+					FinishReason: new("stop"),
 					ChatNonStreamResponseChoice: &schemas.ChatNonStreamResponseChoice{
 						Message: &schemas.ChatMessage{
 							Role:    schemas.ChatMessageRoleAssistant,
-							Content: &schemas.ChatMessageContent{ContentStr: schemas.Ptr("2, 3, and 5 are prime; 4 is not.")},
+							Content: &schemas.ChatMessageContent{ContentStr: new("2, 3, and 5 are prime; 4 is not.")},
 						},
 					},
 				},
@@ -664,7 +664,7 @@ func TestParallelToolCallsHaveUniqueMCPLogIDs(t *testing.T) {
 					ToolCallID: &toolCallID,
 				},
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("true"),
+					ContentStr: new("true"),
 				},
 			},
 		}, nil
@@ -679,7 +679,7 @@ func TestParallelToolCallsHaveUniqueMCPLogIDs(t *testing.T) {
 		Input: []schemas.ChatMessage{
 			{
 				Role:    schemas.ChatMessageRoleUser,
-				Content: &schemas.ChatMessageContent{ContentStr: schemas.Ptr("check if 2,3,4,5 are prime")},
+				Content: &schemas.ChatMessageContent{ContentStr: new("check if 2,3,4,5 are prime")},
 			},
 		},
 	}
@@ -718,9 +718,9 @@ func TestParallelToolCallsHaveUniqueMCPLogIDs(t *testing.T) {
 func TestResponsesToolMessageToChatAssistantMessageToolCall(t *testing.T) {
 	// Test with valid tool message
 	responsesToolMsg := &schemas.ResponsesToolMessage{
-		CallID:    schemas.Ptr("call-123"),
-		Name:      schemas.Ptr("calculate"),
-		Arguments: schemas.Ptr("{\"x\": 10, \"y\": 20}"),
+		CallID:    new("call-123"),
+		Name:      new("calculate"),
+		Arguments: new("{\"x\": 10, \"y\": 20}"),
 	}
 
 	chatToolCall := responsesToolMsg.ToChatAssistantMessageToolCall()
@@ -745,8 +745,8 @@ func TestResponsesToolMessageToChatAssistantMessageToolCall(t *testing.T) {
 // TestResponsesToolMessageToChatAssistantMessageToolCall_Nil tests nil handling
 func TestResponsesToolMessageToChatAssistantMessageToolCall_Nil(t *testing.T) {
 	responsesToolMsg := &schemas.ResponsesToolMessage{
-		CallID:    schemas.Ptr("call-123"),
-		Name:      schemas.Ptr("calculate"),
+		CallID:    new("call-123"),
+		Name:      new("calculate"),
 		Arguments: nil, // Test nil Arguments case
 	}
 
@@ -761,7 +761,7 @@ func TestResponsesToolMessageToChatAssistantMessageToolCall_Nil(t *testing.T) {
 	}
 
 	// Verify it's valid JSON by attempting to unmarshal
-	var args map[string]interface{}
+	var args map[string]any
 	if err := json.Unmarshal([]byte(chatToolCall.Function.Arguments), &args); err != nil {
 		t.Errorf("Expected valid JSON, but unmarshaling failed: %v", err)
 	}
@@ -773,10 +773,10 @@ func TestChatMessageToResponsesToolMessage(t *testing.T) {
 	chatMsg := &schemas.ChatMessage{
 		Role: schemas.ChatMessageRoleTool,
 		ChatToolMessage: &schemas.ChatToolMessage{
-			ToolCallID: schemas.Ptr("call-123"),
+			ToolCallID: new("call-123"),
 		},
 		Content: &schemas.ChatMessageContent{
-			ContentStr: schemas.Ptr("Result: 30"),
+			ContentStr: new("Result: 30"),
 		},
 	}
 
@@ -845,9 +845,9 @@ func TestChatMessageToResponsesToolMessage_NoToolMessage(t *testing.T) {
 func TestExecuteAgentForResponsesRequest_ConversionRoundTrip(t *testing.T) {
 	// Create a tool message in Responses format
 	responsesToolMsg := &schemas.ResponsesToolMessage{
-		CallID:    schemas.Ptr("call-456"),
-		Name:      schemas.Ptr("readToolFile"),
-		Arguments: schemas.Ptr("{\"file\": \"test.txt\"}"),
+		CallID:    new("call-456"),
+		Name:      new("readToolFile"),
+		Arguments: new("{\"file\": \"test.txt\"}"),
 	}
 
 	// Step 1: Convert Responses format to Chat format
@@ -877,7 +877,7 @@ func TestExecuteAgentForResponsesRequest_ConversionRoundTrip(t *testing.T) {
 			ToolCallID: chatToolCall.ID,
 		},
 		Content: &schemas.ChatMessageContent{
-			ContentStr: schemas.Ptr("File contents here"),
+			ContentStr: new("File contents here"),
 		},
 	}
 
@@ -915,17 +915,17 @@ func TestExecuteAgentForResponsesRequest_OutputStructured(t *testing.T) {
 	chatResultMsg := &schemas.ChatMessage{
 		Role: schemas.ChatMessageRoleTool,
 		ChatToolMessage: &schemas.ChatToolMessage{
-			ToolCallID: schemas.Ptr("call-789"),
+			ToolCallID: new("call-789"),
 		},
 		Content: &schemas.ChatMessageContent{
 			ContentBlocks: []schemas.ChatContentBlock{
 				{
 					Type: schemas.ChatContentBlockTypeText,
-					Text: schemas.Ptr("Block 1"),
+					Text: new("Block 1"),
 				},
 				{
 					Type: schemas.ChatContentBlockTypeText,
-					Text: schemas.Ptr("Block 2"),
+					Text: new("Block 2"),
 				},
 			},
 		},

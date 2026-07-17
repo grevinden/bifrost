@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/bytedance/sonic"
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/valyala/fasthttp"
 )
 
@@ -118,7 +118,7 @@ func TestHandleProviderAPIError_RawResponseIncluded(t *testing.T) {
 			}
 			resp.SetBody(tt.body)
 
-			var errorResp map[string]interface{}
+			var errorResp map[string]any
 			bifrostErr := HandleProviderAPIError(resp, &errorResp)
 
 			if bifrostErr == nil {
@@ -152,8 +152,8 @@ func TestHandleProviderAPIError_RawResponseIncluded(t *testing.T) {
 func TestEnrichError_PreservesExistingRawResponse(t *testing.T) {
 	ctx := schemas.NewBifrostContext(context.Background(), schemas.NoDeadline)
 
-	existingRawResponse := map[string]interface{}{
-		"error": map[string]interface{}{
+	existingRawResponse := map[string]any{
+		"error": map[string]any{
 			"message": "Original error from provider",
 			"code":    "invalid_api_key",
 		},
@@ -161,7 +161,7 @@ func TestEnrichError_PreservesExistingRawResponse(t *testing.T) {
 
 	bifrostErr := &schemas.BifrostError{
 		IsBifrostError: false,
-		StatusCode:     schemas.Ptr(401),
+		StatusCode:     new(401),
 		Error: &schemas.ErrorField{
 			Message: "Authentication failed",
 		},
@@ -183,8 +183,8 @@ func TestEnrichError_PreservesExistingRawResponse(t *testing.T) {
 		t.Error("RawResponse was cleared when it should have been preserved")
 	} else {
 		// Verify it's still the original
-		if rawMap, ok := enrichedErr.ExtraFields.RawResponse.(map[string]interface{}); ok {
-			if errorMap, ok := rawMap["error"].(map[string]interface{}); ok {
+		if rawMap, ok := enrichedErr.ExtraFields.RawResponse.(map[string]any); ok {
+			if errorMap, ok := rawMap["error"].(map[string]any); ok {
 				if errorMap["code"] != "invalid_api_key" {
 					t.Error("RawResponse was modified, expected it to be preserved")
 				}
@@ -202,7 +202,7 @@ func TestEnrichError_OverwritesWithProvidedResponse(t *testing.T) {
 
 	bifrostErr := &schemas.BifrostError{
 		IsBifrostError: false,
-		StatusCode:     schemas.Ptr(400),
+		StatusCode:     new(400),
 		Error: &schemas.ErrorField{
 			Message: "Bad request",
 		},
@@ -313,7 +313,7 @@ func TestEnrichError_RespectsFlags(t *testing.T) {
 
 			bifrostErr := &schemas.BifrostError{
 				IsBifrostError: false,
-				StatusCode:     schemas.Ptr(500),
+				StatusCode:     new(500),
 				Error:          &schemas.ErrorField{Message: "Error"},
 				ExtraFields:    schemas.BifrostErrorExtraFields{},
 			}
@@ -351,7 +351,7 @@ func TestProviderErrorFlow_EndToEnd(t *testing.T) {
 	resp.SetBody(errorBody)
 
 	// Step 1: Parse the error (like ParseOpenAIError does)
-	var errorResp map[string]interface{}
+	var errorResp map[string]any
 	bifrostErr := HandleProviderAPIError(resp, &errorResp)
 
 	if bifrostErr == nil {
@@ -446,7 +446,7 @@ func TestHandleProviderAPIError_AllPathsSetRawResponse(t *testing.T) {
 			resp.SetBody(tc.body)
 			tc.setupResp(resp)
 
-			var errorResp map[string]interface{}
+			var errorResp map[string]any
 			bifrostErr := HandleProviderAPIError(resp, &errorResp)
 
 			if bifrostErr == nil {
@@ -482,7 +482,7 @@ func TestGetRequestPath(t *testing.T) {
 		},
 		{
 			name:          "Returns path from context when present",
-			contextPath:   schemas.Ptr("/custom/path"),
+			contextPath:   new("/custom/path"),
 			defaultPath:   "/v1/chat/completions",
 			requestType:   schemas.ChatCompletionRequest,
 			expectedPath:  "/custom/path",
@@ -562,7 +562,7 @@ func TestGetRequestPath(t *testing.T) {
 		},
 		{
 			name:        "Context path takes precedence over config override",
-			contextPath: schemas.Ptr("/context/path"),
+			contextPath: new("/context/path"),
 			customProviderConfig: &schemas.CustomProviderConfig{
 				RequestPathOverrides: map[schemas.RequestType]string{
 					schemas.ChatCompletionRequest: "/config/path",
@@ -599,14 +599,14 @@ func TestGetRequestPath(t *testing.T) {
 // output across multiple calls with the same map, despite Go's randomized map iteration.
 func TestMarshalSorted_Deterministic(t *testing.T) {
 	// Build a map with enough keys to make random ordering statistically certain
-	m := map[string]interface{}{
+	m := map[string]any{
 		"zulu":    1,
 		"alpha":   2,
 		"mike":    3,
 		"bravo":   4,
 		"yankee":  5,
 		"charlie": 6,
-		"nested": map[string]interface{}{
+		"nested": map[string]any{
 			"zebra":   "z",
 			"apple":   "a",
 			"mango":   "m",
@@ -631,7 +631,7 @@ func TestMarshalSorted_Deterministic(t *testing.T) {
 	}
 
 	// Run 50 iterations to be confident about determinism
-	for i := 0; i < 50; i++ {
+	for i := range 50 {
 		got, err := MarshalSorted(m)
 		if err != nil {
 			t.Fatalf("MarshalSorted() iteration %d error: %v", i, err)
@@ -647,7 +647,7 @@ func TestMarshalSorted_Deterministic(t *testing.T) {
 		t.Fatalf("MarshalSortedIndent() error: %v", err)
 	}
 
-	for i := 0; i < 50; i++ {
+	for i := range 50 {
 		got, err := MarshalSortedIndent(m, "", "  ")
 		if err != nil {
 			t.Fatalf("MarshalSortedIndent() iteration %d error: %v", i, err)
@@ -744,7 +744,7 @@ func TestCheckAndDecodeBody_Concurrent(t *testing.T) {
 	compressed := gzipCompress(testData)
 
 	done := make(chan bool)
-	for i := 0; i < 100; i++ {
+	for range 100 {
 		go func() {
 			resp := fasthttp.AcquireResponse()
 			defer fasthttp.ReleaseResponse(resp)
@@ -762,7 +762,7 @@ func TestCheckAndDecodeBody_Concurrent(t *testing.T) {
 		}()
 	}
 
-	for i := 0; i < 100; i++ {
+	for range 100 {
 		<-done
 	}
 }
@@ -1020,10 +1020,7 @@ func (r *shortReadReader) Read(p []byte) (int, error) {
 	if r.pos >= len(r.data) {
 		return 0, io.EOF
 	}
-	end := r.pos + r.chunkSize
-	if end > len(r.data) {
-		end = len(r.data)
-	}
+	end := min(r.pos+r.chunkSize, len(r.data))
 	n := copy(p, r.data[r.pos:end])
 	r.pos += n
 	return n, nil
@@ -1105,7 +1102,7 @@ func TestMergeExtraParamsIntoJSON_PreservesKeyOrder(t *testing.T) {
   "tools": []
 }`)
 
-	extraParams := map[string]interface{}{
+	extraParams := map[string]any{
 		"custom_field": "value",
 	}
 
@@ -1130,7 +1127,7 @@ func TestMergeExtraParamsIntoJSON_PreservesKeyOrder(t *testing.T) {
 func TestMergeExtraParamsIntoJSON_OverwriteExistingKey(t *testing.T) {
 	jsonBody := []byte(`{"z_first": "original", "a_second": "original"}`)
 
-	extraParams := map[string]interface{}{
+	extraParams := map[string]any{
 		"z_first": "overwritten",
 	}
 
@@ -1155,8 +1152,8 @@ func TestMergeExtraParamsIntoJSON_OverwriteExistingKey(t *testing.T) {
 func TestMergeExtraParamsIntoJSON_DeepMerge(t *testing.T) {
 	jsonBody := []byte(`{"outer": {"a": 1, "b": 2}}`)
 
-	extraParams := map[string]interface{}{
-		"outer": map[string]interface{}{
+	extraParams := map[string]any{
+		"outer": map[string]any{
 			"c": 3,
 		},
 	}
@@ -1167,12 +1164,12 @@ func TestMergeExtraParamsIntoJSON_DeepMerge(t *testing.T) {
 	}
 
 	// Verify the merge happened
-	var parsed map[string]interface{}
+	var parsed map[string]any
 	if err := sonic.Unmarshal(result, &parsed); err != nil {
 		t.Fatalf("Failed to parse result: %v", err)
 	}
 
-	outer, ok := parsed["outer"].(map[string]interface{})
+	outer, ok := parsed["outer"].(map[string]any)
 	if !ok {
 		t.Fatal("outer should be a map")
 	}
@@ -1183,13 +1180,13 @@ func TestMergeExtraParamsIntoJSON_DeepMerge(t *testing.T) {
 
 func TestMergeExtraParamsIntoJSON_EmptyExtraParams(t *testing.T) {
 	jsonBody := []byte(`{"a": 1, "b": 2}`)
-	result, err := MergeExtraParamsIntoJSON(jsonBody, map[string]interface{}{})
+	result, err := MergeExtraParamsIntoJSON(jsonBody, map[string]any{})
 	if err != nil {
 		t.Fatalf("MergeExtraParamsIntoJSON() error: %v", err)
 	}
 
 	// Should be valid JSON with same content
-	var parsed map[string]interface{}
+	var parsed map[string]any
 	if err := sonic.Unmarshal(result, &parsed); err != nil {
 		t.Fatalf("Failed to parse result: %v", err)
 	}
@@ -1231,7 +1228,7 @@ func TestParseAndSetRawRequest_CompactsJSON(t *testing.T) {
 	}
 
 	// Verify it's still valid JSON with the same content
-	var parsed map[string]interface{}
+	var parsed map[string]any
 	if err := sonic.Unmarshal(raw, &parsed); err != nil {
 		t.Fatalf("Compacted RawRequest is not valid JSON: %v", err)
 	}
@@ -1309,7 +1306,7 @@ func TestParseAndSetRawRequest_SSEStreamingChunks(t *testing.T) {
 				Index: 0,
 				ChatStreamResponseChoice: &schemas.ChatStreamResponseChoice{
 					Delta: &schemas.ChatStreamResponseChoiceDelta{
-						Content: schemas.Ptr("Hello"),
+						Content: new("Hello"),
 					},
 				},
 			},
@@ -1366,7 +1363,7 @@ func TestParseAndSetRawRequest_SSEStreamingChunks(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to marshal raw_request: %v", err)
 	}
-	var rawParsed map[string]interface{}
+	var rawParsed map[string]any
 	if err := sonic.Unmarshal(rawBytes, &rawParsed); err != nil {
 		t.Fatalf("raw_request is not valid JSON after round-trip: %v", err)
 	}
@@ -1560,7 +1557,7 @@ func TestProcessAndSendResponse_StoreRawLoggingOnly_StripsRawDataFromErrorChunk(
 			// Use a postHookRunner that converts the response to a BifrostError with raw data
 			bifrostErr := &schemas.BifrostError{
 				IsBifrostError: false,
-				StatusCode:     schemas.Ptr(429),
+				StatusCode:     new(429),
 				Error:          &schemas.ErrorField{Message: "rate limit exceeded"},
 				ExtraFields: schemas.BifrostErrorExtraFields{
 					RawRequest:  rawReq,

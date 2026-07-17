@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -23,7 +23,7 @@ func TestAgent_StateTransition_LargeMixedToolBatch(t *testing.T) {
 
 	// Register 50 auto-executable tools
 	autoTools := []string{}
-	for i := 0; i < 50; i++ {
+	for i := range 50 {
 		toolName := fmt.Sprintf("auto_tool_%d", i)
 		autoTools = append(autoTools, toolName)
 
@@ -36,7 +36,7 @@ func TestAgent_StateTransition_LargeMixedToolBatch(t *testing.T) {
 			Type: schemas.ChatToolTypeFunction,
 			Function: &schemas.ChatToolFunction{
 				Name:        toolName,
-				Description: schemas.Ptr(fmt.Sprintf("Auto tool %d", i)),
+				Description: new(fmt.Sprintf("Auto tool %d", i)),
 			},
 		}
 
@@ -45,7 +45,7 @@ func TestAgent_StateTransition_LargeMixedToolBatch(t *testing.T) {
 	}
 
 	// Register 5 non-auto-executable tools
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		toolName := fmt.Sprintf("manual_tool_%d", i)
 		toolIndex := i
 
@@ -57,7 +57,7 @@ func TestAgent_StateTransition_LargeMixedToolBatch(t *testing.T) {
 			Type: schemas.ChatToolTypeFunction,
 			Function: &schemas.ChatToolFunction{
 				Name:        toolName,
-				Description: schemas.Ptr(fmt.Sprintf("Manual tool %d", i)),
+				Description: new(fmt.Sprintf("Manual tool %d", i)),
 			},
 		}
 
@@ -75,24 +75,24 @@ func TestAgent_StateTransition_LargeMixedToolBatch(t *testing.T) {
 	toolCalls := []schemas.ChatAssistantMessageToolCall{}
 
 	// Add auto tools
-	for i := 0; i < 50; i++ {
+	for i := range 50 {
 		toolCalls = append(toolCalls, schemas.ChatAssistantMessageToolCall{
-			ID:   schemas.Ptr(fmt.Sprintf("call-auto-%d", i)),
-			Type: schemas.Ptr("function"),
+			ID:   new(fmt.Sprintf("call-auto-%d", i)),
+			Type: new("function"),
 			Function: schemas.ChatAssistantMessageToolCallFunction{
-				Name:      schemas.Ptr(fmt.Sprintf("bifrostInternal-auto_tool_%d", i)),
+				Name:      new(fmt.Sprintf("bifrostInternal-auto_tool_%d", i)),
 				Arguments: "{}",
 			},
 		})
 	}
 
 	// Add manual tools
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		toolCalls = append(toolCalls, schemas.ChatAssistantMessageToolCall{
-			ID:   schemas.Ptr(fmt.Sprintf("call-manual-%d", i)),
-			Type: schemas.Ptr("function"),
+			ID:   new(fmt.Sprintf("call-manual-%d", i)),
+			Type: new("function"),
 			Function: schemas.ChatAssistantMessageToolCallFunction{
-				Name:      schemas.Ptr(fmt.Sprintf("bifrostInternal-manual_tool_%d", i)),
+				Name:      new(fmt.Sprintf("bifrostInternal-manual_tool_%d", i)),
 				Arguments: "{}",
 			},
 		})
@@ -114,7 +114,7 @@ func TestAgent_StateTransition_LargeMixedToolBatch(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Execute large mixed batch"),
+					ContentStr: new("Execute large mixed batch"),
 				},
 			},
 		},
@@ -160,7 +160,7 @@ func TestAgent_StateTransition_DepthCountingBasic(t *testing.T) {
 	responses := []*schemas.BifrostChatResponse{}
 
 	// Create 9 iterations (under the limit)
-	for i := 0; i < 9; i++ {
+	for i := range 9 {
 		responses = append(responses, CreateChatResponseWithToolCalls([]schemas.ChatAssistantMessageToolCall{
 			GetSampleEchoToolCall(fmt.Sprintf("call-depth-%d", i), fmt.Sprintf("iteration %d", i)),
 		}))
@@ -183,7 +183,7 @@ func TestAgent_StateTransition_DepthCountingBasic(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Test depth counting"),
+					ContentStr: new("Test depth counting"),
 				},
 			},
 		},
@@ -221,7 +221,7 @@ func TestAgent_StateTransition_AlternatingAutoNonAuto(t *testing.T) {
 		Type: schemas.ChatToolTypeFunction,
 		Function: &schemas.ChatToolFunction{
 			Name:        "manual_tool",
-			Description: schemas.Ptr("Requires approval"),
+			Description: new("Requires approval"),
 		},
 	}
 	err = manager.RegisterTool("manual_tool", "Requires approval", manualHandler, manualSchema)
@@ -245,10 +245,10 @@ func TestAgent_StateTransition_AlternatingAutoNonAuto(t *testing.T) {
 			// Second: non-auto tool (should stop and return to user)
 			CreateChatResponseWithToolCalls([]schemas.ChatAssistantMessageToolCall{
 				{
-					ID:   schemas.Ptr("call-manual-1"),
-					Type: schemas.Ptr("function"),
+					ID:   new("call-manual-1"),
+					Type: new("function"),
 					Function: schemas.ChatAssistantMessageToolCallFunction{
-						Name: schemas.Ptr("bifrostInternal-manual_tool"),
+						Name:      new("bifrostInternal-manual_tool"),
 						Arguments: "{}",
 					},
 				},
@@ -266,7 +266,7 @@ func TestAgent_StateTransition_AlternatingAutoNonAuto(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Test alternating"),
+					ContentStr: new("Test alternating"),
 				},
 			},
 		},
@@ -319,12 +319,12 @@ func TestAgent_StateTransition_EmptyToolCallsList(t *testing.T) {
 			{
 				Choices: []schemas.BifrostResponseChoice{
 					{
-						FinishReason: schemas.Ptr("stop"),
+						FinishReason: new("stop"),
 						ChatNonStreamResponseChoice: &schemas.ChatNonStreamResponseChoice{
 							Message: &schemas.ChatMessage{
 								Role: schemas.ChatMessageRoleAssistant,
 								Content: &schemas.ChatMessageContent{
-									ContentStr: schemas.Ptr("Done"),
+									ContentStr: new("Done"),
 								},
 								ChatAssistantMessage: &schemas.ChatAssistantMessage{
 									ToolCalls: []schemas.ChatAssistantMessageToolCall{}, // Empty list
@@ -347,7 +347,7 @@ func TestAgent_StateTransition_EmptyToolCallsList(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Test empty list"),
+					ContentStr: new("Test empty list"),
 				},
 			},
 		},
@@ -374,7 +374,7 @@ func TestAgent_StateTransition_AllToolsFilteredOut(t *testing.T) {
 	manager := setupMCPManager(t)
 
 	// Register multiple tools
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		toolName := fmt.Sprintf("tool_%d", i)
 		toolIndex := i
 
@@ -386,7 +386,7 @@ func TestAgent_StateTransition_AllToolsFilteredOut(t *testing.T) {
 			Type: schemas.ChatToolTypeFunction,
 			Function: &schemas.ChatToolFunction{
 				Name:        toolName,
-				Description: schemas.Ptr(fmt.Sprintf("Tool %d", i)),
+				Description: new(fmt.Sprintf("Tool %d", i)),
 			},
 		}
 
@@ -403,18 +403,18 @@ func TestAgent_StateTransition_AllToolsFilteredOut(t *testing.T) {
 	// LLM returns tool calls, but none are auto-executable
 	toolCalls := []schemas.ChatAssistantMessageToolCall{
 		{
-			ID:   schemas.Ptr("call-0"),
-			Type: schemas.Ptr("function"),
+			ID:   new("call-0"),
+			Type: new("function"),
 			Function: schemas.ChatAssistantMessageToolCallFunction{
-				Name: schemas.Ptr("bifrostInternal-tool_0"),
+				Name:      new("bifrostInternal-tool_0"),
 				Arguments: "{}",
 			},
 		},
 		{
-			ID:   schemas.Ptr("call-1"),
-			Type: schemas.Ptr("function"),
+			ID:   new("call-1"),
+			Type: new("function"),
 			Function: schemas.ChatAssistantMessageToolCallFunction{
-				Name: schemas.Ptr("bifrostInternal-tool_1"),
+				Name:      new("bifrostInternal-tool_1"),
 				Arguments: "{}",
 			},
 		},
@@ -436,7 +436,7 @@ func TestAgent_StateTransition_AllToolsFilteredOut(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Test filtering"),
+					ContentStr: new("Test filtering"),
 				},
 			},
 		},
@@ -472,7 +472,7 @@ func TestAgent_StateTransition_StateConsistency(t *testing.T) {
 	// Counter to track state
 	executionOrder := []string{}
 
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		toolName := fmt.Sprintf("stateful_tool_%d", i)
 		toolIndex := i
 
@@ -485,7 +485,7 @@ func TestAgent_StateTransition_StateConsistency(t *testing.T) {
 			Type: schemas.ChatToolTypeFunction,
 			Function: &schemas.ChatToolFunction{
 				Name:        toolName,
-				Description: schemas.Ptr(fmt.Sprintf("Stateful tool %d", i)),
+				Description: new(fmt.Sprintf("Stateful tool %d", i)),
 			},
 		}
 
@@ -503,20 +503,20 @@ func TestAgent_StateTransition_StateConsistency(t *testing.T) {
 		chatResponses: []*schemas.BifrostChatResponse{
 			CreateChatResponseWithToolCalls([]schemas.ChatAssistantMessageToolCall{
 				{
-					ID:   schemas.Ptr("call-0"),
-					Type: schemas.Ptr("function"),
+					ID:   new("call-0"),
+					Type: new("function"),
 					Function: schemas.ChatAssistantMessageToolCallFunction{
-						Name: schemas.Ptr("bifrostInternal-stateful_tool_0"),
+						Name:      new("bifrostInternal-stateful_tool_0"),
 						Arguments: "{}",
 					},
 				},
 			}),
 			CreateChatResponseWithToolCalls([]schemas.ChatAssistantMessageToolCall{
 				{
-					ID:   schemas.Ptr("call-1"),
-					Type: schemas.Ptr("function"),
+					ID:   new("call-1"),
+					Type: new("function"),
 					Function: schemas.ChatAssistantMessageToolCallFunction{
-						Name: schemas.Ptr("bifrostInternal-stateful_tool_1"),
+						Name:      new("bifrostInternal-stateful_tool_1"),
 						Arguments: "{}",
 					},
 				},
@@ -535,7 +535,7 @@ func TestAgent_StateTransition_StateConsistency(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Test state consistency"),
+					ContentStr: new("Test state consistency"),
 				},
 			},
 		},
@@ -606,7 +606,7 @@ func TestAgent_StateTransition_BoundaryConditions(t *testing.T) {
 					{
 						Role: schemas.ChatMessageRoleUser,
 						Content: &schemas.ChatMessageContent{
-							ContentStr: schemas.Ptr("Test"),
+							ContentStr: new("Test"),
 						},
 					},
 				},

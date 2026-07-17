@@ -4,28 +4,28 @@ import (
 	"strings"
 
 	"github.com/bytedance/sonic"
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // NebiusImageGenerationRequest represents a Nebius image generation request
 type NebiusImageGenerationRequest struct {
-	Model             *string                `json:"model"`
-	Prompt            *string                `json:"prompt"`
-	Loras             []NebiusLora           `json:"loras,omitempty"`               // List of compatible LoRAs
-	Width             *int                   `json:"width,omitempty"`               // Width of output image (64-2048)
-	Height            *int                   `json:"height,omitempty"`              // Height of output image (64-2048)
-	NumInferenceSteps *int                   `json:"num_inference_steps,omitempty"` // number of denoising steps
-	Seed              *int                   `json:"seed,omitempty"`                // seed for image generation
-	GuidanceScale     *int                   `json:"guidance_scale,omitempty"`      // 0-100
-	NegativePrompt    *string                `json:"negative_prompt,omitempty"`
-	ResponseExtension *string                `json:"response_extension,omitempty"` // webp, jpg, png
-	ResponseFormat    *string                `json:"response_format,omitempty"`    // b64_json, url
-	Fallbacks         []string               `json:"fallbacks,omitempty"`
-	ExtraParams       map[string]interface{} `json:"-"`
+	Model             *string        `json:"model"`
+	Prompt            *string        `json:"prompt"`
+	Loras             []NebiusLora   `json:"loras,omitempty"`               // List of compatible LoRAs
+	Width             *int           `json:"width,omitempty"`               // Width of output image (64-2048)
+	Height            *int           `json:"height,omitempty"`              // Height of output image (64-2048)
+	NumInferenceSteps *int           `json:"num_inference_steps,omitempty"` // number of denoising steps
+	Seed              *int           `json:"seed,omitempty"`                // seed for image generation
+	GuidanceScale     *int           `json:"guidance_scale,omitempty"`      // 0-100
+	NegativePrompt    *string        `json:"negative_prompt,omitempty"`
+	ResponseExtension *string        `json:"response_extension,omitempty"` // webp, jpg, png
+	ResponseFormat    *string        `json:"response_format,omitempty"`    // b64_json, url
+	Fallbacks         []string       `json:"fallbacks,omitempty"`
+	ExtraParams       map[string]any `json:"-"`
 }
 
 // GetExtraParams implements the RequestBodyWithExtraParams interface
-func (r *NebiusImageGenerationRequest) GetExtraParams() map[string]interface{} {
+func (r *NebiusImageGenerationRequest) GetExtraParams() map[string]any {
 	return r.ExtraParams
 }
 

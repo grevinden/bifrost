@@ -51,8 +51,8 @@ Bifrost normalizes all provider-specific reasoning formats to a consistent OpenA
 package main
 
 import (
-	"github.com/maximhq/bifrost"
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 chatReq := &schemas.BifrostChatRequest{
@@ -103,7 +103,7 @@ chatReq := &schemas.BifrostChatRequest{
 package main
 
 import (
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 responsesReq := &schemas.BifrostResponsesRequest{
@@ -1138,8 +1138,8 @@ When `max_completion_tokens` is not provided, these defaults are used for ratio 
 
 ```go
 import (
-  "github.com/maximhq/bifrost/core/providers/utils"
-  "github.com/maximhq/bifrost/core/schemas"
+  "github.com/grevinden/bifrost/core/providers/utils"
+  "github.com/grevinden/bifrost/core/schemas"
 )
 
 // Using Bifrost Go SDK
@@ -1212,8 +1212,8 @@ budgetTokens, _ := utils.GetBudgetTokensFromReasoningEffort(
 
 ```go
 import (
-  "github.com/maximhq/bifrost/core/providers/utils"
-  "github.com/maximhq/bifrost/core/schemas"
+  "github.com/grevinden/bifrost/core/providers/utils"
+  "github.com/grevinden/bifrost/core/schemas"
 )
 
 // Using Bifrost Go SDK with max_tokens (not effort)
@@ -1284,7 +1284,7 @@ effort := utils.GetReasoningEffortFromBudgetTokens(
 <Tab title="Go SDK">
 
 ```go
-import "github.com/maximhq/bifrost/core/schemas"
+import "github.com/grevinden/bifrost/core/schemas"
 
 // Using Bifrost Go SDK with BOTH effort and max_tokens
 chatReq := &schemas.BifrostChatRequest{

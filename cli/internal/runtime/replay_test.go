@@ -213,9 +213,9 @@ func snapshotScreen(term vt10x.Terminal, cols, rows int) []string {
 	defer term.Unlock()
 
 	lines := make([]string, rows)
-	for y := 0; y < rows; y++ {
+	for y := range rows {
 		var line []rune
-		for x := 0; x < cols; x++ {
+		for x := range cols {
 			ch := term.Cell(x, y).Char
 			if ch == 0 {
 				ch = ' '

@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 func testResponsesAccumulator(tb testing.TB) *Accumulator {
@@ -25,14 +25,14 @@ func TestBuildResponsesMessageConcatenatesTextDeltas(t *testing.T) {
 	ci := 0
 	var want strings.Builder
 	var chunks []*ResponsesStreamChunk
-	for i := 0; i < 500; i++ {
+	for i := range 500 {
 		d := fmt.Sprintf("tok%d ", i)
 		want.WriteString(d)
 		chunks = append(chunks, &ResponsesStreamChunk{
 			ChunkIndex: i,
 			StreamResponse: &schemas.BifrostResponsesStreamResponse{
 				Type:         schemas.ResponsesStreamResponseTypeOutputTextDelta,
-				Delta:        schemas.Ptr(d),
+				Delta:        new(d),
 				ContentIndex: &ci,
 			},
 		})
@@ -60,7 +60,7 @@ func TestBuildResponsesMessageRoutesParallelToolArgs(t *testing.T) {
 		return &ResponsesStreamChunk{
 			StreamResponse: &schemas.BifrostResponsesStreamResponse{
 				Type: schemas.ResponsesStreamResponseTypeOutputItemAdded,
-				Item: &schemas.ResponsesMessage{ID: schemas.Ptr(id)},
+				Item: &schemas.ResponsesMessage{ID: new(id)},
 			},
 		}
 	}
@@ -68,8 +68,8 @@ func TestBuildResponsesMessageRoutesParallelToolArgs(t *testing.T) {
 		return &ResponsesStreamChunk{
 			StreamResponse: &schemas.BifrostResponsesStreamResponse{
 				Type:   schemas.ResponsesStreamResponseTypeFunctionCallArgumentsDelta,
-				ItemID: schemas.Ptr(id),
-				Delta:  schemas.Ptr(delta),
+				ItemID: new(id),
+				Delta:  new(delta),
 			},
 		}
 	}
@@ -101,13 +101,13 @@ func TestDeepCopyResponsesStreamResponseCopiesToolCaller(t *testing.T) {
 	original := &schemas.BifrostResponsesStreamResponse{
 		Type: schemas.ResponsesStreamResponseTypeOutputItemDone,
 		Item: &schemas.ResponsesMessage{
-			ID:   schemas.Ptr("srvtoolu_fetch"),
+			ID:   new("srvtoolu_fetch"),
 			Type: schemas.Ptr(schemas.ResponsesMessageTypeWebFetchCall),
 			ResponsesToolMessage: &schemas.ResponsesToolMessage{
-				CallID: schemas.Ptr("srvtoolu_fetch"),
+				CallID: new("srvtoolu_fetch"),
 				Caller: &schemas.ResponsesToolCaller{
 					Type:   "code_execution_20260120",
-					ToolID: schemas.Ptr("srvtoolu_code"),
+					ToolID: new("srvtoolu_code"),
 				},
 			},
 		},
@@ -142,8 +142,8 @@ func TestBuildResponsesMessageAccumulatesReasoningSummary(t *testing.T) {
 			ChunkIndex: i,
 			StreamResponse: &schemas.BifrostResponsesStreamResponse{
 				Type:   schemas.ResponsesStreamResponseTypeReasoningSummaryTextDelta,
-				ItemID: schemas.Ptr("reason_1"),
-				Delta:  schemas.Ptr(p),
+				ItemID: new("reason_1"),
+				Delta:  new(p),
 			},
 		})
 	}
@@ -173,14 +173,14 @@ func TestBuildResponsesMessageAccumulatesAnnotations(t *testing.T) {
 			ChunkIndex: 0,
 			StreamResponse: &schemas.BifrostResponsesStreamResponse{
 				Type: schemas.ResponsesStreamResponseTypeOutputItemAdded,
-				Item: &schemas.ResponsesMessage{ID: schemas.Ptr(itemID)},
+				Item: &schemas.ResponsesMessage{ID: new(itemID)},
 			},
 		},
 		{
 			ChunkIndex: 1,
 			StreamResponse: &schemas.BifrostResponsesStreamResponse{
 				Type:         schemas.ResponsesStreamResponseTypeOutputTextDelta,
-				Delta:        schemas.Ptr("The capital of France is Paris."),
+				Delta:        new("The capital of France is Paris."),
 				ContentIndex: &ci,
 			},
 		},
@@ -188,12 +188,12 @@ func TestBuildResponsesMessageAccumulatesAnnotations(t *testing.T) {
 			ChunkIndex: 2,
 			StreamResponse: &schemas.BifrostResponsesStreamResponse{
 				Type:         schemas.ResponsesStreamResponseTypeOutputTextAnnotationAdded,
-				ItemID:       schemas.Ptr(itemID),
+				ItemID:       new(itemID),
 				ContentIndex: &ci,
 				Annotation: &schemas.ResponsesOutputMessageContentTextAnnotation{
 					Type:  "url_citation",
-					URL:   schemas.Ptr("https://example.com/paris"),
-					Title: schemas.Ptr("Paris"),
+					URL:   new("https://example.com/paris"),
+					Title: new("Paris"),
 				},
 			},
 		},
@@ -245,7 +245,7 @@ func TestBuildResponsesMessageAccumulatesAnnotationsWithoutItemID(t *testing.T) 
 			ChunkIndex: 0,
 			StreamResponse: &schemas.BifrostResponsesStreamResponse{
 				Type:         schemas.ResponsesStreamResponseTypeOutputTextDelta,
-				Delta:        schemas.Ptr("Grounded answer."),
+				Delta:        new("Grounded answer."),
 				ContentIndex: &ci,
 			},
 		},
@@ -256,7 +256,7 @@ func TestBuildResponsesMessageAccumulatesAnnotationsWithoutItemID(t *testing.T) 
 				ContentIndex: &ci, // no ItemID -> route to the most recent message
 				Annotation: &schemas.ResponsesOutputMessageContentTextAnnotation{
 					Type: "url_citation",
-					URL:  schemas.Ptr("https://example.org/source"),
+					URL:  new("https://example.org/source"),
 				},
 			},
 		},
@@ -293,7 +293,7 @@ func TestForceCleanupStreamAccumulatorReapsRegardlessOfRefcount(t *testing.T) {
 	chunk.ChunkIndex = 0
 	chunk.StreamResponse = &schemas.BifrostResponsesStreamResponse{
 		Type:         schemas.ResponsesStreamResponseTypeOutputTextDelta,
-		Delta:        schemas.Ptr("hello"),
+		Delta:        new("hello"),
 		ContentIndex: &ci,
 	}
 	if err := acc.addResponsesStreamChunk(requestID, chunk, false); err != nil {
@@ -324,12 +324,12 @@ func BenchmarkBuildResponsesMessageTextDeltas(b *testing.B) {
 	ci := 0
 	const n = 2000
 	chunks := make([]*ResponsesStreamChunk, n)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		chunks[i] = &ResponsesStreamChunk{
 			ChunkIndex: i,
 			StreamResponse: &schemas.BifrostResponsesStreamResponse{
 				Type:         schemas.ResponsesStreamResponseTypeOutputTextDelta,
-				Delta:        schemas.Ptr("hello world "),
+				Delta:        new("hello world "),
 				ContentIndex: &ci,
 			},
 		}
@@ -350,13 +350,13 @@ func TestDeepCopyResponsesStreamResponsePreservesAllFields(t *testing.T) {
 	original := &schemas.BifrostResponsesStreamResponse{
 		Type:           schemas.ResponsesStreamResponseTypeReasoningSummaryTextDelta,
 		SequenceNumber: 4,
-		SummaryIndex:   schemas.Ptr(2),
-		Signature:      schemas.Ptr("sig-xyz"),
-		Obfuscation:    schemas.Ptr("opaque-padding"),
+		SummaryIndex:   new(2),
+		Signature:      new("sig-xyz"),
+		Obfuscation:    new("opaque-padding"),
 		Item: &schemas.ResponsesMessage{
-			ID:     schemas.Ptr("msg_123"),
-			Status: schemas.Ptr("in_progress"),
-			Phase:  schemas.Ptr("final_answer"),
+			ID:     new("msg_123"),
+			Status: new("in_progress"),
+			Phase:  new("final_answer"),
 		},
 	}
 

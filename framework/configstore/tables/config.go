@@ -1,6 +1,6 @@
 package tables
 
-import "github.com/maximhq/bifrost/core/network"
+import "github.com/grevinden/bifrost/core/network"
 
 const (
 	ConfigAdminUsernameKey = "admin_username"

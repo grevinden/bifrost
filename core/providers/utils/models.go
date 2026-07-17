@@ -14,7 +14,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
@@ -366,12 +366,12 @@ func (p *ListModelsPipeline) BackfillModels(included map[string]bool) []schemas.
 			}
 			m := schemas.Model{
 				ID:   string(p.ProviderKey) + "/" + entry,
-				Name: schemas.Ptr(ToDisplayName(entry)),
+				Name: new(ToDisplayName(entry)),
 			}
 			// If this allowlist entry has an alias, surface the provider-specific ID.
 			for aliasKey, alias := range p.Aliases {
 				if matches(entry, aliasKey, p.MatchFns) {
-					m.Alias = schemas.Ptr(alias.ModelID)
+					m.Alias = new(alias.ModelID)
 					break
 				}
 			}
@@ -399,8 +399,8 @@ func (p *ListModelsPipeline) BackfillModels(included map[string]bool) []schemas.
 			}
 			result = append(result, schemas.Model{
 				ID:    string(p.ProviderKey) + "/" + aliasKey,
-				Name:  schemas.Ptr(ToDisplayName(aliasKey)),
-				Alias: schemas.Ptr(alias.ModelID),
+				Name:  new(ToDisplayName(aliasKey)),
+				Alias: new(alias.ModelID),
 			})
 		}
 	}

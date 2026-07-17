@@ -3,8 +3,8 @@ package encrypt
 import (
 	"testing"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 func TestEncryptDecrypt(t *testing.T) {

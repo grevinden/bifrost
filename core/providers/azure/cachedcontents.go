@@ -1,8 +1,8 @@
 package azure
 
 import (
-	providerUtils "github.com/maximhq/bifrost/core/providers/utils"
-	"github.com/maximhq/bifrost/core/schemas"
+	providerUtils "github.com/grevinden/bifrost/core/providers/utils"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // CachedContentCreate is unsupported on AzureProvider. Only Gemini and Vertex AI

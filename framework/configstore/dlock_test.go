@@ -3,6 +3,7 @@ package configstore
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -13,8 +14,8 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/configstore/tables"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/configstore/tables"
 )
 
 // mockLogger implements schemas.Logger for testing
@@ -895,10 +896,8 @@ func TestDistributedLock_ConcurrentAcquire(t *testing.T) {
 	var mu sync.Mutex
 	var wg sync.WaitGroup
 
-	for i := 0; i < numGoroutines; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+	for range numGoroutines {
+		wg.Go(func() {
 			lock, err := manager.NewLock("contended-lock")
 			if err != nil {
 				return
@@ -909,7 +908,7 @@ func TestDistributedLock_ConcurrentAcquire(t *testing.T) {
 				successCount++
 				mu.Unlock()
 			}
-		}()
+		})
 	}
 
 	wg.Wait()
@@ -933,7 +932,7 @@ func TestDistributedLock_ConcurrentLockUnlock(t *testing.T) {
 	var mu sync.Mutex
 	var wg sync.WaitGroup
 
-	for i := 0; i < numGoroutines; i++ {
+	for i := range numGoroutines {
 		wg.Add(1)
 		go func(id int) {
 			defer wg.Done()
@@ -975,7 +974,7 @@ func TestDistributedLock_MultipleLocksPerManager(t *testing.T) {
 	var wg sync.WaitGroup
 	errCh := make(chan error, numLocks*2) // Buffer for potential TryLock and Unlock errors
 
-	for i := 0; i < numLocks; i++ {
+	for i := range numLocks {
 		wg.Add(1)
 		go func(id int) {
 			defer wg.Done()
@@ -1038,12 +1037,12 @@ func TestDistributedLock_LongLockKey(t *testing.T) {
 	ctx := context.Background()
 
 	// Create a 255 character lock key (max size per schema)
-	longKey := ""
-	for i := 0; i < 255; i++ {
-		longKey += "a"
+	var longKey strings.Builder
+	for range 255 {
+		longKey.WriteString("a")
 	}
 
-	lock, err := manager.NewLock(longKey)
+	lock, err := manager.NewLock(longKey.String())
 	require.NoError(t, err)
 
 	acquired, err := lock.TryLock(ctx)
@@ -1162,7 +1161,7 @@ func TestDistributedLock_ExtendMultipleTimes(t *testing.T) {
 	require.NoError(t, err)
 
 	// Extend multiple times
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		time.Sleep(20 * time.Millisecond)
 		err = lock.Extend(ctx)
 		require.NoError(t, err, "Extension %d failed", i+1)

@@ -254,7 +254,7 @@ func TestHandleProviderAPIErrorWithHTML(t *testing.T) {
 			resp.Header.Set("Content-Type", tt.contentType)
 			resp.SetBody(tt.body)
 
-			var errorResp map[string]interface{}
+			var errorResp map[string]any
 			bifrostErr := HandleProviderAPIError(resp, &errorResp)
 
 			if bifrostErr == nil {

@@ -14,8 +14,8 @@ import (
 	"testing"
 	"time"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // createMaskImageForAzureOpenAI creates a PNG mask image with transparent background for Azure and OpenAI
@@ -31,8 +31,8 @@ func createMaskImageForAzureOpenAI(width, height int) ([]byte, error) {
 	centerX, centerY := width/2, height/2
 	maskWidth, maskHeight := width/3, height/3
 
-	for y := 0; y < height; y++ {
-		for x := 0; x < width; x++ {
+	for y := range height {
+		for x := range width {
 			// Check if pixel is within the mask rectangle
 			if x >= centerX-maskWidth/2 && x < centerX+maskWidth/2 &&
 				y >= centerY-maskHeight/2 && y < centerY+maskHeight/2 {
@@ -66,8 +66,8 @@ func createSimpleMaskImage(width, height int) ([]byte, error) {
 	centerX, centerY := width/2, height/2
 	maskWidth, maskHeight := width/3, height/3
 
-	for y := 0; y < height; y++ {
-		for x := 0; x < width; x++ {
+	for y := range height {
+		for x := range width {
 			// Check if pixel is within the mask rectangle
 			if x >= centerX-maskWidth/2 && x < centerX+maskWidth/2 &&
 				y >= centerY-maskHeight/2 && y < centerY+maskHeight/2 {
@@ -224,14 +224,14 @@ func RunImageEditTest(t *testing.T, client *bifrost.Bifrost, ctx context.Context
 		retryConfig := GetTestRetryConfigForScenario("ImageEdit", testConfig)
 		retryContext := TestRetryContext{
 			ScenarioName:     "ImageEdit",
-			ExpectedBehavior: map[string]interface{}{},
-			TestMetadata: map[string]interface{}{
+			ExpectedBehavior: map[string]any{},
+			TestMetadata: map[string]any{
 				"provider": testConfig.Provider,
 				"model":    testConfig.ImageEditModel,
 			},
 		}
 
-		expectations := GetExpectationsForScenario("ImageEdit", testConfig, map[string]interface{}{
+		expectations := GetExpectationsForScenario("ImageEdit", testConfig, map[string]any{
 			"min_images":    1,
 			"expected_size": "1024x1024",
 		})
@@ -284,9 +284,9 @@ func RunImageEditTest(t *testing.T, client *bifrost.Bifrost, ctx context.Context
 					Prompt: "Add a beautiful sunset in the background",
 				},
 				Params: &schemas.ImageEditParameters{
-					Size: bifrost.Ptr("1024x1024"),
-					N:    bifrost.Ptr(1),
-					Type: bifrost.Ptr("inpainting"),
+					Size: new("1024x1024"),
+					N:    new(1),
+					Type: new("inpainting"),
 					Mask: maskBytes,
 				},
 				Fallbacks: testConfig.ImageEditFallbacks,
@@ -398,10 +398,10 @@ func RunImageEditStreamTest(t *testing.T, client *bifrost.Bifrost, ctx context.C
 		retryConfig := GetTestRetryConfigForScenario("ImageEditStream", testConfig)
 		retryContext := TestRetryContext{
 			ScenarioName: "ImageEditStream",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"should_generate_images": true,
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider": testConfig.Provider,
 				"model":    testConfig.ImageEditModel,
 			},
@@ -444,9 +444,9 @@ func RunImageEditStreamTest(t *testing.T, client *bifrost.Bifrost, ctx context.C
 				Prompt: "Add a futuristic cityscape in the background",
 			},
 			Params: &schemas.ImageEditParameters{
-				Size:    bifrost.Ptr("1024x1024"),
-				Quality: bifrost.Ptr("low"),
-				Type:    bifrost.Ptr("inpainting"),
+				Size:    new("1024x1024"),
+				Quality: new("low"),
+				Type:    new("inpainting"),
 				Mask:    maskBytes,
 			},
 			Fallbacks: testConfig.ImageEditFallbacks,

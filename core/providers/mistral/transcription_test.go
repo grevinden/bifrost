@@ -9,11 +9,12 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/bytedance/sonic"
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -73,14 +74,14 @@ func TestParseTranscriptionFormDataBodyFromRequest_OrdersMetadataBeforeFile(t *t
 	t.Parallel()
 
 	req := &MistralTranscriptionRequest{
-		Model:          "voxtral-mini-latest",
-		File:           createMinimalAudioFile(),
-		Filename:       "sample.wav",
-		Stream:         schemas.Ptr(true),
-		Language:       schemas.Ptr("en"),
-		Prompt:         schemas.Ptr("hello"),
-		ResponseFormat: schemas.Ptr("json"),
-		Temperature:    schemas.Ptr(0.2),
+		Model:                  "voxtral-mini-latest",
+		File:                   createMinimalAudioFile(),
+		Filename:               "sample.wav",
+		Stream:                 new(true),
+		Language:               new("en"),
+		Prompt:                 new("hello"),
+		ResponseFormat:         new("json"),
+		Temperature:            new(0.2),
 		TimestampGranularities: []string{"word", "segment"},
 	}
 
@@ -162,13 +163,13 @@ func TestToMistralTranscriptionRequest(t *testing.T) {
 					File: []byte{0x01, 0x02, 0x03},
 				},
 				Params: &schemas.TranscriptionParameters{
-					Language: schemas.Ptr("en"),
+					Language: new("en"),
 				},
 			},
 			expected: &MistralTranscriptionRequest{
 				Model:    "mistral-large-latest",
 				File:     []byte{0x01, 0x02, 0x03},
-				Language: schemas.Ptr("en"),
+				Language: new("en"),
 			},
 		},
 		{
@@ -179,10 +180,10 @@ func TestToMistralTranscriptionRequest(t *testing.T) {
 					File: []byte{0x01, 0x02, 0x03},
 				},
 				Params: &schemas.TranscriptionParameters{
-					Language:       schemas.Ptr("en"),
-					Prompt:         schemas.Ptr("This is a test"),
-					ResponseFormat: schemas.Ptr("json"),
-					ExtraParams: map[string]interface{}{
+					Language:       new("en"),
+					Prompt:         new("This is a test"),
+					ResponseFormat: new("json"),
+					ExtraParams: map[string]any{
 						"temperature":             0.5,
 						"timestamp_granularities": []string{"word", "segment"},
 					},
@@ -191,10 +192,10 @@ func TestToMistralTranscriptionRequest(t *testing.T) {
 			expected: &MistralTranscriptionRequest{
 				Model:                  "mistral-large-latest",
 				File:                   []byte{0x01, 0x02, 0x03},
-				Language:               schemas.Ptr("en"),
-				Prompt:                 schemas.Ptr("This is a test"),
-				ResponseFormat:         schemas.Ptr("json"),
-				Temperature:            schemas.Ptr(0.5),
+				Language:               new("en"),
+				Prompt:                 new("This is a test"),
+				ResponseFormat:         new("json"),
+				Temperature:            new(0.5),
 				TimestampGranularities: []string{"word", "segment"},
 			},
 		},
@@ -260,21 +261,21 @@ func TestToBifrostTranscriptionResponse(t *testing.T) {
 			},
 			expected: &schemas.BifrostTranscriptionResponse{
 				Text: "Hello world",
-				Task: schemas.Ptr("transcribe"),
+				Task: new("transcribe"),
 			},
 		},
 		{
 			name: "response with duration and language",
 			input: &MistralTranscriptionResponse{
 				Text:     "Hello world",
-				Duration: schemas.Ptr(5.5),
-				Language: schemas.Ptr("en"),
+				Duration: new(5.5),
+				Language: new("en"),
 			},
 			expected: &schemas.BifrostTranscriptionResponse{
 				Text:     "Hello world",
-				Duration: schemas.Ptr(5.5),
-				Language: schemas.Ptr("en"),
-				Task:     schemas.Ptr("transcribe"),
+				Duration: new(5.5),
+				Language: new("en"),
+				Task:     new("transcribe"),
 			},
 		},
 		{
@@ -302,7 +303,7 @@ func TestToBifrostTranscriptionResponse(t *testing.T) {
 			},
 			expected: &schemas.BifrostTranscriptionResponse{
 				Text: "Hello world",
-				Task: schemas.Ptr("transcribe"),
+				Task: new("transcribe"),
 				Segments: []schemas.TranscriptionSegment{
 					{
 						ID:               0,
@@ -334,7 +335,7 @@ func TestToBifrostTranscriptionResponse(t *testing.T) {
 			},
 			expected: &schemas.BifrostTranscriptionResponse{
 				Text: "Hello world",
-				Task: schemas.Ptr("transcribe"),
+				Task: new("transcribe"),
 				Words: []schemas.TranscriptionWord{
 					{Word: "Hello", Start: 0.0, End: 1.2},
 					{Word: "world", Start: 1.5, End: 2.5},
@@ -411,10 +412,10 @@ func TestCreateMistralTranscriptionMultipartBody(t *testing.T) {
 			request: &MistralTranscriptionRequest{
 				Model:          "mistral-large-latest",
 				File:           []byte{0x01, 0x02, 0x03},
-				Language:       schemas.Ptr("en"),
-				Prompt:         schemas.Ptr("Test prompt"),
-				ResponseFormat: schemas.Ptr("json"),
-				Temperature:    schemas.Ptr(0.5),
+				Language:       new("en"),
+				Prompt:         new("Test prompt"),
+				ResponseFormat: new("json"),
+				Temperature:    new(0.5),
 			},
 			expectedFields: map[string]string{
 				"model":           "mistral-large-latest",
@@ -492,7 +493,7 @@ func TestTranscriptionWithMockServer(t *testing.T) {
 
 	tests := []struct {
 		name           string
-		responseBody   interface{}
+		responseBody   any
 		statusCode     int
 		expectError    bool
 		errorContains  string
@@ -502,8 +503,8 @@ func TestTranscriptionWithMockServer(t *testing.T) {
 			name: "successful transcription",
 			responseBody: MistralTranscriptionResponse{
 				Text:     "Hello, this is a test transcription.",
-				Duration: schemas.Ptr(3.5),
-				Language: schemas.Ptr("en"),
+				Duration: new(3.5),
+				Language: new("en"),
 			},
 			statusCode: http.StatusOK,
 			validateResult: func(t *testing.T, resp *schemas.BifrostTranscriptionResponse) {
@@ -553,14 +554,14 @@ func TestTranscriptionWithMockServer(t *testing.T) {
 		},
 		{
 			name:          "server error",
-			responseBody:  map[string]interface{}{"error": map[string]interface{}{"message": "Internal server error"}},
+			responseBody:  map[string]any{"error": map[string]any{"message": "Internal server error"}},
 			statusCode:    http.StatusInternalServerError,
 			expectError:   true,
 			errorContains: "",
 		},
 		{
 			name:          "unauthorized",
-			responseBody:  map[string]interface{}{"error": map[string]interface{}{"message": "Invalid API key"}},
+			responseBody:  map[string]any{"error": map[string]any{"message": "Invalid API key"}},
 			statusCode:    http.StatusUnauthorized,
 			expectError:   true,
 			errorContains: "",
@@ -605,7 +606,7 @@ func TestTranscriptionWithMockServer(t *testing.T) {
 					File: audioData,
 				},
 				Params: &schemas.TranscriptionParameters{
-					Language: schemas.Ptr("en"),
+					Language: new("en"),
 				},
 			}
 
@@ -799,7 +800,7 @@ func TestTranscriptionStreamWithMockServer(t *testing.T) {
 					File: audioData,
 				},
 				Params: &schemas.TranscriptionParameters{
-					Language: schemas.Ptr("en"),
+					Language: new("en"),
 				},
 			}
 
@@ -913,7 +914,7 @@ func TestToBifrostTranscriptionStreamResponse(t *testing.T) {
 			expected: &schemas.BifrostTranscriptionStreamResponse{
 				Type:  schemas.TranscriptionStreamResponseTypeDelta,
 				Text:  "Hello world",
-				Delta: schemas.Ptr("Hello world"),
+				Delta: new("Hello world"),
 			},
 		},
 		{
@@ -945,7 +946,7 @@ func TestToBifrostTranscriptionStreamResponse(t *testing.T) {
 			expected: &schemas.BifrostTranscriptionStreamResponse{
 				Type:  schemas.TranscriptionStreamResponseTypeDelta,
 				Text:  "Hello",
-				Delta: schemas.Ptr("Hello"),
+				Delta: new("Hello"),
 			},
 		},
 		{
@@ -966,9 +967,9 @@ func TestToBifrostTranscriptionStreamResponse(t *testing.T) {
 				Type: schemas.TranscriptionStreamResponseTypeDone,
 				Usage: &schemas.TranscriptionUsage{
 					Type:         "tokens",
-					TotalTokens:  schemas.Ptr(200),
-					InputTokens:  schemas.Ptr(50),
-					OutputTokens: schemas.Ptr(150),
+					TotalTokens:  new(200),
+					InputTokens:  new(50),
+					OutputTokens: new(150),
 				},
 			},
 		},
@@ -1021,8 +1022,8 @@ func TestCreateMistralTranscriptionStreamMultipartBody(t *testing.T) {
 			request: &MistralTranscriptionRequest{
 				Model:    "voxtral-mini-latest",
 				File:     []byte{0x01, 0x02, 0x03},
-				Language: schemas.Ptr("en"),
-				Stream:   schemas.Ptr(true),
+				Language: new("en"),
+				Stream:   new(true),
 			},
 			expectedFields: map[string]string{
 				"stream":   "true",
@@ -1035,11 +1036,11 @@ func TestCreateMistralTranscriptionStreamMultipartBody(t *testing.T) {
 			request: &MistralTranscriptionRequest{
 				Model:                  "voxtral-mini-latest",
 				File:                   []byte{0x01, 0x02, 0x03},
-				Language:               schemas.Ptr("fr"),
-				Prompt:                 schemas.Ptr("Test prompt"),
-				ResponseFormat:         schemas.Ptr("verbose_json"),
-				Temperature:            schemas.Ptr(0.5),
-				Stream:                 schemas.Ptr(true),
+				Language:               new("fr"),
+				Prompt:                 new("Test prompt"),
+				ResponseFormat:         new("verbose_json"),
+				Temperature:            new(0.5),
+				Stream:                 new(true),
 				TimestampGranularities: []string{"word", "segment"},
 			},
 			expectedFields: map[string]string{
@@ -1174,13 +1175,13 @@ func TestTranscriptionStreamEdgeCases(t *testing.T) {
 				require.GreaterOrEqual(t, len(responses), 4, "Expected at least 4 responses")
 
 				// Verify all deltas received
-				var allText string
+				var allText strings.Builder
 				for _, resp := range responses {
 					if resp.Delta != nil {
-						allText += *resp.Delta
+						allText.WriteString(*resp.Delta)
 					}
 				}
-				assert.Equal(t, "Hello world!", allText)
+				assert.Equal(t, "Hello world!", allText.String())
 			},
 		},
 		{
@@ -1381,7 +1382,7 @@ func TestTranscriptionExtraParamsEdgeCases(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		extraParams map[string]interface{}
+		extraParams map[string]any
 		expectTemp  *float64
 		expectGran  []string
 	}{
@@ -1393,29 +1394,29 @@ func TestTranscriptionExtraParamsEdgeCases(t *testing.T) {
 		},
 		{
 			name:        "empty extra params",
-			extraParams: map[string]interface{}{},
+			extraParams: map[string]any{},
 			expectTemp:  nil,
 			expectGran:  nil,
 		},
 		{
 			name: "temperature as int",
-			extraParams: map[string]interface{}{
+			extraParams: map[string]any{
 				"temperature": 1,
 			},
-			expectTemp: schemas.Ptr(1.0),
+			expectTemp: new(1.0),
 			expectGran: nil,
 		},
 		{
 			name: "temperature as float",
-			extraParams: map[string]interface{}{
+			extraParams: map[string]any{
 				"temperature": 0.7,
 			},
-			expectTemp: schemas.Ptr(0.7),
+			expectTemp: new(0.7),
 			expectGran: nil,
 		},
 		{
 			name: "invalid temperature type",
-			extraParams: map[string]interface{}{
+			extraParams: map[string]any{
 				"temperature": "invalid",
 			},
 			expectTemp: nil,
@@ -1423,7 +1424,7 @@ func TestTranscriptionExtraParamsEdgeCases(t *testing.T) {
 		},
 		{
 			name: "timestamp granularities",
-			extraParams: map[string]interface{}{
+			extraParams: map[string]any{
 				"timestamp_granularities": []string{"word", "segment"},
 			},
 			expectTemp: nil,
@@ -1549,8 +1550,8 @@ func TestMistralTranscriptionIntegration(t *testing.T) {
 			File: audioData,
 		},
 		Params: &schemas.TranscriptionParameters{
-			Language:       schemas.Ptr("en"),
-			ResponseFormat: schemas.Ptr("json"),
+			Language:       new("en"),
+			ResponseFormat: new("json"),
 		},
 	}
 
@@ -1608,7 +1609,7 @@ func TestMistralTranscriptionStreamIntegration(t *testing.T) {
 			File: audioData,
 		},
 		Params: &schemas.TranscriptionParameters{
-			Language: schemas.Ptr("en"),
+			Language: new("en"),
 		},
 	}
 
@@ -1635,7 +1636,7 @@ func TestMistralTranscriptionStreamIntegration(t *testing.T) {
 	require.NotNil(t, streamChan)
 
 	// Collect streaming responses
-	var allText string
+	var allText strings.Builder
 	var chunkCount int
 	var lastResponse *schemas.BifrostTranscriptionStreamResponse
 
@@ -1650,7 +1651,7 @@ func TestMistralTranscriptionStreamIntegration(t *testing.T) {
 			lastResponse = streamResp.BifrostTranscriptionStreamResponse
 
 			if streamResp.BifrostTranscriptionStreamResponse.Delta != nil {
-				allText += *streamResp.BifrostTranscriptionStreamResponse.Delta
+				allText.WriteString(*streamResp.BifrostTranscriptionStreamResponse.Delta)
 			}
 
 			t.Logf("📊 Chunk %d: type=%s, latency=%dms",
@@ -1662,7 +1663,7 @@ func TestMistralTranscriptionStreamIntegration(t *testing.T) {
 
 	t.Log("✅ Streaming transcription completed!")
 	t.Logf("   Total chunks received: %d", chunkCount)
-	t.Logf("   Transcribed text: %s", allText)
+	t.Logf("   Transcribed text: %s", allText.String())
 
 	// Note: ExtraFields.Provider/RequestType on stream chunks are populated
 	// by bifrost.go's dispatcher, not by provider streaming methods called

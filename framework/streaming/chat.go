@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/modelcatalog"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/modelcatalog"
 )
 
 // deepCopyChatStreamDelta creates a deep copy of ChatStreamResponseChoiceDelta
@@ -530,7 +530,7 @@ func (a *Accumulator) processChatStreamingResponse(ctx *schemas.BifrostContext, 
 	chunk.Timestamp = time.Now()
 	chunk.ErrorDetails = bifrostErr
 	if bifrostErr != nil {
-		chunk.FinishReason = bifrost.Ptr("error")
+		chunk.FinishReason = new("error")
 	} else if result != nil && result.TextCompletionResponse != nil {
 		// Handle text completion response directly
 		if len(result.TextCompletionResponse.Choices) > 0 {
@@ -551,12 +551,12 @@ func (a *Accumulator) processChatStreamingResponse(ctx *schemas.BifrostContext, 
 		}
 		chunk.ChunkIndex = result.TextCompletionResponse.ExtraFields.ChunkIndex
 		if result.TextCompletionResponse.ExtraFields.RawResponse != nil {
-			chunk.RawResponse = bifrost.Ptr(fmt.Sprintf("%v", result.TextCompletionResponse.ExtraFields.RawResponse))
+			chunk.RawResponse = new(fmt.Sprintf("%v", result.TextCompletionResponse.ExtraFields.RawResponse))
 		}
 		if isFinalChunk {
 			if a.pricingManager != nil {
 				cost := a.pricingManager.CalculateCost(result, modelcatalog.PricingLookupScopesFromContext(ctx, string(result.GetExtraFields().Provider)))
-				chunk.Cost = bifrost.Ptr(cost)
+				chunk.Cost = new(cost)
 			}
 			chunk.SemanticCacheDebug = result.GetExtraFields().CacheDebug
 		}
@@ -577,12 +577,12 @@ func (a *Accumulator) processChatStreamingResponse(ctx *schemas.BifrostContext, 
 		}
 		chunk.ChunkIndex = result.ChatResponse.ExtraFields.ChunkIndex
 		if result.ChatResponse.ExtraFields.RawResponse != nil {
-			chunk.RawResponse = bifrost.Ptr(fmt.Sprintf("%v", result.ChatResponse.ExtraFields.RawResponse))
+			chunk.RawResponse = new(fmt.Sprintf("%v", result.ChatResponse.ExtraFields.RawResponse))
 		}
 		if isFinalChunk {
 			if a.pricingManager != nil {
 				cost := a.pricingManager.CalculateCost(result, modelcatalog.PricingLookupScopesFromContext(ctx, string(result.GetExtraFields().Provider)))
-				chunk.Cost = bifrost.Ptr(cost)
+				chunk.Cost = new(cost)
 			}
 			chunk.SemanticCacheDebug = result.GetExtraFields().CacheDebug
 		}
@@ -608,7 +608,7 @@ func (a *Accumulator) processChatStreamingResponse(ctx *schemas.BifrostContext, 
 			a.logger.Error("failed to process accumulated chunks for request %s: %v", requestID, processErr)
 			return nil, processErr
 		}
-		var rawRequest interface{}
+		var rawRequest any
 		if result != nil {
 			if result.ChatResponse != nil && result.ChatResponse.ExtraFields.RawRequest != nil {
 				rawRequest = result.ChatResponse.ExtraFields.RawRequest

@@ -3,7 +3,7 @@ package lib
 import (
 	"strings"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 const ClientSafeInternalErrorMessage = "internal server error"

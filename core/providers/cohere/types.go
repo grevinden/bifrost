@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"github.com/bytedance/sonic"
-	providerUtils "github.com/maximhq/bifrost/core/providers/utils"
-	"github.com/maximhq/bifrost/core/schemas"
+	providerUtils "github.com/grevinden/bifrost/core/providers/utils"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 const (
@@ -41,7 +41,7 @@ type CohereChatRequest struct {
 	StrictToolChoice *bool                   `json:"strict_tool_choice,omitempty"` // Optional: Strict tool choice
 	Thinking         *CohereThinking         `json:"thinking,omitempty"`           // Optional: Reasoning configuration
 	ResponseFormat   *CohereResponseFormat   `json:"response_format,omitempty"`    // Optional: Format for the response
-	ExtraParams      map[string]interface{}  `json:"-"`                            // Optional: Extra parameters
+	ExtraParams      map[string]any          `json:"-"`                            // Optional: Extra parameters
 }
 
 // IsStreamingRequested implements the StreamingRequest interface
@@ -49,7 +49,7 @@ func (r *CohereChatRequest) IsStreamingRequested() bool {
 	return r.Stream != nil && *r.Stream
 }
 
-func (r *CohereChatRequest) GetExtraParams() map[string]interface{} {
+func (r *CohereChatRequest) GetExtraParams() map[string]any {
 	return r.ExtraParams
 }
 
@@ -59,9 +59,9 @@ type CohereChatRequestTool struct {
 }
 
 type CohereChatRequestFunction struct {
-	Name        string      `json:"name"`                  // Function name
-	Parameters  interface{} `json:"parameters,omitempty"`  // Function parameters (JSON string)
-	Description *string     `json:"description,omitempty"` // Optional: Function description
+	Name        string  `json:"name"`                  // Function name
+	Parameters  any     `json:"parameters,omitempty"`  // Function parameters (JSON string)
+	Description *string `json:"description,omitempty"` // Optional: Function description
 }
 
 // CohereMessage represents a message in Cohere  format
@@ -201,7 +201,7 @@ const (
 // CohereResponseFormat represents the response format configuration for Cohere chat requests
 type CohereResponseFormat struct {
 	Type       CohereResponseFormatType `json:"type"`             // Required: Response format type
-	JSONSchema *interface{}             `json:"schema,omitempty"` // Optional: JSON schema for structured output (not used when type is "text")
+	JSONSchema *any                     `json:"schema,omitempty"` // Optional: JSON schema for structured output (not used when type is "text")
 }
 
 // CohereResponseFormatType represents the type of response format
@@ -252,12 +252,12 @@ type CohereTool struct {
 
 // CohereCountTokensRequest represents a Cohere tokenize request
 type CohereCountTokensRequest struct {
-	Model       string                 `json:"model"` // Required: Model whose tokenizer should be used
-	Text        string                 `json:"text"`  // Required: Text to tokenize (1-65536 chars)
-	ExtraParams map[string]interface{} `json:"-"`     // Optional: Extra parameters
+	Model       string         `json:"model"` // Required: Model whose tokenizer should be used
+	Text        string         `json:"text"`  // Required: Text to tokenize (1-65536 chars)
+	ExtraParams map[string]any `json:"-"`     // Optional: Extra parameters
 }
 
-func (r *CohereCountTokensRequest) GetExtraParams() map[string]interface{} {
+func (r *CohereCountTokensRequest) GetExtraParams() map[string]any {
 	return r.ExtraParams
 }
 
@@ -272,10 +272,10 @@ type CohereEmbeddingRequest struct {
 	OutputDimension *int                   `json:"output_dimension,omitempty"` // Optional: Embedding dimensions (256, 512, 1024, 1536)
 	EmbeddingTypes  []string               `json:"embedding_types,omitempty"`  // Optional: Types of embeddings to return
 	Truncate        *string                `json:"truncate,omitempty"`         // Optional: How to handle long inputs
-	ExtraParams     map[string]interface{} `json:"-"`                          // Optional: Extra parameters
+	ExtraParams     map[string]any         `json:"-"`                          // Optional: Extra parameters
 }
 
-func (r *CohereEmbeddingRequest) GetExtraParams() map[string]interface{} {
+func (r *CohereEmbeddingRequest) GetExtraParams() map[string]any {
 	return r.ExtraParams
 }
 

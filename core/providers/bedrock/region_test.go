@@ -1,10 +1,11 @@
 package bedrock
 
 import (
+	"context"
 	"net/url"
 	"testing"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -110,7 +111,7 @@ func TestResolveBedrockRegion_AliasOverride(t *testing.T) {
 	}
 
 	// Build ctx carrying an alias with Region override.
-	ctx := schemas.NewBifrostContext(nil, schemas.NoDeadline)
+	ctx := schemas.NewBifrostContext(context.TODO, schemas.NoDeadline)
 	ctx.SetValue(schemas.BifrostContextKeyResolvedAlias, &schemas.ResolvedAlias{
 		Key: "best-claude",
 		Config: &schemas.AliasConfig{

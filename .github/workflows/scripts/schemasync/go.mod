@@ -1,4 +1,4 @@
-module github.com/maximhq/bifrost/tools/schema-sync
+module github.com/grevinden/bifrost/tools/schema-sync
 
 go 1.26.4
 

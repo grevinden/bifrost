@@ -1,4 +1,4 @@
-module github.com/maximhq/bifrost/cli
+module github.com/grevinden/bifrost/cli
 
 go 1.26.4
 

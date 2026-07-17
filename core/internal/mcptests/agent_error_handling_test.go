@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -24,7 +24,7 @@ func TestAgent_ErrorHandling_AllToolsFail(t *testing.T) {
 	manager := setupMCPManager(t)
 
 	// Register multiple tools that all fail
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		toolName := fmt.Sprintf("failing_tool_%d", i)
 		toolIndex := i
 
@@ -36,7 +36,7 @@ func TestAgent_ErrorHandling_AllToolsFail(t *testing.T) {
 			Type: schemas.ChatToolTypeFunction,
 			Function: &schemas.ChatToolFunction{
 				Name:        toolName,
-				Description: schemas.Ptr(fmt.Sprintf("Failing tool %d", i)),
+				Description: new(fmt.Sprintf("Failing tool %d", i)),
 			},
 		}
 
@@ -51,12 +51,12 @@ func TestAgent_ErrorHandling_AllToolsFail(t *testing.T) {
 
 	// Create tool calls for all failing tools
 	toolCalls := []schemas.ChatAssistantMessageToolCall{}
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		toolCalls = append(toolCalls, schemas.ChatAssistantMessageToolCall{
-			ID:   schemas.Ptr(fmt.Sprintf("call-%d", i)),
-			Type: schemas.Ptr("function"),
+			ID:   new(fmt.Sprintf("call-%d", i)),
+			Type: new("function"),
 			Function: schemas.ChatAssistantMessageToolCallFunction{
-				Name:      schemas.Ptr(fmt.Sprintf("bifrostInternal-failing_tool_%d", i)),
+				Name:      new(fmt.Sprintf("bifrostInternal-failing_tool_%d", i)),
 				Arguments: "{}",
 			},
 		})
@@ -79,7 +79,7 @@ func TestAgent_ErrorHandling_AllToolsFail(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Execute all tools"),
+					ContentStr: new("Execute all tools"),
 				},
 			},
 		},
@@ -117,7 +117,7 @@ func TestAgent_ErrorHandling_TimeoutInLoop(t *testing.T) {
 		Type: schemas.ChatToolTypeFunction,
 		Function: &schemas.ChatToolFunction{
 			Name:        "slow_tool",
-			Description: schemas.Ptr("A tool that times out"),
+			Description: new("A tool that times out"),
 		},
 	}
 
@@ -133,10 +133,10 @@ func TestAgent_ErrorHandling_TimeoutInLoop(t *testing.T) {
 
 	toolCalls := []schemas.ChatAssistantMessageToolCall{
 		{
-			ID:   schemas.Ptr("call-timeout"),
-			Type: schemas.Ptr("function"),
+			ID:   new("call-timeout"),
+			Type: new("function"),
 			Function: schemas.ChatAssistantMessageToolCallFunction{
-				Name: schemas.Ptr("bifrostInternal-slow_tool"),
+				Name:      new("bifrostInternal-slow_tool"),
 				Arguments: "{}",
 			},
 		},
@@ -159,7 +159,7 @@ func TestAgent_ErrorHandling_TimeoutInLoop(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Execute slow tool"),
+					ContentStr: new("Execute slow tool"),
 				},
 			},
 		},
@@ -213,7 +213,7 @@ func TestAgent_ErrorHandling_MalformedResponse(t *testing.T) {
 			Type: schemas.ChatToolTypeFunction,
 			Function: &schemas.ChatToolFunction{
 				Name:        toolName,
-				Description: schemas.Ptr(tc.desc),
+				Description: new(tc.desc),
 			},
 		}
 
@@ -230,13 +230,13 @@ func TestAgent_ErrorHandling_MalformedResponse(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			toolName := "malformed_" + tc.name
-			argsJSON, _ := json.Marshal(map[string]interface{}{})
+			argsJSON, _ := json.Marshal(map[string]any{})
 
 			toolCall := schemas.ChatAssistantMessageToolCall{
-				ID:   schemas.Ptr("call-" + tc.name),
-				Type: schemas.Ptr("function"),
+				ID:   new("call-" + tc.name),
+				Type: new("function"),
 				Function: schemas.ChatAssistantMessageToolCallFunction{
-					Name:      schemas.Ptr(toolName),
+					Name:      new(toolName),
 					Arguments: string(argsJSON),
 				},
 			}
@@ -280,7 +280,7 @@ func TestAgent_ErrorHandling_PartialBatchFailure(t *testing.T) {
 			Type: schemas.ChatToolTypeFunction,
 			Function: &schemas.ChatToolFunction{
 				Name:        toolName,
-				Description: schemas.Ptr(fmt.Sprintf("Tool %d", i)),
+				Description: new(fmt.Sprintf("Tool %d", i)),
 			},
 		}
 
@@ -297,10 +297,10 @@ func TestAgent_ErrorHandling_PartialBatchFailure(t *testing.T) {
 	toolCalls := []schemas.ChatAssistantMessageToolCall{}
 	for i := range outcomes {
 		toolCalls = append(toolCalls, schemas.ChatAssistantMessageToolCall{
-			ID:   schemas.Ptr(fmt.Sprintf("call-%d", i)),
-			Type: schemas.Ptr("function"),
+			ID:   new(fmt.Sprintf("call-%d", i)),
+			Type: new("function"),
 			Function: schemas.ChatAssistantMessageToolCallFunction{
-				Name:      schemas.Ptr(fmt.Sprintf("bifrostInternal-tool_%d", i)),
+				Name:      new(fmt.Sprintf("bifrostInternal-tool_%d", i)),
 				Arguments: "{}",
 			},
 		})
@@ -323,7 +323,7 @@ func TestAgent_ErrorHandling_PartialBatchFailure(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Execute batch"),
+					ContentStr: new("Execute batch"),
 				},
 			},
 		},
@@ -369,7 +369,7 @@ func TestAgent_ErrorHandling_RecoveryAndContinuation(t *testing.T) {
 		Type: schemas.ChatToolTypeFunction,
 		Function: &schemas.ChatToolFunction{
 			Name:        "fail_tool",
-			Description: schemas.Ptr("A tool that fails"),
+			Description: new("A tool that fails"),
 		},
 	}
 	err = manager.RegisterTool("fail_tool", "A tool that fails", failHandler, failSchema)
@@ -386,10 +386,10 @@ func TestAgent_ErrorHandling_RecoveryAndContinuation(t *testing.T) {
 			// Iteration 1: failing tool
 			CreateChatResponseWithToolCalls([]schemas.ChatAssistantMessageToolCall{
 				{
-					ID:   schemas.Ptr("call-fail"),
-					Type: schemas.Ptr("function"),
+					ID:   new("call-fail"),
+					Type: new("function"),
 					Function: schemas.ChatAssistantMessageToolCallFunction{
-						Name: schemas.Ptr("bifrostInternal-fail_tool"),
+						Name:      new("bifrostInternal-fail_tool"),
 						Arguments: "{}",
 					},
 				},
@@ -413,7 +413,7 @@ func TestAgent_ErrorHandling_RecoveryAndContinuation(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Test recovery"),
+					ContentStr: new("Test recovery"),
 				},
 			},
 		},
@@ -465,10 +465,10 @@ func TestAgent_ErrorHandling_ErrorInToolArguments(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			toolCall := schemas.ChatAssistantMessageToolCall{
-				ID:   schemas.Ptr("call-" + tc.name),
-				Type: schemas.Ptr("function"),
+				ID:   new("call-" + tc.name),
+				Type: new("function"),
 				Function: schemas.ChatAssistantMessageToolCallFunction{
-					Name: schemas.Ptr("bifrostInternal-calculator"),
+					Name:      new("bifrostInternal-calculator"),
 					Arguments: tc.arguments,
 				},
 			}
@@ -501,7 +501,7 @@ func TestAgent_ErrorHandling_MultipleErrorsInSequence(t *testing.T) {
 		Type: schemas.ChatToolTypeFunction,
 		Function: &schemas.ChatToolFunction{
 			Name:        "fail_tool",
-			Description: schemas.Ptr("Consistently fails"),
+			Description: new("Consistently fails"),
 		},
 	}
 	err := manager.RegisterTool("fail_tool", "Consistently fails", failHandler, failSchema)
@@ -518,10 +518,10 @@ func TestAgent_ErrorHandling_MultipleErrorsInSequence(t *testing.T) {
 			// Iteration 1: fail
 			CreateChatResponseWithToolCalls([]schemas.ChatAssistantMessageToolCall{
 				{
-					ID:   schemas.Ptr("call-fail-1"),
-					Type: schemas.Ptr("function"),
+					ID:   new("call-fail-1"),
+					Type: new("function"),
 					Function: schemas.ChatAssistantMessageToolCallFunction{
-						Name: schemas.Ptr("bifrostInternal-fail_tool"),
+						Name:      new("bifrostInternal-fail_tool"),
 						Arguments: "{}",
 					},
 				},
@@ -529,10 +529,10 @@ func TestAgent_ErrorHandling_MultipleErrorsInSequence(t *testing.T) {
 			// Iteration 2: fail again
 			CreateChatResponseWithToolCalls([]schemas.ChatAssistantMessageToolCall{
 				{
-					ID:   schemas.Ptr("call-fail-2"),
-					Type: schemas.Ptr("function"),
+					ID:   new("call-fail-2"),
+					Type: new("function"),
 					Function: schemas.ChatAssistantMessageToolCallFunction{
-						Name: schemas.Ptr("bifrostInternal-fail_tool"),
+						Name:      new("bifrostInternal-fail_tool"),
 						Arguments: "{}",
 					},
 				},
@@ -552,7 +552,7 @@ func TestAgent_ErrorHandling_MultipleErrorsInSequence(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Test multiple failures"),
+					ContentStr: new("Test multiple failures"),
 				},
 			},
 		},
@@ -586,7 +586,7 @@ func TestAgent_ErrorHandling_ErrorMessagePreservation(t *testing.T) {
 		Type: schemas.ChatToolTypeFunction,
 		Function: &schemas.ChatToolFunction{
 			Name:        "error_tool",
-			Description: schemas.Ptr("Returns specific error"),
+			Description: new("Returns specific error"),
 		},
 	}
 	err := manager.RegisterTool("error_tool", "Returns specific error", errorHandler, errorSchema)
@@ -601,10 +601,10 @@ func TestAgent_ErrorHandling_ErrorMessagePreservation(t *testing.T) {
 		chatResponses: []*schemas.BifrostChatResponse{
 			CreateChatResponseWithToolCalls([]schemas.ChatAssistantMessageToolCall{
 				{
-					ID:   schemas.Ptr("call-error"),
-					Type: schemas.Ptr("function"),
+					ID:   new("call-error"),
+					Type: new("function"),
 					Function: schemas.ChatAssistantMessageToolCallFunction{
-						Name: schemas.Ptr("bifrostInternal-error_tool"),
+						Name:      new("bifrostInternal-error_tool"),
 						Arguments: "{}",
 					},
 				},
@@ -623,7 +623,7 @@ func TestAgent_ErrorHandling_ErrorMessagePreservation(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Test error message"),
+					ContentStr: new("Test error message"),
 				},
 			},
 		},

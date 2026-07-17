@@ -6,10 +6,10 @@ import (
 	"time"
 
 	"github.com/google/cel-go/cel"
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/configstore"
-	configstoreTables "github.com/maximhq/bifrost/framework/configstore/tables"
-	"github.com/maximhq/bifrost/plugins/governance/complexity"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/configstore"
+	configstoreTables "github.com/grevinden/bifrost/framework/configstore/tables"
+	"github.com/grevinden/bifrost/plugins/governance/complexity"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -80,13 +80,13 @@ func TestCELComplexityTierVariable(t *testing.T) {
 	tests := []struct {
 		name       string
 		expression string
-		variables  map[string]interface{}
+		variables  map[string]any
 		expected   bool
 	}{
 		{
 			name:       "tier equals COMPLEX",
 			expression: `complexity_tier == "COMPLEX"`,
-			variables: map[string]interface{}{
+			variables: map[string]any{
 				"complexity_tier": "COMPLEX",
 			},
 			expected: true,
@@ -94,7 +94,7 @@ func TestCELComplexityTierVariable(t *testing.T) {
 		{
 			name:       "tier equals SIMPLE",
 			expression: `complexity_tier == "SIMPLE"`,
-			variables: map[string]interface{}{
+			variables: map[string]any{
 				"complexity_tier": "SIMPLE",
 			},
 			expected: true,
@@ -102,7 +102,7 @@ func TestCELComplexityTierVariable(t *testing.T) {
 		{
 			name:       "tier equals REASONING",
 			expression: `complexity_tier == "REASONING"`,
-			variables: map[string]interface{}{
+			variables: map[string]any{
 				"complexity_tier": "REASONING",
 			},
 			expected: true,
@@ -110,7 +110,7 @@ func TestCELComplexityTierVariable(t *testing.T) {
 		{
 			name:       "tier mismatch",
 			expression: `complexity_tier == "COMPLEX"`,
-			variables: map[string]interface{}{
+			variables: map[string]any{
 				"complexity_tier": "MEDIUM",
 			},
 			expected: false,
@@ -118,7 +118,7 @@ func TestCELComplexityTierVariable(t *testing.T) {
 		{
 			name:       "tier not equals",
 			expression: `complexity_tier != "SIMPLE"`,
-			variables: map[string]interface{}{
+			variables: map[string]any{
 				"complexity_tier": "COMPLEX",
 			},
 			expected: true,
@@ -126,7 +126,7 @@ func TestCELComplexityTierVariable(t *testing.T) {
 		{
 			name:       "tier in list",
 			expression: `complexity_tier in ["COMPLEX", "REASONING"]`,
-			variables: map[string]interface{}{
+			variables: map[string]any{
 				"complexity_tier": "COMPLEX",
 			},
 			expected: true,
@@ -134,7 +134,7 @@ func TestCELComplexityTierVariable(t *testing.T) {
 		{
 			name:       "tier not in list",
 			expression: `!(complexity_tier in ["SIMPLE", "MEDIUM"])`,
-			variables: map[string]interface{}{
+			variables: map[string]any{
 				"complexity_tier": "COMPLEX",
 			},
 			expected: true,
@@ -171,7 +171,7 @@ func TestCELComplexityWithFullEnvironment(t *testing.T) {
 	program, err := env.Program(ast)
 	require.NoError(t, err, "program creation failed")
 
-	variables := map[string]interface{}{
+	variables := map[string]any{
 		"model":            "gpt-4o",
 		"provider":         "openai",
 		"request_type":     "chat_completion",
@@ -273,7 +273,7 @@ func TestEvaluateRoutingRules_ComplexityUnavailableNegativePredicatesDoNotMatch(
 			rule := complexityRoutingRule("complexity-unavailable-"+tt.name, tt.expression)
 			require.NoError(t, store.UpdateRoutingRuleInMemory(ctx, rule))
 
-			engine, err := NewRoutingEngine(store, NewMockLogger(), schemas.Ptr(10))
+			engine, err := NewRoutingEngine(store, NewMockLogger(), new(10))
 			require.NoError(t, err)
 
 			computeCalls := 0
@@ -302,7 +302,7 @@ func TestEvaluateRoutingRules_ComplexityTierLiteralDoesNotComputeComplexity(t *t
 	rule := complexityRoutingRule("complexity-tier-literal", `model == "complexity_tier"`)
 	require.NoError(t, store.UpdateRoutingRuleInMemory(ctx, rule))
 
-	engine, err := NewRoutingEngine(store, NewMockLogger(), schemas.Ptr(10))
+	engine, err := NewRoutingEngine(store, NewMockLogger(), new(10))
 	require.NoError(t, err)
 
 	computeCalls := 0
@@ -331,7 +331,7 @@ func TestEvaluateRoutingRules_ComplexityNegativePredicateMatchesAvailableTier(t 
 	rule := complexityRoutingRule("complexity-available-not-simple", `complexity_tier != "SIMPLE"`)
 	require.NoError(t, store.UpdateRoutingRuleInMemory(ctx, rule))
 
-	engine, err := NewRoutingEngine(store, NewMockLogger(), schemas.Ptr(10))
+	engine, err := NewRoutingEngine(store, NewMockLogger(), new(10))
 	require.NoError(t, err)
 
 	decision, err := engine.EvaluateRoutingRules(schemas.NewBifrostContext(ctx, time.Now()), &RoutingContext{
@@ -348,8 +348,8 @@ func TestEvaluateRoutingRules_ComplexityNegativePredicateMatchesAvailableTier(t 
 	assert.Equal(t, "claude-3-5-sonnet", decision.Model)
 }
 
-func complexityRoutingVariables() map[string]interface{} {
-	return map[string]interface{}{
+func complexityRoutingVariables() map[string]any {
+	return map[string]any{
 		"model":            "gpt-4o",
 		"provider":         "openai",
 		"request_type":     "chat_completion",
@@ -374,7 +374,7 @@ func complexityRoutingRule(id string, expression string) *configstoreTables.Tabl
 	return &configstoreTables.TableRoutingRule{
 		ID:            id,
 		Name:          id,
-		Enabled:       boolPtr(true),
+		Enabled:       new(true),
 		CelExpression: expression,
 		Scope:         "global",
 		Priority:      1,

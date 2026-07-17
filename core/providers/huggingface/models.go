@@ -5,8 +5,8 @@ import (
 	"slices"
 	"strings"
 
-	providerUtils "github.com/maximhq/bifrost/core/providers/utils"
-	schemas "github.com/maximhq/bifrost/core/schemas"
+	providerUtils "github.com/grevinden/bifrost/core/providers/utils"
+	schemas "github.com/grevinden/bifrost/core/schemas"
 )
 
 const (
@@ -53,12 +53,12 @@ func (response *HuggingFaceListModelsResponse) ToBifrostListModelsResponse(provi
 			newModel := schemas.Model{
 				// inferenceProvider stays in the compound ID; aliases rename only the model segment
 				ID:               fmt.Sprintf("%s/%s/%s", providerKey, inferenceProvider, result.ResolvedID),
-				Name:             schemas.Ptr(model.ModelID),
+				Name:             new(model.ModelID),
 				SupportedMethods: supported,
-				HuggingFaceID:    schemas.Ptr(model.ID),
+				HuggingFaceID:    new(model.ID),
 			}
 			if result.AliasValue != "" {
-				newModel.Alias = schemas.Ptr(result.AliasValue)
+				newModel.Alias = new(result.AliasValue)
 			}
 			bifrostResponse.Data = append(bifrostResponse.Data, newModel)
 			included[strings.ToLower(result.ResolvedID)] = true

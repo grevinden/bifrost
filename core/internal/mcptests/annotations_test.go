@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -37,11 +37,11 @@ func TestAnnotations_PreservedAfterToolRegistration(t *testing.T) {
 		Type: schemas.ChatToolTypeFunction,
 		Function: &schemas.ChatToolFunction{
 			Name:        "read_resource",
-			Description: schemas.Ptr("Reads a resource"),
+			Description: new("Reads a resource"),
 			Parameters: &schemas.ToolFunctionParameters{
 				Type: "object",
 				Properties: schemas.NewOrderedMapFromPairs(
-					schemas.KV("uri", map[string]interface{}{
+					schemas.KV("uri", map[string]any{
 						"type":        "string",
 						"description": "URI of the resource to read",
 					}),
@@ -106,15 +106,15 @@ func TestAnnotations_AbsentFromProviderJSON(t *testing.T) {
 		Type: schemas.ChatToolTypeFunction,
 		Function: &schemas.ChatToolFunction{
 			Name:        "write_file",
-			Description: schemas.Ptr("Writes content to a file"),
+			Description: new("Writes content to a file"),
 			Parameters: &schemas.ToolFunctionParameters{
 				Type: "object",
 				Properties: schemas.NewOrderedMapFromPairs(
-					schemas.KV("path", map[string]interface{}{
+					schemas.KV("path", map[string]any{
 						"type":        "string",
 						"description": "Destination file path",
 					}),
-					schemas.KV("content", map[string]interface{}{
+					schemas.KV("content", map[string]any{
 						"type":        "string",
 						"description": "Content to write",
 					}),
@@ -184,7 +184,7 @@ func TestAnnotations_DeepCopyPreservesAnnotations(t *testing.T) {
 		Type: schemas.ChatToolTypeFunction,
 		Function: &schemas.ChatToolFunction{
 			Name:        "read_config",
-			Description: schemas.Ptr("Reads configuration from disk"),
+			Description: new("Reads configuration from disk"),
 		},
 		Annotations: &schemas.MCPToolAnnotations{
 			Title:        "Config Reader",

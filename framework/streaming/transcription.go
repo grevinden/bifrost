@@ -6,15 +6,15 @@ import (
 	"strings"
 	"time"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/modelcatalog"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/modelcatalog"
 )
 
 // buildCompleteMessageFromTranscriptionStreamChunks builds a complete message from accumulated transcription chunks
 func (a *Accumulator) buildCompleteMessageFromTranscriptionStreamChunks(chunks []*TranscriptionStreamChunk) *schemas.BifrostTranscriptionResponse {
 	completeMessage := &schemas.BifrostTranscriptionResponse{}
-	finalContent := ""
+	var finalContent strings.Builder
 	sort.Slice(chunks, func(i, j int) bool {
 		return chunks[i].ChunkIndex < chunks[j].ChunkIndex
 	})
@@ -23,11 +23,11 @@ func (a *Accumulator) buildCompleteMessageFromTranscriptionStreamChunks(chunks [
 			continue
 		}
 		if chunk.Delta.Type == schemas.TranscriptionStreamResponseTypeDelta && chunk.Delta.Delta != nil {
-			finalContent += *chunk.Delta.Delta
+			finalContent.WriteString(*chunk.Delta.Delta)
 		}
 	}
 	// Add final content to the message
-	completeMessage.Text = finalContent
+	completeMessage.Text = finalContent.String()
 	return completeMessage
 }
 
@@ -138,7 +138,7 @@ func (a *Accumulator) processTranscriptionStreamingResponse(ctx *schemas.Bifrost
 	chunk.Timestamp = time.Now()
 	chunk.ErrorDetails = bifrostErr
 	if bifrostErr != nil {
-		chunk.FinishReason = bifrost.Ptr("error")
+		chunk.FinishReason = new("error")
 	} else if result != nil && result.TranscriptionStreamResponse != nil {
 		// Set delta for all chunks (not just final chunks with usage)
 		// We create a deep copy of the delta to avoid pointing to stack memory
@@ -159,12 +159,12 @@ func (a *Accumulator) processTranscriptionStreamingResponse(ctx *schemas.Bifrost
 		}
 		chunk.ChunkIndex = result.TranscriptionStreamResponse.ExtraFields.ChunkIndex
 		if result.TranscriptionStreamResponse.ExtraFields.RawResponse != nil {
-			chunk.RawResponse = bifrost.Ptr(fmt.Sprintf("%v", result.TranscriptionStreamResponse.ExtraFields.RawResponse))
+			chunk.RawResponse = new(fmt.Sprintf("%v", result.TranscriptionStreamResponse.ExtraFields.RawResponse))
 		}
 		if isFinalChunk {
 			if a.pricingManager != nil {
 				cost := a.pricingManager.CalculateCost(result, modelcatalog.PricingLookupScopesFromContext(ctx, string(result.GetExtraFields().Provider)))
-				chunk.Cost = bifrost.Ptr(cost)
+				chunk.Cost = new(cost)
 			}
 			chunk.SemanticCacheDebug = result.GetExtraFields().CacheDebug
 		}
@@ -189,7 +189,7 @@ func (a *Accumulator) processTranscriptionStreamingResponse(ctx *schemas.Bifrost
 			a.logger.Error("failed to process accumulated chunks for request %s: %v", requestID, processErr)
 			return nil, processErr
 		}
-		var rawRequest interface{}
+		var rawRequest any
 		if result != nil && result.TranscriptionStreamResponse != nil && result.TranscriptionStreamResponse.ExtraFields.RawRequest != nil {
 			rawRequest = result.TranscriptionStreamResponse.ExtraFields.RawRequest
 		}

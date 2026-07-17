@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"strings"
 
-	codemcp "github.com/maximhq/bifrost/core/mcp"
-	"github.com/maximhq/bifrost/core/schemas"
+	codemcp "github.com/grevinden/bifrost/core/mcp"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // createListToolFilesTool creates the listToolFiles tool definition for code mode.
@@ -49,7 +49,7 @@ func (s *StarlarkCodeMode) createListToolFilesTool() schemas.ChatTool {
 		Type: schemas.ChatToolTypeFunction,
 		Function: &schemas.ChatToolFunction{
 			Name:        codemcp.ToolTypeListToolFiles,
-			Description: schemas.Ptr(description),
+			Description: new(description),
 			Parameters: &schemas.ToolFunctionParameters{
 				Type:       "object",
 				Properties: schemas.NewOrderedMap(),

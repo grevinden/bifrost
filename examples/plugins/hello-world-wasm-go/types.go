@@ -1,6 +1,6 @@
 package main
 
-import "github.com/maximhq/bifrost/core/schemas"
+import "github.com/grevinden/bifrost/core/schemas"
 
 // ============================================================================
 // Input/Output Structs

@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // RunResponsesReasoningTest executes the reasoning test scenario to test thinking capabilities via Responses API only
@@ -44,10 +44,10 @@ func RunResponsesReasoningTest(t *testing.T, client *bifrost.Bifrost, ctx contex
 				// Note: Older o1 models may not return message output via Responses API - use o3/o4-mini.
 				// OpenAI recommends reserving at least 25,000 tokens for reasoning and outputs.
 				// See: https://platform.openai.com/docs/guides/reasoning#allocating-space-for-reasoning
-				MaxOutputTokens: bifrost.Ptr(25000),
+				MaxOutputTokens: new(25000),
 				// Configure reasoning-specific parameters
 				Reasoning: &schemas.ResponsesParametersReasoning{
-					Effort: bifrost.Ptr("high"), // High effort for complex reasoning
+					Effort: new("high"), // High effort for complex reasoning
 					// Summary: bifrost.Ptr("detailed"), // Detailed summary of reasoning process
 				},
 				// Include reasoning content in response
@@ -60,12 +60,12 @@ func RunResponsesReasoningTest(t *testing.T, client *bifrost.Bifrost, ctx contex
 		retryConfig := GetTestRetryConfigForScenario("Reasoning", testConfig)
 		retryContext := TestRetryContext{
 			ScenarioName: "Reasoning",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"should_show_reasoning": true,
 				"mathematical_problem":  true,
 				"step_by_step":          true,
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider":          testConfig.Provider,
 				"model":             testConfig.ReasoningModel,
 				"problem_type":      "mathematical",
@@ -83,7 +83,7 @@ func RunResponsesReasoningTest(t *testing.T, client *bifrost.Bifrost, ctx contex
 		}
 
 		// Enhanced validation for reasoning scenarios
-		expectations := GetExpectationsForScenario("Reasoning", testConfig, map[string]interface{}{
+		expectations := GetExpectationsForScenario("Reasoning", testConfig, map[string]any{
 			"requires_reasoning": true,
 		})
 		expectations = ModifyExpectationsForProvider(expectations, testConfig.Provider)
@@ -240,11 +240,11 @@ func RunChatCompletionReasoningTest(t *testing.T, client *bifrost.Bifrost, ctx c
 			Model:    testConfig.ReasoningModel,
 			Input:    chatMessages,
 			Params: &schemas.ChatParameters{
-				MaxCompletionTokens: bifrost.Ptr(1800),
+				MaxCompletionTokens: new(1800),
 				// Configure reasoning-specific parameters
 				Reasoning: &schemas.ChatReasoning{
-					Effort:    bifrost.Ptr("high"), // High effort for complex reasoning
-					MaxTokens: bifrost.Ptr(1500),   // Maximum tokens for reasoning output
+					Effort:    new("high"), // High effort for complex reasoning
+					MaxTokens: new(1500),   // Maximum tokens for reasoning output
 				},
 			},
 			Fallbacks: testConfig.Fallbacks,
@@ -254,12 +254,12 @@ func RunChatCompletionReasoningTest(t *testing.T, client *bifrost.Bifrost, ctx c
 		retryConfig := GetTestRetryConfigForScenario("Reasoning", testConfig)
 		retryContext := TestRetryContext{
 			ScenarioName: "Reasoning",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"should_show_reasoning": true,
 				"mathematical_problem":  true,
 				"step_by_step":          true,
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider":          testConfig.Provider,
 				"model":             testConfig.ReasoningModel,
 				"problem_type":      "mathematical",
@@ -277,7 +277,7 @@ func RunChatCompletionReasoningTest(t *testing.T, client *bifrost.Bifrost, ctx c
 		}
 
 		// Enhanced validation for reasoning scenarios
-		expectations := GetExpectationsForScenario("Reasoning", testConfig, map[string]interface{}{
+		expectations := GetExpectationsForScenario("Reasoning", testConfig, map[string]any{
 			"requires_reasoning": true,
 		})
 		expectations = ModifyExpectationsForProvider(expectations, testConfig.Provider)
@@ -451,9 +451,9 @@ func RunMultiTurnReasoningTest(t *testing.T, client *bifrost.Bifrost, ctx contex
 			Model:    testConfig.ReasoningModel,
 			Input:    chatMessages,
 			Params: &schemas.ChatParameters{
-				MaxCompletionTokens: bifrost.Ptr(4000),
+				MaxCompletionTokens: new(4000),
 				Reasoning: &schemas.ChatReasoning{
-					Effort: bifrost.Ptr("low"),
+					Effort: new("low"),
 				},
 			},
 			Fallbacks: testConfig.Fallbacks,
@@ -462,11 +462,11 @@ func RunMultiTurnReasoningTest(t *testing.T, client *bifrost.Bifrost, ctx contex
 		retryConfig := GetTestRetryConfigForScenario("Reasoning", testConfig)
 		retryContext := TestRetryContext{
 			ScenarioName: "MultiTurnReasoning_Step1",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"should_show_reasoning": true,
 				"multi_turn":            true,
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider": testConfig.Provider,
 				"model":    testConfig.ReasoningModel,
 				"step":     "initial",
@@ -480,7 +480,7 @@ func RunMultiTurnReasoningTest(t *testing.T, client *bifrost.Bifrost, ctx contex
 			OnRetry:     retryConfig.OnRetry,
 			OnFinalFail: retryConfig.OnFinalFail,
 		}
-		expectations := GetExpectationsForScenario("Reasoning", testConfig, map[string]interface{}{
+		expectations := GetExpectationsForScenario("Reasoning", testConfig, map[string]any{
 			"requires_reasoning": true,
 		})
 		expectations = ModifyExpectationsForProvider(expectations, testConfig.Provider)
@@ -533,9 +533,9 @@ func RunMultiTurnReasoningTest(t *testing.T, client *bifrost.Bifrost, ctx contex
 			Model:    testConfig.ReasoningModel,
 			Input:    multiTurnMessages,
 			Params: &schemas.ChatParameters{
-				MaxCompletionTokens: bifrost.Ptr(4000),
+				MaxCompletionTokens: new(4000),
 				Reasoning: &schemas.ChatReasoning{
-					Effort: bifrost.Ptr("low"),
+					Effort: new("low"),
 				},
 			},
 			Fallbacks: testConfig.Fallbacks,
@@ -543,11 +543,11 @@ func RunMultiTurnReasoningTest(t *testing.T, client *bifrost.Bifrost, ctx contex
 
 		retryContext2 := TestRetryContext{
 			ScenarioName: "MultiTurnReasoning_Step2",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"multi_turn":            true,
 				"reasoning_passthrough": true,
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider": testConfig.Provider,
 				"model":    testConfig.ReasoningModel,
 				"step":     "follow_up",
@@ -572,12 +572,4 @@ func RunMultiTurnReasoningTest(t *testing.T, client *bifrost.Bifrost, ctx contex
 
 		t.Log("Multi-turn reasoning passthrough test passed!")
 	})
-}
-
-// min returns the smaller of two integers
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
 }

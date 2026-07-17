@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/providers/utils"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/providers/utils"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // RunSpeechSynthesisStreamTest executes the streaming speech synthesis test scenario
@@ -99,14 +99,14 @@ func RunSpeechSynthesisStreamTest(t *testing.T, client *bifrost.Bifrost, ctx con
 				retryConfig := GetTestRetryConfigForScenario("SpeechSynthesisStream", testConfig)
 				retryContext := TestRetryContext{
 					ScenarioName: "SpeechSynthesisStream_" + tc.name,
-					ExpectedBehavior: map[string]interface{}{
+					ExpectedBehavior: map[string]any{
 						"generate_streaming_audio": true,
 						"voice_type":               tc.voice,
 						"format":                   tc.format,
 						"min_chunks":               tc.expectMinChunks,
 						"min_total_bytes":          tc.expectMinBytes,
 					},
-					TestMetadata: map[string]interface{}{
+					TestMetadata: map[string]any{
 						"provider":    testConfig.Provider,
 						"model":       testConfig.SpeechSynthesisModel,
 						"text_length": len(tc.text),
@@ -114,8 +114,6 @@ func RunSpeechSynthesisStreamTest(t *testing.T, client *bifrost.Bifrost, ctx con
 						"format":      tc.format,
 					},
 				}
-
-				
 
 				responseChannel, err := WithStreamRetry(t, retryConfig, retryContext, func() (chan *schemas.BifrostStreamChunk, *schemas.BifrostError) {
 					requestCtx := schemas.NewBifrostContext(ctx, schemas.NoDeadline)
@@ -268,9 +266,9 @@ func RunSpeechSynthesisStreamAdvancedTest(t *testing.T, client *bifrost.Bifrost,
 			}
 
 			// Test streaming with HD model and very long text
-			finalText := ""
+			var finalText strings.Builder
 			for i := 1; i <= 20; i++ {
-				finalText += strings.Replace("This is sentence number %d in a very long text for testing streaming speech synthesis with the HD model. ", "%d", string(rune('0'+i%10)), -1)
+				finalText.WriteString(strings.Replace("This is sentence number %d in a very long text for testing streaming speech synthesis with the HD model. ", "%d", string(rune('0'+i%10)), -1))
 			}
 
 			voice := GetProviderVoice(testConfig.Provider, "tertiary")
@@ -278,7 +276,7 @@ func RunSpeechSynthesisStreamAdvancedTest(t *testing.T, client *bifrost.Bifrost,
 				Provider: testConfig.Provider,
 				Model:    testConfig.SpeechSynthesisModel,
 				Input: &schemas.SpeechInput{
-					Input: finalText,
+					Input: finalText.String(),
 				},
 				Params: &schemas.SpeechParameters{
 					VoiceConfig: &schemas.SpeechVoiceInput{
@@ -293,16 +291,16 @@ func RunSpeechSynthesisStreamAdvancedTest(t *testing.T, client *bifrost.Bifrost,
 			retryConfig := GetTestRetryConfigForScenario("SpeechSynthesisStreamHD", testConfig)
 			retryContext := TestRetryContext{
 				ScenarioName: "SpeechSynthesisStreamHD_LongText",
-				ExpectedBehavior: map[string]interface{}{
+				ExpectedBehavior: map[string]any{
 					"generate_hd_streaming_audio": true,
 					"handle_long_text":            true,
 					"min_chunks":                  3,
 					"min_total_bytes":             10000,
 				},
-				TestMetadata: map[string]interface{}{
+				TestMetadata: map[string]any{
 					"provider":    testConfig.Provider,
 					"model":       testConfig.SpeechSynthesisModel,
-					"text_length": len(finalText),
+					"text_length": len(finalText.String()),
 					"voice":       voice,
 				},
 			}
@@ -442,24 +440,23 @@ func RunSpeechSynthesisStreamAdvancedTest(t *testing.T, client *bifrost.Bifrost,
 					retryConfig := GetTestRetryConfigForScenario("SpeechSynthesisStreamVoice", testConfig)
 					retryContext := TestRetryContext{
 						ScenarioName: "SpeechSynthesisStream_Voice_" + voiceCopy,
-						ExpectedBehavior: map[string]interface{}{
+						ExpectedBehavior: map[string]any{
 							"generate_streaming_audio": true,
 							"voice_type":               voiceCopy,
 						},
-						TestMetadata: map[string]interface{}{
+						TestMetadata: map[string]any{
 							"provider": testConfig.Provider,
 							"voice":    voiceCopy,
 						},
 					}
 
-					
 					// Use retry framework with stream validation
 					var accumulatedAudio bytes.Buffer // Accumulate audio for codec validation
 					validationResult := WithSpeechStreamValidationRetry(
 						t,
 						retryConfig,
 						retryContext,
-						func() (chan *schemas.BifrostStreamChunk, *schemas.BifrostError) {							
+						func() (chan *schemas.BifrostStreamChunk, *schemas.BifrostError) {
 							accumulatedAudio.Reset() // Reset buffer on retry
 							requestCtx := schemas.NewBifrostContext(ctx, schemas.NoDeadline)
 							return client.SpeechStreamRequest(requestCtx, request)

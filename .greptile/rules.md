@@ -9,7 +9,7 @@ When reviewing a PR, first identify which Bifrost area is touched:
 - `core/`: provider lifecycle, inference routing, MCP, schemas, provider implementations, pooling.
 - `framework/`: persistence, streaming accumulators, vector stores, tracing, encryption.
 - `transports/`: HTTP server, handlers, SDK integrations, config schema.
-- `plugins/`: governance, logging, telemetry, semantic cache, compatibility plugins.
+- `plugins/`: llmboster, governance, logging, telemetry, semantic cache, prompts, modelcatalogresolver, compat, jsonparser, maxim, mocker.
 - `ui/`: React workspace interface and shared components.
 - `tests/e2e/`: Playwright end-to-end tests.
 - `docs/`: Mintlify documentation.

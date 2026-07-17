@@ -50,7 +50,7 @@ Remove the `fasthttp` import if present:
 import (
 	"fmt"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	// Remove: "github.com/valyala/fasthttp"
 )
 ```
@@ -293,7 +293,7 @@ func HTTPTransportPostHook(ctx *schemas.BifrostContext, req *schemas.HTTPRequest
 
 2. **Update Bifrost to v1.4.x:**
    ```bash
-   go get github.com/maximhq/bifrost/core@v1.4.0
+   go get github.com/grevinden/bifrost/core@v1.4.0
    ```
 
 3. **Test with a simple request:**
@@ -459,7 +459,7 @@ func HTTPTransportStreamChunkHook(ctx *schemas.BifrostContext, req *schemas.HTTP
 ## Need Help?
 
 - **Discord Community**: [Join our Discord](https://discord.gg/exN5KAydbU)
-- **GitHub Issues**: [Report bugs or request features](https://github.com/maximhq/bifrost/issues)
+- **GitHub Issues**: [Report bugs or request features](https://github.com/grevinden/bifrost/issues)
 - **Writing Plugins Guide**: [Full plugin documentation](./writing-plugin)
 
 

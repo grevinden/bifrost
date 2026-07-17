@@ -5,8 +5,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/maximhq/bifrost/core/mcp/credstore"
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/mcp/credstore"
+	"github.com/grevinden/bifrost/core/schemas"
 
 	"github.com/mark3labs/mcp-go/server"
 )

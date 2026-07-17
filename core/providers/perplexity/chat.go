@@ -1,7 +1,7 @@
 package perplexity
 
 import (
-	schemas "github.com/maximhq/bifrost/core/schemas"
+	schemas "github.com/grevinden/bifrost/core/schemas"
 )
 
 // ToPerplexityChatCompletionRequest converts a Bifrost request to Perplexity chat completion request
@@ -41,9 +41,9 @@ func ToPerplexityChatCompletionRequest(bifrostReq *schemas.BifrostChatRequest) *
 			effort := *bifrostReq.Params.Reasoning.Effort
 			switch effort {
 			case "minimal":
-				perplexityReq.ReasoningEffort = schemas.Ptr("low")
+				perplexityReq.ReasoningEffort = new("low")
 			case "xhigh", "max":
-				perplexityReq.ReasoningEffort = schemas.Ptr("high")
+				perplexityReq.ReasoningEffort = new("high")
 			default:
 				perplexityReq.ReasoningEffort = &effort
 			}
@@ -161,11 +161,11 @@ func ToPerplexityChatCompletionRequest(bifrostReq *schemas.BifrostChatRequest) *
 
 			// Handle web_search_options
 			if webSearchOptionsParam, ok := schemas.SafeExtractFromMap(bifrostReq.Params.ExtraParams, "web_search_options"); ok {
-				if webSearchOptionsSlice, ok := webSearchOptionsParam.([]interface{}); ok {
+				if webSearchOptionsSlice, ok := webSearchOptionsParam.([]any); ok {
 					var webSearchOptions []WebSearchOption
-					updatedWebSearchOptionsSlice := make([]interface{}, 0, len(webSearchOptionsSlice))
+					updatedWebSearchOptionsSlice := make([]any, 0, len(webSearchOptionsSlice))
 					for _, optionInterface := range webSearchOptionsSlice {
-						if optionMap, ok := optionInterface.(map[string]interface{}); ok {
+						if optionMap, ok := optionInterface.(map[string]any); ok {
 							option := WebSearchOption{}
 
 							if searchContextSize, ok := schemas.SafeExtractStringPointer(optionMap["search_context_size"]); ok {
@@ -185,7 +185,7 @@ func ToPerplexityChatCompletionRequest(bifrostReq *schemas.BifrostChatRequest) *
 
 							// Handle user_location
 							if userLocationParam, ok := schemas.SafeExtractFromMap(optionMap, "user_location"); ok {
-								if userLocationMap, ok := userLocationParam.(map[string]interface{}); ok {
+								if userLocationMap, ok := userLocationParam.(map[string]any); ok {
 									userLocation := &WebSearchOptionUserLocation{}
 
 									if latitude, ok := schemas.SafeExtractFloat64Pointer(userLocationMap["latitude"]); ok {
@@ -238,11 +238,11 @@ func ToPerplexityChatCompletionRequest(bifrostReq *schemas.BifrostChatRequest) *
 
 			// Handle media_response
 			if mediaResponseParam, ok := schemas.SafeExtractFromMap(bifrostReq.Params.ExtraParams, "media_response"); ok {
-				if mediaResponseMap, ok := mediaResponseParam.(map[string]interface{}); ok {
+				if mediaResponseMap, ok := mediaResponseParam.(map[string]any); ok {
 					mediaResponse := &MediaResponse{}
 
 					if overridesParam, ok := schemas.SafeExtractFromMap(mediaResponseMap, "overrides"); ok {
-						if overridesMap, ok := overridesParam.(map[string]interface{}); ok {
+						if overridesMap, ok := overridesParam.(map[string]any); ok {
 							overrides := MediaResponseOverrides{}
 
 							if returnVideos, ok := schemas.SafeExtractBoolPointer(overridesMap["return_videos"]); ok {
@@ -279,12 +279,11 @@ func (response *PerplexityChatResponse) ToBifrostChatResponse(model string) *sch
 	}
 
 	bifrostResponse := &schemas.BifrostChatResponse{
-		ID:      response.ID,
-		Model:   model,
-		Object:  response.Object,
-		Created: response.Created,
-		ExtraFields: schemas.BifrostResponseExtraFields{
-		},
+		ID:            response.ID,
+		Model:         model,
+		Object:        response.Object,
+		Created:       response.Created,
+		ExtraFields:   schemas.BifrostResponseExtraFields{},
 		SearchResults: response.SearchResults,
 		Videos:        response.Videos,
 		Citations:     response.Citations,

@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"github.com/bytedance/sonic"
-	providerUtils "github.com/maximhq/bifrost/core/providers/utils"
-	"github.com/maximhq/bifrost/core/schemas"
+	providerUtils "github.com/grevinden/bifrost/core/providers/utils"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/tidwall/gjson"
 )
 
@@ -1052,7 +1052,7 @@ func TestAddMissingBetaHeadersToContext_PerProvider(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctx := schemas.NewBifrostContext(nil, time.Time{})
+			ctx := schemas.NewBifrostContext(context.TODO, time.Time{})
 			AddMissingBetaHeadersToContext(ctx, tt.req, tt.provider)
 
 			var headers []string

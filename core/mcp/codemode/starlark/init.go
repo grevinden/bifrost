@@ -2,7 +2,7 @@
 
 package starlark
 
-import "github.com/maximhq/bifrost/core/schemas"
+import "github.com/grevinden/bifrost/core/schemas"
 
 // noopLogger is a no-op implementation of schemas.Logger used as a fallback
 // when no logger is provided.

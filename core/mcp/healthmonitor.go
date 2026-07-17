@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/mark3labs/mcp-go/client"
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 const (

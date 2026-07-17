@@ -13,9 +13,9 @@ import (
 	"time"
 
 	"github.com/bytedance/sonic"
-	"github.com/maximhq/bifrost/core/providers/anthropic"
-	"github.com/maximhq/bifrost/core/providers/openai"
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/providers/anthropic"
+	"github.com/grevinden/bifrost/core/providers/openai"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/valyala/fasthttp"
@@ -72,7 +72,7 @@ func TestRequestWithSettableExtraParams_OpenAIChatRequest(t *testing.T) {
 		rws := interface{}(req).(RequestWithSettableExtraParams)
 		rws.SetExtraParams(extra)
 
-		ctx := schemas.NewBifrostContext(nil, schemas.NoDeadline)
+		ctx := schemas.NewBifrostContext(context.TODO, schemas.NoDeadline)
 		bifrostReq := req.ToBifrostChatRequest(ctx)
 
 		require.NotNil(t, bifrostReq)

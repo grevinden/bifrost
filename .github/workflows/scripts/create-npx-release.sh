@@ -51,8 +51,8 @@ bifrost --help
 ### Links
 
 - 📦 [View on npm](https://www.npmjs.com/package/@maximhq/bifrost)
-- 📚 [Documentation](https://github.com/maximhq/bifrost)
-- 🐛 [Report Issues](https://github.com/maximhq/bifrost/issues)
+- 📚 [Documentation](https://github.com/grevinden/bifrost)
+- 🐛 [Report Issues](https://github.com/grevinden/bifrost/issues)
 
 ### What's New
 

@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // ToBedrockRerankRequest converts a Bifrost rerank request into Bedrock Agent Runtime format.

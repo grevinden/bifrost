@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	core "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	core "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -38,7 +38,7 @@ func TestConcurrent_MultipleToolExecutions(t *testing.T) {
 	successCount := int32(0)
 
 	start := time.Now()
-	for i := 0; i < concurrency; i++ {
+	for i := range concurrency {
 		wg.Add(1)
 		go func(id int) {
 			defer wg.Done()
@@ -96,7 +96,7 @@ func TestConcurrent_SameTool(t *testing.T) {
 	errors := make(chan error, concurrency)
 
 	// Each goroutine sends unique message and should get it back
-	for i := 0; i < concurrency; i++ {
+	for i := range concurrency {
 		wg.Add(1)
 		go func(id int) {
 			defer wg.Done()
@@ -127,7 +127,7 @@ func TestConcurrent_SameTool(t *testing.T) {
 	}
 
 	// Verify each result contains its unique message (results are independent)
-	for i := 0; i < concurrency; i++ {
+	for i := range concurrency {
 		expectedMsg := fmt.Sprintf("unique-message-%d", i)
 		assert.Contains(t, results[i], expectedMsg, "result %d should contain its unique message", i)
 	}
@@ -155,7 +155,7 @@ func TestConcurrent_DifferentTools(t *testing.T) {
 	errors := make(chan error, concurrency)
 	successCount := int32(0)
 
-	for i := 0; i < concurrency; i++ {
+	for i := range concurrency {
 		wg.Add(1)
 		toolType := i % 3 // Rotate between 3 tool types
 
@@ -230,12 +230,10 @@ func TestConcurrent_AddClientDuringExecution(t *testing.T) {
 	errors := make(chan error, 25)
 
 	// Goroutine 1: Execute tools continuously (20 executions)
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		<-startAdding // Wait for signal to start
 
-		for i := 0; i < 20; i++ {
+		for i := range 20 {
 			toolCall := GetSampleEchoToolCall(fmt.Sprintf("exec-%d", i), fmt.Sprintf("msg-%d", i))
 			_, bifrostErr := bifrost.ExecuteChatMCPTool(ctx, &toolCall)
 			if bifrostErr != nil {
@@ -243,15 +241,13 @@ func TestConcurrent_AddClientDuringExecution(t *testing.T) {
 			}
 			time.Sleep(10 * time.Millisecond) // Small delay between executions
 		}
-	}()
+	})
 
 	// Goroutine 2: Add new clients concurrently (5 new clients)
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		<-startAdding // Wait for signal to start
 
-		for i := 0; i < 5; i++ {
+		for i := range 5 {
 			// Register a new tool (creates new InProcess client)
 			toolName := fmt.Sprintf("concurrent_tool_%d", i)
 			err := manager.RegisterTool(
@@ -267,7 +263,7 @@ func TestConcurrent_AddClientDuringExecution(t *testing.T) {
 			}
 			time.Sleep(20 * time.Millisecond) // Small delay between adds
 		}
-	}()
+	})
 
 	// Start both goroutines
 	close(startAdding)
@@ -309,11 +305,9 @@ func TestConcurrent_RemoveClientDuringExecution(t *testing.T) {
 	executions := make(chan bool, 10)
 
 	// Goroutine 1: Execute tools 10 times
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 
-		for i := 0; i < 10; i++ {
+		for i := range 10 {
 			toolCall := GetSampleEchoToolCall(fmt.Sprintf("exec-%d", i), fmt.Sprintf("msg-%d", i))
 			_, bifrostErr := bifrost.ExecuteChatMCPTool(ctx, &toolCall)
 
@@ -324,15 +318,13 @@ func TestConcurrent_RemoveClientDuringExecution(t *testing.T) {
 			executions <- true
 			time.Sleep(20 * time.Millisecond)
 		}
-	}()
+	})
 
 	// Goroutine 2: Remove client after a few executions
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 
 		// Wait for a few executions to complete
-		for i := 0; i < 3; i++ {
+		for range 3 {
 			<-executions
 		}
 
@@ -343,7 +335,7 @@ func TestConcurrent_RemoveClientDuringExecution(t *testing.T) {
 		} else {
 			t.Logf("Client removed during execution")
 		}
-	}()
+	})
 
 	wg.Wait()
 	close(errors)
@@ -391,11 +383,9 @@ func TestConcurrent_EditClientDuringExecution(t *testing.T) {
 	executions := make(chan bool, 10)
 
 	// Goroutine 1: Execute tools
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 
-		for i := 0; i < 10; i++ {
+		for i := range 10 {
 			// Try to execute any available tool
 			clients := manager.GetClients()
 			if len(clients) > 0 && len(clients[0].ToolMap) > 0 {
@@ -407,8 +397,8 @@ func TestConcurrent_EditClientDuringExecution(t *testing.T) {
 				}
 
 				toolCall := schemas.ChatAssistantMessageToolCall{
-					ID:   schemas.Ptr(fmt.Sprintf("exec-%d", i)),
-					Type: schemas.Ptr("function"),
+					ID:   new(fmt.Sprintf("exec-%d", i)),
+					Type: new("function"),
 					Function: schemas.ChatAssistantMessageToolCallFunction{
 						Name:      &toolName,
 						Arguments: `{}`,
@@ -422,15 +412,13 @@ func TestConcurrent_EditClientDuringExecution(t *testing.T) {
 			executions <- true
 			time.Sleep(50 * time.Millisecond)
 		}
-	}()
+	})
 
 	// Goroutine 2: Edit client configuration
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 
 		// Wait for a few executions
-		for i := 0; i < 2; i++ {
+		for range 2 {
 			<-executions
 		}
 
@@ -443,7 +431,7 @@ func TestConcurrent_EditClientDuringExecution(t *testing.T) {
 		} else {
 			t.Logf("Client edited during execution")
 		}
-	}()
+	})
 
 	wg.Wait()
 	close(errors)
@@ -481,9 +469,7 @@ func TestConcurrent_HealthCheckDuringExecution(t *testing.T) {
 	errors := make(chan error, 6)
 
 	// Goroutine 1: Long-running tool (2 seconds)
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 
 		toolCall := GetSampleDelayToolCall("long-running", 2.0) // 2 second delay
 		start := time.Now()
@@ -495,10 +481,10 @@ func TestConcurrent_HealthCheckDuringExecution(t *testing.T) {
 		} else {
 			t.Logf("Long-running tool completed in %v", elapsed)
 		}
-	}()
+	})
 
 	// Goroutines 2-6: Quick health check simulations (execute echo tools)
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		wg.Add(1)
 		go func(id int) {
 			defer wg.Done()
@@ -548,7 +534,7 @@ func TestConcurrent_MultipleHealthChecks(t *testing.T) {
 	errors := make(chan error, concurrency)
 
 	// 10 tool executions
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		wg.Add(1)
 		go func(id int) {
 			defer wg.Done()
@@ -580,7 +566,7 @@ func TestConcurrent_MultipleHealthChecks(t *testing.T) {
 	}
 
 	// 10 "health checks" (GetClients calls + quick echo executions)
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		wg.Add(1)
 		go func(id int) {
 			defer wg.Done()
@@ -639,7 +625,7 @@ func TestConcurrent_ClientStateMutations(t *testing.T) {
 	done := make(chan bool)
 
 	// 50 goroutines reading GetClients() repeatedly
-	for i := 0; i < 50; i++ {
+	for i := range 50 {
 		wg.Add(1)
 		go func(id int) {
 			defer wg.Done()
@@ -661,12 +647,12 @@ func TestConcurrent_ClientStateMutations(t *testing.T) {
 	}
 
 	// 10 goroutines executing tools (causing state changes)
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		wg.Add(1)
 		go func(id int) {
 			defer wg.Done()
 
-			for j := 0; j < 5; j++ {
+			for j := range 5 {
 				select {
 				case <-done:
 					return
@@ -712,11 +698,9 @@ func TestConcurrent_GetClientsWhileModifying(t *testing.T) {
 	done := make(chan bool)
 
 	// Goroutine 1: Repeatedly call GetClients() 1000 times
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 
-		for i := 0; i < 1000; i++ {
+		for range 1000 {
 			select {
 			case <-done:
 				return
@@ -727,14 +711,12 @@ func TestConcurrent_GetClientsWhileModifying(t *testing.T) {
 			}
 		}
 		t.Logf("GetClients() called 1000 times")
-	}()
+	})
 
 	// Goroutine 2: Add/remove clients 100 times
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 
-		for i := 0; i < 100; i++ {
+		for i := range 100 {
 			select {
 			case <-done:
 				return
@@ -760,7 +742,7 @@ func TestConcurrent_GetClientsWhileModifying(t *testing.T) {
 			}
 		}
 		t.Logf("Modified clients 100 times")
-	}()
+	})
 
 	// Timeout after 2 seconds
 	go func() {
@@ -819,7 +801,7 @@ func TestConcurrent_PluginHooks(t *testing.T) {
 	successCount := int32(0)
 
 	start := time.Now()
-	for i := 0; i < concurrency; i++ {
+	for i := range concurrency {
 		wg.Add(1)
 		toolType := i % 2
 
@@ -922,7 +904,7 @@ func TestConcurrent_MultiplePlugins(t *testing.T) {
 	errors := make(chan error, concurrency)
 	successCount := int32(0)
 
-	for i := 0; i < concurrency; i++ {
+	for i := range concurrency {
 		wg.Add(1)
 		toolType := i % 3
 
@@ -1076,7 +1058,7 @@ func TestConcurrent_RaceConditions(t *testing.T) {
 	var wg sync.WaitGroup
 	errors := make(chan error, concurrency)
 
-	for i := 0; i < concurrency; i++ {
+	for i := range concurrency {
 		wg.Add(1)
 		operationType := i % 5
 
@@ -1161,7 +1143,7 @@ func TestConcurrent_StressTest(t *testing.T) {
 	successCount := int32(0)
 
 	start := time.Now()
-	for i := 0; i < concurrency; i++ {
+	for i := range concurrency {
 		wg.Add(1)
 		toolType := i % 4
 

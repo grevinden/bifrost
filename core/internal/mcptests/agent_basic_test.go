@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -95,7 +95,7 @@ func TestAgent_BasicLoop(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Please echo hello"),
+					ContentStr: new("Please echo hello"),
 				},
 			},
 		},
@@ -155,7 +155,7 @@ func TestAgent_BasicLoop_ChatFormat(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Calculate 5+3"),
+					ContentStr: new("Calculate 5+3"),
 				},
 			},
 		},
@@ -195,9 +195,9 @@ func TestAgent_BasicLoop_ResponsesFormat(t *testing.T) {
 		responsesResponses: []*schemas.BifrostResponsesResponse{
 			CreateResponsesResponseWithToolCalls([]schemas.ResponsesToolMessage{
 				{
-					CallID:    schemas.Ptr("call-1"),
-					Name: schemas.Ptr("bifrostInternal-echo"),
-					Arguments: schemas.Ptr(`{"message": "testing responses format"}`),
+					CallID:    new("call-1"),
+					Name:      new("bifrostInternal-echo"),
+					Arguments: new(`{"message": "testing responses format"}`),
 				},
 			}),
 			CreateResponsesResponseWithText("Successfully echoed your message"),
@@ -215,7 +215,7 @@ func TestAgent_BasicLoop_ResponsesFormat(t *testing.T) {
 				Type: schemas.Ptr(schemas.ResponsesMessageTypeMessage),
 				Role: schemas.Ptr(schemas.ResponsesInputMessageRoleUser),
 				Content: &schemas.ResponsesMessageContent{
-					ContentStr: schemas.Ptr("Echo a message"),
+					ContentStr: new("Echo a message"),
 				},
 			},
 		},
@@ -273,7 +273,7 @@ func TestAgent_SingleIteration(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Test"),
+					ContentStr: new("Test"),
 				},
 			},
 		},
@@ -348,7 +348,7 @@ func TestAgent_MultipleIterations(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Multi-step task"),
+					ContentStr: new("Multi-step task"),
 				},
 			},
 		},
@@ -402,7 +402,7 @@ func TestAgent_NoToolCalls(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Simple question"),
+					ContentStr: new("Simple question"),
 				},
 			},
 		},
@@ -466,7 +466,7 @@ func TestAgent_MixedAutoAndNonAutoTools(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Test mixed tools"),
+					ContentStr: new("Test mixed tools"),
 				},
 			},
 		},
@@ -542,7 +542,7 @@ func TestAgent_OnlyAutoTools(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Test only auto tools"),
+					ContentStr: new("Test only auto tools"),
 				},
 			},
 		},
@@ -601,7 +601,7 @@ func TestAgent_OnlyNonAutoTools(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Test non-auto tools"),
+					ContentStr: new("Test non-auto tools"),
 				},
 			},
 		},
@@ -664,7 +664,7 @@ func TestAgent_WithRealLLM_Simple(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Calculate 25 + 17 using the calculator tool"),
+					ContentStr: new("Calculate 25 + 17 using the calculator tool"),
 				},
 			},
 		},
@@ -722,7 +722,7 @@ func TestAgent_WithRealLLM_MultiStep(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("First calculate 10 + 5, then echo the result"),
+					ContentStr: new("First calculate 10 + 5, then echo the result"),
 				},
 			},
 		},

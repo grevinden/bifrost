@@ -1,10 +1,11 @@
 package llmtests
 
 import (
+	"maps"
 	"regexp"
 	"strings"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // =============================================================================
@@ -106,7 +107,7 @@ func EmbeddingExpectations(expectedTexts []string) ResponseExpectations {
 		ShouldHaveModel:     true,
 		ShouldHaveLatency:   true, // Global expectation: latency should always be present
 		// Custom validation will be needed for embedding data
-		ProviderSpecific: map[string]interface{}{
+		ProviderSpecific: map[string]any{
 			"expected_embedding_count": len(expectedTexts),
 			"expected_texts":           expectedTexts,
 		},
@@ -121,7 +122,7 @@ func CountTokensExpectations() ResponseExpectations {
 		ShouldHaveUsageStats: true,
 		ShouldHaveModel:      true,
 		ShouldHaveLatency:    true,
-		ProviderSpecific: map[string]interface{}{
+		ProviderSpecific: map[string]any{
 			"response_type": "count_tokens",
 		},
 	}
@@ -193,7 +194,7 @@ func SpeechExpectations(minAudioBytes int) ResponseExpectations {
 		ShouldHaveModel:      true,
 		ShouldHaveLatency:    true, // Global expectation: latency should always be present
 		// Speech-specific validations stored in ProviderSpecific
-		ProviderSpecific: map[string]interface{}{
+		ProviderSpecific: map[string]any{
 			"min_audio_bytes":   minAudioBytes,
 			"should_have_audio": true,
 			"expected_format":   "audio", // General audio format
@@ -218,7 +219,7 @@ func TranscriptionExpectations(minTextLength int) ResponseExpectations {
 			"unsupported format", "transcription error",
 			"no audio detected", "silence detected",
 		},
-		ProviderSpecific: map[string]interface{}{
+		ProviderSpecific: map[string]any{
 			"min_transcription_length":  minTextLength,
 			"should_have_transcription": true,
 			"response_type":             "transcription",
@@ -234,7 +235,7 @@ func ImageGenerationExpectations(minImages int, expectedSize string) ResponseExp
 		ShouldHaveTimestamps: true,
 		ShouldHaveModel:      true,
 		ShouldHaveLatency:    true, // Global expectation: latency should always be present
-		ProviderSpecific: map[string]interface{}{
+		ProviderSpecific: map[string]any{
 			"min_images":    minImages,
 			"expected_size": expectedSize,
 			"response_type": "image_generation",
@@ -249,7 +250,7 @@ func ReasoningExpectations() ResponseExpectations {
 		ShouldHaveUsageStats: true,
 		ShouldHaveTimestamps: true,
 		ShouldHaveModel:      true,
-		ProviderSpecific: map[string]interface{}{
+		ProviderSpecific: map[string]any{
 			"response_type":        "reasoning",
 			"expects_step_by_step": true,
 		},
@@ -265,7 +266,7 @@ func ChatAudioExpectations() ResponseExpectations {
 		ShouldHaveTimestamps: true,
 		ShouldHaveModel:      true,
 		ShouldHaveLatency:    true, // Global expectation: latency should always be present
-		ProviderSpecific: map[string]interface{}{
+		ProviderSpecific: map[string]any{
 			"response_type": "chat_audio",
 		},
 	}
@@ -276,7 +277,7 @@ func ChatAudioExpectations() ResponseExpectations {
 // =============================================================================
 
 // GetExpectationsForScenario returns appropriate validation expectations for a given scenario
-func GetExpectationsForScenario(scenarioName string, testConfig ComprehensiveTestConfig, customParams map[string]interface{}) ResponseExpectations {
+func GetExpectationsForScenario(scenarioName string, testConfig ComprehensiveTestConfig, customParams map[string]any) ResponseExpectations {
 	var expectations ResponseExpectations
 
 	switch scenarioName {
@@ -608,8 +609,10 @@ func ConsistencyExpectations(expectedConsistencyMarkers []string) ResponseExpect
 // =============================================================================
 
 // stringPtr returns a pointer to a string
+//
+//go:fix inline
 func stringPtr(s string) *string {
-	return &s
+	return new(s)
 }
 
 // CombineExpectations merges multiple expectations (later ones override earlier ones)
@@ -663,11 +666,9 @@ func CombineExpectations(expectations ...ResponseExpectations) ResponseExpectati
 		// Merge provider specific data
 		if len(exp.ProviderSpecific) > 0 {
 			if base.ProviderSpecific == nil {
-				base.ProviderSpecific = make(map[string]interface{})
+				base.ProviderSpecific = make(map[string]any)
 			}
-			for k, v := range exp.ProviderSpecific {
-				base.ProviderSpecific[k] = v
-			}
+			maps.Copy(base.ProviderSpecific, exp.ProviderSpecific)
 		}
 	}
 

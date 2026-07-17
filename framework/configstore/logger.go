@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	gormLibLogger "gorm.io/gorm/logger"
 )
 
@@ -20,17 +20,17 @@ func (l *gormLogger) LogMode(level gormLibLogger.LogLevel) gormLibLogger.Interfa
 }
 
 // Info logs an info message.
-func (l *gormLogger) Info(ctx context.Context, msg string, data ...interface{}) {
+func (l *gormLogger) Info(ctx context.Context, msg string, data ...any) {
 	l.logger.Info(msg, data...)
 }
 
 // Warn logs a warning message.
-func (l *gormLogger) Warn(ctx context.Context, msg string, data ...interface{}) {
+func (l *gormLogger) Warn(ctx context.Context, msg string, data ...any) {
 	l.logger.Warn(msg, data...)
 }
 
 // Error logs an error message.
-func (l *gormLogger) Error(ctx context.Context, msg string, data ...interface{}) {
+func (l *gormLogger) Error(ctx context.Context, msg string, data ...any) {
 	l.logger.Error(msg, data...)
 }
 

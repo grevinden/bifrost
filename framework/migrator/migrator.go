@@ -498,7 +498,7 @@ func (g *Gormigrate) model() any {
 	fields := []reflect.StructField{
 		{
 			Name: "ID",
-			Type: reflect.TypeOf(""),
+			Type: reflect.TypeFor[string](),
 			Tag: reflect.StructTag(fmt.Sprintf(
 				`gorm:"primaryKey;column:%s;size:%d"`,
 				g.options.IDColumnName,
@@ -507,17 +507,17 @@ func (g *Gormigrate) model() any {
 		},
 		{
 			Name: "Sequence",
-			Type: reflect.TypeOf(int64(0)),
+			Type: reflect.TypeFor[int64](),
 			Tag:  reflect.StructTag(fmt.Sprintf(`gorm:"column:%s"`, g.options.SequenceColumnName)),
 		},
 		{
 			Name: "AppliedAt",
-			Type: reflect.TypeOf(time.Time{}),
+			Type: reflect.TypeFor[time.Time](),
 			Tag:  reflect.StructTag(fmt.Sprintf(`gorm:"column:%s"`, g.options.AppliedAtColumnName)),
 		},
 		{
 			Name: "Status",
-			Type: reflect.TypeOf(""),
+			Type: reflect.TypeFor[string](),
 			Tag:  reflect.StructTag(fmt.Sprintf(`gorm:"column:%s;size:20"`, g.options.StatusColumnName)),
 		},
 	}
@@ -575,7 +575,7 @@ func (g *Gormigrate) backfillMigrationMetadata() error {
 	for i, id := range ids {
 		err := g.tx.Table(g.options.TableName).
 			Where(fmt.Sprintf("%s = ?", g.options.IDColumnName), id).
-			Updates(map[string]interface{}{
+			Updates(map[string]any{
 				g.options.SequenceColumnName:  maxSeq + int64(i) + 1,
 				g.options.AppliedAtColumnName: now,
 				g.options.StatusColumnName:    "success",

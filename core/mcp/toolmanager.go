@@ -11,10 +11,10 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/grevinden/bifrost/core/mcp/credstore"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/mark3labs/mcp-go/client"
 	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/maximhq/bifrost/core/mcp/credstore"
-	"github.com/maximhq/bifrost/core/schemas"
 )
 
 // ClientManager interface for accessing MCP clients and tools
@@ -669,9 +669,9 @@ func (m *ToolsManager) executeToolInternal(
 	// redundant lookup is needed here.
 
 	// Parse tool arguments
-	var arguments map[string]interface{}
+	var arguments map[string]any
 	if strings.TrimSpace(toolCall.Function.Arguments) == "" {
-		arguments = map[string]interface{}{}
+		arguments = map[string]any{}
 	} else {
 		if err := json.Unmarshal([]byte(toolCall.Function.Arguments), &arguments); err != nil {
 			return nil, "", "", fmt.Errorf("failed to parse tool arguments for '%s': %v", toolName, err)

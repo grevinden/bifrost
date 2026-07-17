@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"strings"
 
-	codemcp "github.com/maximhq/bifrost/core/mcp"
-	"github.com/maximhq/bifrost/core/schemas"
+	codemcp "github.com/grevinden/bifrost/core/mcp"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // createGetToolDocsTool creates the getToolDocs tool definition for code mode.
@@ -17,11 +17,11 @@ import (
 // signatures from readToolFile are not sufficient to understand how to use it.
 func (s *StarlarkCodeMode) createGetToolDocsTool() schemas.ChatTool {
 	getToolDocsProps := schemas.NewOrderedMapFromPairs(
-		schemas.KV("server", map[string]interface{}{
+		schemas.KV("server", map[string]any{
 			"type":        "string",
 			"description": "The server name (e.g., 'calculator'). Use listToolFiles to see available servers.",
 		}),
-		schemas.KV("tool", map[string]interface{}{
+		schemas.KV("tool", map[string]any{
 			"type":        "string",
 			"description": "The tool name (e.g., 'add'). Use readToolFile to see available tools for a server.",
 		}),
@@ -30,7 +30,7 @@ func (s *StarlarkCodeMode) createGetToolDocsTool() schemas.ChatTool {
 		Type: schemas.ChatToolTypeFunction,
 		Function: &schemas.ChatToolFunction{
 			Name: codemcp.ToolTypeGetToolDocs,
-			Description: schemas.Ptr(
+			Description: new(
 				"Get detailed documentation for a specific tool including full parameter descriptions, " +
 					"types, and usage examples. Use this when the compact signature from readToolFile " +
 					"is not sufficient to understand how to use a tool. " +
@@ -48,7 +48,7 @@ func (s *StarlarkCodeMode) createGetToolDocsTool() schemas.ChatTool {
 // handleGetToolDocs handles the getToolDocs tool call.
 func (s *StarlarkCodeMode) handleGetToolDocs(ctx context.Context, toolCall schemas.ChatAssistantMessageToolCall) (*schemas.ChatMessage, error) {
 	// Parse tool arguments
-	var arguments map[string]interface{}
+	var arguments map[string]any
 	if err := json.Unmarshal([]byte(toolCall.Function.Arguments), &arguments); err != nil {
 		return nil, fmt.Errorf("failed to parse tool arguments: %v", err)
 	}
@@ -107,11 +107,12 @@ func (s *StarlarkCodeMode) handleGetToolDocs(ctx context.Context, toolCall schem
 				availableServers = append(availableServers, name)
 			}
 		}
-		errorMsg := fmt.Sprintf("Server '%s' not found. Available servers are:\n", serverName)
+		var errorMsg strings.Builder
+		errorMsg.WriteString(fmt.Sprintf("Server '%s' not found. Available servers are:\n", serverName))
 		for _, sn := range availableServers {
-			errorMsg += fmt.Sprintf("  - %s\n", sn)
+			errorMsg.WriteString(fmt.Sprintf("  - %s\n", sn))
 		}
-		return createToolResponseMessage(toolCall, errorMsg), nil
+		return createToolResponseMessage(toolCall, errorMsg.String()), nil
 	}
 
 	// Handle tool not found
@@ -123,11 +124,12 @@ func (s *StarlarkCodeMode) handleGetToolDocs(ctx context.Context, toolCall schem
 				availableTools = append(availableTools, getCanonicalToolName(matchedClientName, tool.Function.Name))
 			}
 		}
-		errorMsg := fmt.Sprintf("Tool '%s' not found in server '%s'. Available tools are:\n", toolName, matchedClientName)
+		var errorMsg strings.Builder
+		errorMsg.WriteString(fmt.Sprintf("Tool '%s' not found in server '%s'. Available tools are:\n", toolName, matchedClientName))
 		for _, t := range availableTools {
-			errorMsg += fmt.Sprintf("  - %s\n", t)
+			errorMsg.WriteString(fmt.Sprintf("  - %s\n", t))
 		}
-		return createToolResponseMessage(toolCall, errorMsg), nil
+		return createToolResponseMessage(toolCall, errorMsg.String()), nil
 	}
 
 	// Generate detailed documentation using generateTypeDefinitions
@@ -212,7 +214,7 @@ func generateTypeDefinitions(clientName string, tools []schemas.ChatTool, isTool
 
 				// Sort properties for consistent output
 				propNames := make([]string, 0, props.Len())
-				props.Range(func(name string, _ interface{}) bool {
+				props.Range(func(name string, _ any) bool {
 					propNames = append(propNames, name)
 					return true
 				})
@@ -226,7 +228,7 @@ func generateTypeDefinitions(clientName string, tools []schemas.ChatTool, isTool
 
 				for _, propName := range propNames {
 					prop, _ := props.Get(propName)
-					propMap, ok := prop.(map[string]interface{})
+					propMap, ok := prop.(map[string]any)
 					if !ok {
 						continue
 					}

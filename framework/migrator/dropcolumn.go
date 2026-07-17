@@ -3,7 +3,7 @@ package migrator
 import (
 	"fmt"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -30,7 +30,7 @@ import (
 // round-trip. The single HasColumn here also lets us emit the "dropping column"
 // log line only when a column is actually dropped: pass a non-nil logger to get
 // that line, or nil to stay silent.
-func DropColumnIfExists(tx *gorm.DB, logger schemas.Logger, model interface{}, field string) error {
+func DropColumnIfExists(tx *gorm.DB, logger schemas.Logger, model any, field string) error {
 	mig := tx.Migrator()
 	if !mig.HasColumn(model, field) {
 		return nil

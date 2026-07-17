@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	schemas "github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	schemas "github.com/grevinden/bifrost/core/schemas"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -206,8 +206,8 @@ func TestMetricsEnabledGating(t *testing.T) {
 		want bool
 	}{
 		{"default omitted -> on", nil, true},
-		{"explicit true", boolPtr(true), true},
-		{"explicit false", boolPtr(false), false},
+		{"explicit true", new(true), true},
+		{"explicit false", new(false), false},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -349,4 +349,5 @@ func TestPushGatewayPushesBifrostButNotRuntimeCollectors(t *testing.T) {
 	}
 }
 
-func boolPtr(b bool) *bool { return &b }
+//go:fix inline
+func boolPtr(b bool) *bool { return new(b) }

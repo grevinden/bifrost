@@ -1,6 +1,7 @@
 package governance
 
 import (
+	"maps"
 	"sync"
 
 	"github.com/google/cel-go/cel"
@@ -135,9 +136,7 @@ func celExprReferencesIdentifier(expr celast.Expr, identifier string, scopedIden
 
 func addScopedCELIdentifiers(parent map[string]int, identifiers ...string) map[string]int {
 	scoped := make(map[string]int, len(parent)+len(identifiers))
-	for identifier, count := range parent {
-		scoped[identifier] = count
-	}
+	maps.Copy(scoped, parent)
 	for _, identifier := range identifiers {
 		if identifier != "" {
 			scoped[identifier]++

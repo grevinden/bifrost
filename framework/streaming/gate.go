@@ -3,7 +3,7 @@ package streaming
 import (
 	"fmt"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // gateReplayBufMaxBytes caps the per-stream paused replay buffer at 100 MB.
@@ -327,7 +327,7 @@ func (sa *StreamAccumulator) GateSend(chunk *schemas.BifrostStreamChunk, isFinal
 			sa.gateEndError = &schemas.BifrostError{
 				IsBifrostError: true,
 				Error: &schemas.ErrorField{
-					Type:    schemas.Ptr("paused_replay_buffer_overflow"),
+					Type:    new("paused_replay_buffer_overflow"),
 					Message: fmt.Sprintf("paused stream replay buffer exceeded %d bytes — ending stream", gateReplayBufMaxBytes),
 				},
 			}

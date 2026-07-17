@@ -7,7 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/mark3labs/mcp-go/client"
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // MCPOpFunc is the closure each call site provides to RunWithPluginPipeline. It receives the

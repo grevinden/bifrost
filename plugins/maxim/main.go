@@ -10,9 +10,9 @@ import (
 
 	"github.com/bytedance/sonic"
 	"github.com/google/uuid"
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/streaming"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/streaming"
 
 	"github.com/maximhq/maxim-go"
 	"github.com/maximhq/maxim-go/logging"
@@ -304,7 +304,7 @@ func (plugin *Plugin) PreLLMHook(ctx *schemas.BifrostContext, req *schemas.Bifro
 	var messages []maximSchemas.CompletionRequest
 	var latestMessage string
 
-	modelParams := make(map[string]interface{})
+	modelParams := make(map[string]any)
 
 	switch req.RequestType {
 	case schemas.TextCompletionRequest, schemas.TextCompletionStreamRequest:
@@ -450,7 +450,7 @@ func (plugin *Plugin) PreLLMHook(ctx *schemas.BifrostContext, req *schemas.Bifro
 
 	traceConfig := logging.TraceConfig{
 		Id:   traceID,
-		Name: maxim.StrPtr(name),
+		Name: new(name),
 	}
 
 	if sessionID != "" {

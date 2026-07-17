@@ -11,11 +11,11 @@ import (
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/configstore"
-	"github.com/maximhq/bifrost/framework/configstore/tables"
-	"github.com/maximhq/bifrost/framework/temptoken"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/configstore"
+	"github.com/grevinden/bifrost/framework/configstore/tables"
+	"github.com/grevinden/bifrost/framework/temptoken"
 )
 
 // testConfigStore is a minimal in-memory implementation of configstore.ConfigStore
@@ -43,7 +43,7 @@ func (s *testConfigStore) GetClientConfig(_ context.Context) (*configstore.Clien
 	if s.clientConfig == nil {
 		return nil, nil
 	}
-	return bifrost.Ptr(*s.clientConfig), nil
+	return new(*s.clientConfig), nil
 }
 
 func (s *testConfigStore) GetMCPPerUserHeaderFlowByModeIdentityAndMCPClient(_ context.Context, mode schemas.MCPAuthMode, identity, mcpClientID string) (*tables.TableMCPPerUserHeaderFlow, error) {
@@ -56,15 +56,15 @@ func (s *testConfigStore) GetMCPPerUserHeaderFlowByModeIdentityAndMCPClient(_ co
 		switch mode {
 		case schemas.MCPAuthModeUser:
 			if flow.UserID != nil && *flow.UserID == identity {
-				return bifrost.Ptr(*flow), nil
+				return new(*flow), nil
 			}
 		case schemas.MCPAuthModeVK:
 			if flow.VirtualKeyID != nil && *flow.VirtualKeyID == identity {
-				return bifrost.Ptr(*flow), nil
+				return new(*flow), nil
 			}
 		case schemas.MCPAuthModeSession:
 			if flow.SessionID == identity {
-				return bifrost.Ptr(*flow), nil
+				return new(*flow), nil
 			}
 		}
 	}
@@ -74,21 +74,21 @@ func (s *testConfigStore) GetMCPPerUserHeaderFlowByModeIdentityAndMCPClient(_ co
 func (s *testConfigStore) CreateMCPPerUserHeaderFlow(_ context.Context, flow *tables.TableMCPPerUserHeaderFlow) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.headerFlows[flow.ID] = bifrost.Ptr(*flow)
+	s.headerFlows[flow.ID] = new(*flow)
 	return nil
 }
 
 func (s *testConfigStore) UpdateMCPPerUserHeaderFlow(_ context.Context, flow *tables.TableMCPPerUserHeaderFlow) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.headerFlows[flow.ID] = bifrost.Ptr(*flow)
+	s.headerFlows[flow.ID] = new(*flow)
 	return nil
 }
 
 func (s *testConfigStore) CreateTempToken(_ context.Context, token *tables.TempToken, _ ...*gorm.DB) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.tempTokens[token.ID] = bifrost.Ptr(*token)
+	s.tempTokens[token.ID] = new(*token)
 	return nil
 }
 

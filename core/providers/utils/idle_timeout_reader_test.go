@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/valyala/fasthttp"
 )
 
@@ -189,7 +189,7 @@ func TestIdleTimeoutReader_NormalRead(t *testing.T) {
 
 	// Writer sends 5 chunks quickly.
 	go func() {
-		for i := 0; i < 5; i++ {
+		for range 5 {
 			time.Sleep(10 * time.Millisecond)
 			pw.Write([]byte("chunk"))
 		}
@@ -248,7 +248,7 @@ func TestIdleTimeoutReader_TimeoutAfterPartialData(t *testing.T) {
 
 	// Writer sends 3 chunks then stops.
 	go func() {
-		for i := 0; i < 3; i++ {
+		for range 3 {
 			time.Sleep(20 * time.Millisecond)
 			pw.Write([]byte("data"))
 		}
@@ -283,7 +283,7 @@ func TestIdleTimeoutReader_ResetOnData(t *testing.T) {
 	defer cleanup()
 
 	go func() {
-		for i := 0; i < 5; i++ {
+		for range 5 {
 			time.Sleep(150 * time.Millisecond)
 			pw.Write([]byte("ok"))
 		}
@@ -630,7 +630,7 @@ func (c *countingStreamCloser) CloseWithError(error) error {
 func TestStreamClose_ExactlyOnceAcrossOwners(t *testing.T) {
 	t.Parallel()
 
-	for i := 0; i < 100; i++ {
+	for i := range 100 {
 		body := &countingStreamCloser{}
 		goCtx, cancel := context.WithCancel(context.Background())
 		ctx := schemas.NewBifrostContext(goCtx, time.Time{})
@@ -669,15 +669,13 @@ func TestConnectionClosedClaim_SerializesOwners(t *testing.T) {
 	var winners atomic.Int32
 	var wg sync.WaitGroup
 	start := make(chan struct{})
-	for i := 0; i < owners; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+	for range owners {
+		wg.Go(func() {
 			<-start
 			if prev, _ := ctx.GetAndSetValue(schemas.BifrostContextKeyConnectionClosed, true).(bool); !prev {
 				winners.Add(1)
 			}
-		}()
+		})
 	}
 	close(start)
 	wg.Wait()

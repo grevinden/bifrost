@@ -8,7 +8,7 @@ package queryscope
 import (
 	"context"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"gorm.io/gorm"
 )
 

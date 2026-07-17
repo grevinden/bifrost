@@ -197,7 +197,7 @@ grep -rn "FunctionName(" --include='*.go' core/ framework/ transports/ plugins/
 grep -rn "InterfaceName" --include='*.go' core/ framework/
 
 # Find all imports of a package
-grep -rn '"github.com/maximhq/bifrost/core/schemas"' --include='*.go' .
+grep -rn '"github.com/grevinden/bifrost/core/schemas"' --include='*.go' .
 ```
 
 ### 3d. Find Related Tests

@@ -81,29 +81,29 @@ description: "v1.6.3 changelog - 2026-07-06"
 
 ## 🐙 Closed GitHub Issues
 
-- [#2347](https://github.com/maximhq/bifrost/issues/2347) - MCP tool ordering is non-deterministic, breaking prefix-based prompt caching
-- [#3106](https://github.com/maximhq/bifrost/issues/3106) - Governance team delete/fetch fails for SCIM-synced team IDs containing spaces or URL-sensitive characters
-- [#3121](https://github.com/maximhq/bifrost/issues/3121) - OpenAI responses.retrieve() not supported
-- [#3139](https://github.com/maximhq/bifrost/issues/3139) - Bifrost adds non-standard reasoning/reasoning_details fields to chat completions when using a custom provider for deepseek v4 models
-- [#3357](https://github.com/maximhq/bifrost/issues/3357) - Bifrost billing discrepancy for cancelled requests
-- [#3951](https://github.com/maximhq/bifrost/issues/3951) - Gemini batch: inline responses (dest.inlinedResponses) are silently dropped, leaving output_file_id null
-- [#4262](https://github.com/maximhq/bifrost/issues/4262) - Bedrock ConverseStream egress never emits contentBlockStop (breaks strands streaming)
-- [#4314](https://github.com/maximhq/bifrost/issues/4314) - MCP client registered as connected with empty tool set when ListTools fails during connect/reconnect
-- [#4402](https://github.com/maximhq/bifrost/issues/4402) - Vertex provider drops image blocks whose URL uses `gs://` scheme
-- [#4446](https://github.com/maximhq/bifrost/issues/4446) - Add per MCP server level tool timeout configuration
-- [#4679](https://github.com/maximhq/bifrost/issues/4679) - Bedrock Responses API does not signal max_output_tokens truncation
-- [#4689](https://github.com/maximhq/bifrost/issues/4689) - Custom providers cannot set budget
-- [#4720](https://github.com/maximhq/bifrost/issues/4720) - chunking_strategy is dropped for OpenAI-compatible transcription requests
-- [#4721](https://github.com/maximhq/bifrost/issues/4721) - Logs table Tokens column shows N/A when hybrid object storage is enabled
-- [#4756](https://github.com/maximhq/bifrost/issues/4756) - semantic_cache internal embedding path bypasses plugin pipeline, causing "no keys found" while direct /v1/embeddings works
-- [#4777](https://github.com/maximhq/bifrost/issues/4777) - Image generation stream: completed chunk returns empty output_tokens_details, causing under-billing
-- [#4788](https://github.com/maximhq/bifrost/issues/4788) - DeepSeek Anthropic-compatible provider causes "stream closed" error in v1.6.0 (regression from v1.5.16)
-- [#4816](https://github.com/maximhq/bifrost/issues/4816) - /v1 chat completions folds cache-write tokens into prompt_tokens_details.cached_tokens
-- [#4851](https://github.com/maximhq/bifrost/issues/4851) - v1.6.2 governance rate-limit reset causes high CPU in BumpRateLimitUsage/updateRateLimitReferences
-- [#4863](https://github.com/maximhq/bifrost/issues/4863) - model_parameters_url in config.json is ignored after the DB value is set
-- [#4868](https://github.com/maximhq/bifrost/issues/4868) - Memory leak: orphaned deferred spans in TraceStore are never TTL-swept
-- [#4872](https://github.com/maximhq/bifrost/issues/4872) - Raw request/response payloads bypass disable_content_logging via ErrorDetailsParsed
-- [#4942](https://github.com/maximhq/bifrost/issues/4942) - redacted_thinking blocks are dropped on chat completions, breaking tool-use replay with extended thinking
+- [#2347](https://github.com/grevinden/bifrost/issues/2347) - MCP tool ordering is non-deterministic, breaking prefix-based prompt caching
+- [#3106](https://github.com/grevinden/bifrost/issues/3106) - Governance team delete/fetch fails for SCIM-synced team IDs containing spaces or URL-sensitive characters
+- [#3121](https://github.com/grevinden/bifrost/issues/3121) - OpenAI responses.retrieve() not supported
+- [#3139](https://github.com/grevinden/bifrost/issues/3139) - Bifrost adds non-standard reasoning/reasoning_details fields to chat completions when using a custom provider for deepseek v4 models
+- [#3357](https://github.com/grevinden/bifrost/issues/3357) - Bifrost billing discrepancy for cancelled requests
+- [#3951](https://github.com/grevinden/bifrost/issues/3951) - Gemini batch: inline responses (dest.inlinedResponses) are silently dropped, leaving output_file_id null
+- [#4262](https://github.com/grevinden/bifrost/issues/4262) - Bedrock ConverseStream egress never emits contentBlockStop (breaks strands streaming)
+- [#4314](https://github.com/grevinden/bifrost/issues/4314) - MCP client registered as connected with empty tool set when ListTools fails during connect/reconnect
+- [#4402](https://github.com/grevinden/bifrost/issues/4402) - Vertex provider drops image blocks whose URL uses `gs://` scheme
+- [#4446](https://github.com/grevinden/bifrost/issues/4446) - Add per MCP server level tool timeout configuration
+- [#4679](https://github.com/grevinden/bifrost/issues/4679) - Bedrock Responses API does not signal max_output_tokens truncation
+- [#4689](https://github.com/grevinden/bifrost/issues/4689) - Custom providers cannot set budget
+- [#4720](https://github.com/grevinden/bifrost/issues/4720) - chunking_strategy is dropped for OpenAI-compatible transcription requests
+- [#4721](https://github.com/grevinden/bifrost/issues/4721) - Logs table Tokens column shows N/A when hybrid object storage is enabled
+- [#4756](https://github.com/grevinden/bifrost/issues/4756) - semantic_cache internal embedding path bypasses plugin pipeline, causing "no keys found" while direct /v1/embeddings works
+- [#4777](https://github.com/grevinden/bifrost/issues/4777) - Image generation stream: completed chunk returns empty output_tokens_details, causing under-billing
+- [#4788](https://github.com/grevinden/bifrost/issues/4788) - DeepSeek Anthropic-compatible provider causes "stream closed" error in v1.6.0 (regression from v1.5.16)
+- [#4816](https://github.com/grevinden/bifrost/issues/4816) - /v1 chat completions folds cache-write tokens into prompt_tokens_details.cached_tokens
+- [#4851](https://github.com/grevinden/bifrost/issues/4851) - v1.6.2 governance rate-limit reset causes high CPU in BumpRateLimitUsage/updateRateLimitReferences
+- [#4863](https://github.com/grevinden/bifrost/issues/4863) - model_parameters_url in config.json is ignored after the DB value is set
+- [#4868](https://github.com/grevinden/bifrost/issues/4868) - Memory leak: orphaned deferred spans in TraceStore are never TTL-swept
+- [#4872](https://github.com/grevinden/bifrost/issues/4872) - Raw request/response payloads bypass disable_content_logging via ErrorDetailsParsed
+- [#4942](https://github.com/grevinden/bifrost/issues/4942) - redacted_thinking blocks are dropped on chat completions, breaking tool-use replay with extended thinking
 
 </Update>
 <Update label="Core" description="1.6.3">

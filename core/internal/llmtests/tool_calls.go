@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/require"
 )
 
@@ -39,11 +39,11 @@ func RunToolCallsTest(t *testing.T, client *bifrost.Bifrost, ctx context.Context
 		retryConfig := ToolCallRetryConfig(string(SampleToolTypeWeather))
 		retryContext := TestRetryContext{
 			ScenarioName: "ToolCalls",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"expected_tool_name": string(SampleToolTypeWeather),
 				"required_location":  "new york",
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider": testConfig.Provider,
 				"model":    testConfig.ChatModel,
 			},
@@ -66,7 +66,7 @@ func RunToolCallsTest(t *testing.T, client *bifrost.Bifrost, ctx context.Context
 				Model:    testConfig.ChatModel,
 				Input:    chatMessages,
 				Params: &schemas.ChatParameters{
-					MaxCompletionTokens: bifrost.Ptr(150),
+					MaxCompletionTokens: new(150),
 					Tools:               []schemas.ChatTool{*chatTool},
 				},
 				Fallbacks: testConfig.Fallbacks,
@@ -140,7 +140,7 @@ func validateLocationInToolCalls(t *testing.T, toolCalls []ToolCallInfo, apiName
 
 	for _, toolCall := range toolCalls {
 		if toolCall.Name == string(SampleToolTypeWeather) {
-			var args map[string]interface{}
+			var args map[string]any
 			if json.Unmarshal([]byte(toolCall.Arguments), &args) == nil {
 				if location, exists := args["location"].(string); exists {
 					lowerLocation := strings.ToLower(location)
@@ -183,10 +183,10 @@ func RunToolCallsWithEmptyPropertiesTest(t *testing.T, client *bifrost.Bifrost, 
 		retryConfig := ToolCallRetryConfig("ping")
 		retryContext := TestRetryContext{
 			ScenarioName: "ToolCallsWithEmptyProperties",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"expected_tool_name": "ping",
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider": testConfig.Provider,
 				"model":    testConfig.ChatModel,
 			},
@@ -202,10 +202,10 @@ func RunToolCallsWithEmptyPropertiesTest(t *testing.T, client *bifrost.Bifrost, 
 				Model:    testConfig.ChatModel,
 				Input:    chatMessages,
 				Params: &schemas.ChatParameters{
-					MaxCompletionTokens: bifrost.Ptr(150),
+					MaxCompletionTokens: new(150),
 					Tools:               []schemas.ChatTool{*chatTool},
 					ToolChoice: &schemas.ChatToolChoice{
-						ChatToolChoiceStr: bifrost.Ptr("required"),
+						ChatToolChoiceStr: new("required"),
 					},
 				},
 				Fallbacks: testConfig.Fallbacks,
@@ -222,7 +222,7 @@ func RunToolCallsWithEmptyPropertiesTest(t *testing.T, client *bifrost.Bifrost, 
 				Params: &schemas.ResponsesParameters{
 					Tools: []schemas.ResponsesTool{*responsesTool},
 					ToolChoice: &schemas.ResponsesToolChoice{
-						ResponsesToolChoiceStr: bifrost.Ptr("required"),
+						ResponsesToolChoiceStr: new("required"),
 					},
 				},
 			}
@@ -317,10 +317,10 @@ func RunToolCallsWithNilPropertiesTest(t *testing.T, client *bifrost.Bifrost, ct
 		retryConfig := ToolCallRetryConfig("ping")
 		retryContext := TestRetryContext{
 			ScenarioName: "ToolCallsWithNilProperties",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"expected_tool_name": "ping",
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider": testConfig.Provider,
 				"model":    testConfig.ChatModel,
 			},
@@ -336,10 +336,10 @@ func RunToolCallsWithNilPropertiesTest(t *testing.T, client *bifrost.Bifrost, ct
 				Model:    testConfig.ChatModel,
 				Input:    chatMessages,
 				Params: &schemas.ChatParameters{
-					MaxCompletionTokens: bifrost.Ptr(150),
+					MaxCompletionTokens: new(150),
 					Tools:               []schemas.ChatTool{*chatTool},
 					ToolChoice: &schemas.ChatToolChoice{
-						ChatToolChoiceStr: bifrost.Ptr("required"),
+						ChatToolChoiceStr: new("required"),
 					},
 				},
 				Fallbacks: testConfig.Fallbacks,
@@ -356,7 +356,7 @@ func RunToolCallsWithNilPropertiesTest(t *testing.T, client *bifrost.Bifrost, ct
 				Params: &schemas.ResponsesParameters{
 					Tools: []schemas.ResponsesTool{*responsesTool},
 					ToolChoice: &schemas.ResponsesToolChoice{
-						ResponsesToolChoiceStr: bifrost.Ptr("required"),
+						ResponsesToolChoiceStr: new("required"),
 					},
 				},
 			}

@@ -3,8 +3,8 @@ package handlers
 import (
 	"strings"
 
-	configtables "github.com/maximhq/bifrost/framework/configstore/tables"
-	"github.com/maximhq/bifrost/transports/bifrost-http/lib"
+	configtables "github.com/grevinden/bifrost/framework/configstore/tables"
+	"github.com/grevinden/bifrost/transports/bifrost-http/lib"
 	"github.com/valyala/fasthttp"
 )
 

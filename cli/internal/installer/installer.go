@@ -6,7 +6,7 @@ import (
 	"io"
 	"os/exec"
 
-	"github.com/maximhq/bifrost/cli/internal/harness"
+	"github.com/grevinden/bifrost/cli/internal/harness"
 )
 
 // IsInstalled reports whether the harness binary exists in the system PATH.

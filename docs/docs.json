@@ -27,7 +27,7 @@
       },
       {
         "label": "GitHub",
-        "href": "https://github.com/maximhq/bifrost",
+        "href": "https://github.com/grevinden/bifrost",
         "icon": "github"
       }
     ],
@@ -1240,7 +1240,7 @@
   "footer": {
     "socials": {
       "x": "https://x.com/getmaximai",
-      "github": "https://github.com/maximhq/bifrost",
+      "github": "https://github.com/grevinden/bifrost",
       "linkedin": "https://linkedin.com/company/maxim-ai"
     }
   }

@@ -5,7 +5,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 const DefaultModelParamsCacheSize = 2048

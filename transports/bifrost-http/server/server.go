@@ -17,27 +17,27 @@ import (
 
 	"github.com/fasthttp/router"
 	"github.com/google/uuid"
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/configstore"
-	"github.com/maximhq/bifrost/framework/configstore/tables"
-	"github.com/maximhq/bifrost/framework/encrypt"
-	"github.com/maximhq/bifrost/framework/logstore"
-	dynamicPlugins "github.com/maximhq/bifrost/framework/plugins"
-	"github.com/maximhq/bifrost/framework/sidekiq"
-	"github.com/maximhq/bifrost/framework/temptoken"
-	"github.com/maximhq/bifrost/framework/tracing"
-	"github.com/maximhq/bifrost/plugins/governance"
-	"github.com/maximhq/bifrost/plugins/governance/complexity"
-	"github.com/maximhq/bifrost/plugins/logging"
-	"github.com/maximhq/bifrost/plugins/otel"
-	"github.com/maximhq/bifrost/plugins/prompts"
-	"github.com/maximhq/bifrost/plugins/semanticcache"
-	"github.com/maximhq/bifrost/plugins/telemetry"
-	"github.com/maximhq/bifrost/transports/bifrost-http/handlers"
-	"github.com/maximhq/bifrost/transports/bifrost-http/integrations"
-	"github.com/maximhq/bifrost/transports/bifrost-http/lib"
-	bfws "github.com/maximhq/bifrost/transports/bifrost-http/websocket"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/configstore"
+	"github.com/grevinden/bifrost/framework/configstore/tables"
+	"github.com/grevinden/bifrost/framework/encrypt"
+	"github.com/grevinden/bifrost/framework/logstore"
+	dynamicPlugins "github.com/grevinden/bifrost/framework/plugins"
+	"github.com/grevinden/bifrost/framework/sidekiq"
+	"github.com/grevinden/bifrost/framework/temptoken"
+	"github.com/grevinden/bifrost/framework/tracing"
+	"github.com/grevinden/bifrost/plugins/governance"
+	"github.com/grevinden/bifrost/plugins/governance/complexity"
+	"github.com/grevinden/bifrost/plugins/logging"
+	"github.com/grevinden/bifrost/plugins/otel"
+	"github.com/grevinden/bifrost/plugins/prompts"
+	"github.com/grevinden/bifrost/plugins/semanticcache"
+	"github.com/grevinden/bifrost/plugins/telemetry"
+	"github.com/grevinden/bifrost/transports/bifrost-http/handlers"
+	"github.com/grevinden/bifrost/transports/bifrost-http/integrations"
+	"github.com/grevinden/bifrost/transports/bifrost-http/lib"
+	bfws "github.com/grevinden/bifrost/transports/bifrost-http/websocket"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	dto "github.com/prometheus/client_model/go"
@@ -1807,6 +1807,12 @@ func (s *BifrostHTTPServer) Bootstrap(ctx context.Context) error {
 		return fmt.Errorf("failed to initialize bifrost: %v", err)
 	}
 	logger.Info("bifrost client initialized")
+	// Inject the live Bifrost client into plugins that need it (ClientAwarePlugin).
+	for _, p := range s.Config.GetLoadedLLMPlugins() {
+		if aware, ok := p.(schemas.ClientAwarePlugin); ok {
+			aware.SetBifrostClient(s.Client)
+		}
+	}
 	// Sync plugin execution order from config to core (defensive — Init receives sorted list,
 	// but this ensures order consistency if the loading path changes in the future)
 	s.Client.ReorderPlugins(s.Config.GetPluginOrder())

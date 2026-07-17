@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -119,7 +119,7 @@ func TestCodeMode_Agent_MultiTurn_CodeChaining(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Get Tokyo temperature, transform and hash it"),
+					ContentStr: new("Get Tokyo temperature, transform and hash it"),
 				},
 			},
 		},
@@ -208,7 +208,7 @@ func TestCodeMode_Agent_MultiTurn_MixedToolsAndCode(t *testing.T) {
 	// Turn 2: Direct tool call (auto)
 	mocker.AddChatResponse(CreateDynamicChatResponse(func(history []schemas.ChatMessage) *schemas.BifrostChatResponse {
 		return CreateChatResponseWithToolCalls([]schemas.ChatAssistantMessageToolCall{
-			CreateToolCall("call-2", "get_temperature", map[string]interface{}{
+			CreateToolCall("call-2", "get_temperature", map[string]any{
 				"location": "London",
 			}),
 		})
@@ -229,7 +229,7 @@ else:
 	// Turn 4: Non-auto tool (should stop)
 	mocker.AddChatResponse(CreateDynamicChatResponse(func(history []schemas.ChatMessage) *schemas.BifrostChatResponse {
 		return CreateChatResponseWithToolCalls([]schemas.ChatAssistantMessageToolCall{
-			CreateToolCall("call-4", "echo", map[string]interface{}{
+			CreateToolCall("call-4", "echo", map[string]any{
 				"text": "needs approval",
 			}),
 		})
@@ -242,7 +242,7 @@ else:
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Test mixed tools and code"),
+					ContentStr: new("Test mixed tools and code"),
 				},
 			},
 		},
@@ -337,7 +337,7 @@ else:
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Try to call blocked tool"),
+					ContentStr: new("Try to call blocked tool"),
 				},
 			},
 		},
@@ -445,7 +445,7 @@ func TestCodeMode_Agent_MultiTurn_ContextFilterOverride(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Test context override"),
+					ContentStr: new("Test context override"),
 				},
 			},
 		},
@@ -552,7 +552,7 @@ func TestCodeMode_Agent_MultiTurn_MaxDepth(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Test max depth"),
+					ContentStr: new("Test max depth"),
 				},
 			},
 		},
@@ -660,7 +660,7 @@ func TestCodeMode_Agent_MultiTurn_ErrorRecovery(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Test error recovery"),
+					ContentStr: new("Test error recovery"),
 				},
 			},
 		},
@@ -704,7 +704,7 @@ func extractToolResult(history []schemas.ChatMessage, toolCallID string) string 
 			content := *msg.Content.ContentStr
 
 			// Try to parse as execution result
-			var execResult map[string]interface{}
+			var execResult map[string]any
 			if err := json.Unmarshal([]byte(content), &execResult); err == nil {
 				if result, hasResult := execResult["result"]; hasResult {
 					// Return the result field as JSON string

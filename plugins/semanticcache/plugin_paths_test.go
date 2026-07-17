@@ -4,15 +4,16 @@ import (
 	"context"
 	"encoding/json"
 	"reflect"
+	"slices"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/vectorstore"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/vectorstore"
 )
 
 // -----------------------------------------------------------------------------
@@ -198,7 +199,7 @@ func TestExpiredEntry_DetectedAndDeleted(t *testing.T) {
 	})
 	store.chunks[expiredID] = vectorstore.SearchResult{
 		ID: expiredID,
-		Properties: map[string]interface{}{
+		Properties: map[string]any{
 			"response":   string(chunkJSON),
 			"expires_at": time.Now().Add(-1 * time.Minute).Unix(),
 		},
@@ -228,13 +229,7 @@ func TestExpiredEntry_DetectedAndDeleted(t *testing.T) {
 
 	store.mu.Lock()
 	defer store.mu.Unlock()
-	found := false
-	for _, id := range store.deleteIDs {
-		if id == expiredID {
-			found = true
-			break
-		}
-	}
+	found := slices.Contains(store.deleteIDs, expiredID)
 	if !found {
 		t.Fatalf("expected expired entry %q to be deleted, got delete log %v", expiredID, store.deleteIDs)
 	}
@@ -538,7 +533,7 @@ func TestPreLLMHook_ConcurrentSameRequestID(t *testing.T) {
 	var wg sync.WaitGroup
 	var panics atomic.Int32
 	wg.Add(N)
-	for i := 0; i < N; i++ {
+	for range N {
 		go func() {
 			defer wg.Done()
 			defer func() {

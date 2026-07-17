@@ -12,7 +12,7 @@ func TestSetJSONField(t *testing.T) {
 		name     string
 		data     []byte
 		path     string
-		value    interface{}
+		value    any
 		expected string
 	}{
 		{
@@ -44,10 +44,10 @@ func TestSetJSONField(t *testing.T) {
 			expected: `{"betas":["a","b"]}`,
 		},
 		{
-			name:  "preserves_existing_fields",
-			data:  []byte(`{"a":1,"b":2}`),
-			path:  "c",
-			value: 3,
+			name:     "preserves_existing_fields",
+			data:     []byte(`{"a":1,"b":2}`),
+			path:     "c",
+			value:    3,
 			expected: `{"a":1,"b":2,"c":3}`,
 		},
 	}

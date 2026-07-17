@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -50,7 +50,7 @@ func TestResponsesFormat_Basic(t *testing.T) {
 	// Create Responses format tool call
 	callID := "call-456"
 	toolName := "calculator"
-	args := map[string]interface{}{
+	args := map[string]any{
 		"operation": "multiply",
 		"x":         4.0,
 		"y":         7.0,
@@ -186,7 +186,7 @@ func TestResponsesToChatConversion(t *testing.T) {
 	// Create Responses format tool call
 	callID := "call-999"
 	toolName := "echo"
-	args := map[string]interface{}{
+	args := map[string]any{
 		"message": "Hello, World!",
 	}
 	responsesToolCall := GetSampleResponsesToolCallMessage(callID, toolName, args)
@@ -303,7 +303,7 @@ func TestConversionRoundTrip_ResponsesToChatAndBack(t *testing.T) {
 	// Create original Responses tool call
 	originalCallID := "call-roundtrip-2"
 	originalToolName := "get_weather"
-	originalArgs := map[string]interface{}{
+	originalArgs := map[string]any{
 		"location": "San Francisco",
 		"units":    "celsius",
 	}
@@ -385,20 +385,20 @@ func TestFormatConversion_ComplexStructures(t *testing.T) {
 	t.Parallel()
 
 	// Create tool call with complex nested structure
-	complexArgs := map[string]interface{}{
+	complexArgs := map[string]any{
 		"simple_string": "value",
 		"number":        42.5,
 		"boolean":       true,
-		"array":         []interface{}{"item1", "item2", 3},
-		"nested_object": map[string]interface{}{
+		"array":         []any{"item1", "item2", 3},
+		"nested_object": map[string]any{
 			"inner_key": "inner_value",
-			"inner_array": []interface{}{
-				map[string]interface{}{"deep_key": "deep_value"},
+			"inner_array": []any{
+				map[string]any{"deep_key": "deep_value"},
 			},
 		},
-		"array_of_objects": []interface{}{
-			map[string]interface{}{"id": 1, "name": "first"},
-			map[string]interface{}{"id": 2, "name": "second"},
+		"array_of_objects": []any{
+			map[string]any{"id": 1, "name": "first"},
+			map[string]any{"id": 2, "name": "second"},
 		},
 	}
 
@@ -408,9 +408,9 @@ func TestFormatConversion_ComplexStructures(t *testing.T) {
 	callID := "call-complex"
 	chatToolCall := schemas.ChatAssistantMessageToolCall{
 		ID:   &callID,
-		Type: schemas.Ptr("function"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("complex_tool"),
+			Name:      new("complex_tool"),
 			Arguments: string(argsJSON),
 		},
 	}
@@ -424,7 +424,7 @@ func TestFormatConversion_ComplexStructures(t *testing.T) {
 
 	// Verify structure is preserved in Responses format
 	require.NotNil(t, responsesToolMsg.Arguments, "arguments should not be nil")
-	var responsesArgs map[string]interface{}
+	var responsesArgs map[string]any
 	err = json.Unmarshal([]byte(*responsesToolMsg.Arguments), &responsesArgs)
 	require.NoError(t, err, "should unmarshal arguments")
 	assert.Equal(t, "value", responsesArgs["simple_string"], "simple string should be preserved")
@@ -432,7 +432,7 @@ func TestFormatConversion_ComplexStructures(t *testing.T) {
 	assert.True(t, responsesArgs["boolean"].(bool), "boolean should be preserved")
 
 	// Verify nested structures
-	nestedObj, ok := responsesArgs["nested_object"].(map[string]interface{})
+	nestedObj, ok := responsesArgs["nested_object"].(map[string]any)
 	require.True(t, ok, "nested object should be preserved")
 	assert.Equal(t, "inner_value", nestedObj["inner_key"], "nested object values should be preserved")
 
@@ -441,7 +441,7 @@ func TestFormatConversion_ComplexStructures(t *testing.T) {
 	require.NotNil(t, convertedBack, "converted back should not be nil")
 
 	// Verify complex structure is preserved in round-trip
-	var convertedArgs map[string]interface{}
+	var convertedArgs map[string]any
 	err = json.Unmarshal([]byte(convertedBack.Function.Arguments), &convertedArgs)
 	require.NoError(t, err, "should unmarshal converted arguments")
 	assert.Equal(t, complexArgs["simple_string"], convertedArgs["simple_string"], "simple string should survive round-trip")
@@ -632,7 +632,7 @@ func TestFormatConversion_ErrorWithStackTrace(t *testing.T) {
 	t.Parallel()
 
 	// Create error with detailed stack trace
-	errorWithStackTrace := map[string]interface{}{
+	errorWithStackTrace := map[string]any{
 		"error":   "RuntimeError: Null pointer exception",
 		"message": "Cannot read property 'value' of null",
 		"stack": []string{
@@ -640,7 +640,7 @@ func TestFormatConversion_ErrorWithStackTrace(t *testing.T) {
 			"at validateInput (validator.js:18:7)",
 			"at main (index.js:10:3)",
 		},
-		"metadata": map[string]interface{}{
+		"metadata": map[string]any{
 			"timestamp": "2024-01-15T10:30:00Z",
 			"severity":  "critical",
 			"retryable": false,
@@ -664,7 +664,7 @@ func TestFormatConversion_ErrorWithStackTrace(t *testing.T) {
 	outputStr := *responsesMsg.ResponsesToolMessage.Output.ResponsesToolCallOutputStr
 
 	// Parse output to verify structure
-	var parsedError map[string]interface{}
+	var parsedError map[string]any
 	err = json.Unmarshal([]byte(outputStr), &parsedError)
 	require.NoError(t, err, "should unmarshal error output")
 
@@ -675,12 +675,12 @@ func TestFormatConversion_ErrorWithStackTrace(t *testing.T) {
 	assert.NotNil(t, parsedError["metadata"], "metadata should be preserved")
 
 	// Verify stack trace array is intact
-	stack, ok := parsedError["stack"].([]interface{})
+	stack, ok := parsedError["stack"].([]any)
 	require.True(t, ok, "stack should be an array")
 	assert.Len(t, stack, 3, "stack should have 3 frames")
 
 	// Verify metadata is intact
-	metadata, ok := parsedError["metadata"].(map[string]interface{})
+	metadata, ok := parsedError["metadata"].(map[string]any)
 	require.True(t, ok, "metadata should be an object")
 	assert.Equal(t, "critical", metadata["severity"], "severity should be preserved")
 	assert.Equal(t, false, metadata["retryable"], "retryable flag should be preserved")

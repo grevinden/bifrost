@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/qdrant/go-client/qdrant"
 	"google.golang.org/grpc"
 )
@@ -18,11 +18,11 @@ const qdrantMaxRecvMsgSize = 64 * 1024 * 1024 // 64 MB
 
 // QdrantConfig represents the configuration for the Qdrant vector store.
 type QdrantConfig struct {
-	Host             schemas.SecretVar `json:"host"`                        // Qdrant server host - REQUIRED
-	Port             schemas.SecretVar `json:"port"`                        // Qdrant server port  (fallback to 6334 for gRPC)
-	APIKey           schemas.SecretVar `json:"api_key,omitempty"`           // API key for authentication - Optional
-	UseTLS           schemas.SecretVar `json:"use_tls,omitempty"`           // Use TLS for connection - Optional
-	MaxRecvMsgSizeMB schemas.SecretVar `json:"max_recv_msg_size_mb,omitempty"` // gRPC max receive message size in MB (default: 64). Increase when caching large payloads such as image generation responses.
+	Host             schemas.SecretVar `json:"host"`                 // Qdrant server host - REQUIRED
+	Port             schemas.SecretVar `json:"port"`                 // Qdrant server port  (fallback to 6334 for gRPC)
+	APIKey           schemas.SecretVar `json:"api_key"`              // API key for authentication - Optional
+	UseTLS           schemas.SecretVar `json:"use_tls"`              // Use TLS for connection - Optional
+	MaxRecvMsgSizeMB schemas.SecretVar `json:"max_recv_msg_size_mb"` // gRPC max receive message size in MB (default: 64). Increase when caching large payloads such as image generation responses.
 }
 
 // QdrantStore represents the Qdrant vector store.
@@ -242,7 +242,7 @@ func (s *QdrantStore) GetNearest(ctx context.Context, namespace string, vector [
 		Filter:         filter,
 		Limit:          &searchLimit,
 		WithPayload:    qdrant.NewWithPayload(true),
-		ScoreThreshold: qdrant.PtrOf(float32(threshold)),
+		ScoreThreshold: new(float32(threshold)),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to search points: %w", err)
@@ -262,7 +262,7 @@ func (s *QdrantStore) GetNearest(ctx context.Context, namespace string, vector [
 }
 
 // Add stores a new point in the Qdrant vector store.
-func (s *QdrantStore) Add(ctx context.Context, namespace string, id string, embedding []float32, metadata map[string]interface{}) error {
+func (s *QdrantStore) Add(ctx context.Context, namespace string, id string, embedding []float32, metadata map[string]any) error {
 	if strings.TrimSpace(id) == "" {
 		return fmt.Errorf("id is required")
 	}
@@ -283,7 +283,7 @@ func (s *QdrantStore) Add(ctx context.Context, namespace string, id string, embe
 	_, err = s.client.Upsert(ctx, &qdrant.UpsertPoints{
 		CollectionName: namespace,
 		Points:         []*qdrant.PointStruct{point},
-		Wait:           qdrant.PtrOf(true),
+		Wait:           new(true),
 	})
 	if err != nil {
 		return fmt.Errorf("failed to upsert point: %w", err)
@@ -428,19 +428,19 @@ func pointIDToString(id *qdrant.PointId) string {
 	}
 }
 
-func payloadToMap(payload map[string]*qdrant.Value) map[string]interface{} {
+func payloadToMap(payload map[string]*qdrant.Value) map[string]any {
 	if payload == nil {
-		return make(map[string]interface{})
+		return make(map[string]any)
 	}
 
-	result := make(map[string]interface{}, len(payload))
+	result := make(map[string]any, len(payload))
 	for k, v := range payload {
 		result[k] = valueToInterface(v)
 	}
 	return result
 }
 
-func valueToInterface(v *qdrant.Value) interface{} {
+func valueToInterface(v *qdrant.Value) any {
 	if v == nil {
 		return nil
 	}
@@ -454,7 +454,7 @@ func valueToInterface(v *qdrant.Value) interface{} {
 	case *qdrant.Value_BoolValue:
 		return val.BoolValue
 	case *qdrant.Value_ListValue:
-		list := make([]interface{}, len(val.ListValue.Values))
+		list := make([]any, len(val.ListValue.Values))
 		for i, item := range val.ListValue.Values {
 			list[i] = valueToInterface(item)
 		}
@@ -466,17 +466,17 @@ func valueToInterface(v *qdrant.Value) interface{} {
 	}
 }
 
-func mapToPayload(m map[string]interface{}) map[string]*qdrant.Value {
+func mapToPayload(m map[string]any) map[string]*qdrant.Value {
 	if m == nil {
 		return make(map[string]*qdrant.Value)
 	}
 	// Convert []string to []interface{} since Qdrant's NewValueMap doesn't handle []string directly
-	converted := make(map[string]interface{}, len(m))
+	converted := make(map[string]any, len(m))
 	for k, v := range m {
 		switch val := v.(type) {
 		case []string:
 			// Convert []string to []interface{}
-			interfaceSlice := make([]interface{}, len(val))
+			interfaceSlice := make([]any, len(val))
 			for i, s := range val {
 				interfaceSlice[i] = s
 			}
@@ -488,11 +488,11 @@ func mapToPayload(m map[string]interface{}) map[string]*qdrant.Value {
 	return qdrant.NewValueMap(converted)
 }
 
-func filterProperties(props map[string]interface{}, selectFields []string) map[string]interface{} {
+func filterProperties(props map[string]any, selectFields []string) map[string]any {
 	if len(selectFields) == 0 {
 		return props
 	}
-	filtered := make(map[string]interface{}, len(selectFields))
+	filtered := make(map[string]any, len(selectFields))
 	for _, field := range selectFields {
 		if val, ok := props[field]; ok {
 			filtered[field] = val
@@ -566,7 +566,7 @@ func buildQdrantCondition(q Query) *qdrant.Condition {
 		}
 		return buildMatchCondition(field, q.Value)
 	case QueryOperatorContainsAll:
-		if values, ok := q.Value.([]interface{}); ok {
+		if values, ok := q.Value.([]any); ok {
 			var mustConditions []*qdrant.Condition
 			for _, v := range values {
 				cond := buildMatchCondition(field, v)
@@ -591,7 +591,7 @@ func buildQdrantCondition(q Query) *qdrant.Condition {
 	}
 }
 
-func buildMatchCondition(field string, value interface{}) *qdrant.Condition {
+func buildMatchCondition(field string, value any) *qdrant.Condition {
 	switch v := value.(type) {
 	case string:
 		return qdrant.NewMatchKeyword(field, v)
@@ -608,7 +608,7 @@ func buildMatchCondition(field string, value interface{}) *qdrant.Condition {
 	}
 }
 
-func buildRangeCondition(field string, value interface{}, op string) *qdrant.Condition {
+func buildRangeCondition(field string, value any, op string) *qdrant.Condition {
 	var floatVal float64
 	switch v := value.(type) {
 	case int:
@@ -628,13 +628,13 @@ func buildRangeCondition(field string, value interface{}, op string) *qdrant.Con
 	r := &qdrant.Range{}
 	switch op {
 	case "gt":
-		r.Gt = qdrant.PtrOf(floatVal)
+		r.Gt = new(floatVal)
 	case "gte":
-		r.Gte = qdrant.PtrOf(floatVal)
+		r.Gte = new(floatVal)
 	case "lt":
-		r.Lt = qdrant.PtrOf(floatVal)
+		r.Lt = new(floatVal)
 	case "lte":
-		r.Lte = qdrant.PtrOf(floatVal)
+		r.Lte = new(floatVal)
 	}
 	return qdrant.NewRange(field, r)
 }

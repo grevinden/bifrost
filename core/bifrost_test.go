@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	mistralprovider "github.com/maximhq/bifrost/core/providers/mistral"
-	schemas "github.com/maximhq/bifrost/core/schemas"
+	mistralprovider "github.com/grevinden/bifrost/core/providers/mistral"
+	schemas "github.com/grevinden/bifrost/core/schemas"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
@@ -94,7 +94,7 @@ func TestExecuteRequestWithRetries_SuccessScenarios(t *testing.T) {
 			callCount++
 			if callCount <= 2 {
 				// First two calls fail with retryable error
-				return "", createBifrostError("rate limit exceeded", Ptr(429), nil, false)
+				return "", createBifrostError("rate limit exceeded", new(429), nil, false)
 			}
 			// Third call succeeds
 			return "success", nil
@@ -135,7 +135,7 @@ func TestExecuteRequestWithRetries_RetryLimits(t *testing.T) {
 		handler := func(_ schemas.Key) (string, *schemas.BifrostError) {
 			callCount++
 			// Always fail with retryable error
-			return "", createBifrostError("rate limit exceeded", Ptr(429), nil, false)
+			return "", createBifrostError("rate limit exceeded", new(429), nil, false)
 		}
 
 		result, err := executeRequestWithRetries(
@@ -184,11 +184,11 @@ func TestExecuteRequestWithRetries_NonRetryableErrors(t *testing.T) {
 		},
 		{
 			name:  "RequestCancelled",
-			error: createBifrostError("request cancelled", nil, Ptr(schemas.ErrRequestCancelled), false),
+			error: createBifrostError("request cancelled", nil, new(schemas.ErrRequestCancelled), false),
 		},
 		{
 			name:  "Non-retryable status code",
-			error: createBifrostError("bad request", Ptr(400), nil, false),
+			error: createBifrostError("bad request", new(400), nil, false),
 		},
 		{
 			name:  "Non-retryable error message",
@@ -240,23 +240,23 @@ func TestExecuteRequestWithRetries_RetryableConditions(t *testing.T) {
 	}{
 		{
 			name:  "StatusCode_500",
-			error: createBifrostError("internal server error", Ptr(500), nil, false),
+			error: createBifrostError("internal server error", new(500), nil, false),
 		},
 		{
 			name:  "StatusCode_502",
-			error: createBifrostError("bad gateway", Ptr(502), nil, false),
+			error: createBifrostError("bad gateway", new(502), nil, false),
 		},
 		{
 			name:  "StatusCode_503",
-			error: createBifrostError("service unavailable", Ptr(503), nil, false),
+			error: createBifrostError("service unavailable", new(503), nil, false),
 		},
 		{
 			name:  "StatusCode_504",
-			error: createBifrostError("gateway timeout", Ptr(504), nil, false),
+			error: createBifrostError("gateway timeout", new(504), nil, false),
 		},
 		{
 			name:  "StatusCode_429",
-			error: createBifrostError("too many requests", Ptr(429), nil, false),
+			error: createBifrostError("too many requests", new(429), nil, false),
 		},
 		{
 			name:  "ErrProviderDoRequest",
@@ -268,7 +268,7 @@ func TestExecuteRequestWithRetries_RetryableConditions(t *testing.T) {
 		},
 		{
 			name:  "RateLimitType",
-			error: createBifrostError("some error", nil, Ptr("rate_limit"), false),
+			error: createBifrostError("some error", nil, new("rate_limit"), false),
 		},
 	}
 	logger := NewDefaultLogger(schemas.LogLevelError)
@@ -342,16 +342,13 @@ func TestCalculateBackoff_JitterBounds(t *testing.T) {
 	config := createTestConfig(3, 100*time.Millisecond, 5*time.Second)
 
 	// Test jitter bounds for multiple attempts
-	for attempt := 0; attempt < 3; attempt++ {
+	for attempt := range 3 {
 		t.Run(fmt.Sprintf("Attempt_%d_JitterBounds", attempt), func(t *testing.T) {
 			// Calculate expected base backoff
-			baseBackoff := config.NetworkConfig.RetryBackoffInitial * time.Duration(1<<uint(attempt))
-			if baseBackoff > config.NetworkConfig.RetryBackoffMax {
-				baseBackoff = config.NetworkConfig.RetryBackoffMax
-			}
+			baseBackoff := min(config.NetworkConfig.RetryBackoffInitial*time.Duration(1<<uint(attempt)), config.NetworkConfig.RetryBackoffMax)
 
 			// Test multiple samples to verify jitter bounds
-			for i := 0; i < 100; i++ {
+			for range 100 {
 				backoff := calculateBackoff(attempt, config)
 
 				// Jitter should be ±20% (0.8 to 1.2 multiplier), but capped at configured max
@@ -522,7 +519,7 @@ func TestExecuteRequestWithRetries_LoggingAndCounting(t *testing.T) {
 
 		if callCount <= 2 {
 			// First two calls fail with retryable error
-			return "", createBifrostError("rate limit exceeded", Ptr(429), nil, false)
+			return "", createBifrostError("rate limit exceeded", new(429), nil, false)
 		}
 		// Third call succeeds
 		return "success", nil
@@ -588,7 +585,7 @@ func TestHandleProviderRequest_OCROperationNotAllowed(t *testing.T) {
 				Model: "custom-mistral/mistral-ocr-latest",
 				Document: schemas.OCRDocument{
 					Type:        schemas.OCRDocumentTypeDocumentURL,
-					DocumentURL: Ptr("https://example.com/doc.pdf"),
+					DocumentURL: new("https://example.com/doc.pdf"),
 				},
 			},
 		},
@@ -663,8 +660,8 @@ func BenchmarkCalculateBackoff(b *testing.B) {
 	config := createTestConfig(10, 100*time.Millisecond, 5*time.Second)
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		calculateBackoff(i%10, config)
+	for b.Loop() {
+		calculateBackoff(b.N, config)
 	}
 }
 
@@ -682,8 +679,8 @@ func BenchmarkIsRateLimitError(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		IsRateLimitErrorMessage(messages[i%len(messages)])
+	for b.Loop() {
+		IsRateLimitErrorMessage(messages[b.N%len(messages)])
 	}
 }
 
@@ -1034,7 +1031,7 @@ func TestSelectKeyFromProviderForModel_NoStickinessWithoutSessionID(t *testing.T
 	bfCtx := schemas.NewBifrostContext(context.Background(), schemas.NoDeadline)
 	// No session ID set — pool is returned with canRotate=true; keySelector is called each time.
 
-	for i := 0; i < 2; i++ {
+	for i := range 2 {
 		pool, canRotate, err := bifrost.selectKeyFromProviderForModelWithPool(bfCtx, schemas.ChatCompletionRequest, schemas.OpenAI, "gpt-4", schemas.OpenAI)
 		if err != nil {
 			t.Fatalf("selectKeyFromProviderForModelWithPool call %d: %v", i+1, err)
@@ -1110,7 +1107,7 @@ func TestSelectKeyFromProviderForModel_SessionStickinessNoRotation(t *testing.T)
 		usedKeyIDs = append(usedKeyIDs, k.ID)
 		callCount++
 		if callCount <= 3 {
-			return "", createBifrostError("rate limit exceeded", Ptr(429), nil, false)
+			return "", createBifrostError("rate limit exceeded", new(429), nil, false)
 		}
 		return "ok", nil
 	}
@@ -1223,7 +1220,7 @@ func TestExecuteRequestWithRetries_KeyRotation(t *testing.T) {
 			selectedKeyIDs = append(selectedKeyIDs, k.ID)
 			// First two calls rate-limit, third succeeds
 			if len(selectedKeyIDs) <= 2 {
-				return "", createBifrostError("rate limit exceeded", Ptr(429), nil, false)
+				return "", createBifrostError("rate limit exceeded", new(429), nil, false)
 			}
 			return "success", nil
 		}
@@ -1321,7 +1318,7 @@ func TestExecuteRequestWithRetries_KeyRotation(t *testing.T) {
 
 		handler := func(k schemas.Key) (string, *schemas.BifrostError) {
 			selectedKeyIDs = append(selectedKeyIDs, k.ID)
-			return "", createBifrostError("rate limit exceeded", Ptr(429), nil, false)
+			return "", createBifrostError("rate limit exceeded", new(429), nil, false)
 		}
 
 		executeRequestWithRetries(ctx, config6, handler, keyProvider,
@@ -1571,7 +1568,7 @@ func TestUpdateProvider(t *testing.T) {
 		const numConcurrentUpdates = 5
 		errChan := make(chan error, numConcurrentUpdates)
 
-		for i := 0; i < numConcurrentUpdates; i++ {
+		for i := range numConcurrentUpdates {
 			go func(updateNum int) {
 				// Update with slightly different config each time
 				account.UpdateProviderConfig(schemas.OpenAI, 5+updateNum, 1000+updateNum*100)
@@ -1582,7 +1579,7 @@ func TestUpdateProvider(t *testing.T) {
 
 		// Collect results
 		var errors []error
-		for i := 0; i < numConcurrentUpdates; i++ {
+		for range numConcurrentUpdates {
 			if err := <-errChan; err != nil {
 				errors = append(errors, err)
 			}
@@ -1674,7 +1671,7 @@ func TestUpdateProvider_ProviderSliceIntegrity(t *testing.T) {
 		}
 
 		// Perform multiple updates to ensure no memory leaks in provider slice
-		for i := 0; i < 10; i++ {
+		for i := range 10 {
 			account.UpdateProviderConfig(schemas.OpenAI, 5+i, 1000+i*100)
 			err = bifrost.UpdateProvider(schemas.OpenAI)
 			if err != nil {
@@ -1722,7 +1719,7 @@ func TestProviderQueue_SendOnClosedChannel_Race(t *testing.T) {
 	const iterations = 200
 	panicCount := 0
 
-	for i := 0; i < iterations; i++ {
+	for range iterations {
 		func() {
 			pq := &ProviderQueue{
 				queue:      make(chan *ChannelMessage, 10),
@@ -1736,11 +1733,9 @@ func TestProviderQueue_SendOnClosedChannel_Race(t *testing.T) {
 
 			var panicked bool
 			var wg sync.WaitGroup
-			wg.Add(1)
 
 			// Producer — mirrors the hot path in tryRequest.
-			go func() {
-				defer wg.Done()
+			wg.Go(func() {
 				defer func() {
 					if r := recover(); r != nil && fmt.Sprint(r) == "send on closed channel" {
 						panicked = true
@@ -1769,7 +1764,7 @@ func TestProviderQueue_SendOnClosedChannel_Race(t *testing.T) {
 				case pq.queue <- msg: // panics ~50 % of iterations
 				case <-pq.done: // selected the other ~50 %
 				}
-			}()
+			})
 
 			// Closer — mirrors UpdateProvider / RemoveProvider.
 			go func() {
@@ -1956,7 +1951,7 @@ func TestProviderQueue_WorkerDrainSendsErrors(t *testing.T) {
 
 	// Pre-fill queue — simulates requests buffered when done fires
 	msgs := make([]*ChannelMessage, numBuffered)
-	for i := 0; i < numBuffered; i++ {
+	for i := range numBuffered {
 		msgs[i] = newTestChannelMessage(ctx)
 		pq.queue <- msgs[i]
 	}
@@ -2025,7 +2020,7 @@ drainLoop:
 func TestProviderQueue_NoPanicWithoutCloseQueue(t *testing.T) {
 	const iterations = 500
 
-	for i := 0; i < iterations; i++ {
+	for i := range iterations {
 		func() {
 			pq := &ProviderQueue{
 				queue:      make(chan *ChannelMessage, 10),
@@ -2038,13 +2033,11 @@ func TestProviderQueue_NoPanicWithoutCloseQueue(t *testing.T) {
 
 			var panicked bool
 			var wg sync.WaitGroup
-			wg.Add(1)
 
 			// Producer: mirrors the tryRequest hot path after the fix.
 			// Passes isClosing(), waits for signalClosing, then sends.
 			// The queue channel is NEVER closed — only done is closed.
-			go func() {
-				defer wg.Done()
+			wg.Go(func() {
 				defer func() {
 					if r := recover(); r != nil {
 						panicked = true
@@ -2062,7 +2055,7 @@ func TestProviderQueue_NoPanicWithoutCloseQueue(t *testing.T) {
 				case pq.queue <- msg: // queue is open → safe to send
 				case <-pq.done: // done is closed → selected immediately
 				}
-			}()
+			})
 
 			// Closer: signal shutdown but never close the queue channel
 			go func() {
@@ -2196,7 +2189,7 @@ func TestUpdateProvider_TransferOrdering(t *testing.T) {
 	}
 
 	// Pre-fill oldPq — simulates buffered requests at the moment UpdateProvider runs
-	for i := 0; i < numMessages; i++ {
+	for range numMessages {
 		oldPq.queue <- &ChannelMessage{}
 	}
 
@@ -2303,10 +2296,8 @@ func TestUpdateProvider_NoPanicConcurrentAccess(t *testing.T) {
 	}()
 
 	// Producers: continuously simulate the tryRequest hot path
-	for i := 0; i < numProducers; i++ {
-		producerWg.Add(1)
-		go func() {
-			defer producerWg.Done()
+	for range numProducers {
+		producerWg.Go(func() {
 			for {
 				select {
 				case <-stop:
@@ -2351,15 +2342,13 @@ func TestUpdateProvider_NoPanicConcurrentAccess(t *testing.T) {
 
 				runtime.Gosched()
 			}
-		}()
+		})
 	}
 
 	// Updater: repeatedly performs UpdateProvider-style queue replacements
 	var updaterWg sync.WaitGroup
-	updaterWg.Add(1)
-	go func() {
-		defer updaterWg.Done()
-		for i := 0; i < numUpdates; i++ {
+	updaterWg.Go(func() {
+		for range numUpdates {
 			val, ok := requestQueues.Load(provider)
 			if !ok {
 				continue
@@ -2394,7 +2383,7 @@ func TestUpdateProvider_NoPanicConcurrentAccess(t *testing.T) {
 
 			time.Sleep(5 * time.Millisecond)
 		}
-	}()
+	})
 
 	time.Sleep(producerRunTime)
 	close(stop)
@@ -2496,7 +2485,7 @@ func TestRemoveProvider_BufferedRequestsGetErrors(t *testing.T) {
 
 	// Buffer requests — simulates requests already queued when RemoveProvider runs
 	msgs := make([]*ChannelMessage, numBuffered)
-	for i := 0; i < numBuffered; i++ {
+	for i := range numBuffered {
 		msgs[i] = newTestChannelMessage(ctx)
 		pq.queue <- msgs[i]
 	}
@@ -2564,11 +2553,9 @@ func TestRemoveProvider_WorkerWaitGroupCompletes(t *testing.T) {
 	}
 
 	var wg sync.WaitGroup
-	wg.Add(1)
 
 	// Worker goroutine — mirrors requestWorker's WaitGroup contract
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		for {
 			select {
 			case r, ok := <-pq.queue:
@@ -2587,7 +2574,7 @@ func TestRemoveProvider_WorkerWaitGroupCompletes(t *testing.T) {
 				}
 			}
 		}
-	}()
+	})
 
 	// Tiny sleep to ensure worker is parked on select before we signal
 	time.Sleep(10 * time.Millisecond)
@@ -2634,10 +2621,8 @@ func TestRemoveProvider_ConcurrentNewProducersDuringShutdown(t *testing.T) {
 
 	var producerWg sync.WaitGroup
 
-	for i := 0; i < numProducers; i++ {
-		producerWg.Add(1)
-		go func() {
-			defer producerWg.Done()
+	for range numProducers {
+		producerWg.Go(func() {
 			defer func() {
 				if r := recover(); r != nil {
 					atomic.AddInt64(&panicCount, 1)
@@ -2665,7 +2650,7 @@ func TestRemoveProvider_ConcurrentNewProducersDuringShutdown(t *testing.T) {
 			case <-pq.done:
 				atomic.AddInt64(&shutdownErrors, 1)
 			}
-		}()
+		})
 	}
 
 	// Wait for at least one producer to pass the isClosing() gate
@@ -2715,45 +2700,39 @@ func TestPluginPipelineStreamingRace(t *testing.T) {
 
 	// Per-chunk accumulator writers — simulate multiple plugins accumulating
 	// timing for every streamed chunk.
-	for w := 0; w < writers; w++ {
+	for w := range writers {
 		wg.Add(1)
 		go func(id int) {
 			defer wg.Done()
 			pluginName := fmt.Sprintf("plugin-%d", id%3) // a few distinct plugin keys
-			for i := 0; i < iterations; i++ {
+			for i := range iterations {
 				p.accumulatePluginTiming(pluginName, time.Microsecond, i%17 == 0)
 			}
 		}(w)
 	}
 
 	// End-of-stream finalizer racing with writers.
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		ctx := context.Background()
-		for i := 0; i < iterations/10; i++ {
+		for range iterations / 10 {
 			p.FinalizeStreamingPostHookSpans(ctx)
 		}
-	}()
+	})
 
 	// resetPluginPipeline racing with writers — simulates the pool returning
 	// the pipeline to another request mid-flight.
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		for i := 0; i < iterations/10; i++ {
+	wg.Go(func() {
+		for range iterations / 10 {
 			p.resetPluginPipeline()
 		}
-	}()
+	})
 
 	// Concurrent GetChunkCount readers.
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		for i := 0; i < iterations; i++ {
+	wg.Go(func() {
+		for range iterations {
 			_ = p.GetChunkCount()
 		}
-	}()
+	})
 
 	wg.Wait()
 }
@@ -2926,14 +2905,14 @@ func TestClearAnthropicPassthroughForNonNativeProvider(t *testing.T) {
 // context, or an undelivered response/error.
 func TestReleaseChannelMessage_ClearsPooledReferences(t *testing.T) {
 	b := &Bifrost{
-		channelMessagePool: sync.Pool{New: func() interface{} { return &ChannelMessage{} }},
-		responseChannelPool: sync.Pool{New: func() interface{} {
+		channelMessagePool: sync.Pool{New: func() any { return &ChannelMessage{} }},
+		responseChannelPool: sync.Pool{New: func() any {
 			return make(chan *schemas.BifrostResponse, 1)
 		}},
-		errorChannelPool: sync.Pool{New: func() interface{} {
+		errorChannelPool: sync.Pool{New: func() any {
 			return make(chan schemas.BifrostError, 1)
 		}},
-		responseStreamPool: sync.Pool{New: func() interface{} {
+		responseStreamPool: sync.Pool{New: func() any {
 			return make(chan chan *schemas.BifrostStreamChunk, 1)
 		}},
 	}
@@ -2978,14 +2957,14 @@ func TestReleaseChannelMessage_ClearsPooledReferences(t *testing.T) {
 // ResponseStream, which is only allocated for stream request types.
 func TestReleaseChannelMessage_ClearsPooledReferences_Streaming(t *testing.T) {
 	b := &Bifrost{
-		channelMessagePool: sync.Pool{New: func() interface{} { return &ChannelMessage{} }},
-		responseChannelPool: sync.Pool{New: func() interface{} {
+		channelMessagePool: sync.Pool{New: func() any { return &ChannelMessage{} }},
+		responseChannelPool: sync.Pool{New: func() any {
 			return make(chan *schemas.BifrostResponse, 1)
 		}},
-		errorChannelPool: sync.Pool{New: func() interface{} {
+		errorChannelPool: sync.Pool{New: func() any {
 			return make(chan schemas.BifrostError, 1)
 		}},
-		responseStreamPool: sync.Pool{New: func() interface{} {
+		responseStreamPool: sync.Pool{New: func() any {
 			return make(chan chan *schemas.BifrostStreamChunk, 1)
 		}},
 	}

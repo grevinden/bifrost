@@ -32,11 +32,12 @@ import (
 	"math"
 	"path/filepath"
 	"sort"
+	"strings"
 	"testing"
 	"time"
 
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/queryscope"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/queryscope"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
@@ -76,10 +77,17 @@ func parityBackends(t *testing.T) map[string]LogStore {
 	return map[string]LogStore{"sqlite": sq, parityReference: pg, "clickhouse": ch}
 }
 
-func strPtrP(s string) *string         { return &s }
-func f64PtrP(f float64) *float64       { return &f }
-func intPtrP(i int) *int               { return &i }
-func timePtrP(ts time.Time) *time.Time { return &ts }
+//go:fix inline
+func strPtrP(s string) *string { return new(s) }
+
+//go:fix inline
+func f64PtrP(f float64) *float64 { return new(f) }
+
+//go:fix inline
+func intPtrP(i int) *int { return new(i) }
+
+//go:fix inline
+func timePtrP(ts time.Time) *time.Time { return new(ts) }
 
 // parityLogSpec builds one fixture row. All timestamps are whole seconds so
 // the GORM ClickHouse driver's seconds-precision formatting of time.Time
@@ -152,42 +160,42 @@ func (s parityLogSpec) toLog(base time.Time) *Log {
 func paritySpecs() []parityLogSpec {
 	return []parityLogSpec{
 		{id: "p1", offsetSec: 100, object: "chat.completion", provider: "openai", model: "gpt-4o", status: "success",
-			alias: strPtrP("a1"), canonical: strPtrP("gpt-4o-2024-11-20"), selectedKey: "sk1", vkID: strPtrP("vk1"), vkName: strPtrP("VK One"),
-			teamID: strPtrP("t1"), customerID: strPtrP("c1"), buID: strPtrP("b1"), userID: strPtrP("u1"),
-			cost: f64PtrP(0.5), latency: f64PtrP(100), tokens: [3]int{100, 50, 150}, stopReason: strPtrP("stop"),
-			routing: strPtrP("governance,loadbalancing"), metadata: strPtrP(`{"env":"prod"}`),
-			cacheDebug: `{"hit_type":"direct"}`, content: "alpha bravo hello", parentID: strPtrP("sess1")},
+			alias: new("a1"), canonical: new("gpt-4o-2024-11-20"), selectedKey: "sk1", vkID: new("vk1"), vkName: new("VK One"),
+			teamID: new("t1"), customerID: new("c1"), buID: new("b1"), userID: new("u1"),
+			cost: new(0.5), latency: f64PtrP(100), tokens: [3]int{100, 50, 150}, stopReason: new("stop"),
+			routing: new("governance,loadbalancing"), metadata: new(`{"env":"prod"}`),
+			cacheDebug: `{"hit_type":"direct"}`, content: "alpha bravo hello", parentID: new("sess1")},
 		{id: "p2", offsetSec: 90, object: "chat.completion", provider: "openai", model: "gpt-4o", status: "success",
-			vkID: strPtrP("vk1"), vkName: strPtrP("VK One"), teamID: strPtrP("t1"), userID: strPtrP("u2"),
-			cost: f64PtrP(1.25), latency: f64PtrP(250), tokens: [3]int{200, 100, 300}, stopReason: strPtrP("length"),
-			routing: strPtrP("governance"), metadata: strPtrP(`{"env":"dev"}`),
-			cacheDebug: `{"hit_type":"semantic"}`, content: "charlie delta", parentID: strPtrP("sess1")},
+			vkID: new("vk1"), vkName: new("VK One"), teamID: new("t1"), userID: new("u2"),
+			cost: new(1.25), latency: f64PtrP(250), tokens: [3]int{200, 100, 300}, stopReason: new("length"),
+			routing: new("governance"), metadata: new(`{"env":"dev"}`),
+			cacheDebug: `{"hit_type":"semantic"}`, content: "charlie delta", parentID: new("sess1")},
 		{id: "p3", offsetSec: 80, object: "chat.completion", provider: "openai", model: "gpt-4o-mini", status: "error",
-			vkID: strPtrP("vk2"), vkName: strPtrP("VK Two"), teamID: strPtrP("t2"), userID: strPtrP("u2"),
-			latency: f64PtrP(50), content: "echo error", parentID: strPtrP("sess1")},
+			vkID: new("vk2"), vkName: new("VK Two"), teamID: new("t2"), userID: new("u2"),
+			latency: f64PtrP(50), content: "echo error", parentID: new("sess1")},
 		{id: "p4", offsetSec: 70, object: "chat.completion", provider: "anthropic", model: "claude-3", status: "success",
-			vkID: strPtrP("vk2"), vkName: strPtrP("VK Two"), teamID: strPtrP("t2"), userID: strPtrP("u3"),
-			cost: f64PtrP(2.5), latency: f64PtrP(400), tokens: [3]int{400, 100, 500}, stopReason: strPtrP("tool_calls"),
-			metadata: strPtrP(`{"env":"prod","region":"us"}`), content: "echo foxtrot"},
+			vkID: new("vk2"), vkName: new("VK Two"), teamID: new("t2"), userID: new("u3"),
+			cost: new(2.5), latency: f64PtrP(400), tokens: [3]int{400, 100, 500}, stopReason: new("tool_calls"),
+			metadata: new(`{"env":"prod","region":"us"}`), content: "echo foxtrot"},
 		{id: "p5", offsetSec: 60, object: "chat.completion", provider: "anthropic", model: "claude-3", status: "processing",
-			vkID: strPtrP("vk1"), vkName: strPtrP("VK One"), teamID: strPtrP("t1"), userID: strPtrP("u1")},
+			vkID: new("vk1"), vkName: new("VK One"), teamID: new("t1"), userID: new("u1")},
 		{id: "p6", offsetSec: 50, object: "embedding", provider: "openai", model: "gpt-4o", status: "success",
 			cost: f64PtrP(0), latency: f64PtrP(75), tokens: [3]int{10, 5, 15}},
 		{id: "p7", offsetSec: 40, object: "chat.completion", provider: "mistral", model: "mistral-small", status: "success",
-			alias: strPtrP("a2"), canonical: strPtrP("mistral-small-2409"), vkID: strPtrP("vk3"), vkName: strPtrP("VK Three"), customerID: strPtrP("c2"),
-			buID: strPtrP("b2"), userID: strPtrP("u4"), cost: f64PtrP(3.0), latency: f64PtrP(800),
-			tokens: [3]int{900, 100, 1000}, stopReason: strPtrP("stop"), content: "golf hotel"},
+			alias: new("a2"), canonical: new("mistral-small-2409"), vkID: new("vk3"), vkName: new("VK Three"), customerID: new("c2"),
+			buID: new("b2"), userID: new("u4"), cost: new(3.0), latency: f64PtrP(800),
+			tokens: [3]int{900, 100, 1000}, stopReason: new("stop"), content: "golf hotel"},
 		{id: "p8", offsetSec: 30, object: "chat.completion", provider: "openai", model: "gpt-4o", status: "success",
-			vkID: strPtrP("vk3"), vkName: strPtrP("VK Three"), teamID: strPtrP("t3"), userID: strPtrP("u1"),
-			cost: f64PtrP(0.75), latency: f64PtrP(120), tokens: [3]int{50, 25, 75}, stopReason: strPtrP("content_filter"),
-			routing: strPtrP("routing-rule"), metadata: strPtrP(`{"env":"prod"}`), content: "india juliet"},
+			vkID: new("vk3"), vkName: new("VK Three"), teamID: new("t3"), userID: new("u1"),
+			cost: new(0.75), latency: f64PtrP(120), tokens: [3]int{50, 25, 75}, stopReason: new("content_filter"),
+			routing: new("routing-rule"), metadata: new(`{"env":"prod"}`), content: "india juliet"},
 		// Cluster-governance rows for GetNodeUsageAfter parity.
 		{id: "p9", offsetSec: 20, object: "chat.completion", provider: "openai", model: "gpt-4o", status: "success",
-			cost: f64PtrP(1.0), latency: f64PtrP(90), tokens: [3]int{40, 20, 60},
-			nodeID: strPtrP("pnode"), budgetIDs: strPtrP(`["bud1"]`), rateLimitIDs: strPtrP(`["rl1"]`)},
+			cost: new(1.0), latency: f64PtrP(90), tokens: [3]int{40, 20, 60},
+			nodeID: new("pnode"), budgetIDs: new(`["bud1"]`), rateLimitIDs: new(`["rl1"]`)},
 		{id: "p10", offsetSec: 10, object: "chat.completion", provider: "openai", model: "gpt-4o", status: "success",
-			cost: f64PtrP(2.0), latency: f64PtrP(110), tokens: [3]int{80, 40, 120},
-			nodeID: strPtrP("pnode"), budgetIDs: strPtrP(`["bud1","bud2"]`), rateLimitIDs: strPtrP(`["rl1"]`)},
+			cost: new(2.0), latency: f64PtrP(110), tokens: [3]int{80, 40, 120},
+			nodeID: new("pnode"), budgetIDs: new(`["bud1","bud2"]`), rateLimitIDs: new(`["rl1"]`)},
 	}
 }
 
@@ -200,9 +208,9 @@ func parityMCPLogs(base time.Time) []*MCPToolLog {
 		}
 	}
 	return []*MCPToolLog{
-		mk("m1", 95, "search_web", "srv1", "success", f64PtrP(120), f64PtrP(0.01), strPtrP("vk1"), strPtrP("VK One")),
-		mk("m2", 85, "search_web", "srv2", "error", f64PtrP(80), nil, strPtrP("vk2"), strPtrP("VK Two")),
-		mk("m3", 75, "calculator", "srv1", "success", f64PtrP(30), f64PtrP(0.002), strPtrP("vk1"), strPtrP("VK One")),
+		mk("m1", 95, "search_web", "srv1", "success", f64PtrP(120), new(0.01), new("vk1"), new("VK One")),
+		mk("m2", 85, "search_web", "srv2", "error", f64PtrP(80), nil, new("vk2"), new("VK Two")),
+		mk("m3", 75, "calculator", "srv1", "success", f64PtrP(30), new(0.002), new("vk1"), new("VK One")),
 		mk("m4", 65, "calculator", "srv1", "processing", nil, nil, nil, nil),
 	}
 }
@@ -273,16 +281,16 @@ func canonicalEntryKey(v any) string {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
-	out := ""
+	var out strings.Builder
 	for _, k := range keys {
 		switch val := m[k].(type) {
 		case float64:
-			out += fmt.Sprintf("%s=%.3f;", k, val)
+			out.WriteString(fmt.Sprintf("%s=%.3f;", k, val))
 		default:
-			out += fmt.Sprintf("%s=%v;", k, val)
+			out.WriteString(fmt.Sprintf("%s=%v;", k, val))
 		}
 	}
-	return out
+	return out.String()
 }
 
 // collectDiffs walks two JSON-normalized values and records human-readable
@@ -430,7 +438,7 @@ func asyncJobProjection(j *AsyncJob) map[string]any {
 // remainingLogIDs lists surviving log ids - the post-state assertion used
 // after every destructive operation.
 func remainingLogIDs(ctx context.Context, s LogStore) (any, error) {
-	logs, err := s.FindAll(ctx, map[string]interface{}{}, "id")
+	logs, err := s.FindAll(ctx, map[string]any{}, "id")
 	if err != nil {
 		return nil, err
 	}
@@ -492,7 +500,7 @@ func TestLogStoreParity(t *testing.T) {
 
 	windowStart := base.Add(-2 * time.Minute)
 	windowEnd := base.Add(time.Minute)
-	window := SearchFilters{StartTime: timePtrP(windowStart), EndTime: timePtrP(windowEnd)}
+	window := SearchFilters{StartTime: new(windowStart), EndTime: new(windowEnd)}
 	page := PaginationOptions{Limit: 50, SortBy: "timestamp", Order: "desc"}
 
 	// --- Phase: reads ---
@@ -512,10 +520,10 @@ func TestLogStoreParity(t *testing.T) {
 		"users":           {UserIDs: []string{"u1"}},
 		"business_units":  {BusinessUnitIDs: []string{"b1"}},
 		"routing_engines": {RoutingEngineUsed: []string{"loadbalancing", "routing-rule"}},
-		"time_range":      {StartTime: timePtrP(base.Add(-75 * time.Second)), EndTime: timePtrP(base.Add(-25 * time.Second))},
+		"time_range":      {StartTime: new(base.Add(-75 * time.Second)), EndTime: new(base.Add(-25 * time.Second))},
 		"latency_range":   {MinLatency: f64PtrP(80), MaxLatency: f64PtrP(260)},
-		"token_range":     {MinTokens: intPtrP(100), MaxTokens: intPtrP(600)},
-		"cost_range":      {MinCost: f64PtrP(1.0), MaxCost: f64PtrP(2.6)},
+		"token_range":     {MinTokens: new(100), MaxTokens: new(600)},
+		"cost_range":      {MinCost: new(1.0), MaxCost: new(2.6)},
 		"missing_cost":    {MissingCostOnly: true},
 		"cache_direct":    {CacheHitTypes: []string{"direct"}},
 		"cache_semantic":  {CacheHitTypes: []string{"semantic"}},
@@ -588,7 +596,7 @@ func TestLogStoreParity(t *testing.T) {
 		// identifier to the aggregate alias and errors (code 184).
 		"cost_with_cost_filter": func(ctx context.Context, s LogStore) (any, error) {
 			f := window
-			f.MinCost = f64PtrP(0.6)
+			f.MinCost = new(0.6)
 			return s.GetCostHistogram(ctx, f, 60)
 		},
 	}
@@ -698,14 +706,14 @@ func TestLogStoreParity(t *testing.T) {
 			return logProjection(l), nil
 		})
 		assertParity(t, stores, 1e-6, func(ctx context.Context, s LogStore) (any, error) {
-			l, err := s.FindFirst(ctx, map[string]interface{}{"provider": "mistral"}, "id", "provider", "status")
+			l, err := s.FindFirst(ctx, map[string]any{"provider": "mistral"}, "id", "provider", "status")
 			if err != nil {
 				return nil, err
 			}
 			return map[string]any{"id": l.ID, "provider": l.Provider, "status": l.Status}, nil
 		})
 		assertParity(t, stores, 1e-6, func(ctx context.Context, s LogStore) (any, error) {
-			logs, err := s.FindAll(ctx, map[string]interface{}{"status": "success"}, "id")
+			logs, err := s.FindAll(ctx, map[string]any{"status": "success"}, "id")
 			if err != nil {
 				return nil, err
 			}
@@ -717,7 +725,7 @@ func TestLogStoreParity(t *testing.T) {
 			return ids, nil
 		})
 		assertParity(t, stores, 1e-6, func(ctx context.Context, s LogStore) (any, error) {
-			logs, err := s.FindAllDistinct(ctx, map[string]interface{}{"status": "success"}, "provider")
+			logs, err := s.FindAllDistinct(ctx, map[string]any{"status": "success"}, "provider")
 			if err != nil {
 				return nil, err
 			}
@@ -778,7 +786,7 @@ func TestLogStoreParity(t *testing.T) {
 	})
 
 	t.Run("MCP", func(t *testing.T) {
-		mcpWindow := MCPToolLogSearchFilters{StartTime: timePtrP(windowStart), EndTime: timePtrP(windowEnd)}
+		mcpWindow := MCPToolLogSearchFilters{StartTime: new(windowStart), EndTime: new(windowEnd)}
 		mcpPage := PaginationOptions{Limit: 50, SortBy: "timestamp", Order: "desc"}
 		calls := map[string]func(context.Context, LogStore) (any, error){
 			"search": func(ctx context.Context, s LogStore) (any, error) {
@@ -888,7 +896,7 @@ func TestLogStoreParity(t *testing.T) {
 	t.Run("Mutations", func(t *testing.T) {
 		t.Run("update_map", func(t *testing.T) {
 			runOnAll(t, stores, func(ctx context.Context, s LogStore) error {
-				return s.Update(ctx, "p6", map[string]interface{}{
+				return s.Update(ctx, "p6", map[string]any{
 					"status": "error", "latency": 99.0, "stop_reason": "content_filter",
 				})
 			})
@@ -903,7 +911,7 @@ func TestLogStoreParity(t *testing.T) {
 		t.Run("update_struct", func(t *testing.T) {
 			// Struct updates write non-zero fields only, on every backend.
 			runOnAll(t, stores, func(ctx context.Context, s LogStore) error {
-				return s.Update(ctx, "p8", &Log{Model: "gpt-4o-turbo", Cost: f64PtrP(0.85)})
+				return s.Update(ctx, "p8", &Log{Model: "gpt-4o-turbo", Cost: new(0.85)})
 			})
 			assertParity(t, stores, 1e-6, func(ctx context.Context, s LogStore) (any, error) {
 				l, err := s.FindByID(ctx, "p8")
@@ -915,7 +923,7 @@ func TestLogStoreParity(t *testing.T) {
 		})
 		t.Run("update_missing_row", func(t *testing.T) {
 			for name, s := range stores {
-				err := s.Update(ctx, "missing-id", map[string]interface{}{"status": "success"})
+				err := s.Update(ctx, "missing-id", map[string]any{"status": "success"})
 				assert.ErrorIs(t, err, ErrNotFound, name)
 			}
 		})
@@ -952,10 +960,10 @@ func TestLogStoreParity(t *testing.T) {
 		})
 		t.Run("update_mcp_map_and_struct", func(t *testing.T) {
 			runOnAll(t, stores, func(ctx context.Context, s LogStore) error {
-				if err := s.UpdateMCPToolLog(ctx, "m3", map[string]interface{}{"status": "error", "latency": 45.0}); err != nil {
+				if err := s.UpdateMCPToolLog(ctx, "m3", map[string]any{"status": "error", "latency": 45.0}); err != nil {
 					return err
 				}
-				return s.UpdateMCPToolLog(ctx, "m2", &MCPToolLog{Status: "success", Cost: f64PtrP(0.02)})
+				return s.UpdateMCPToolLog(ctx, "m2", &MCPToolLog{Status: "success", Cost: new(0.02)})
 			})
 			assertParity(t, stores, 1e-6, func(ctx context.Context, s LogStore) (any, error) {
 				var out []map[string]any
@@ -969,7 +977,7 @@ func TestLogStoreParity(t *testing.T) {
 				return out, nil
 			})
 			for name, s := range stores {
-				err := s.UpdateMCPToolLog(ctx, "missing-id", map[string]interface{}{"status": "success"})
+				err := s.UpdateMCPToolLog(ctx, "missing-id", map[string]any{"status": "success"})
 				assert.ErrorIs(t, err, ErrNotFound, name)
 			}
 		})
@@ -990,7 +998,7 @@ func TestLogStoreParity(t *testing.T) {
 				return err
 			}
 			// j2 expired ten minutes ago; j3 is a stale processing job.
-			if err := s.CreateAsyncJob(ctx, mkJob("j2", "completed", -time.Hour, timePtrP(base.Add(-10*time.Minute)))); err != nil {
+			if err := s.CreateAsyncJob(ctx, mkJob("j2", "completed", -time.Hour, new(base.Add(-10*time.Minute)))); err != nil {
 				return err
 			}
 			return s.CreateAsyncJob(ctx, mkJob("j3", "processing", -2*time.Hour, nil))
@@ -1010,7 +1018,7 @@ func TestLogStoreParity(t *testing.T) {
 		}
 
 		runOnAll(t, stores, func(ctx context.Context, s LogStore) error {
-			return s.UpdateAsyncJob(ctx, "j1", map[string]interface{}{
+			return s.UpdateAsyncJob(ctx, "j1", map[string]any{
 				"status": "completed", "status_code": 200, "response": `{"done":true}`,
 			})
 		})

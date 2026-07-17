@@ -4,13 +4,14 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"gorm.io/gorm"
 )
 
@@ -795,12 +796,7 @@ func canUseMatViewStatusFilter(statuses []string) bool {
 }
 
 func isTerminalLogStatus(status string) bool {
-	for _, terminalStatus := range terminalLogStatuses {
-		if status == terminalStatus {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(terminalLogStatuses, status)
 }
 
 // canUseMatView checks both that materialized views are ready (created and
@@ -2042,7 +2038,7 @@ func (s *RDBLogStore) getDistinctRoutingEnginesFromMatView(ctx context.Context, 
 	}
 	seen := make(map[string]struct{})
 	for _, raw := range rawValues {
-		for _, eng := range strings.Split(raw, ",") {
+		for eng := range strings.SplitSeq(raw, ",") {
 			eng = strings.TrimSpace(eng)
 			if eng != "" {
 				seen[eng] = struct{}{}

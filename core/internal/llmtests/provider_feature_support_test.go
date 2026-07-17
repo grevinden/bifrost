@@ -1,12 +1,14 @@
 package llmtests
 
 import (
+	"context"
+	"slices"
 	"testing"
 	"time"
 
-	"github.com/maximhq/bifrost/core/providers/anthropic"
-	providerUtils "github.com/maximhq/bifrost/core/providers/utils"
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/providers/anthropic"
+	providerUtils "github.com/grevinden/bifrost/core/providers/utils"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -207,8 +209,8 @@ func TestProviderToolValidation(t *testing.T) {
 			name:     "Vertex/mixed_supported_and_unsupported",
 			provider: schemas.Vertex,
 			tools: []schemas.ResponsesTool{
-				{Type: schemas.ResponsesToolTypeWebSearch},   // allowed
-				{Type: schemas.ResponsesToolTypeFunction},    // allowed
+				{Type: schemas.ResponsesToolTypeWebSearch},       // allowed
+				{Type: schemas.ResponsesToolTypeFunction},        // allowed
 				{Type: schemas.ResponsesToolTypeCodeInterpreter}, // rejected
 			},
 			expectErr: true,
@@ -295,7 +297,7 @@ func TestProviderWebSearchVersionSelection(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			ctx := schemas.NewBifrostContext(nil, time.Time{})
+			ctx := schemas.NewBifrostContext(context.Background(), time.Time{})
 			bifrostReq := &schemas.BifrostResponsesRequest{
 				Provider: tt.provider,
 				Model:    tt.model,
@@ -374,7 +376,7 @@ func TestProviderWebFetchVersionSelection(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			ctx := schemas.NewBifrostContext(nil, time.Time{})
+			ctx := schemas.NewBifrostContext(context.Background(), time.Time{})
 			bifrostReq := &schemas.BifrostResponsesRequest{
 				Provider: tt.provider,
 				Model:    tt.model,
@@ -727,7 +729,7 @@ func TestProviderBetaHeaderInjection(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			ctx := schemas.NewBifrostContext(nil, time.Time{})
+			ctx := schemas.NewBifrostContext(context.Background(), time.Time{})
 			req := tt.setupReq()
 
 			anthropic.AddMissingBetaHeadersToContext(ctx, req, tt.provider)
@@ -738,13 +740,7 @@ func TestProviderBetaHeaderInjection(t *testing.T) {
 			}
 
 			for _, expected := range tt.expectHeaders {
-				found := false
-				for _, h := range headers {
-					if h == expected {
-						found = true
-						break
-					}
-				}
+				found := slices.Contains(headers, expected)
 				assert.True(t, found, "expected beta header %q for provider %s, got headers: %v", expected, tt.provider, headers)
 			}
 
@@ -765,15 +761,15 @@ func TestProviderAnthropicRequestPipeline(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name                    string
-		provider                schemas.ModelProvider
-		model                   string
-		tools                   []schemas.ResponsesTool
-		expectConversionErr     bool
-		errSubstr               string
-		expectedWebSearchType   string // expected web_search tool type after conversion
-		expectedBetaHeaders     []string
-		unexpectedBetaHeaders   []string
+		name                  string
+		provider              schemas.ModelProvider
+		model                 string
+		tools                 []schemas.ResponsesTool
+		expectConversionErr   bool
+		errSubstr             string
+		expectedWebSearchType string // expected web_search tool type after conversion
+		expectedBetaHeaders   []string
+		unexpectedBetaHeaders []string
 	}{
 		// ── Vertex: web_search with filters → basic version, no dynamic headers ──
 		{
@@ -785,8 +781,8 @@ func TestProviderAnthropicRequestPipeline(t *testing.T) {
 					Type: schemas.ResponsesToolTypeWebSearch,
 					ResponsesToolWebSearch: &schemas.ResponsesToolWebSearch{
 						UserLocation: &schemas.ResponsesToolWebSearchUserLocation{
-							Type:    schemas.Ptr("approximate"),
-							Country: schemas.Ptr("US"),
+							Type:    new("approximate"),
+							Country: new("US"),
 						},
 					},
 				},
@@ -880,7 +876,7 @@ func TestProviderAnthropicRequestPipeline(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			ctx := schemas.NewBifrostContext(nil, time.Time{})
+			ctx := schemas.NewBifrostContext(context.Background(), time.Time{})
 			model := tt.model
 			if model == "" {
 				model = "claude-sonnet-4-5"
@@ -941,13 +937,7 @@ func TestProviderAnthropicRequestPipeline(t *testing.T) {
 			}
 
 			for _, expected := range tt.expectedBetaHeaders {
-				found := false
-				for _, h := range headers {
-					if h == expected {
-						found = true
-						break
-					}
-				}
+				found := slices.Contains(headers, expected)
 				assert.True(t, found, "expected beta header %q not found in %v for provider=%s", expected, headers, tt.provider)
 			}
 
@@ -1081,7 +1071,7 @@ func TestComputerUseVersionAndBetaHeaderEndToEnd(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			ctx := schemas.NewBifrostContext(nil, time.Time{})
+			ctx := schemas.NewBifrostContext(context.Background(), time.Time{})
 
 			// Step 1: Convert bifrost tool → anthropic tool (selects version based on model)
 			bifrostReq := &schemas.BifrostResponsesRequest{
@@ -1129,13 +1119,7 @@ func TestComputerUseVersionAndBetaHeaderEndToEnd(t *testing.T) {
 				headers = extraHeaders["anthropic-beta"]
 			}
 
-			found := false
-			for _, h := range headers {
-				if h == tt.expectedBetaHeader {
-					found = true
-					break
-				}
-			}
+			found := slices.Contains(headers, tt.expectedBetaHeader)
 			assert.True(t, found, "expected beta header %q not found in %v for model=%s provider=%s",
 				tt.expectedBetaHeader, headers, tt.model, tt.provider)
 		})

@@ -12,9 +12,9 @@ import (
 	"time"
 	"unicode"
 
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/mark3labs/mcp-go/client"
 	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/maximhq/bifrost/core/schemas"
 )
 
 // RetryConfig defines the retry behavior with exponential backoff
@@ -295,10 +295,7 @@ func ExecuteWithRetry(
 		}
 
 		// Update backoff for next iteration
-		backoff = time.Duration(float64(backoff) * 2)
-		if backoff > config.MaxBackoff {
-			backoff = config.MaxBackoff
-		}
+		backoff = min(time.Duration(float64(backoff)*2), config.MaxBackoff)
 	}
 
 	return lastErr
@@ -577,7 +574,7 @@ func convertMCPToolToBifrostSchema(mcpTool *mcp.Tool, logger schemas.Logger) sch
 		Type: schemas.ChatToolTypeFunction,
 		Function: &schemas.ChatToolFunction{
 			Name:        mcpTool.Name,
-			Description: schemas.Ptr(mcpTool.Description),
+			Description: new(mcpTool.Description),
 			Parameters: &schemas.ToolFunctionParameters{
 				Type:       mcpTool.InputSchema.Type,
 				Properties: properties,
@@ -610,7 +607,7 @@ func extractTextFromMCPResponse(toolResponse *mcp.CallToolResult, toolName strin
 		default:
 			// Fallback: try to extract from map structure
 			if jsonBytes, err := schemas.MarshalSorted(contentBlock); err == nil {
-				var contentMap map[string]interface{}
+				var contentMap map[string]any
 				if json.Unmarshal(jsonBytes, &contentMap) == nil {
 					if text, ok := contentMap["text"].(string); ok {
 						result.WriteString(fmt.Sprintf("[Text Response: %s]\n", text))
@@ -908,8 +905,8 @@ func hasToolCallsForResponsesResponse(response *schemas.BifrostResponsesResponse
 //   - string: Sanitized tool name without prefix (e.g., "add")
 func stripClientPrefix(prefixedToolName, clientName string) string {
 	prefix := clientName + "-"
-	if strings.HasPrefix(prefixedToolName, prefix) {
-		return strings.TrimPrefix(prefixedToolName, prefix)
+	if after, ok := strings.CutPrefix(prefixedToolName, prefix); ok {
+		return after
 	}
 	// If prefix doesn't match, return as-is (shouldn't happen, but be safe)
 	return prefixedToolName
@@ -944,28 +941,28 @@ func getOriginalToolName(sanitizedToolName string, toolNameMapping map[string]st
 //
 // Parameters:
 //   - properties: The properties map to fix
-func FixArraySchemas(properties map[string]interface{}, logger schemas.Logger) {
+func FixArraySchemas(properties map[string]any, logger schemas.Logger) {
 	for key, value := range properties {
 		// Check if the value is a map (representing a schema object)
-		if schemaMap, ok := value.(map[string]interface{}); ok {
+		if schemaMap, ok := value.(map[string]any); ok {
 			// Check if this is an array type
 			if schemaType, ok := schemaMap["type"].(string); ok && schemaType == "array" {
 				// Check if 'items' is missing
 				if _, hasItems := schemaMap["items"]; !hasItems {
 					// Add a default 'items' schema (unconstrained)
-					schemaMap["items"] = map[string]interface{}{}
+					schemaMap["items"] = map[string]any{}
 					logger.Debug("%s Fixed array schema for property '%s': added missing 'items' field", MCPLogPrefix, key)
 				}
 				// Recurse into items regardless of type (object or array)
-				if itemsMap, ok := schemaMap["items"].(map[string]interface{}); ok {
+				if itemsMap, ok := schemaMap["items"].(map[string]any); ok {
 					itemsType, _ := itemsMap["type"].(string)
 					switch itemsType {
 					case "array":
 						// Handle nested arrays (array-of-array)
-						FixArraySchemas(map[string]interface{}{"": itemsMap}, logger)
+						FixArraySchemas(map[string]any{"": itemsMap}, logger)
 					case "object":
 						// Recurse into object properties
-						if itemsProps, ok := itemsMap["properties"].(map[string]interface{}); ok {
+						if itemsProps, ok := itemsMap["properties"].(map[string]any); ok {
 							FixArraySchemas(itemsProps, logger)
 						}
 					}
@@ -974,36 +971,36 @@ func FixArraySchemas(properties map[string]interface{}, logger schemas.Logger) {
 
 			// Recursively fix nested object properties
 			if schemaType, ok := schemaMap["type"].(string); ok && schemaType == "object" {
-				if nestedProps, ok := schemaMap["properties"].(map[string]interface{}); ok {
+				if nestedProps, ok := schemaMap["properties"].(map[string]any); ok {
 					FixArraySchemas(nestedProps, logger)
 				}
 			}
 
 			// Handle anyOf, oneOf, allOf
 			for _, unionKey := range []string{"anyOf", "oneOf", "allOf"} {
-				if unionArray, ok := schemaMap[unionKey].([]interface{}); ok {
+				if unionArray, ok := schemaMap[unionKey].([]any); ok {
 					for _, unionItem := range unionArray {
-						if unionMap, ok := unionItem.(map[string]interface{}); ok {
+						if unionMap, ok := unionItem.(map[string]any); ok {
 							if unionType, ok := unionMap["type"].(string); ok && unionType == "array" {
 								if _, hasItems := unionMap["items"]; !hasItems {
-									unionMap["items"] = map[string]interface{}{}
+									unionMap["items"] = map[string]any{}
 									logger.Debug("%s Fixed array schema in %s for property '%s': added missing 'items' field", MCPLogPrefix, unionKey, key)
 								}
 								// Recurse into items regardless of type
-								if itemsMap, ok := unionMap["items"].(map[string]interface{}); ok {
+								if itemsMap, ok := unionMap["items"].(map[string]any); ok {
 									itemsType, _ := itemsMap["type"].(string)
 									switch itemsType {
 									case "array":
 										// Handle nested arrays
-										FixArraySchemas(map[string]interface{}{"": itemsMap}, logger)
+										FixArraySchemas(map[string]any{"": itemsMap}, logger)
 									case "object":
-										if itemsProps, ok := itemsMap["properties"].(map[string]interface{}); ok {
+										if itemsProps, ok := itemsMap["properties"].(map[string]any); ok {
 											FixArraySchemas(itemsProps, logger)
 										}
 									}
 								}
 							}
-							if nestedProps, ok := unionMap["properties"].(map[string]interface{}); ok {
+							if nestedProps, ok := unionMap["properties"].(map[string]any); ok {
 								FixArraySchemas(nestedProps, logger)
 							}
 						}

@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	providerUtils "github.com/maximhq/bifrost/core/providers/utils"
-	"github.com/maximhq/bifrost/core/schemas"
+	providerUtils "github.com/grevinden/bifrost/core/providers/utils"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 func makeSimpleInput(text string) []schemas.ResponsesMessage {
@@ -471,7 +471,7 @@ func TestBuildAnthropicResponsesRequestBody_TypedPath(t *testing.T) {
 	})
 
 	t.Run("typed_path_count_tokens_strips_fields", func(t *testing.T) {
-		ctx := schemas.NewBifrostContext(nil, time.Time{})
+		ctx := schemas.NewBifrostContext(context.TODO, time.Time{})
 
 		temp := 0.7
 		request := &schemas.BifrostResponsesRequest{

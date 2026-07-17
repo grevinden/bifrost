@@ -1,0 +1,37 @@
+{
+    "$schema": "https://www.getbifrost.ai/schema",
+    "client": {
+        "enable_logging": true,
+        "initial_pool_size": 100
+    },
+    "config_store": {
+        "enabled": true,
+        "type": "sqlite",
+        "config": {
+            "path": "./lmstudio-config.db"
+        }
+    },
+    "logs_store": {
+        "enabled": true,
+        "type": "sqlite",
+        "config": {
+            "path": "./lmstudio-logs.db"
+        }
+    },
+    "providers": {
+        "openai": {
+            "keys": [
+                {
+                    "name": "lmstudio-local",
+                    "value": "sk-lmstudio-not-a-real-key",
+                    "weight": 1
+                }
+            ],
+            "network_config": {
+                "base_url": "http://127.0.0.1:1234",
+                "default_request_timeout_in_seconds": 120,
+                "max_retries": 0
+            }
+        }
+    }
+}

@@ -1,11 +1,12 @@
 package logstore
 
 import (
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/bytedance/sonic"
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -118,7 +119,7 @@ func TestBuildInputContentSummary(t *testing.T) {
 			{Role: schemas.ChatMessageRoleUser, Content: &schemas.ChatMessageContent{ContentStr: &content}},
 		},
 		OutputMessageParsed: &schemas.ChatMessage{
-			Content: &schemas.ChatMessageContent{ContentStr: strPtr("It's sunny")},
+			Content: &schemas.ChatMessageContent{ContentStr: new("It's sunny")},
 		},
 	}
 
@@ -181,12 +182,12 @@ func TestMCPToolLogPayload_RoundTripFullLog(t *testing.T) {
 	entry := &MCPToolLog{
 		ID:             "mcp-1",
 		RequestID:      "req-1",
-		LLMRequestID:   strPtr("llm-1"),
+		LLMRequestID:   new("llm-1"),
 		Timestamp:      time.Date(2026, 4, 3, 14, 0, 0, 0, time.UTC),
 		ToolName:       "search",
 		ServerLabel:    "docs",
 		VirtualKeyID:   &vkID,
-		VirtualKeyName: strPtr("prod-key"),
+		VirtualKeyName: new("prod-key"),
 		Latency:        &latency,
 		Cost:           &cost,
 		Status:         "success",
@@ -203,7 +204,7 @@ func TestMCPToolLogPayload_RoundTripFullLog(t *testing.T) {
 				Message: "stored for round trip",
 			},
 		},
-		MetadataParsed: map[string]interface{}{
+		MetadataParsed: map[string]any{
 			"trace": "abc",
 		},
 	}
@@ -221,16 +222,16 @@ func TestMCPToolLogPayload_RoundTripFullLog(t *testing.T) {
 	assert.Equal(t, entry.ToolName, dbEntry.ToolName)
 	assert.Equal(t, entry.ServerLabel, dbEntry.ServerLabel)
 	assert.Equal(t, entry.Status, dbEntry.Status)
-	assert.Equal(t, "full input", dbEntry.ArgumentsParsed.(map[string]interface{})["query"])
-	assert.Equal(t, true, dbEntry.ResultParsed.(map[string]interface{})["ok"])
+	assert.Equal(t, "full input", dbEntry.ArgumentsParsed.(map[string]any)["query"])
+	assert.Equal(t, true, dbEntry.ResultParsed.(map[string]any)["ok"])
 	assert.Equal(t, "stored for round trip", dbEntry.ErrorDetailsParsed.Error.Message)
 	assert.Equal(t, "abc", dbEntry.MetadataParsed["trace"])
 }
 
 func TestPrepareMCPToolDBEntry_KeepsOnlyInputPreview(t *testing.T) {
-	longInput := ""
-	for i := 0; i < 260; i++ {
-		longInput += "a"
+	var longInput strings.Builder
+	for range 260 {
+		longInput.WriteString("a")
 	}
 	entry := &MCPToolLog{
 		ID:          "mcp-preview",
@@ -240,7 +241,7 @@ func TestPrepareMCPToolDBEntry_KeepsOnlyInputPreview(t *testing.T) {
 		ServerLabel: "local",
 		Status:      "success",
 		ArgumentsParsed: map[string]any{
-			"input": longInput,
+			"input": longInput.String(),
 		},
 		ResultParsed: map[string]any{
 			"secret": "large result",
@@ -251,7 +252,7 @@ func TestPrepareMCPToolDBEntry_KeepsOnlyInputPreview(t *testing.T) {
 				Message: "large error",
 			},
 		},
-		MetadataParsed: map[string]interface{}{
+		MetadataParsed: map[string]any{
 			"trace": "abc",
 		},
 	}
@@ -283,6 +284,7 @@ func TestPayloadFieldNames(t *testing.T) {
 	assert.NotEqual(t, "modified", payloadFields[0])
 }
 
+//go:fix inline
 func strPtr(s string) *string {
-	return &s
+	return new(s)
 }

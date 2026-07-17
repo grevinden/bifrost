@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // RunAutomaticFunctionCallingTest executes the automatic function calling test scenario using dual API testing framework
@@ -44,12 +44,12 @@ func RunAutomaticFunctionCallingTest(t *testing.T, client *bifrost.Bifrost, ctx 
 		retryConfig := ToolCallRetryConfig(string(SampleToolTypeTime))
 		retryContext := TestRetryContext{
 			ScenarioName: "AutomaticFunctionCalling",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"expected_tool_name": string(SampleToolTypeTime),
 				"is_forced_call":     true,
 				"timezone":           "UTC",
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider":    testConfig.Provider,
 				"model":       testConfig.ChatModel,
 				"tool_choice": "forced",
@@ -102,7 +102,7 @@ func RunAutomaticFunctionCallingTest(t *testing.T, client *bifrost.Bifrost, ctx 
 					ToolChoice: &schemas.ResponsesToolChoice{
 						ResponsesToolChoiceStruct: &schemas.ResponsesToolChoiceStruct{
 							Type: schemas.ResponsesToolChoiceTypeFunction,
-							Name: bifrost.Ptr(string(SampleToolTypeTime)),
+							Name: new(string(SampleToolTypeTime)),
 						},
 					},
 				},
@@ -164,7 +164,7 @@ func validateAutomaticToolCall(t *testing.T, toolCalls []ToolCallInfo, apiName s
 	// Validation for tool call already happened inside WithDualAPITestRetry
 	// If we reach here, the tool call was successful
 	// This function just provides additional logging for tool call details
-	
+
 	for _, toolCall := range toolCalls {
 		if toolCall.Name == string(SampleToolTypeTime) {
 			t.Logf("✅ %s automatic function call: %s", apiName, toolCall.Arguments)

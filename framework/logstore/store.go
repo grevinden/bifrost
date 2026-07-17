@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/objectstore"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/objectstore"
 )
 
 // LogStoreType represents the type of log store.
@@ -94,7 +94,7 @@ type LogStore interface {
 	// Async Job methods
 	CreateAsyncJob(ctx context.Context, job *AsyncJob) error
 	FindAsyncJobByID(ctx context.Context, id string) (*AsyncJob, error)
-	UpdateAsyncJob(ctx context.Context, id string, updates map[string]interface{}) error
+	UpdateAsyncJob(ctx context.Context, id string, updates map[string]any) error
 	DeleteExpiredAsyncJobs(ctx context.Context) (int64, error)
 	DeleteStaleAsyncJobs(ctx context.Context, staleSince time.Time) (int64, error)
 }

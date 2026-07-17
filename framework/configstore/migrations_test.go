@@ -12,10 +12,10 @@ import (
 	"testing"
 	"time"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/configstore/tables"
-	"github.com/maximhq/bifrost/framework/encrypt"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/configstore/tables"
+	"github.com/grevinden/bifrost/framework/encrypt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gorm.io/driver/postgres"
@@ -717,10 +717,8 @@ func TestMigrationAddStoreRawRequestResponseColumn(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			for _, ndb := range forEachProviderMigrationDB(t, tt.name) {
-				ndb := ndb
 				t.Run(ndb.name, func(t *testing.T) {
 					db := ndb.db
 					ctx := context.Background()
@@ -790,7 +788,6 @@ func TestMigrationAddStoreRawRequestResponseColumn(t *testing.T) {
 
 func TestMigrationAddStoreRawRequestResponseColumn_MultipleProviders(t *testing.T) {
 	for _, ndb := range forEachProviderMigrationDB(t, "multiple") {
-		ndb := ndb
 		t.Run(ndb.name, func(t *testing.T) {
 			db := ndb.db
 			ctx := context.Background()
@@ -847,7 +844,6 @@ func TestMigrationAddStoreRawRequestResponseColumn_MultipleProviders(t *testing.
 
 func TestMigrationAddStoreRawRequestResponseColumn_Idempotent(t *testing.T) {
 	for _, ndb := range forEachProviderMigrationDB(t, "idempotent") {
-		ndb := ndb
 		t.Run(ndb.name, func(t *testing.T) {
 			db := ndb.db
 			ctx := context.Background()
@@ -1143,7 +1139,7 @@ func TestTriggerMigrations_FreshDB(t *testing.T) {
 	_, db := setupFullMigrationDB(t)
 
 	// Every critical table should exist after the full migration chain.
-	criticalTables := []interface{}{
+	criticalTables := []any{
 		&tables.TableProvider{},
 		&tables.TableKey{},
 		&tables.TableVirtualKey{},
@@ -1251,7 +1247,7 @@ func TestFullMigration_VirtualKeyCRUD(t *testing.T) {
 		ID:        "vk-test-001",
 		Name:      "test-virtual-key",
 		Value:     *schemas.NewSecretVar("vk-secret-value-12345"),
-		IsActive:  bifrost.Ptr(true),
+		IsActive:  new(true),
 		CreatedAt: now,
 		UpdatedAt: now,
 	}
@@ -1439,7 +1435,7 @@ func TestFullMigration_EndToEnd(t *testing.T) {
 	} {
 		err := store.CreateVirtualKey(ctx, &tables.TableVirtualKey{
 			ID: vk.id, Name: vk.name, Value: *schemas.NewSecretVar(vk.value),
-			IsActive: bifrost.Ptr(true), CreatedAt: now, UpdatedAt: now,
+			IsActive: new(true), CreatedAt: now, UpdatedAt: now,
 		})
 		require.NoError(t, err, "CreateVirtualKey %s", vk.name)
 	}
@@ -2370,7 +2366,7 @@ func TestMigrationCalendarAligned_StaleRateLimitID(t *testing.T) {
 	// references a rate_limit_id that doesn't exist in the table.
 	stale := "rl-does-not-exist"
 	insertVKRaw(t, db, "vk-stale", "vk-stale", "vk-stale-value", &stale, true)
-	insertBudgetRaw(t, db, "budget-stale-vk", strPtr("vk-stale"))
+	insertBudgetRaw(t, db, "budget-stale-vk", new("vk-stale"))
 
 	// VK-ok has calendar_aligned=true and a valid rate_limit so we can verify
 	// the loop keeps processing after the stale skip.
@@ -2587,7 +2583,8 @@ func assertNoCorruptedFKReferences(t *testing.T, db *gorm.DB) {
 	}
 }
 
-func strPtr(s string) *string { return &s }
+//go:fix inline
+func strPtr(s string) *string { return new(s) }
 
 // TestMigrationAddModelConfigScopeColumns verifies the existing-install transition:
 // adding scope/scope_id columns, backfilling existing rows to "global", and swapping the
@@ -2662,8 +2659,8 @@ func TestMigrationMigrateProviderGovernanceToModelConfigs(t *testing.T) {
 
 	now := time.Now()
 	require.NoError(t, db.Create(&tables.TableBudget{ID: "b1", MaxLimit: 100, ResetDuration: "1M", LastReset: now, CreatedAt: now, UpdatedAt: now}).Error)
-	require.NoError(t, db.Create(&tables.TableRateLimit{ID: "rl1", TokenMaxLimit: schemas.Ptr(int64(1000)), TokenResetDuration: schemas.Ptr("1h"), TokenLastReset: now, RequestLastReset: now, CreatedAt: now, UpdatedAt: now}).Error)
-	require.NoError(t, db.Create(&tables.TableProvider{Name: "openai", BudgetID: schemas.Ptr("b1"), RateLimitID: schemas.Ptr("rl1"), CreatedAt: now, UpdatedAt: now}).Error)
+	require.NoError(t, db.Create(&tables.TableRateLimit{ID: "rl1", TokenMaxLimit: new(int64(1000)), TokenResetDuration: new("1h"), TokenLastReset: now, RequestLastReset: now, CreatedAt: now, UpdatedAt: now}).Error)
+	require.NoError(t, db.Create(&tables.TableProvider{Name: "openai", BudgetID: new("b1"), RateLimitID: new("rl1"), CreatedAt: now, UpdatedAt: now}).Error)
 
 	require.NoError(t, migrationMigrateProviderGovernanceToModelConfigs(ctx, db, testMigrationLogger))
 

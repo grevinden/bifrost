@@ -5,7 +5,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	schemas "github.com/maximhq/bifrost/core/schemas"
+	schemas "github.com/grevinden/bifrost/core/schemas"
 )
 
 type StreamType string
@@ -306,7 +306,7 @@ type ProcessedStreamResponse struct {
 	ResolvedModel  string // actual model used by the provider (equals RequestedModel when no alias mapping exists)
 	RoutingInfo    schemas.RoutingInfo
 	Data           *AccumulatedData
-	RawRequest     *interface{}
+	RawRequest     *any
 }
 
 // ToBifrostResponse converts a ProcessedStreamResponse to a BifrostResponse

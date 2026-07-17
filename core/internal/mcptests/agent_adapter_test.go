@@ -3,7 +3,7 @@ package mcptests
 import (
 	"testing"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -270,7 +270,7 @@ func TestAgent_Adapter_ResponsesFormat_STDIO(t *testing.T) {
 	// Turn 1: Mixed InProcess and STDIO tools
 	mocker.AddResponsesResponse(CreateAgentTurnWithToolCallsResponses(
 		GetSampleEchoToolCall("call-1", "test"),
-		CreateSTDIOToolCall("call-2", "GoTestServer", "uuid_generate", map[string]interface{}{}),
+		CreateSTDIOToolCall("call-2", "GoTestServer", "uuid_generate", map[string]any{}),
 	))
 
 	// Turn 2: Final text
@@ -381,7 +381,7 @@ func TestAgent_Adapter_ResponsesFormat_ErrorHandling(t *testing.T) {
 	// Turn 1: Call error tool
 	mocker.AddResponsesResponse(CreateAgentTurnWithToolCallsResponses(
 		GetSampleEchoToolCall("call-1", "before error"),
-		CreateSTDIOToolCall("call-2", "ErrorTestServer", "return_error", map[string]interface{}{
+		CreateSTDIOToolCall("call-2", "ErrorTestServer", "return_error", map[string]any{
 			"error_type": "standard",
 			"message":    "Test error in Responses API",
 		}),

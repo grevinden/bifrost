@@ -4,8 +4,8 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/maximhq/bifrost/core/schemas"
-	configstoreTables "github.com/maximhq/bifrost/framework/configstore/tables"
+	"github.com/grevinden/bifrost/core/schemas"
+	configstoreTables "github.com/grevinden/bifrost/framework/configstore/tables"
 )
 
 func TestGetCapabilityEntry_PrefersChatThenResponsesThenCompletion(t *testing.T) {
@@ -20,9 +20,9 @@ func TestGetCapabilityEntry_PrefersChatThenResponsesThenCompletion(t *testing.T)
 				Model:           "gpt-4o",
 				Provider:        "openai",
 				Mode:            "responses",
-				ContextLength:   capabilityIntPtr(200000),
-				MaxInputTokens:  capabilityIntPtr(100000),
-				MaxOutputTokens: capabilityIntPtr(32000),
+				ContextLength:   new(200000),
+				MaxInputTokens:  new(100000),
+				MaxOutputTokens: new(32000),
 			},
 			makeKey("gpt-4o", "openai", "chat"): {
 				Model:           "gpt-4o",
@@ -66,8 +66,8 @@ func TestGetCapabilityEntry_FallsBackToAnyModeDeterministically(t *testing.T) {
 				Model:           "imagen",
 				Provider:        "vertex",
 				Mode:            "image_generation",
-				ContextLength:   capabilityIntPtr(4096),
-				MaxOutputTokens: capabilityIntPtr(1),
+				ContextLength:   new(4096),
+				MaxOutputTokens: new(1),
 			},
 		},
 	}
@@ -91,8 +91,8 @@ func TestGetCapabilityEntry_ResolvesAliasFamilyViaBaseModel(t *testing.T) {
 				BaseModel:       "gpt-4o",
 				Provider:        "openai",
 				Mode:            "responses",
-				ContextLength:   capabilityIntPtr(64000),
-				MaxOutputTokens: capabilityIntPtr(8000),
+				ContextLength:   new(64000),
+				MaxOutputTokens: new(8000),
 			},
 			makeKey("gpt-4o-2024-08-06", "openai", "chat"): {
 				Model:           "gpt-4o-2024-08-06",
@@ -100,7 +100,7 @@ func TestGetCapabilityEntry_ResolvesAliasFamilyViaBaseModel(t *testing.T) {
 				Provider:        "openai",
 				Mode:            "chat",
 				ContextLength:   &contextLengthChat,
-				MaxOutputTokens: capabilityIntPtr(16000),
+				MaxOutputTokens: new(16000),
 			},
 		},
 		baseModelIndex: map[string]string{
@@ -128,8 +128,8 @@ func TestGetCapabilityEntry_ResolvesProviderPrefixedAlias(t *testing.T) {
 				BaseModel:       "gpt-4o",
 				Provider:        "openai",
 				Mode:            "chat",
-				ContextLength:   capabilityIntPtr(128000),
-				MaxOutputTokens: capabilityIntPtr(16000),
+				ContextLength:   new(128000),
+				MaxOutputTokens: new(16000),
 			},
 		},
 		baseModelIndex: map[string]string{
@@ -158,7 +158,7 @@ func TestGetCapabilityEntry_PrefersLiteralMatchOverAliasFamily(t *testing.T) {
 				Provider:        "openai",
 				Mode:            "chat",
 				ContextLength:   &literalContextLength,
-				MaxOutputTokens: capabilityIntPtr(4000),
+				MaxOutputTokens: new(4000),
 			},
 			makeKey("gpt-4o-2024-08-06", "openai", "chat"): {
 				Model:           "gpt-4o-2024-08-06",
@@ -166,7 +166,7 @@ func TestGetCapabilityEntry_PrefersLiteralMatchOverAliasFamily(t *testing.T) {
 				Provider:        "openai",
 				Mode:            "chat",
 				ContextLength:   &aliasContextLength,
-				MaxOutputTokens: capabilityIntPtr(16000),
+				MaxOutputTokens: new(16000),
 			},
 		},
 		baseModelIndex: map[string]string{
@@ -197,9 +197,9 @@ func TestCapabilityFieldsRoundTripThroughPricingConversions(t *testing.T) {
 			InputCostPerToken:  &inputCost,
 			OutputCostPerToken: &outputCost,
 		},
-		ContextLength:   capabilityIntPtr(128000),
-		MaxInputTokens:  capabilityIntPtr(64000),
-		MaxOutputTokens: capabilityIntPtr(16000),
+		ContextLength:   new(128000),
+		MaxInputTokens:  new(64000),
+		MaxOutputTokens: new(16000),
 		Architecture: &schemas.Architecture{
 			Modality: &modality,
 		},
@@ -225,9 +225,11 @@ func TestCapabilityFieldsRoundTripThroughPricingConversions(t *testing.T) {
 	}
 }
 
-func capabilityIntPtr(v int) *int { return &v }
+//go:fix inline
+func capabilityIntPtr(v int) *int { return new(v) }
 
-func capabilityBoolPtr(v bool) *bool { return &v }
+//go:fix inline
+func capabilityBoolPtr(v bool) *bool { return new(v) }
 
 // TestExtractSupportedParams_WebSearch guards the two web-search keys: the
 // model_parameters "web_search" id and the supports_web_search flag must each
@@ -248,13 +250,13 @@ func TestExtractSupportedParams_WebSearch(t *testing.T) {
 		},
 		{
 			name:   "supports_web_search flag",
-			parsed: &modelParametersParseResult{SupportsWebSearch: capabilityBoolPtr(true)},
+			parsed: &modelParametersParseResult{SupportsWebSearch: new(true)},
 		},
 		{
 			name: "both set",
 			parsed: &modelParametersParseResult{
 				ModelParameters:   webSearchParam,
-				SupportsWebSearch: capabilityBoolPtr(true),
+				SupportsWebSearch: new(true),
 			},
 		},
 	}
@@ -275,7 +277,7 @@ func TestExtractSupportedParams_WebSearch(t *testing.T) {
 // the datasheet declares no web-search support, so the tool is still stripped
 // for models that genuinely lack it.
 func TestExtractSupportedParams_WebSearchAbsent(t *testing.T) {
-	got := extractSupportedParams(&modelParametersParseResult{SupportsWebSearch: capabilityBoolPtr(false)})
+	got := extractSupportedParams(&modelParametersParseResult{SupportsWebSearch: new(false)})
 	for _, unexpected := range []string{"web_search", "web_search_options"} {
 		if slices.Contains(got, unexpected) {
 			t.Errorf("expected supported params to omit %q, got %v", unexpected, got)

@@ -3,7 +3,7 @@ package vertex
 import (
 	"time"
 
-	providerUtils "github.com/maximhq/bifrost/core/providers/utils"
+	providerUtils "github.com/grevinden/bifrost/core/providers/utils"
 )
 
 // Vertex AI Embedding API types

@@ -12,10 +12,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/configstore"
-	"github.com/maximhq/bifrost/framework/configstore/tables"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/configstore"
+	"github.com/grevinden/bifrost/framework/configstore/tables"
 )
 
 // testConfigStore is a minimal in-memory implementation of configstore.ConfigStore
@@ -43,7 +43,7 @@ func (s *testConfigStore) GetOauthConfigByID(_ context.Context, id string) (*tab
 	if cfg == nil {
 		return nil, nil
 	}
-	return bifrost.Ptr(*cfg), nil
+	return new(*cfg), nil
 }
 
 func (s *testConfigStore) GetOauthConfigByTokenID(_ context.Context, tokenID string) (*tables.TableOauthConfig, error) {
@@ -51,7 +51,7 @@ func (s *testConfigStore) GetOauthConfigByTokenID(_ context.Context, tokenID str
 	defer s.mu.Unlock()
 	for _, cfg := range s.oauthConfigs {
 		if cfg.TokenID != nil && *cfg.TokenID == tokenID {
-			return bifrost.Ptr(*cfg), nil
+			return new(*cfg), nil
 		}
 	}
 	return nil, nil
@@ -60,7 +60,7 @@ func (s *testConfigStore) GetOauthConfigByTokenID(_ context.Context, tokenID str
 func (s *testConfigStore) UpdateOauthConfig(_ context.Context, cfg *tables.TableOauthConfig) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.oauthConfigs[cfg.ID] = bifrost.Ptr(*cfg)
+	s.oauthConfigs[cfg.ID] = new(*cfg)
 	return nil
 }
 
@@ -71,13 +71,13 @@ func (s *testConfigStore) GetOauthTokenByID(_ context.Context, id string) (*tabl
 	if token == nil {
 		return nil, nil
 	}
-	return bifrost.Ptr(*token), nil
+	return new(*token), nil
 }
 
 func (s *testConfigStore) UpdateOauthToken(_ context.Context, token *tables.TableOauthToken) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.oauthTokens[token.ID] = bifrost.Ptr(*token)
+	s.oauthTokens[token.ID] = new(*token)
 	return nil
 }
 
@@ -87,7 +87,7 @@ func (s *testConfigStore) GetClientConfig(_ context.Context) (*configstore.Clien
 	if s.clientConfig == nil {
 		return nil, nil
 	}
-	return bifrost.Ptr(*s.clientConfig), nil
+	return new(*s.clientConfig), nil
 }
 
 func (s *testConfigStore) GetExpiringOauthTokens(_ context.Context, before time.Time) ([]*tables.TableOauthToken, error) {
@@ -96,7 +96,7 @@ func (s *testConfigStore) GetExpiringOauthTokens(_ context.Context, before time.
 	var expiring []*tables.TableOauthToken
 	for _, token := range s.oauthTokens {
 		if token.ExpiresAt != nil && token.ExpiresAt.Before(before) {
-			expiring = append(expiring, bifrost.Ptr(*token))
+			expiring = append(expiring, new(*token))
 		}
 	}
 	return expiring, nil
@@ -158,7 +158,7 @@ func TestTestConfigStore_GetExpiringOauthTokens(t *testing.T) {
 			AccessToken:  "access-token-2",
 			RefreshToken: "refresh-token-2",
 			TokenType:    "bearer",
-			ExpiresAt:    bifrost.Ptr(now.Add(1 * time.Minute)),
+			ExpiresAt:    new(now.Add(1 * time.Minute)),
 			Scopes:       "[]",
 		}
 

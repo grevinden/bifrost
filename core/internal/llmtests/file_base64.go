@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // HelloWorldPDFBase64 is a base64 encoded PDF file containing "Hello World!" text.
@@ -31,12 +31,12 @@ func CreateDocumentChatMessage(text, documentBase64 string) schemas.ChatMessage 
 		Role: schemas.ChatMessageRoleUser,
 		Content: &schemas.ChatMessageContent{
 			ContentBlocks: []schemas.ChatContentBlock{
-				{Type: schemas.ChatContentBlockTypeText, Text: bifrost.Ptr(text)},
+				{Type: schemas.ChatContentBlockTypeText, Text: new(text)},
 				{
 					Type: schemas.ChatContentBlockTypeFile,
 					File: &schemas.ChatInputFile{
-						FileData: bifrost.Ptr(documentBase64),
-						Filename: bifrost.Ptr("test_document.pdf"),
+						FileData: new(documentBase64),
+						Filename: new("test_document.pdf"),
 					},
 				},
 			},
@@ -51,12 +51,12 @@ func CreateDocumentResponsesMessage(text, documentBase64 string) schemas.Respons
 		Role: bifrost.Ptr(schemas.ResponsesInputMessageRoleUser),
 		Content: &schemas.ResponsesMessageContent{
 			ContentBlocks: []schemas.ResponsesMessageContentBlock{
-				{Type: schemas.ResponsesInputMessageContentBlockTypeText, Text: bifrost.Ptr(text)},
+				{Type: schemas.ResponsesInputMessageContentBlockTypeText, Text: new(text)},
 				{
 					Type: schemas.ResponsesInputMessageContentBlockTypeFile,
 					ResponsesInputMessageContentBlockFile: &schemas.ResponsesInputMessageContentBlockFile{
-						FileData: bifrost.Ptr(documentBase64),
-						Filename: bifrost.Ptr("test_document.pdf"),
+						FileData: new(documentBase64),
+						Filename: new("test_document.pdf"),
 					},
 				},
 			},
@@ -99,13 +99,13 @@ func RunFileBase64ChatCompletionsTest(t *testing.T, client *bifrost.Bifrost, ctx
 		retryConfig := GetTestRetryConfigForScenario("FileInput", testConfig)
 		retryContext := TestRetryContext{
 			ScenarioName: "FileBase64-ChatCompletions",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"should_process_pdf":     true,
 				"should_read_document":   true,
 				"should_extract_content": true,
 				"document_understanding": true,
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider":          testConfig.Provider,
 				"model":             testConfig.ChatModel,
 				"file_type":         "pdf",
@@ -116,7 +116,7 @@ func RunFileBase64ChatCompletionsTest(t *testing.T, client *bifrost.Bifrost, ctx
 		}
 
 		// Enhanced validation for PDF document processing
-		expectations := GetExpectationsForScenario("FileInput", testConfig, map[string]interface{}{})
+		expectations := GetExpectationsForScenario("FileInput", testConfig, map[string]any{})
 		expectations = ModifyExpectationsForProvider(expectations, testConfig.Provider)
 		expectations.ShouldContainAnyOf = append(expectations.ShouldContainAnyOf, "hello", "world", "pdf", "document")
 		expectations.ShouldNotContainWords = append(expectations.ShouldNotContainWords, []string{
@@ -140,7 +140,7 @@ func RunFileBase64ChatCompletionsTest(t *testing.T, client *bifrost.Bifrost, ctx
 				Model:    testConfig.ChatModel,
 				Input:    chatMessages,
 				Params: &schemas.ChatParameters{
-					MaxCompletionTokens: bifrost.Ptr(500),
+					MaxCompletionTokens: new(500),
 				},
 				Fallbacks: testConfig.Fallbacks,
 			}
@@ -179,13 +179,13 @@ func RunFileBase64ResponsesTest(t *testing.T, client *bifrost.Bifrost, ctx conte
 		// Set up retry context for document input requests
 		retryContext := TestRetryContext{
 			ScenarioName: "FileBase64-Responses",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"should_process_pdf":     true,
 				"should_read_document":   true,
 				"should_extract_content": true,
 				"document_understanding": true,
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider":          testConfig.Provider,
 				"model":             testConfig.ChatModel,
 				"file_type":         "pdf",
@@ -196,7 +196,7 @@ func RunFileBase64ResponsesTest(t *testing.T, client *bifrost.Bifrost, ctx conte
 		}
 
 		// Enhanced validation for PDF document processing
-		expectations := GetExpectationsForScenario("FileInput", testConfig, map[string]interface{}{})
+		expectations := GetExpectationsForScenario("FileInput", testConfig, map[string]any{})
 		expectations = ModifyExpectationsForProvider(expectations, testConfig.Provider)
 		expectations.ShouldContainAnyOf = append(expectations.ShouldContainAnyOf, "hello", "world", "pdf", "document")
 		expectations.ShouldNotContainWords = append(expectations.ShouldNotContainWords, []string{
@@ -221,7 +221,7 @@ func RunFileBase64ResponsesTest(t *testing.T, client *bifrost.Bifrost, ctx conte
 				Model:    testConfig.ChatModel,
 				Input:    responsesMessages,
 				Params: &schemas.ResponsesParameters{
-					MaxOutputTokens: bifrost.Ptr(500),
+					MaxOutputTokens: new(500),
 				},
 				Fallbacks: testConfig.Fallbacks,
 			}

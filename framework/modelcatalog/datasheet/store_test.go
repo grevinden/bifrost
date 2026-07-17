@@ -4,8 +4,8 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/maximhq/bifrost/core/schemas"
-	configstoreTables "github.com/maximhq/bifrost/framework/configstore/tables"
+	"github.com/grevinden/bifrost/core/schemas"
+	configstoreTables "github.com/grevinden/bifrost/framework/configstore/tables"
 )
 
 func TestDeprecatedDatasheetModelsForProviderUsesRebuiltIndex(t *testing.T) {

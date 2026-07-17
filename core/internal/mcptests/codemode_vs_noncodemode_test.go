@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -84,10 +84,10 @@ result = main()
 `
 
 	toolCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-codemode-only"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-codemode-only"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("executeToolCode"),
+			Name:      new("executeToolCode"),
 			Arguments: fmt.Sprintf(`{"code": %s}`, mustJSONString(code)),
 		},
 	}
@@ -100,13 +100,13 @@ result = main()
 	returnValue, err := extractReturnValue(*result.Content.ContentStr)
 	require.NoError(t, err, "should extract return value")
 
-	returnObj, ok := returnValue.(map[string]interface{})
+	returnObj, ok := returnValue.(map[string]any)
 	require.True(t, ok, "result should be an object")
 
 	// Assertions - temperature should succeed
 	codemodeSuccess, ok := returnObj["codemode_success"]
 	require.True(t, ok, "should have codemode_success field")
-	if successMap, ok := codemodeSuccess.(map[string]interface{}); ok {
+	if successMap, ok := codemodeSuccess.(map[string]any); ok {
 		_, hasError := successMap["error"]
 		assert.False(t, hasError, "CodeMode client should not have error")
 	}
@@ -114,7 +114,7 @@ result = main()
 	// Assertions - gotest should fail
 	noncodemodeFailRaw, ok := returnObj["noncodemode_fail"]
 	require.True(t, ok, "should have noncodemode_fail field")
-	noncodemodeFailMap, ok := noncodemodeFailRaw.(map[string]interface{})
+	noncodemodeFailMap, ok := noncodemodeFailRaw.(map[string]any)
 	require.True(t, ok, "noncodemode_fail should be object")
 	errorMsg, hasError := noncodemodeFailMap["error"]
 	assert.True(t, hasError, "Non-CodeMode client should have error")
@@ -211,10 +211,10 @@ result = main()
 `
 
 	toolCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-mixed"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-mixed"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("executeToolCode"),
+			Name:      new("executeToolCode"),
 			Arguments: fmt.Sprintf(`{"code": %s}`, mustJSONString(code)),
 		},
 	}
@@ -230,13 +230,13 @@ result = main()
 	returnValue, err := extractReturnValue(*result.Content.ContentStr)
 	require.NoError(t, err)
 
-	resultsArray, ok := returnValue.([]interface{})
+	resultsArray, ok := returnValue.([]any)
 	require.True(t, ok, "result should be array")
 	require.Len(t, resultsArray, 4, "should have 4 results")
 
 	// Check each result
 	for _, resultRaw := range resultsArray {
-		resultMap := resultRaw.(map[string]interface{})
+		resultMap := resultRaw.(map[string]any)
 		serverName := resultMap["server"].(string)
 		success := resultMap["success"].(bool)
 
@@ -266,8 +266,8 @@ result = main()
 // 5. temperature → auto-executes
 // 6. uuid_generate → requires approval (Non-CodeMode)
 // 7. Agent returns with:
-//    - Content: Results from auto-executed tools (temperature)
-//    - ToolCalls: Tools awaiting approval (uuid_generate)
+//   - Content: Results from auto-executed tools (temperature)
+//   - ToolCalls: Tools awaiting approval (uuid_generate)
 func TestCodeMode_Agent_MixedCodeModeWithApproval(t *testing.T) {
 	t.Parallel()
 
@@ -313,10 +313,10 @@ func TestCodeMode_Agent_MixedCodeModeWithApproval(t *testing.T) {
 	// Turn 2: Mix of CodeMode (auto) and Non-CodeMode (needs approval)
 	mocker.AddChatResponse(CreateDynamicChatResponse(func(history []schemas.ChatMessage) *schemas.BifrostChatResponse {
 		return CreateChatResponseWithToolCalls([]schemas.ChatAssistantMessageToolCall{
-			CreateToolCall("call-2", "get_temperature", map[string]interface{}{
+			CreateToolCall("call-2", "get_temperature", map[string]any{
 				"location": "London",
 			}), // CodeMode - auto
-			CreateToolCall("call-3", "uuid_generate", map[string]interface{}{}), // Non-CodeMode - approval
+			CreateToolCall("call-3", "uuid_generate", map[string]any{}), // Non-CodeMode - approval
 		})
 	}))
 
@@ -327,7 +327,7 @@ func TestCodeMode_Agent_MixedCodeModeWithApproval(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Test mixed CodeMode with approval"),
+					ContentStr: new("Test mixed CodeMode with approval"),
 				},
 			},
 		},
@@ -416,7 +416,7 @@ func TestCodeMode_Agent_CodeModeInCode_NonCodeModeDirect(t *testing.T) {
 	// Turn 2: Direct call to Non-CodeMode tool (allowed, auto-execute)
 	mocker.AddChatResponse(CreateDynamicChatResponse(func(history []schemas.ChatMessage) *schemas.BifrostChatResponse {
 		return CreateChatResponseWithToolCalls([]schemas.ChatAssistantMessageToolCall{
-			CreateToolCall("call-2", "uuid_generate", map[string]interface{}{}), // Non-CodeMode but DIRECT call
+			CreateToolCall("call-2", "uuid_generate", map[string]any{}), // Non-CodeMode but DIRECT call
 		})
 	}))
 
@@ -432,7 +432,7 @@ func TestCodeMode_Agent_CodeModeInCode_NonCodeModeDirect(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Test CodeMode in code, Non-CodeMode direct"),
+					ContentStr: new("Test CodeMode in code, Non-CodeMode direct"),
 				},
 			},
 		},
@@ -476,14 +476,15 @@ func TestCodeMode_Agent_CodeModeInCode_NonCodeModeDirect(t *testing.T) {
 // Flow:
 // 1. LLM returns 4 tools simultaneously
 // 2. Agent evaluates each:
-//    - get_temperature (CodeMode + auto) ✅ Execute
-//    - echo (CodeMode + NOT auto) ⏸️ Requires approval
-//    - uuid_generate (Non-CodeMode + auto) ✅ Execute
-//    - hash (Non-CodeMode + NOT auto) ⏸️ Requires approval
+//   - get_temperature (CodeMode + auto) ✅ Execute
+//   - echo (CodeMode + NOT auto) ⏸️ Requires approval
+//   - uuid_generate (Non-CodeMode + auto) ✅ Execute
+//   - hash (Non-CodeMode + NOT auto) ⏸️ Requires approval
+//
 // 3. Agent executes 2 auto tools
 // 4. Agent returns with:
-//    - Content: Results from 2 auto-executed tools
-//    - ToolCalls: 2 tools awaiting approval
+//   - Content: Results from 2 auto-executed tools
+//   - ToolCalls: 2 tools awaiting approval
 func TestCodeMode_Agent_PartialApprovalMixed(t *testing.T) {
 	t.Parallel()
 
@@ -521,10 +522,10 @@ func TestCodeMode_Agent_PartialApprovalMixed(t *testing.T) {
 	// Turn 1: Returns 4 tools - mix of auto/non-auto, CodeMode/Non-CodeMode
 	mocker.AddChatResponse(CreateDynamicChatResponse(func(history []schemas.ChatMessage) *schemas.BifrostChatResponse {
 		return CreateChatResponseWithToolCalls([]schemas.ChatAssistantMessageToolCall{
-			CreateToolCall("call-1", "get_temperature", map[string]interface{}{"location": "Tokyo"}),  // CodeMode, auto ✅
-			CreateToolCall("call-2", "echo", map[string]interface{}{"text": "test"}),                  // CodeMode, NOT auto ⏸️
-			CreateToolCall("call-3", "uuid_generate", map[string]interface{}{}),                       // Non-CodeMode, auto ✅
-			CreateToolCall("call-4", "hash", map[string]interface{}{"input": "test", "algorithm": "sha256"}), // Non-CodeMode, NOT auto ⏸️
+			CreateToolCall("call-1", "get_temperature", map[string]any{"location": "Tokyo"}),         // CodeMode, auto ✅
+			CreateToolCall("call-2", "echo", map[string]any{"text": "test"}),                         // CodeMode, NOT auto ⏸️
+			CreateToolCall("call-3", "uuid_generate", map[string]any{}),                              // Non-CodeMode, auto ✅
+			CreateToolCall("call-4", "hash", map[string]any{"input": "test", "algorithm": "sha256"}), // Non-CodeMode, NOT auto ⏸️
 		})
 	}))
 
@@ -535,7 +536,7 @@ func TestCodeMode_Agent_PartialApprovalMixed(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Test partial approval mixed"),
+					ContentStr: new("Test partial approval mixed"),
 				},
 			},
 		},
@@ -583,25 +584,25 @@ func TestCodeMode_Agent_PartialApprovalMixed(t *testing.T) {
 }
 
 // Helper function to extract return value from formatted CodeMode execution response
-func extractReturnValue(formattedResponse string) (interface{}, error) {
+func extractReturnValue(formattedResponse string) (any, error) {
 	// The response format is:
 	// Console output:
 	// ...
 	// Return value: {...} OR Return value: [...]
 	//
 	// We need to extract the JSON after "Return value:"
-	idx := strings.Index(formattedResponse, "Return value:")
-	if idx == -1 {
+	_, after, ok := strings.Cut(formattedResponse, "Return value:")
+	if !ok {
 		return nil, fmt.Errorf("could not find 'Return value:' in response")
 	}
-	rest := strings.TrimSpace(formattedResponse[idx+len("Return value:"):])
+	rest := strings.TrimSpace(after)
 	if len(rest) == 0 {
 		return nil, fmt.Errorf("empty return value")
 	}
 
 	// Use balanced bracket matching to handle nested JSON
 	jsonStr := extractBalancedJSON(rest)
-	var result interface{}
+	var result any
 	if err := json.Unmarshal([]byte(jsonStr), &result); err != nil {
 		return nil, fmt.Errorf("failed to parse return value JSON: %w", err)
 	}

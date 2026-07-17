@@ -6,11 +6,11 @@ import (
 	"fmt"
 
 	"github.com/bytedance/sonic"
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // validateRawFields checks raw request/response fields and integrates errors into the ValidationResult.
-func validateRawFields(expectations ResponseExpectations, rawRequest, rawResponse interface{}, result *ValidationResult) {
+func validateRawFields(expectations ResponseExpectations, rawRequest, rawResponse any, result *ValidationResult) {
 	if expectations.ShouldHaveRawRequest {
 		if err := ValidateRawField(rawRequest, "RawRequest"); err != nil {
 			result.Passed = false
@@ -30,7 +30,7 @@ func validateRawFields(expectations ResponseExpectations, rawRequest, rawRespons
 // 2. Valid JSON (parseable)
 // 3. Compact JSON (no unnecessary whitespace)
 // Returns an error describing the validation failure, or nil if valid.
-func ValidateRawField(field interface{}, fieldName string) error {
+func ValidateRawField(field any, fieldName string) error {
 	if field == nil {
 		return fmt.Errorf("%s should be non-nil when raw request/response is enabled", fieldName)
 	}

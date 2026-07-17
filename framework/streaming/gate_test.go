@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // newTestAccumulator returns a real Accumulator wired up like production.
@@ -23,7 +23,7 @@ func newTestAccumulator(t *testing.T) *Accumulator {
 // makeChunks builds n distinct *BifrostStreamChunk pointers tracked by reference equality.
 func makeChunks(n int) []*schemas.BifrostStreamChunk {
 	out := make([]*schemas.BifrostStreamChunk, n)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		out[i] = &schemas.BifrostStreamChunk{
 			BifrostChatResponse: &schemas.BifrostChatResponse{ID: fmt.Sprintf("chunk-%d", i)},
 		}
@@ -99,7 +99,7 @@ func TestGate_HappyPath(t *testing.T) {
 
 	chunks := makeChunks(10)
 
-	for i := 0; i < 2; i++ {
+	for i := range 2 {
 		if !a.GateSend(traceID, chunks[i], false, false, r.ch, ctx) {
 			t.Fatalf("chunk %d: send returned false", i)
 		}
@@ -143,7 +143,7 @@ func TestGate_HappyPath(t *testing.T) {
 	if len(cs) != 10 {
 		t.Fatalf("expected 10 chunks, got %d", len(cs))
 	}
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		if cs[i] != chunks[i] {
 			t.Fatalf("position %d: pointer mismatch", i)
 		}
@@ -207,7 +207,7 @@ func TestGate_FinalChunkWhilePaused(t *testing.T) {
 		t.Fatalf("expected 6 chunks delivered")
 	}
 	cs, _ := r.snapshot()
-	for i := 0; i < 6; i++ {
+	for i := range 6 {
 		if cs[i] != chunks[i] {
 			t.Fatalf("order mismatch at %d", i)
 		}
@@ -371,7 +371,7 @@ func TestGate_HardErrorWhilePaused(t *testing.T) {
 		t.Fatalf("expected 5 chunks delivered")
 	}
 	cs, _ := r.snapshot()
-	for i := 0; i < 4; i++ {
+	for i := range 4 {
 		if cs[i] != chunks[i] {
 			t.Fatalf("order mismatch at %d", i)
 		}
@@ -410,7 +410,7 @@ func TestGate_PauseStreamMultipleCalls(t *testing.T) {
 	sa.mu.Unlock()
 
 	// Repeat pause calls — must not change state or move gatePausedAt.
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		a.PauseStream(traceID)
 	}
 	sa.mu.Lock()
@@ -441,7 +441,7 @@ func TestGate_PauseStreamMultipleCalls(t *testing.T) {
 		t.Fatalf("expected 5 chunks after resume")
 	}
 	cs, _ := r.snapshot()
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		if cs[i] != chunks[i] {
 			t.Fatalf("order mismatch at %d", i)
 		}
@@ -577,7 +577,7 @@ func TestGate_AsyncResume(t *testing.T) {
 		t.Fatalf("expected 5 chunks")
 	}
 	cs, _ := r.snapshot()
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		if cs[i] != chunks[i] {
 			t.Fatalf("order mismatch at %d", i)
 		}

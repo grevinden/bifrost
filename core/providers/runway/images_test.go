@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	schemas "github.com/maximhq/bifrost/core/schemas"
+	schemas "github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -39,8 +39,8 @@ func TestToRunwayImageGenerationRequest(t *testing.T) {
 
 	t.Run("aspect_ratio_takes_precedence_over_size", func(t *testing.T) {
 		result, err := ToRunwayImageGenerationRequest(makeImageReq("gen4_image", "a cat", &schemas.ImageGenerationParameters{
-			AspectRatio: schemas.Ptr("1080:1920"),
-			Size:        schemas.Ptr("1280x720"),
+			AspectRatio: new("1080:1920"),
+			Size:        new("1280x720"),
 		}))
 		require.NoError(t, err)
 		assert.Equal(t, "1080:1920", result.Ratio)
@@ -48,7 +48,7 @@ func TestToRunwayImageGenerationRequest(t *testing.T) {
 
 	t.Run("size_converted_to_ratio", func(t *testing.T) {
 		result, err := ToRunwayImageGenerationRequest(makeImageReq("gen4_image", "a cat", &schemas.ImageGenerationParameters{
-			Size: schemas.Ptr("1280x720"),
+			Size: new("1280x720"),
 		}))
 		require.NoError(t, err)
 		assert.Equal(t, "1280:720", result.Ratio)
@@ -56,7 +56,7 @@ func TestToRunwayImageGenerationRequest(t *testing.T) {
 
 	t.Run("seed_mapped", func(t *testing.T) {
 		result, err := ToRunwayImageGenerationRequest(makeImageReq("gen4_image", "a cat", &schemas.ImageGenerationParameters{
-			Seed: schemas.Ptr(42),
+			Seed: new(42),
 		}))
 		require.NoError(t, err)
 		require.NotNil(t, result.Seed)
@@ -76,7 +76,7 @@ func TestToRunwayImageGenerationRequest(t *testing.T) {
 	t.Run("explicit_reference_images_override_input_images", func(t *testing.T) {
 		result, err := ToRunwayImageGenerationRequest(makeImageReq("gen4_image", "@logo a cat", &schemas.ImageGenerationParameters{
 			InputImages: []string{"https://example.com/input.jpg"},
-			ExtraParams: map[string]interface{}{
+			ExtraParams: map[string]any{
 				"reference_images": []ReferenceImage{{URI: "https://example.com/ref.jpg", Tag: "logo"}},
 			},
 		}))
@@ -89,8 +89,8 @@ func TestToRunwayImageGenerationRequest(t *testing.T) {
 
 	t.Run("map_fallback_content_moderation", func(t *testing.T) {
 		result, err := ToRunwayImageGenerationRequest(makeImageReq("gen4_image", "a cat", &schemas.ImageGenerationParameters{
-			ExtraParams: map[string]interface{}{
-				"content_moderation": map[string]interface{}{"public_figure_threshold": "low"},
+			ExtraParams: map[string]any{
+				"content_moderation": map[string]any{"public_figure_threshold": "low"},
 			},
 		}))
 		require.NoError(t, err)
@@ -102,10 +102,10 @@ func TestToRunwayImageGenerationRequest(t *testing.T) {
 
 	t.Run("gpt_image_2_fields_attached", func(t *testing.T) {
 		result, err := ToRunwayImageGenerationRequest(makeImageReq("gpt_image_2", "a cat", &schemas.ImageGenerationParameters{
-			N:          schemas.Ptr(3),
-			Quality:    schemas.Ptr("high"),
-			Background: schemas.Ptr("opaque"),
-			Seed:       schemas.Ptr(7),
+			N:          new(3),
+			Quality:    new("high"),
+			Background: new("opaque"),
+			Seed:       new(7),
 		}))
 		require.NoError(t, err)
 		require.NotNil(t, result.OutputCount)
@@ -119,10 +119,10 @@ func TestToRunwayImageGenerationRequest(t *testing.T) {
 
 	t.Run("gen4_drops_unsupported_fields", func(t *testing.T) {
 		result, err := ToRunwayImageGenerationRequest(makeImageReq("gen4_image", "a cat", &schemas.ImageGenerationParameters{
-			N:          schemas.Ptr(3),
-			Quality:    schemas.Ptr("high"),
-			Background: schemas.Ptr("opaque"),
-			Seed:       schemas.Ptr(7),
+			N:          new(3),
+			Quality:    new("high"),
+			Background: new("opaque"),
+			Seed:       new(7),
 		}))
 		require.NoError(t, err)
 		assert.Nil(t, result.OutputCount, "gen4_image does not support outputCount")
@@ -134,8 +134,8 @@ func TestToRunwayImageGenerationRequest(t *testing.T) {
 
 	t.Run("content_moderation_dropped_for_unsupported_model", func(t *testing.T) {
 		result, err := ToRunwayImageGenerationRequest(makeImageReq("gpt_image_2", "a cat", &schemas.ImageGenerationParameters{
-			ExtraParams: map[string]interface{}{
-				"content_moderation": map[string]interface{}{"public_figure_threshold": "low"},
+			ExtraParams: map[string]any{
+				"content_moderation": map[string]any{"public_figure_threshold": "low"},
 			},
 		}))
 		require.NoError(t, err)
@@ -147,14 +147,14 @@ func TestToRunwayImageGenerationRequest(t *testing.T) {
 		refImages := []ReferenceImage{{URI: "https://example.com/ref.jpg", Tag: "hero", Subject: "human"}}
 
 		gemini, err := ToRunwayImageGenerationRequest(makeImageReq("gemini_image3_pro", "@hero a cat", &schemas.ImageGenerationParameters{
-			ExtraParams: map[string]interface{}{"reference_images": refImages},
+			ExtraParams: map[string]any{"reference_images": refImages},
 		}))
 		require.NoError(t, err)
 		require.Len(t, gemini.ReferenceImages, 1)
 		assert.Equal(t, "human", gemini.ReferenceImages[0].Subject)
 
 		gen4, err := ToRunwayImageGenerationRequest(makeImageReq("gen4_image", "@hero a cat", &schemas.ImageGenerationParameters{
-			ExtraParams: map[string]interface{}{"reference_images": []ReferenceImage{{URI: "https://example.com/ref.jpg", Tag: "hero", Subject: "human"}}},
+			ExtraParams: map[string]any{"reference_images": []ReferenceImage{{URI: "https://example.com/ref.jpg", Tag: "hero", Subject: "human"}}},
 		}))
 		require.NoError(t, err)
 		require.Len(t, gen4.ReferenceImages, 1)
@@ -199,7 +199,7 @@ func TestToRunwayImageEditRequest(t *testing.T) {
 
 	t.Run("size_converted_to_ratio", func(t *testing.T) {
 		result, err := ToRunwayImageEditRequest(makeImageEditReq("gen4_image", "x", [][]byte{{0x89, 0x50}}, &schemas.ImageEditParameters{
-			Size: schemas.Ptr("1280x720"),
+			Size: new("1280x720"),
 		}))
 		require.NoError(t, err)
 		assert.Equal(t, "1280:720", result.Ratio)
@@ -207,7 +207,7 @@ func TestToRunwayImageEditRequest(t *testing.T) {
 
 	t.Run("explicit_reference_images_appended_after_edit_images", func(t *testing.T) {
 		result, err := ToRunwayImageEditRequest(makeImageEditReq("gen4_image", "@logo x", [][]byte{{0x89, 0x50}}, &schemas.ImageEditParameters{
-			ExtraParams: map[string]interface{}{
+			ExtraParams: map[string]any{
 				"reference_images": []ReferenceImage{{URI: "https://example.com/logo.png", Tag: "logo"}},
 			},
 		}))
@@ -221,10 +221,10 @@ func TestToRunwayImageEditRequest(t *testing.T) {
 
 	t.Run("gen4_drops_unsupported_fields", func(t *testing.T) {
 		result, err := ToRunwayImageEditRequest(makeImageEditReq("gen4_image", "x", [][]byte{{0x89, 0x50}}, &schemas.ImageEditParameters{
-			N:          schemas.Ptr(3),
-			Quality:    schemas.Ptr("high"),
-			Background: schemas.Ptr("opaque"),
-			Seed:       schemas.Ptr(7),
+			N:          new(3),
+			Quality:    new("high"),
+			Background: new("opaque"),
+			Seed:       new(7),
 		}))
 		require.NoError(t, err)
 		assert.Nil(t, result.OutputCount)

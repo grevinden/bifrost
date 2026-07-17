@@ -4,8 +4,8 @@ import (
 	"encoding/base64"
 	"fmt"
 
-	"github.com/maximhq/bifrost/core/providers/utils"
-	schemas "github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/providers/utils"
+	schemas "github.com/grevinden/bifrost/core/schemas"
 )
 
 func ToHuggingFaceTranscriptionRequest(request *schemas.BifrostTranscriptionRequest) (*HuggingFaceTranscriptionRequest, error) {
@@ -31,8 +31,8 @@ func ToHuggingFaceTranscriptionRequest(request *schemas.BifrostTranscriptionRequ
 	if inferenceProvider != falAI {
 		hfRequest = &HuggingFaceTranscriptionRequest{
 			Inputs:   request.Input.File,
-			Model:    schemas.Ptr(modelName),
-			Provider: schemas.Ptr(string(inferenceProvider)),
+			Model:    new(modelName),
+			Provider: new(string(inferenceProvider)),
 		}
 	} else {
 		encoded := base64.StdEncoding.EncodeToString(request.Input.File)

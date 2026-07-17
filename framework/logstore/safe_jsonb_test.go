@@ -36,7 +36,7 @@ func malformedHistoryCases() []malformedHistoryCase {
 	// that wouldn't fit comfortably inline.
 	var big strings.Builder
 	big.WriteByte('[')
-	for i := 0; i < 1000; i++ {
+	for i := range 1000 {
 		if i > 0 {
 			big.WriteByte(',')
 		}
@@ -249,7 +249,7 @@ func TestBifrostSafeJsonb_DirectInvocation(t *testing.T) {
 	// Build large valid array — last element should be `{"last": true}`.
 	var big strings.Builder
 	big.WriteByte('[')
-	for i := 0; i < 500; i++ {
+	for i := range 500 {
 		big.WriteString(`{"i":`)
 		big.WriteByte(byte('0' + (i % 10)))
 		big.WriteString(`},`)

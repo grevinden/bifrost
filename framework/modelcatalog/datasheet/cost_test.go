@@ -2,11 +2,12 @@ package datasheet
 
 import (
 	"encoding/json"
+	"maps"
 	"testing"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
-	configstoreTables "github.com/maximhq/bifrost/framework/configstore/tables"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
+	configstoreTables "github.com/grevinden/bifrost/framework/configstore/tables"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -21,8 +22,8 @@ func chatPricing(input, output float64) configstoreTables.TableModelPricing {
 		Model:              "test-model",
 		Provider:           "test-provider",
 		Mode:               "chat",
-		InputCostPerToken:  bifrost.Ptr(input),
-		OutputCostPerToken: bifrost.Ptr(output),
+		InputCostPerToken:  new(input),
+		OutputCostPerToken: new(output),
 	}
 }
 
@@ -30,9 +31,7 @@ func chatPricing(input, output float64) configstoreTables.TableModelPricing {
 func testStoreWithPricing(entries map[string]configstoreTables.TableModelPricing) *Store {
 	s := newTestStore()
 
-	for k, v := range entries {
-		s.pricingData[k] = v
-	}
+	maps.Copy(s.pricingData, entries)
 	return s
 }
 
@@ -132,8 +131,8 @@ func TestComputeTextCost_ZeroTokens(t *testing.T) {
 func TestComputeTextCost_WithCachedPromptTokens(t *testing.T) {
 	// Claude 3.5 Sonnet (Bedrock): input=$3/M, output=$15/M, cache_read=$0.3/M, cache_creation=$3.75/M
 	p := chatPricing(0.000003, 0.000015)
-	p.CacheReadInputTokenCost = bifrost.Ptr(0.0000003)
-	p.CacheCreationInputTokenCost = bifrost.Ptr(0.00000375)
+	p.CacheReadInputTokenCost = new(0.0000003)
+	p.CacheCreationInputTokenCost = new(0.00000375)
 
 	usage := &schemas.BifrostLLMUsage{
 		PromptTokens:     2000,
@@ -159,24 +158,24 @@ func TestComputeTextCost_WithCachedPromptTokens(t *testing.T) {
 // exercise the cache-write (cache-creation) tiering added with gpt-5.6.
 func gpt56SolPricing() configstoreTables.TableModelPricing {
 	p := chatPricing(0.000005, 0.00003) // standard input $5/M, output $30/M
-	p.InputCostPerTokenAbove272kTokens = bifrost.Ptr(0.00001)
-	p.InputCostPerTokenFlex = bifrost.Ptr(0.0000025)
-	p.InputCostPerTokenFlexAbove272kTokens = bifrost.Ptr(0.000005)
-	p.InputCostPerTokenPriority = bifrost.Ptr(0.00001)
-	p.OutputCostPerTokenAbove272kTokens = bifrost.Ptr(0.000045)
-	p.OutputCostPerTokenFlex = bifrost.Ptr(0.000015)
-	p.OutputCostPerTokenFlexAbove272kTokens = bifrost.Ptr(0.0000225)
-	p.OutputCostPerTokenPriority = bifrost.Ptr(0.00006)
-	p.CacheReadInputTokenCost = bifrost.Ptr(0.0000005)
-	p.CacheReadInputTokenCostAbove272kTokens = bifrost.Ptr(0.000001)
-	p.CacheReadInputTokenCostFlex = bifrost.Ptr(0.00000025)
-	p.CacheReadInputTokenCostFlexAbove272kTokens = bifrost.Ptr(0.0000005)
-	p.CacheReadInputTokenCostPriority = bifrost.Ptr(0.000001)
-	p.CacheCreationInputTokenCost = bifrost.Ptr(0.00000625)
-	p.CacheCreationInputTokenCostAbove272kTokens = bifrost.Ptr(0.0000125)
-	p.CacheCreationInputTokenCostFlex = bifrost.Ptr(0.000003125)
-	p.CacheCreationInputTokenCostFlexAbove272kTokens = bifrost.Ptr(0.00000625)
-	p.CacheCreationInputTokenCostPriority = bifrost.Ptr(0.0000125)
+	p.InputCostPerTokenAbove272kTokens = new(0.00001)
+	p.InputCostPerTokenFlex = new(0.0000025)
+	p.InputCostPerTokenFlexAbove272kTokens = new(0.000005)
+	p.InputCostPerTokenPriority = new(0.00001)
+	p.OutputCostPerTokenAbove272kTokens = new(0.000045)
+	p.OutputCostPerTokenFlex = new(0.000015)
+	p.OutputCostPerTokenFlexAbove272kTokens = new(0.0000225)
+	p.OutputCostPerTokenPriority = new(0.00006)
+	p.CacheReadInputTokenCost = new(0.0000005)
+	p.CacheReadInputTokenCostAbove272kTokens = new(0.000001)
+	p.CacheReadInputTokenCostFlex = new(0.00000025)
+	p.CacheReadInputTokenCostFlexAbove272kTokens = new(0.0000005)
+	p.CacheReadInputTokenCostPriority = new(0.000001)
+	p.CacheCreationInputTokenCost = new(0.00000625)
+	p.CacheCreationInputTokenCostAbove272kTokens = new(0.0000125)
+	p.CacheCreationInputTokenCostFlex = new(0.000003125)
+	p.CacheCreationInputTokenCostFlexAbove272kTokens = new(0.00000625)
+	p.CacheCreationInputTokenCostPriority = new(0.0000125)
 	return p
 }
 
@@ -268,7 +267,7 @@ func TestComputeTextCost_GPT56_PriorityTier(t *testing.T) {
 // above 272k (no new tiering leaks into existing flex models).
 func TestComputeTextCost_FlexFlatAbove272kWhenNoFlexTierColumn(t *testing.T) {
 	p := chatPricing(0.000005, 0.00003)
-	p.InputCostPerTokenFlex = bifrost.Ptr(0.0000025)
+	p.InputCostPerTokenFlex = new(0.0000025)
 	usage := &schemas.BifrostLLMUsage{PromptTokens: 300000, TotalTokens: 300000}
 	cost := computeTextCost(&p, usage, serviceTier{isFlex: true})
 	assert.InDelta(t, 300000*0.0000025, cost, 1e-9)
@@ -277,8 +276,8 @@ func TestComputeTextCost_FlexFlatAbove272kWhenNoFlexTierColumn(t *testing.T) {
 func TestComputeTextCost_FastMode(t *testing.T) {
 	// Opus 4.8: standard $5/$25, fast $10/$50 per MTok.
 	p := chatPricing(0.000005, 0.000025)
-	p.InputCostPerTokenFast = bifrost.Ptr(0.00001)
-	p.OutputCostPerTokenFast = bifrost.Ptr(0.00005)
+	p.InputCostPerTokenFast = new(0.00001)
+	p.OutputCostPerTokenFast = new(0.00005)
 
 	usage := &schemas.BifrostLLMUsage{
 		PromptTokens:     1000,
@@ -298,10 +297,10 @@ func TestComputeTextCost_FastMode(t *testing.T) {
 func TestComputeTextCost_FastMode_FlatAcrossContextWindow(t *testing.T) {
 	// Fast mode is flat across the full window — it must ignore the 200k tier rate.
 	p := chatPricing(0.000005, 0.000025)
-	p.InputCostPerTokenFast = bifrost.Ptr(0.00001)
-	p.OutputCostPerTokenFast = bifrost.Ptr(0.00005)
-	p.InputCostPerTokenAbove200kTokens = bifrost.Ptr(0.0000075)
-	p.OutputCostPerTokenAbove200kTokens = bifrost.Ptr(0.0000375)
+	p.InputCostPerTokenFast = new(0.00001)
+	p.OutputCostPerTokenFast = new(0.00005)
+	p.InputCostPerTokenAbove200kTokens = new(0.0000075)
+	p.OutputCostPerTokenAbove200kTokens = new(0.0000375)
 
 	usage := &schemas.BifrostLLMUsage{
 		PromptTokens:     250000,
@@ -330,12 +329,12 @@ func TestComputeTextCost_FastMode_UsesFastCacheRates(t *testing.T) {
 	// Fast mode has dedicated cache columns; when set, cache tokens bill at the
 	// _fast rate, not the standard rate.
 	p := chatPricing(0.000005, 0.000025)
-	p.InputCostPerTokenFast = bifrost.Ptr(0.00001)
-	p.OutputCostPerTokenFast = bifrost.Ptr(0.00005)
-	p.CacheReadInputTokenCost = bifrost.Ptr(0.0000005)         // standard read (ignored in fast)
-	p.CacheCreationInputTokenCost = bifrost.Ptr(0.00000625)    // standard 5m write (ignored in fast)
-	p.CacheReadInputTokenCostFast = bifrost.Ptr(0.000001)      // fast read
-	p.CacheCreationInputTokenCostFast = bifrost.Ptr(0.0000125) // fast 5m write
+	p.InputCostPerTokenFast = new(0.00001)
+	p.OutputCostPerTokenFast = new(0.00005)
+	p.CacheReadInputTokenCost = new(0.0000005)         // standard read (ignored in fast)
+	p.CacheCreationInputTokenCost = new(0.00000625)    // standard 5m write (ignored in fast)
+	p.CacheReadInputTokenCostFast = new(0.000001)      // fast read
+	p.CacheCreationInputTokenCostFast = new(0.0000125) // fast 5m write
 
 	usage := &schemas.BifrostLLMUsage{
 		PromptTokens:     2000,
@@ -357,10 +356,10 @@ func TestComputeTextCost_FastMode_CacheFallsBackToStandardWhenFastUnset(t *testi
 	// When the _fast cache columns are absent, cache tokens fall back to standard
 	// cache rates (mirrors the input/output fast fallback) — the flag is a no-op.
 	p := chatPricing(0.000005, 0.000025)
-	p.InputCostPerTokenFast = bifrost.Ptr(0.00001)
-	p.OutputCostPerTokenFast = bifrost.Ptr(0.00005)
-	p.CacheReadInputTokenCost = bifrost.Ptr(0.0000005)
-	p.CacheCreationInputTokenCost = bifrost.Ptr(0.00000625)
+	p.InputCostPerTokenFast = new(0.00001)
+	p.OutputCostPerTokenFast = new(0.00005)
+	p.CacheReadInputTokenCost = new(0.0000005)
+	p.CacheCreationInputTokenCost = new(0.00000625)
 
 	usage := &schemas.BifrostLLMUsage{
 		PromptTokens:     2000,
@@ -383,10 +382,10 @@ func TestComputeTextCost_FastMode_CacheFallsBackToStandardWhenFastUnset(t *testi
 // rate. Opus 4.8: fast $10/$50, fast 5m cache write $12.50 per MTok.
 func TestComputeTextCost_FastMode_Opus48CacheRegression(t *testing.T) {
 	p := chatPricing(0.000005, 0.000025)
-	p.InputCostPerTokenFast = bifrost.Ptr(0.00001)
-	p.OutputCostPerTokenFast = bifrost.Ptr(0.00005)
-	p.CacheCreationInputTokenCost = bifrost.Ptr(0.00000625)    // standard 5m write (ignored in fast)
-	p.CacheCreationInputTokenCostFast = bifrost.Ptr(0.0000125) // fast 5m write
+	p.InputCostPerTokenFast = new(0.00001)
+	p.OutputCostPerTokenFast = new(0.00005)
+	p.CacheCreationInputTokenCost = new(0.00000625)    // standard 5m write (ignored in fast)
+	p.CacheCreationInputTokenCostFast = new(0.0000125) // fast 5m write
 
 	// input_tokens=2, cache_creation=44667 (all 5m), output=135. PromptTokens
 	// carries the cache-creation tokens (Anthropic responses usage mapping).
@@ -413,10 +412,10 @@ func TestComputeTextCost_FastMode_Opus48CacheRegression(t *testing.T) {
 // 1.1x while leaving the flat per-search fee untouched.
 func TestComputeTextCost_InferenceGeoUS_AppliesMultiplier(t *testing.T) {
 	p := chatPricing(0.00001, 0.00005)
-	p.CacheReadInputTokenCost = bifrost.Ptr(0.000001)
-	p.CacheCreationInputTokenCost = bifrost.Ptr(0.0000125)
-	p.SearchContextCostPerQuery = bifrost.Ptr(0.01)
-	p.InferenceGeoUSMultiplier = bifrost.Ptr(1.1)
+	p.CacheReadInputTokenCost = new(0.000001)
+	p.CacheCreationInputTokenCost = new(0.0000125)
+	p.SearchContextCostPerQuery = new(0.01)
+	p.InferenceGeoUSMultiplier = new(1.1)
 
 	usage := &schemas.BifrostLLMUsage{
 		PromptTokens:     1000, // 500 non-cached + 200 read + 300 write
@@ -426,7 +425,7 @@ func TestComputeTextCost_InferenceGeoUS_AppliesMultiplier(t *testing.T) {
 			CachedWriteTokens: 300,
 		},
 		CompletionTokensDetails: &schemas.ChatCompletionTokensDetails{
-			NumSearchQueries: bifrost.Ptr(2),
+			NumSearchQueries: new(2),
 		},
 	}
 
@@ -453,24 +452,24 @@ func TestComputeTextCost_InferenceGeoUS_NoMultiplierColumn(t *testing.T) {
 
 func TestTierFromResponse_Speed(t *testing.T) {
 	assert.False(t, tierFromResponse(nil, nil, nil).isFast)
-	assert.False(t, tierFromResponse(nil, bifrost.Ptr("standard"), nil).isFast)
-	assert.True(t, tierFromResponse(nil, bifrost.Ptr("fast"), nil).isFast)
+	assert.False(t, tierFromResponse(nil, new("standard"), nil).isFast)
+	assert.True(t, tierFromResponse(nil, new("fast"), nil).isFast)
 }
 
 func TestTierFromResponse_InferenceGeo(t *testing.T) {
 	assert.False(t, tierFromResponse(nil, nil, nil).inferenceGeoUS)
-	assert.False(t, tierFromResponse(nil, nil, bifrost.Ptr("global")).inferenceGeoUS)
-	assert.True(t, tierFromResponse(nil, nil, bifrost.Ptr("us")).inferenceGeoUS)
-	assert.True(t, tierFromResponse(nil, nil, bifrost.Ptr("US")).inferenceGeoUS)
+	assert.False(t, tierFromResponse(nil, nil, new("global")).inferenceGeoUS)
+	assert.True(t, tierFromResponse(nil, nil, new("us")).inferenceGeoUS)
+	assert.True(t, tierFromResponse(nil, nil, new("US")).inferenceGeoUS)
 }
 
 func TestComputeTextCost_With1hrCacheCreationTokens(t *testing.T) {
 	// claude-3-5-sonnet-20241022-v2:0 on Bedrock:
 	// input=$3/M, output=$15/M, cache_creation=$3.75/M, cache_creation_1hr=$7.50/M, cache_read=$0.3/M
 	p := chatPricing(0.000003, 0.000015)
-	p.CacheReadInputTokenCost = bifrost.Ptr(3e-7)
-	p.CacheCreationInputTokenCost = bifrost.Ptr(0.00000375)
-	p.CacheCreationInputTokenCostAbove1hr = bifrost.Ptr(0.0000075)
+	p.CacheReadInputTokenCost = new(3e-7)
+	p.CacheCreationInputTokenCost = new(0.00000375)
+	p.CacheCreationInputTokenCostAbove1hr = new(0.0000075)
 
 	usage := &schemas.BifrostLLMUsage{
 		PromptTokens:     2000,
@@ -498,8 +497,8 @@ func TestComputeTextCost_StandardCacheCreationPricingLesserThan1hr(t *testing.T)
 	// Standard (5-min TTL) cache creation is cheaper than 1hr TTL cache creation.
 	// 1hr rate ($7.50/M) is 2x the standard rate ($3.75/M).
 	p := chatPricing(0.000003, 0.000015)
-	p.CacheCreationInputTokenCost = bifrost.Ptr(0.00000375)
-	p.CacheCreationInputTokenCostAbove1hr = bifrost.Ptr(0.0000075)
+	p.CacheCreationInputTokenCost = new(0.00000375)
+	p.CacheCreationInputTokenCostAbove1hr = new(0.0000075)
 
 	base := &schemas.BifrostLLMUsage{
 		PromptTokens:     2000,
@@ -530,8 +529,8 @@ func TestComputeTextCost_1hrCacheCreationFallsBackToStandardWhenAbove1hrRateAbse
 	// claude-3-5-haiku on Bedrock has no cache_creation_input_token_cost_above_1hr entry.
 	// Tokens marked as 1hr cache writes must fall back to the standard cache creation rate.
 	p := chatPricing(8e-7, 0.000004)
-	p.CacheReadInputTokenCost = bifrost.Ptr(8e-8)
-	p.CacheCreationInputTokenCost = bifrost.Ptr(0.000001)
+	p.CacheReadInputTokenCost = new(8e-8)
+	p.CacheCreationInputTokenCost = new(0.000001)
 	// CacheCreationInputTokenCostAbove1hr intentionally left nil
 
 	usage := &schemas.BifrostLLMUsage{
@@ -559,8 +558,8 @@ func TestComputeTextCost_CacheWriteTokenDetailsNil_FallsBackToStandardCreationRa
 	// CachedWriteTokens is set but CachedWriteTokenDetails is nil.
 	// All write tokens must use the standard cache creation rate even though above_1hr is configured.
 	p := chatPricing(0.000003, 0.000015)
-	p.CacheCreationInputTokenCost = bifrost.Ptr(0.00000375)
-	p.CacheCreationInputTokenCostAbove1hr = bifrost.Ptr(0.0000075) // present but must not be used
+	p.CacheCreationInputTokenCost = new(0.00000375)
+	p.CacheCreationInputTokenCostAbove1hr = new(0.0000075) // present but must not be used
 
 	usage := &schemas.BifrostLLMUsage{
 		PromptTokens:     2000,
@@ -585,8 +584,8 @@ func TestComputeTextCost_CacheWriteTokenDetails1hZero_FallsBackToStandardCreatio
 	// CachedWriteTokenDetails is present but CachedWriteTokens1h is 0 (e.g. all tokens
 	// used 5-min TTL). All write tokens must use the standard cache creation rate.
 	p := chatPricing(0.000003, 0.000015)
-	p.CacheCreationInputTokenCost = bifrost.Ptr(0.00000375)
-	p.CacheCreationInputTokenCostAbove1hr = bifrost.Ptr(0.0000075) // present but must not be used
+	p.CacheCreationInputTokenCost = new(0.00000375)
+	p.CacheCreationInputTokenCostAbove1hr = new(0.0000075) // present but must not be used
 
 	usage := &schemas.BifrostLLMUsage{
 		PromptTokens:     2000,
@@ -614,12 +613,12 @@ func TestComputeTextCost_1hrCacheCreationAbove200k_UsesAbove1hrAbove200kRate(t *
 	// When totalTokens > 200k and CachedWriteTokens1h > 0, the above_1hr_above_200k rate
 	// ($15/M) must be used — the most specific tier wins.
 	p := chatPricing(0.000003, 0.000015)
-	p.InputCostPerTokenAbove200kTokens = bifrost.Ptr(0.000006)
-	p.OutputCostPerTokenAbove200kTokens = bifrost.Ptr(0.00003)
-	p.CacheCreationInputTokenCost = bifrost.Ptr(0.00000375)
-	p.CacheCreationInputTokenCostAbove200kTokens = bifrost.Ptr(0.0000075)
-	p.CacheCreationInputTokenCostAbove1hr = bifrost.Ptr(0.0000075)
-	p.CacheCreationInputTokenCostAbove1hrAbove200kTokens = bifrost.Ptr(0.000015)
+	p.InputCostPerTokenAbove200kTokens = new(0.000006)
+	p.OutputCostPerTokenAbove200kTokens = new(0.00003)
+	p.CacheCreationInputTokenCost = new(0.00000375)
+	p.CacheCreationInputTokenCostAbove200kTokens = new(0.0000075)
+	p.CacheCreationInputTokenCostAbove1hr = new(0.0000075)
+	p.CacheCreationInputTokenCostAbove1hrAbove200kTokens = new(0.000015)
 
 	usage := &schemas.BifrostLLMUsage{
 		PromptTokens:     210000,
@@ -648,11 +647,11 @@ func TestComputeTextCost_1hrCacheCreationAbove200k_FallsBackToAbove1hrWhenAbove2
 	// CacheCreationInputTokenCostAbove1hr is present, the 1hr rate must be used
 	// even for >200k requests.
 	p := chatPricing(0.000003, 0.000015)
-	p.InputCostPerTokenAbove200kTokens = bifrost.Ptr(0.000006)
-	p.OutputCostPerTokenAbove200kTokens = bifrost.Ptr(0.00003)
-	p.CacheCreationInputTokenCost = bifrost.Ptr(0.00000375)
-	p.CacheCreationInputTokenCostAbove200kTokens = bifrost.Ptr(0.0000075)
-	p.CacheCreationInputTokenCostAbove1hr = bifrost.Ptr(0.000009) // distinct from above_200k to make fallback unambiguous
+	p.InputCostPerTokenAbove200kTokens = new(0.000006)
+	p.OutputCostPerTokenAbove200kTokens = new(0.00003)
+	p.CacheCreationInputTokenCost = new(0.00000375)
+	p.CacheCreationInputTokenCostAbove200kTokens = new(0.0000075)
+	p.CacheCreationInputTokenCostAbove1hr = new(0.000009) // distinct from above_200k to make fallback unambiguous
 	// CacheCreationInputTokenCostAbove1hrAbove200kTokens intentionally left nil
 
 	usage := &schemas.BifrostLLMUsage{
@@ -680,10 +679,10 @@ func TestComputeTextCost_1hrCacheCreationAbove200k_FallsBackToStandardAbove200kW
 	// When neither above_1hr field is present, 1hr tokens on a >200k request fall back
 	// to the standard above_200k cache creation rate.
 	p := chatPricing(8e-7, 0.000004)
-	p.InputCostPerTokenAbove200kTokens = bifrost.Ptr(0.0000016)
-	p.OutputCostPerTokenAbove200kTokens = bifrost.Ptr(0.000008)
-	p.CacheCreationInputTokenCost = bifrost.Ptr(0.000001)
-	p.CacheCreationInputTokenCostAbove200kTokens = bifrost.Ptr(0.000002)
+	p.InputCostPerTokenAbove200kTokens = new(0.0000016)
+	p.OutputCostPerTokenAbove200kTokens = new(0.000008)
+	p.CacheCreationInputTokenCost = new(0.000001)
+	p.CacheCreationInputTokenCostAbove200kTokens = new(0.000002)
 	// Neither CacheCreationInputTokenCostAbove1hr nor Above1hrAbove200k is set
 
 	usage := &schemas.BifrostLLMUsage{
@@ -710,8 +709,8 @@ func TestComputeTextCost_1hrCacheCreationAbove200k_FallsBackToStandardAbove200kW
 func TestComputeTextCost_Tiered200k(t *testing.T) {
 	// Claude 3.5 Sonnet Bedrock 200k tier: input=$6/M, output=$30/M
 	p := chatPricing(0.000003, 0.000015)
-	p.InputCostPerTokenAbove200kTokens = bifrost.Ptr(0.000006)
-	p.OutputCostPerTokenAbove200kTokens = bifrost.Ptr(0.00003)
+	p.InputCostPerTokenAbove200kTokens = new(0.000006)
+	p.OutputCostPerTokenAbove200kTokens = new(0.00003)
 
 	usage := &schemas.BifrostLLMUsage{
 		PromptTokens:     210000,
@@ -728,8 +727,8 @@ func TestComputeTextCost_Tiered200k(t *testing.T) {
 
 func TestComputeTextCost_Below200kUsesBaseRate(t *testing.T) {
 	p := chatPricing(0.000003, 0.000015)
-	p.InputCostPerTokenAbove200kTokens = bifrost.Ptr(0.000006)
-	p.OutputCostPerTokenAbove200kTokens = bifrost.Ptr(0.00003)
+	p.InputCostPerTokenAbove200kTokens = new(0.000006)
+	p.OutputCostPerTokenAbove200kTokens = new(0.00003)
 
 	usage := &schemas.BifrostLLMUsage{
 		PromptTokens:     1000,
@@ -746,8 +745,8 @@ func TestComputeTextCost_Below200kUsesBaseRate(t *testing.T) {
 
 func TestComputeTextCost_TotalAbove200kButInputBelow200kUsesBaseRate(t *testing.T) {
 	p := chatPricing(0.000003, 0.000015)
-	p.InputCostPerTokenAbove200kTokens = bifrost.Ptr(0.000006)
-	p.OutputCostPerTokenAbove200kTokens = bifrost.Ptr(0.00003)
+	p.InputCostPerTokenAbove200kTokens = new(0.000006)
+	p.OutputCostPerTokenAbove200kTokens = new(0.00003)
 
 	usage := &schemas.BifrostLLMUsage{
 		PromptTokens:     180000,
@@ -829,7 +828,7 @@ func TestComputeTextCost_272kTierWithCacheRead(t *testing.T) {
 
 func TestComputeTextCost_SearchQueryCost(t *testing.T) {
 	p := chatPricing(0.000003, 0.000015)
-	p.SearchContextCostPerQuery = bifrost.Ptr(0.01) // $0.01 per search query
+	p.SearchContextCostPerQuery = new(0.01) // $0.01 per search query
 
 	numQueries := 3
 	usage := &schemas.BifrostLLMUsage{
@@ -876,8 +875,8 @@ func TestComputeTextCost_NoCacheRateFallsBackToBaseInputRate(t *testing.T) {
 func TestComputeEmbeddingCost_Basic(t *testing.T) {
 	// Titan Embed Text v1: $0.1/M input
 	p := configstoreTables.TableModelPricing{
-		InputCostPerToken:  bifrost.Ptr(0.0000001),
-		OutputCostPerToken: bifrost.Ptr(0.0),
+		InputCostPerToken:  new(0.0000001),
+		OutputCostPerToken: new(0.0),
 	}
 	usage := &schemas.BifrostLLMUsage{
 		PromptTokens: 5000,
@@ -890,8 +889,8 @@ func TestComputeEmbeddingCost_Basic(t *testing.T) {
 
 func TestComputeEmbeddingCost_TotalAbove200kButInputBelow200kUsesBaseRate(t *testing.T) {
 	p := configstoreTables.TableModelPricing{
-		InputCostPerToken:                bifrost.Ptr(0.000003),
-		InputCostPerTokenAbove200kTokens: bifrost.Ptr(0.000006),
+		InputCostPerToken:                new(0.000003),
+		InputCostPerTokenAbove200kTokens: new(0.000006),
 	}
 	usage := &schemas.BifrostLLMUsage{
 		PromptTokens: 180000,
@@ -914,8 +913,8 @@ func TestComputeEmbeddingCost_NilUsage(t *testing.T) {
 
 func TestComputeRerankCost_Basic(t *testing.T) {
 	p := configstoreTables.TableModelPricing{
-		InputCostPerToken:  bifrost.Ptr(0.000001),
-		OutputCostPerToken: bifrost.Ptr(0.000002),
+		InputCostPerToken:  new(0.000001),
+		OutputCostPerToken: new(0.000002),
 	}
 	usage := &schemas.BifrostLLMUsage{
 		PromptTokens:     2000,
@@ -929,8 +928,8 @@ func TestComputeRerankCost_Basic(t *testing.T) {
 
 func TestComputeRerankCost_TotalAbove200kButInputBelow200kUsesBaseRate(t *testing.T) {
 	p := chatPricing(0.000003, 0.000015)
-	p.InputCostPerTokenAbove200kTokens = bifrost.Ptr(0.000006)
-	p.OutputCostPerTokenAbove200kTokens = bifrost.Ptr(0.00003)
+	p.InputCostPerTokenAbove200kTokens = new(0.000006)
+	p.OutputCostPerTokenAbove200kTokens = new(0.00003)
 	usage := &schemas.BifrostLLMUsage{
 		PromptTokens:     180000,
 		CompletionTokens: 30000,
@@ -944,9 +943,9 @@ func TestComputeRerankCost_TotalAbove200kButInputBelow200kUsesBaseRate(t *testin
 
 func TestComputeRerankCost_WithSearchCost(t *testing.T) {
 	p := configstoreTables.TableModelPricing{
-		InputCostPerToken:         bifrost.Ptr(0.0),
-		OutputCostPerToken:        bifrost.Ptr(0.0),
-		SearchContextCostPerQuery: bifrost.Ptr(0.001),
+		InputCostPerToken:         new(0.0),
+		OutputCostPerToken:        new(0.0),
+		SearchContextCostPerQuery: new(0.001),
 	}
 	numQueries := 5
 	usage := &schemas.BifrostLLMUsage{
@@ -970,9 +969,9 @@ func TestComputeRerankCost_NilUsage(t *testing.T) {
 func TestComputeSpeechCost_TokensPreferredOverDuration(t *testing.T) {
 	// TTS: input=text tokens, output=audio tokens (preferred over per-second)
 	p := configstoreTables.TableModelPricing{
-		InputCostPerToken:   bifrost.Ptr(0.0000025),
-		OutputCostPerToken:  bifrost.Ptr(0.00001),
-		OutputCostPerSecond: bifrost.Ptr(0.00025),
+		InputCostPerToken:   new(0.0000025),
+		OutputCostPerToken:  new(0.00001),
+		OutputCostPerSecond: new(0.00025),
 	}
 	seconds := 60
 	usage := &schemas.BifrostLLMUsage{
@@ -991,9 +990,9 @@ func TestComputeSpeechCost_TokensPreferredOverDuration(t *testing.T) {
 func TestComputeSpeechCost_OutputFallsBackToPerSecond(t *testing.T) {
 	// TTS: no output tokens → falls back to per-second output pricing
 	p := configstoreTables.TableModelPricing{
-		InputCostPerToken:   bifrost.Ptr(0.000001),
-		OutputCostPerToken:  bifrost.Ptr(0.000002),
-		OutputCostPerSecond: bifrost.Ptr(0.0001),
+		InputCostPerToken:   new(0.000001),
+		OutputCostPerToken:  new(0.000002),
+		OutputCostPerSecond: new(0.0001),
 	}
 	seconds := 120
 	usage := &schemas.BifrostLLMUsage{PromptTokens: 500}
@@ -1007,9 +1006,9 @@ func TestComputeSpeechCost_OutputFallsBackToPerSecond(t *testing.T) {
 func TestComputeSpeechCost_OutputAudioTokenRate(t *testing.T) {
 	// TTS: output uses OutputCostPerAudioToken when available
 	p := configstoreTables.TableModelPricing{
-		InputCostPerToken:       bifrost.Ptr(0.000001),
-		OutputCostPerToken:      bifrost.Ptr(0.000002),
-		OutputCostPerAudioToken: bifrost.Ptr(0.00005),
+		InputCostPerToken:       new(0.000001),
+		OutputCostPerToken:      new(0.000002),
+		OutputCostPerAudioToken: new(0.00005),
 	}
 	usage := &schemas.BifrostLLMUsage{
 		PromptTokens:     200,
@@ -1037,8 +1036,8 @@ func TestComputeSpeechCost_TokenFallback(t *testing.T) {
 
 func TestComputeSpeechCost_TotalAbove200kButInputBelow200kUsesBaseRate(t *testing.T) {
 	p := chatPricing(0.000003, 0.000015)
-	p.InputCostPerTokenAbove200kTokens = bifrost.Ptr(0.000006)
-	p.OutputCostPerTokenAbove200kTokens = bifrost.Ptr(0.00003)
+	p.InputCostPerTokenAbove200kTokens = new(0.000006)
+	p.OutputCostPerTokenAbove200kTokens = new(0.00003)
 	usage := &schemas.BifrostLLMUsage{
 		PromptTokens:     180000,
 		CompletionTokens: 30000,
@@ -1062,9 +1061,9 @@ func TestComputeSpeechCost_NilUsageNilSeconds(t *testing.T) {
 func TestComputeTranscriptionCost_DurationBased(t *testing.T) {
 	// assemblyai/nano: input_cost_per_second=0.00010278
 	p := configstoreTables.TableModelPricing{
-		InputCostPerToken:  bifrost.Ptr(0.0),
-		OutputCostPerToken: bifrost.Ptr(0.0),
-		InputCostPerSecond: bifrost.Ptr(0.00010278),
+		InputCostPerToken:  new(0.0),
+		OutputCostPerToken: new(0.0),
+		InputCostPerSecond: new(0.00010278),
 	}
 	seconds := 300 // 5 minutes
 	cost := computeTranscriptionCost(&p, nil, &seconds, nil, serviceTier{})
@@ -1074,9 +1073,9 @@ func TestComputeTranscriptionCost_DurationBased(t *testing.T) {
 
 func TestComputeTranscriptionCost_AudioTokenDetails(t *testing.T) {
 	p := configstoreTables.TableModelPricing{
-		InputCostPerToken:      bifrost.Ptr(0.000005),
-		OutputCostPerToken:     bifrost.Ptr(0.000015),
-		InputCostPerAudioToken: bifrost.Ptr(0.00001),
+		InputCostPerToken:      new(0.000005),
+		OutputCostPerToken:     new(0.000015),
+		InputCostPerAudioToken: new(0.00001),
 	}
 	usage := &schemas.BifrostLLMUsage{
 		PromptTokens:     2000,
@@ -1109,8 +1108,8 @@ func TestComputeTranscriptionCost_TokenFallback(t *testing.T) {
 
 func TestComputeTranscriptionCost_TotalAbove200kButInputBelow200kUsesBaseRate(t *testing.T) {
 	p := chatPricing(0.000003, 0.000015)
-	p.InputCostPerTokenAbove200kTokens = bifrost.Ptr(0.000006)
-	p.OutputCostPerTokenAbove200kTokens = bifrost.Ptr(0.00003)
+	p.InputCostPerTokenAbove200kTokens = new(0.000006)
+	p.OutputCostPerTokenAbove200kTokens = new(0.00003)
 	usage := &schemas.BifrostLLMUsage{
 		PromptTokens:     180000,
 		CompletionTokens: 30000,
@@ -1125,10 +1124,10 @@ func TestComputeTranscriptionCost_TotalAbove200kButInputBelow200kUsesBaseRate(t 
 func TestComputeTranscriptionCost_TokenDetailsPreferredOverDuration(t *testing.T) {
 	// STT: audio token details present → uses tokens, not per-second
 	p := configstoreTables.TableModelPricing{
-		InputCostPerToken:          bifrost.Ptr(0.000005),
-		OutputCostPerToken:         bifrost.Ptr(0.0),
-		InputCostPerAudioPerSecond: bifrost.Ptr(0.0001),
-		InputCostPerAudioToken:     bifrost.Ptr(0.00001),
+		InputCostPerToken:          new(0.000005),
+		OutputCostPerToken:         new(0.0),
+		InputCostPerAudioPerSecond: new(0.0001),
+		InputCostPerAudioToken:     new(0.00001),
 	}
 	seconds := 60
 	audioDetails := &schemas.TranscriptionUsageInputTokenDetails{
@@ -1147,9 +1146,9 @@ func TestComputeTranscriptionCost_TokenDetailsPreferredOverDuration(t *testing.T
 func TestComputeTranscriptionCost_DurationFallbackWhenNoTokens(t *testing.T) {
 	// STT: no audio token details, no prompt tokens → falls back to per-second
 	p := configstoreTables.TableModelPricing{
-		InputCostPerToken:          bifrost.Ptr(0.000005),
-		OutputCostPerToken:         bifrost.Ptr(0.000015),
-		InputCostPerAudioPerSecond: bifrost.Ptr(0.0001),
+		InputCostPerToken:          new(0.000005),
+		OutputCostPerToken:         new(0.000015),
+		InputCostPerAudioPerSecond: new(0.0001),
 	}
 	seconds := 60
 	usage := &schemas.BifrostLLMUsage{
@@ -1170,9 +1169,9 @@ func TestComputeTranscriptionCost_DurationFallbackWhenNoTokens(t *testing.T) {
 func TestComputeImageCost_PerImage(t *testing.T) {
 	// dall-e-3 (aiml): output_cost_per_image=$0.052
 	p := configstoreTables.TableModelPricing{
-		InputCostPerToken:  bifrost.Ptr(0.0),
-		OutputCostPerToken: bifrost.Ptr(0.0),
-		OutputCostPerImage: bifrost.Ptr(0.052),
+		InputCostPerToken:  new(0.0),
+		OutputCostPerToken: new(0.0),
+		OutputCostPerImage: new(0.052),
 	}
 	usage := &schemas.ImageUsage{
 		OutputTokensDetails: &schemas.ImageTokenDetails{
@@ -1186,7 +1185,7 @@ func TestComputeImageCost_PerImage(t *testing.T) {
 
 func TestComputeImageCost_PerImageDefaultsToOne(t *testing.T) {
 	p := configstoreTables.TableModelPricing{
-		OutputCostPerImage: bifrost.Ptr(0.052),
+		OutputCostPerImage: new(0.052),
 	}
 	usage := &schemas.ImageUsage{} // No token details → defaults to 1 image
 	cost := computeImageCost(&p, usage, "", "", serviceTier{})
@@ -1195,8 +1194,8 @@ func TestComputeImageCost_PerImageDefaultsToOne(t *testing.T) {
 
 func TestComputeImageCost_TokenBased(t *testing.T) {
 	p := configstoreTables.TableModelPricing{
-		InputCostPerToken:  bifrost.Ptr(0.000005),
-		OutputCostPerToken: bifrost.Ptr(0.000015),
+		InputCostPerToken:  new(0.000005),
+		OutputCostPerToken: new(0.000015),
 	}
 	usage := &schemas.ImageUsage{
 		InputTokens:  1000,
@@ -1210,8 +1209,8 @@ func TestComputeImageCost_TokenBased(t *testing.T) {
 
 func TestComputeImageCost_TotalAbove200kButInputBelow200kUsesBaseRate(t *testing.T) {
 	p := chatPricing(0.000003, 0.000015)
-	p.InputCostPerTokenAbove200kTokens = bifrost.Ptr(0.000006)
-	p.OutputCostPerTokenAbove200kTokens = bifrost.Ptr(0.00003)
+	p.InputCostPerTokenAbove200kTokens = new(0.000006)
+	p.OutputCostPerTokenAbove200kTokens = new(0.00003)
 	usage := &schemas.ImageUsage{
 		InputTokens:  180000,
 		OutputTokens: 30000,
@@ -1225,7 +1224,7 @@ func TestComputeImageCost_TotalAbove200kButInputBelow200kUsesBaseRate(t *testing
 
 func TestComputeImageCost_DerivesTierTokensFromTotalMinusOutputWhenInputMissing(t *testing.T) {
 	p := chatPricing(0.000003, 0.000015)
-	p.OutputCostPerTokenAbove200kTokens = bifrost.Ptr(0.00003)
+	p.OutputCostPerTokenAbove200kTokens = new(0.00003)
 	usage := &schemas.ImageUsage{
 		OutputTokens: 30000,
 		TotalTokens:  240000, // derived input = 210000, so output uses long-context rate
@@ -1238,8 +1237,8 @@ func TestComputeImageCost_DerivesTierTokensFromTotalMinusOutputWhenInputMissing(
 
 func TestComputeImageCost_DoesNotUseBareTotalTokensAsInputTierTokens(t *testing.T) {
 	p := chatPricing(0.000003, 0.000015)
-	p.OutputCostPerImage = bifrost.Ptr(0.05)
-	p.OutputCostPerTokenAbove200kTokens = bifrost.Ptr(0.00003)
+	p.OutputCostPerImage = new(0.05)
+	p.OutputCostPerTokenAbove200kTokens = new(0.00003)
 	usage := &schemas.ImageUsage{
 		TotalTokens: 210000, // no input/output split; total includes output, so do not use it as input
 	}
@@ -1251,8 +1250,8 @@ func TestComputeImageCost_DoesNotUseBareTotalTokensAsInputTierTokens(t *testing.
 
 func TestComputeImageCost_TokenBasedWithDetails(t *testing.T) {
 	p := configstoreTables.TableModelPricing{
-		InputCostPerToken:  bifrost.Ptr(0.000005),
-		OutputCostPerToken: bifrost.Ptr(0.000015),
+		InputCostPerToken:  new(0.000005),
+		OutputCostPerToken: new(0.000015),
 	}
 	usage := &schemas.ImageUsage{
 		InputTokens:  2000,
@@ -1281,8 +1280,8 @@ func TestComputeImageCost_NilUsage(t *testing.T) {
 
 func TestComputeImageCost_InputAndOutputPerImage(t *testing.T) {
 	p := configstoreTables.TableModelPricing{
-		InputCostPerImage:  bifrost.Ptr(0.01),
-		OutputCostPerImage: bifrost.Ptr(0.05),
+		InputCostPerImage:  new(0.01),
+		OutputCostPerImage: new(0.05),
 	}
 	usage := &schemas.ImageUsage{
 		NumInputImages:      3,
@@ -1295,7 +1294,7 @@ func TestComputeImageCost_InputAndOutputPerImage(t *testing.T) {
 
 func TestComputeImageCost_PerPixelOutput(t *testing.T) {
 	p := configstoreTables.TableModelPricing{
-		OutputCostPerPixel: bifrost.Ptr(0.000000019), // ~$0.02 for 1024x1024
+		OutputCostPerPixel: new(0.000000019), // ~$0.02 for 1024x1024
 	}
 	usage := &schemas.ImageUsage{
 		OutputTokensDetails: &schemas.ImageTokenDetails{NImages: 1},
@@ -1307,8 +1306,8 @@ func TestComputeImageCost_PerPixelOutput(t *testing.T) {
 
 func TestComputeImageCost_PerPixelInputAndOutput(t *testing.T) {
 	p := configstoreTables.TableModelPricing{
-		InputCostPerPixel:  bifrost.Ptr(0.00000001),
-		OutputCostPerPixel: bifrost.Ptr(0.00000002),
+		InputCostPerPixel:  new(0.00000001),
+		OutputCostPerPixel: new(0.00000002),
 	}
 	usage := &schemas.ImageUsage{
 		NumInputImages:      2,
@@ -1324,10 +1323,10 @@ func TestComputeImageCost_PerPixelInputAndOutput(t *testing.T) {
 
 func TestComputeImageCost_TokensPreferredOverPixels(t *testing.T) {
 	p := configstoreTables.TableModelPricing{
-		InputCostPerToken:  bifrost.Ptr(0.000005),
-		OutputCostPerToken: bifrost.Ptr(0.000015),
-		InputCostPerPixel:  bifrost.Ptr(0.00000001),
-		OutputCostPerPixel: bifrost.Ptr(0.00000002),
+		InputCostPerToken:  new(0.000005),
+		OutputCostPerToken: new(0.000015),
+		InputCostPerPixel:  new(0.00000001),
+		OutputCostPerPixel: new(0.00000002),
 	}
 	usage := &schemas.ImageUsage{
 		InputTokens:  1000,
@@ -1341,8 +1340,8 @@ func TestComputeImageCost_TokensPreferredOverPixels(t *testing.T) {
 
 func TestComputeImageCost_PixelsPreferredOverPerImage(t *testing.T) {
 	p := configstoreTables.TableModelPricing{
-		OutputCostPerPixel: bifrost.Ptr(0.00000002),
-		OutputCostPerImage: bifrost.Ptr(999.0), // should not be used
+		OutputCostPerPixel: new(0.00000002),
+		OutputCostPerImage: new(999.0), // should not be used
 	}
 	usage := &schemas.ImageUsage{
 		OutputTokensDetails: &schemas.ImageTokenDetails{NImages: 1},
@@ -1354,8 +1353,8 @@ func TestComputeImageCost_PixelsPreferredOverPerImage(t *testing.T) {
 
 func TestComputeImageCost_PerPixelFallsBackToPerImage_WhenNoSize(t *testing.T) {
 	p := configstoreTables.TableModelPricing{
-		OutputCostPerPixel: bifrost.Ptr(0.00000002),
-		OutputCostPerImage: bifrost.Ptr(0.05),
+		OutputCostPerPixel: new(0.00000002),
+		OutputCostPerImage: new(0.05),
 	}
 	usage := &schemas.ImageUsage{
 		OutputTokensDetails: &schemas.ImageTokenDetails{NImages: 2},
@@ -1371,11 +1370,11 @@ func TestComputeImageCost_QualityBasedRates(t *testing.T) {
 	}
 	// Quality-specific rates take precedence over base/size-tier
 	p := configstoreTables.TableModelPricing{
-		OutputCostPerImage:              bifrost.Ptr(0.01),
-		OutputCostPerImageLowQuality:    bifrost.Ptr(0.02),
-		OutputCostPerImageMediumQuality: bifrost.Ptr(0.03),
-		OutputCostPerImageHighQuality:   bifrost.Ptr(0.04),
-		OutputCostPerImageAutoQuality:   bifrost.Ptr(0.05),
+		OutputCostPerImage:              new(0.01),
+		OutputCostPerImageLowQuality:    new(0.02),
+		OutputCostPerImageMediumQuality: new(0.03),
+		OutputCostPerImageHighQuality:   new(0.04),
+		OutputCostPerImageAutoQuality:   new(0.05),
 	}
 	assert.InDelta(t, 0.02, computeImageCost(&p, usage, "", "low", serviceTier{}), 1e-12)
 	assert.InDelta(t, 0.03, computeImageCost(&p, usage, "", "medium", serviceTier{}), 1e-12)
@@ -1404,9 +1403,9 @@ func TestParseImagePixels(t *testing.T) {
 
 func TestComputeVideoCost_DurationBased(t *testing.T) {
 	p := configstoreTables.TableModelPricing{
-		InputCostPerToken:           bifrost.Ptr(0.000001),
-		OutputCostPerToken:          bifrost.Ptr(0.0),
-		OutputCostPerVideoPerSecond: bifrost.Ptr(0.001),
+		InputCostPerToken:           new(0.000001),
+		OutputCostPerToken:          new(0.0),
+		OutputCostPerVideoPerSecond: new(0.001),
 	}
 	seconds := 30
 	usage := &schemas.BifrostLLMUsage{PromptTokens: 500, TotalTokens: 500}
@@ -1419,8 +1418,8 @@ func TestComputeVideoCost_DurationBased(t *testing.T) {
 
 func TestComputeVideoCost_TotalAbove200kButInputBelow200kUsesBaseRate(t *testing.T) {
 	p := chatPricing(0.000003, 0.000015)
-	p.InputCostPerTokenAbove200kTokens = bifrost.Ptr(0.000006)
-	p.OutputCostPerTokenAbove200kTokens = bifrost.Ptr(0.00003)
+	p.InputCostPerTokenAbove200kTokens = new(0.000006)
+	p.OutputCostPerTokenAbove200kTokens = new(0.00003)
 	usage := &schemas.BifrostLLMUsage{
 		PromptTokens:     180000,
 		CompletionTokens: 30000,
@@ -1434,9 +1433,9 @@ func TestComputeVideoCost_TotalAbove200kButInputBelow200kUsesBaseRate(t *testing
 
 func TestComputeVideoCost_OutputCostPerSecondFallback(t *testing.T) {
 	p := configstoreTables.TableModelPricing{
-		InputCostPerToken:   bifrost.Ptr(0.0),
-		OutputCostPerToken:  bifrost.Ptr(0.0),
-		OutputCostPerSecond: bifrost.Ptr(0.002),
+		InputCostPerToken:   new(0.0),
+		OutputCostPerToken:  new(0.0),
+		OutputCostPerSecond: new(0.002),
 	}
 	seconds := 10
 	cost := computeVideoCost(&p, nil, &seconds, serviceTier{})
@@ -1445,8 +1444,8 @@ func TestComputeVideoCost_OutputCostPerSecondFallback(t *testing.T) {
 
 func TestComputeVideoCost_NilSeconds(t *testing.T) {
 	p := configstoreTables.TableModelPricing{
-		InputCostPerToken:           bifrost.Ptr(0.000001),
-		OutputCostPerVideoPerSecond: bifrost.Ptr(0.001),
+		InputCostPerToken:           new(0.000001),
+		OutputCostPerVideoPerSecond: new(0.001),
 	}
 	usage := &schemas.BifrostLLMUsage{PromptTokens: 1000}
 	cost := computeVideoCost(&p, usage, nil, serviceTier{})
@@ -1460,23 +1459,23 @@ func TestComputeVideoCost_NilSeconds(t *testing.T) {
 
 func TestTieredInputRate_BelowThreshold(t *testing.T) {
 	p := configstoreTables.TableModelPricing{
-		InputCostPerToken:                bifrost.Ptr(0.000003),
-		InputCostPerTokenAbove200kTokens: bifrost.Ptr(0.000006),
+		InputCostPerToken:                new(0.000003),
+		InputCostPerTokenAbove200kTokens: new(0.000006),
 	}
 	assert.Equal(t, 0.000003, tieredInputRate(&p, 100000, serviceTier{}))
 }
 
 func TestTieredInputRate_AboveThreshold(t *testing.T) {
 	p := configstoreTables.TableModelPricing{
-		InputCostPerToken:                bifrost.Ptr(0.000003),
-		InputCostPerTokenAbove200kTokens: bifrost.Ptr(0.000006),
+		InputCostPerToken:                new(0.000003),
+		InputCostPerTokenAbove200kTokens: new(0.000006),
 	}
 	assert.Equal(t, 0.000006, tieredInputRate(&p, 210000, serviceTier{}))
 }
 
 func TestTieredInputRate_AboveThresholdNoTieredRate(t *testing.T) {
 	p := configstoreTables.TableModelPricing{
-		InputCostPerToken: bifrost.Ptr(0.000003),
+		InputCostPerToken: new(0.000003),
 	}
 	// Falls back to base rate when tiered field is nil
 	assert.Equal(t, 0.000003, tieredInputRate(&p, 300000, serviceTier{}))
@@ -1484,8 +1483,8 @@ func TestTieredInputRate_AboveThresholdNoTieredRate(t *testing.T) {
 
 func TestTieredOutputRate_AboveThreshold(t *testing.T) {
 	p := configstoreTables.TableModelPricing{
-		OutputCostPerToken:                bifrost.Ptr(0.000015),
-		OutputCostPerTokenAbove200kTokens: bifrost.Ptr(0.00003),
+		OutputCostPerToken:                new(0.000015),
+		OutputCostPerTokenAbove200kTokens: new(0.00003),
 	}
 	assert.Equal(t, 0.00003, tieredOutputRate(&p, 250000, serviceTier{}))
 }
@@ -1532,9 +1531,9 @@ func TestExtractCostInput_TranscriptionWithSeconds(t *testing.T) {
 		TranscriptionResponse: &schemas.BifrostTranscriptionResponse{
 			Usage: &schemas.TranscriptionUsage{
 				Seconds:      &sec,
-				InputTokens:  bifrost.Ptr(1000),
-				OutputTokens: bifrost.Ptr(200),
-				TotalTokens:  bifrost.Ptr(1200),
+				InputTokens:  new(1000),
+				OutputTokens: new(200),
+				TotalTokens:  new(1200),
 			},
 		},
 	}
@@ -1593,7 +1592,7 @@ func TestCalculateCost_SemanticCacheDirectHit(t *testing.T) {
 	s := testStoreWithPricing(map[string]configstoreTables.TableModelPricing{
 		makeKey("gpt-4o", "openai", "chat"): {
 			Model: "gpt-4o", Provider: "openai", Mode: "chat",
-			InputCostPerToken: bifrost.Ptr(0.000005), OutputCostPerToken: bifrost.Ptr(0.000015),
+			InputCostPerToken: new(0.000005), OutputCostPerToken: new(0.000015),
 		},
 	})
 
@@ -1624,11 +1623,11 @@ func TestCalculateCost_SemanticCacheSemanticHit(t *testing.T) {
 	s := testStoreWithPricing(map[string]configstoreTables.TableModelPricing{
 		makeKey("gpt-4o", "openai", "chat"): {
 			Model: "gpt-4o", Provider: "openai", Mode: "chat",
-			InputCostPerToken: bifrost.Ptr(0.000005), OutputCostPerToken: bifrost.Ptr(0.000015),
+			InputCostPerToken: new(0.000005), OutputCostPerToken: new(0.000015),
 		},
 		makeKey("text-embedding-3-small", "openai", "embedding"): {
 			Model: "text-embedding-3-small", Provider: "openai", Mode: "embedding",
-			InputCostPerToken: bifrost.Ptr(0.00000002),
+			InputCostPerToken: new(0.00000002),
 		},
 	})
 
@@ -1663,11 +1662,11 @@ func TestCalculateCost_SemanticCacheMiss(t *testing.T) {
 	s := testStoreWithPricing(map[string]configstoreTables.TableModelPricing{
 		makeKey("gpt-4o", "openai", "chat"): {
 			Model: "gpt-4o", Provider: "openai", Mode: "chat",
-			InputCostPerToken: bifrost.Ptr(0.000005), OutputCostPerToken: bifrost.Ptr(0.000015),
+			InputCostPerToken: new(0.000005), OutputCostPerToken: new(0.000015),
 		},
 		makeKey("text-embedding-3-small", "openai", "embedding"): {
 			Model: "text-embedding-3-small", Provider: "openai", Mode: "embedding",
-			InputCostPerToken: bifrost.Ptr(0.00000002),
+			InputCostPerToken: new(0.00000002),
 		},
 	})
 
@@ -1754,9 +1753,9 @@ func TestCalculateCost_ChatCompletion_GPT4o(t *testing.T) {
 	s := testStoreWithPricing(map[string]configstoreTables.TableModelPricing{
 		makeKey("gpt-4o", "openai", "chat"): {
 			Model: "gpt-4o", Provider: "openai", Mode: "chat",
-			InputCostPerToken:       bifrost.Ptr(0.000005),
-			OutputCostPerToken:      bifrost.Ptr(0.000015),
-			CacheReadInputTokenCost: bifrost.Ptr(0.0000005),
+			InputCostPerToken:       new(0.000005),
+			OutputCostPerToken:      new(0.000015),
+			CacheReadInputTokenCost: new(0.0000005),
 		},
 	})
 
@@ -1776,12 +1775,12 @@ func TestCalculateCost_ChatCompletion_Claude35Sonnet_WithCache(t *testing.T) {
 	s := testStoreWithPricing(map[string]configstoreTables.TableModelPricing{
 		makeKey("anthropic.claude-3-5-sonnet-20241022-v2:0", "bedrock", "chat"): {
 			Model: "anthropic.claude-3-5-sonnet-20241022-v2:0", Provider: "bedrock", Mode: "chat",
-			InputCostPerToken:                 bifrost.Ptr(0.000003),
-			OutputCostPerToken:                bifrost.Ptr(0.000015),
-			CacheReadInputTokenCost:           bifrost.Ptr(0.0000003),
-			CacheCreationInputTokenCost:       bifrost.Ptr(0.00000375),
-			InputCostPerTokenAbove200kTokens:  bifrost.Ptr(0.000006),
-			OutputCostPerTokenAbove200kTokens: bifrost.Ptr(0.00003),
+			InputCostPerToken:                 new(0.000003),
+			OutputCostPerToken:                new(0.000015),
+			CacheReadInputTokenCost:           new(0.0000003),
+			CacheCreationInputTokenCost:       new(0.00000375),
+			InputCostPerTokenAbove200kTokens:  new(0.000006),
+			OutputCostPerTokenAbove200kTokens: new(0.00003),
 		},
 	})
 
@@ -1808,8 +1807,8 @@ func TestCalculateCost_Embedding(t *testing.T) {
 	s := testStoreWithPricing(map[string]configstoreTables.TableModelPricing{
 		makeKey("amazon.titan-embed-text-v1", "bedrock", "embedding"): {
 			Model: "amazon.titan-embed-text-v1", Provider: "bedrock", Mode: "embedding",
-			InputCostPerToken:  bifrost.Ptr(0.0000001),
-			OutputCostPerToken: bifrost.Ptr(0.0),
+			InputCostPerToken:  new(0.0000001),
+			OutputCostPerToken: new(0.0),
 		},
 	})
 
@@ -1827,8 +1826,8 @@ func TestCalculateCost_Rerank(t *testing.T) {
 	s := testStoreWithPricing(map[string]configstoreTables.TableModelPricing{
 		makeKey("amazon.rerank-v1:0", "bedrock", "rerank"): {
 			Model: "amazon.rerank-v1:0", Provider: "bedrock", Mode: "rerank",
-			InputCostPerToken:  bifrost.Ptr(0.0),
-			OutputCostPerToken: bifrost.Ptr(0.0),
+			InputCostPerToken:  new(0.0),
+			OutputCostPerToken: new(0.0),
 		},
 	})
 
@@ -1846,7 +1845,7 @@ func TestCalculateCost_ImageGeneration(t *testing.T) {
 	s := testStoreWithPricing(map[string]configstoreTables.TableModelPricing{
 		makeKey("dall-e-3", "aiml", "image_generation"): {
 			Model: "dall-e-3", Provider: "aiml", Mode: "image_generation",
-			OutputCostPerImage: bifrost.Ptr(0.052),
+			OutputCostPerImage: new(0.052),
 		},
 	})
 
@@ -1925,7 +1924,7 @@ func TestGetPricing_GeminiFallsBackToVertex(t *testing.T) {
 	s := testStoreWithPricing(map[string]configstoreTables.TableModelPricing{
 		makeKey("gemini-2.0-flash", "vertex", "chat"): {
 			Model: "gemini-2.0-flash", Provider: "vertex", Mode: "chat",
-			InputCostPerToken: bifrost.Ptr(0.0000001), OutputCostPerToken: bifrost.Ptr(0.0000004),
+			InputCostPerToken: new(0.0000001), OutputCostPerToken: new(0.0000004),
 		},
 	})
 	p := s.resolvePricing(schemas.RoutingInfo{Provider: "gemini", Model: "gemini-2.0-flash"}, schemas.ChatCompletionRequest, LookupScopes{Provider: "gemini"})
@@ -2181,14 +2180,14 @@ func TestCalculateCost_200kTier_EndToEnd(t *testing.T) {
 	s := testStoreWithPricing(map[string]configstoreTables.TableModelPricing{
 		makeKey("anthropic.claude-3-5-sonnet-20240620-v1:0", "bedrock", "chat"): {
 			Model: "anthropic.claude-3-5-sonnet-20240620-v1:0", Provider: "bedrock", Mode: "chat",
-			InputCostPerToken:                          bifrost.Ptr(0.000003),
-			OutputCostPerToken:                         bifrost.Ptr(0.000015),
-			InputCostPerTokenAbove200kTokens:           bifrost.Ptr(0.000006),
-			OutputCostPerTokenAbove200kTokens:          bifrost.Ptr(0.00003),
-			CacheReadInputTokenCost:                    bifrost.Ptr(0.0000003),
-			CacheCreationInputTokenCost:                bifrost.Ptr(0.00000375),
-			CacheReadInputTokenCostAbove200kTokens:     bifrost.Ptr(0.0000006),
-			CacheCreationInputTokenCostAbove200kTokens: bifrost.Ptr(0.0000075),
+			InputCostPerToken:                          new(0.000003),
+			OutputCostPerToken:                         new(0.000015),
+			InputCostPerTokenAbove200kTokens:           new(0.000006),
+			OutputCostPerTokenAbove200kTokens:          new(0.00003),
+			CacheReadInputTokenCost:                    new(0.0000003),
+			CacheCreationInputTokenCost:                new(0.00000375),
+			CacheReadInputTokenCostAbove200kTokens:     new(0.0000006),
+			CacheCreationInputTokenCostAbove200kTokens: new(0.0000075),
 		},
 	})
 
@@ -2729,7 +2728,7 @@ func TestCalculateCost_ProviderCostZeroTotalStillCalculates(t *testing.T) {
 func TestCalculateCost_AllCachedTokens(t *testing.T) {
 	// All prompt tokens are from cache
 	p := chatPricing(0.000005, 0.000015)
-	p.CacheReadInputTokenCost = bifrost.Ptr(0.0000005)
+	p.CacheReadInputTokenCost = new(0.0000005)
 
 	usage := &schemas.BifrostLLMUsage{
 		PromptTokens:     1000,
@@ -2755,8 +2754,8 @@ func TestCalculateCost_ImageGeneration_NilUsage_PerImagePricing(t *testing.T) {
 		Model:              "dall-e-3",
 		Provider:           "openai",
 		Mode:               "image_generation",
-		InputCostPerToken:  bifrost.Ptr(0.0),
-		OutputCostPerImage: bifrost.Ptr(0.04),
+		InputCostPerToken:  new(0.0),
+		OutputCostPerImage: new(0.04),
 	}
 
 	s := testStoreWithPricing(map[string]configstoreTables.TableModelPricing{
@@ -2775,8 +2774,8 @@ func TestCalculateCost_ImageGeneration_NilUsage_InputAndOutputPerImage(t *testin
 		Model:              "test-image-model",
 		Provider:           "test",
 		Mode:               "image_generation",
-		InputCostPerImage:  bifrost.Ptr(0.01),
-		OutputCostPerImage: bifrost.Ptr(0.04),
+		InputCostPerImage:  new(0.01),
+		OutputCostPerImage: new(0.04),
 	}
 
 	s := testStoreWithPricing(map[string]configstoreTables.TableModelPricing{
@@ -2796,8 +2795,8 @@ func TestCalculateCost_ImageGeneration_WithInputImages(t *testing.T) {
 		Model:              "gpt-image-1",
 		Provider:           "openai",
 		Mode:               "image_generation",
-		InputCostPerImage:  bifrost.Ptr(0.01),
-		OutputCostPerImage: bifrost.Ptr(0.04),
+		InputCostPerImage:  new(0.01),
+		OutputCostPerImage: new(0.04),
 	}
 
 	s := testStoreWithPricing(map[string]configstoreTables.TableModelPricing{
@@ -2818,7 +2817,7 @@ func TestCalculateCost_ImageGeneration_OutputCountFromData(t *testing.T) {
 		Model:              "dall-e-3",
 		Provider:           "openai",
 		Mode:               "image_generation",
-		OutputCostPerImage: bifrost.Ptr(0.04),
+		OutputCostPerImage: new(0.04),
 	}
 
 	s := testStoreWithPricing(map[string]configstoreTables.TableModelPricing{
@@ -2849,8 +2848,8 @@ func TestCalculateCost_ImageGeneration_NilUsage_NoPerImagePricing(t *testing.T) 
 		Model:              "token-only-model",
 		Provider:           "test",
 		Mode:               "image_generation",
-		InputCostPerToken:  bifrost.Ptr(0.000001),
-		OutputCostPerToken: bifrost.Ptr(0.000002),
+		InputCostPerToken:  new(0.000001),
+		OutputCostPerToken: new(0.000002),
 	}
 
 	s := testStoreWithPricing(map[string]configstoreTables.TableModelPricing{
@@ -2869,7 +2868,7 @@ func TestCalculateCost_ImageGeneration_EmptyUsage_PerImagePricing(t *testing.T) 
 		Model:              "dall-e-3",
 		Provider:           "openai",
 		Mode:               "image_generation",
-		OutputCostPerImage: bifrost.Ptr(0.04),
+		OutputCostPerImage: new(0.04),
 	}
 
 	s := testStoreWithPricing(map[string]configstoreTables.TableModelPricing{
@@ -2884,9 +2883,9 @@ func TestCalculateCost_ImageGeneration_EmptyUsage_PerImagePricing(t *testing.T) 
 func TestComputeImageCost_MixedInputTokensOutputPerImage(t *testing.T) {
 	// Input has tokens (text prompt), output has no tokens but per-image pricing
 	p := configstoreTables.TableModelPricing{
-		InputCostPerToken:  bifrost.Ptr(0.000005),
-		OutputCostPerToken: bifrost.Ptr(0.000015),
-		OutputCostPerImage: bifrost.Ptr(0.04),
+		InputCostPerToken:  new(0.000005),
+		OutputCostPerToken: new(0.000015),
+		OutputCostPerImage: new(0.04),
 	}
 	usage := &schemas.ImageUsage{
 		InputTokens:         500,
@@ -2901,9 +2900,9 @@ func TestComputeImageCost_MixedInputTokensOutputPerImage(t *testing.T) {
 func TestComputeImageCost_MixedInputPerImageOutputTokens(t *testing.T) {
 	// Input has no tokens but per-image count, output has tokens
 	p := configstoreTables.TableModelPricing{
-		InputCostPerToken:  bifrost.Ptr(0.000005),
-		OutputCostPerToken: bifrost.Ptr(0.000015),
-		InputCostPerImage:  bifrost.Ptr(0.01),
+		InputCostPerToken:  new(0.000005),
+		OutputCostPerToken: new(0.000015),
+		InputCostPerImage:  new(0.01),
 	}
 	usage := &schemas.ImageUsage{
 		NumInputImages: 3,
@@ -2918,10 +2917,10 @@ func TestComputeImageCost_MixedInputPerImageOutputTokens(t *testing.T) {
 func TestComputeImageCost_BothHaveTokens_IgnoresPerImage(t *testing.T) {
 	// Both sides have tokens — per-image pricing is ignored
 	p := configstoreTables.TableModelPricing{
-		InputCostPerToken:  bifrost.Ptr(0.000005),
-		OutputCostPerToken: bifrost.Ptr(0.000015),
-		InputCostPerImage:  bifrost.Ptr(0.01),
-		OutputCostPerImage: bifrost.Ptr(0.04),
+		InputCostPerToken:  new(0.000005),
+		OutputCostPerToken: new(0.000015),
+		InputCostPerImage:  new(0.01),
+		OutputCostPerImage: new(0.04),
 	}
 	usage := &schemas.ImageUsage{
 		InputTokens:    200,
@@ -2974,7 +2973,7 @@ func TestComputeContainerCreationCost_Basic(t *testing.T) {
 		Model:                         "container",
 		Provider:                      "openai",
 		Mode:                          "chat",
-		CodeInterpreterCostPerSession: bifrost.Ptr(0.03),
+		CodeInterpreterCostPerSession: new(0.03),
 	}
 	assert.InDelta(t, 0.03, computeContainerCreationCost(&p), 1e-12)
 }
@@ -3002,7 +3001,7 @@ func TestCalculateCost_ContainerCreate_NoMemoryLimit(t *testing.T) {
 			Model:                         "container",
 			Provider:                      "openai",
 			Mode:                          "chat",
-			CodeInterpreterCostPerSession: bifrost.Ptr(0.03),
+			CodeInterpreterCostPerSession: new(0.03),
 		},
 	})
 
@@ -3027,13 +3026,13 @@ func TestCalculateCost_ContainerCreate_MemorySpecificEntry(t *testing.T) {
 			Model:                         "container",
 			Provider:                      "openai",
 			Mode:                          "chat",
-			CodeInterpreterCostPerSession: bifrost.Ptr(0.03),
+			CodeInterpreterCostPerSession: new(0.03),
 		},
 		makeKey("container-4g", "openai", "chat"): {
 			Model:                         "container-4g",
 			Provider:                      "openai",
 			Mode:                          "chat",
-			CodeInterpreterCostPerSession: bifrost.Ptr(0.12),
+			CodeInterpreterCostPerSession: new(0.12),
 		},
 	})
 
@@ -3059,7 +3058,7 @@ func TestCalculateCost_ContainerCreate_FallsBackToBaseEntry(t *testing.T) {
 			Model:                         "container",
 			Provider:                      "openai",
 			Mode:                          "chat",
-			CodeInterpreterCostPerSession: bifrost.Ptr(0.03),
+			CodeInterpreterCostPerSession: new(0.03),
 		},
 	})
 
@@ -3166,8 +3165,8 @@ func TestCalculateCost_BackCompat_RoutingInfoWinsOverLegacyFields(t *testing.T) 
 			Model:              "gemini-2.0-flash",
 			Provider:           "gemini",
 			Mode:               "chat",
-			InputCostPerToken:  bifrost.Ptr(0.0000001),
-			OutputCostPerToken: bifrost.Ptr(0.0000004),
+			InputCostPerToken:  new(0.0000001),
+			OutputCostPerToken: new(0.0000004),
 		},
 	})
 
@@ -3278,9 +3277,9 @@ func TestCalculateCostForUsage_NilUsageIsZero(t *testing.T) {
 // multiplier instead of being billed as standard/global.
 func TestCalculateCostForUsage_AppliesServedTier(t *testing.T) {
 	p := chatPricing(0.000005, 0.000015) // base $5/$15 per MTok
-	p.InputCostPerTokenFast = bifrost.Ptr(0.00001)
-	p.OutputCostPerTokenFast = bifrost.Ptr(0.00003)
-	p.InferenceGeoUSMultiplier = bifrost.Ptr(1.1)
+	p.InputCostPerTokenFast = new(0.00001)
+	p.OutputCostPerTokenFast = new(0.00003)
+	p.InferenceGeoUSMultiplier = new(1.1)
 	s := testStoreWithPricing(map[string]configstoreTables.TableModelPricing{
 		makeKey("claude-x", "anthropic", "chat"): p,
 	})
@@ -3594,9 +3593,9 @@ func TestCalculateCost_GPT56_Responses_FlexLongContext_EndToEnd(t *testing.T) {
 // flat rate must take precedence over the standard context tiers.
 func TestTieredCacheCreationRate_PriorityWinsOver200kBand(t *testing.T) {
 	p := configstoreTables.TableModelPricing{
-		CacheCreationInputTokenCost:                bifrost.Ptr(0.000001),
-		CacheCreationInputTokenCostAbove200kTokens: bifrost.Ptr(0.000002), // standard >200k — must NOT win for priority
-		CacheCreationInputTokenCostPriority:        bifrost.Ptr(0.000005), // flat priority — must win
+		CacheCreationInputTokenCost:                new(0.000001),
+		CacheCreationInputTokenCostAbove200kTokens: new(0.000002), // standard >200k — must NOT win for priority
+		CacheCreationInputTokenCostPriority:        new(0.000005), // flat priority — must win
 	}
 	// 250k tokens: >200k and ≤272k.
 	assert.Equal(t, 0.000005, tieredCacheCreationInputTokenRate(&p, 250000, serviceTier{isPriority: true}))

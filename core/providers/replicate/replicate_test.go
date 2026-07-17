@@ -11,22 +11,22 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/maximhq/bifrost/core/internal/llmtests"
-	"github.com/maximhq/bifrost/core/providers/replicate"
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/internal/llmtests"
+	"github.com/grevinden/bifrost/core/providers/replicate"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 type testLogger struct{}
 
-func (l *testLogger) Debug(string, ...any)                     {}
-func (l *testLogger) Info(string, ...any)                      {}
-func (l *testLogger) Warn(string, ...any)                      {}
-func (l *testLogger) Error(string, ...any)                     {}
-func (l *testLogger) Fatal(string, ...any)                     {}
-func (l *testLogger) SetLevel(schemas.LogLevel)               {}
-func (l *testLogger) SetOutputType(schemas.LoggerOutputType)  {}
+func (l *testLogger) Debug(string, ...any)                   {}
+func (l *testLogger) Info(string, ...any)                    {}
+func (l *testLogger) Warn(string, ...any)                    {}
+func (l *testLogger) Error(string, ...any)                   {}
+func (l *testLogger) Fatal(string, ...any)                   {}
+func (l *testLogger) SetLevel(schemas.LogLevel)              {}
+func (l *testLogger) SetOutputType(schemas.LoggerOutputType) {}
 func (l *testLogger) LogHTTPRequest(schemas.LogLevel, string) schemas.LogEventBuilder {
 	return schemas.NoopLogEvent
 }
@@ -59,7 +59,7 @@ func multipartFieldOrderFromRequest(r *http.Request) ([]string, error) {
 
 func TestFileUpload_OrdersMetadataBeforeFile(t *testing.T) {
 	var (
-		order       []string
+		order      []string
 		handlerErr error
 	)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -83,8 +83,8 @@ func TestFileUpload_OrdersMetadataBeforeFile(t *testing.T) {
 		File:        []byte(`{"hello":"world"}`),
 		Filename:    "payload.json",
 		ContentType: &contentType,
-		ExtraParams: map[string]interface{}{
-			"metadata": map[string]interface{}{"owner": "oss", "purpose": "test"},
+		ExtraParams: map[string]any{
+			"metadata": map[string]any{"owner": "oss", "purpose": "test"},
 		},
 	})
 	require.NotNil(t, bifrostErr)
@@ -112,7 +112,7 @@ func TestReplicate(t *testing.T) {
 		ImageGenerationModel: "black-forest-labs/flux-dev",
 		ImageEditModel:       "black-forest-labs/flux-dev",
 		VideoGenerationModel: "openai/sora-2-pro",
-		FileExtraParams: map[string]interface{}{
+		FileExtraParams: map[string]any{
 			"owner":  os.Getenv("REPLICATE_OWNER"),
 			"expiry": 1830297599,
 		},
@@ -182,13 +182,13 @@ func TestBifrostToReplicateChatRequestConversion(t *testing.T) {
 					{
 						Role: schemas.ChatMessageRoleSystem,
 						Content: &schemas.ChatMessageContent{
-							ContentStr: schemas.Ptr("You are a helpful assistant."),
+							ContentStr: new("You are a helpful assistant."),
 						},
 					},
 					{
 						Role: schemas.ChatMessageRoleUser,
 						Content: &schemas.ChatMessageContent{
-							ContentStr: schemas.Ptr("Hello!"),
+							ContentStr: new("Hello!"),
 						},
 					},
 				},
@@ -211,7 +211,7 @@ func TestBifrostToReplicateChatRequestConversion(t *testing.T) {
 					{
 						Role: schemas.ChatMessageRoleUser,
 						Content: &schemas.ChatMessageContent{
-							ContentStr: schemas.Ptr("Test"),
+							ContentStr: new("Test"),
 						},
 					},
 				},
@@ -236,13 +236,13 @@ func TestBifrostToReplicateChatRequestConversion(t *testing.T) {
 					{
 						Role: schemas.ChatMessageRoleSystem,
 						Content: &schemas.ChatMessageContent{
-							ContentStr: schemas.Ptr("You are a helpful assistant."),
+							ContentStr: new("You are a helpful assistant."),
 						},
 					},
 					{
 						Role: schemas.ChatMessageRoleUser,
 						Content: &schemas.ChatMessageContent{
-							ContentStr: schemas.Ptr("Hello!"),
+							ContentStr: new("Hello!"),
 						},
 					},
 				},
@@ -266,13 +266,13 @@ func TestBifrostToReplicateChatRequestConversion(t *testing.T) {
 					{
 						Role: schemas.ChatMessageRoleSystem,
 						Content: &schemas.ChatMessageContent{
-							ContentStr: schemas.Ptr("Be concise."),
+							ContentStr: new("Be concise."),
 						},
 					},
 					{
 						Role: schemas.ChatMessageRoleUser,
 						Content: &schemas.ChatMessageContent{
-							ContentStr: schemas.Ptr("What is AI?"),
+							ContentStr: new("What is AI?"),
 						},
 					},
 				},
@@ -295,13 +295,13 @@ func TestBifrostToReplicateChatRequestConversion(t *testing.T) {
 					{
 						Role: schemas.ChatMessageRoleSystem,
 						Content: &schemas.ChatMessageContent{
-							ContentStr: schemas.Ptr("You are helpful."),
+							ContentStr: new("You are helpful."),
 						},
 					},
 					{
 						Role: schemas.ChatMessageRoleUser,
 						Content: &schemas.ChatMessageContent{
-							ContentStr: schemas.Ptr("Hi there"),
+							ContentStr: new("Hi there"),
 						},
 					},
 				},
@@ -324,7 +324,7 @@ func TestBifrostToReplicateChatRequestConversion(t *testing.T) {
 					{
 						Role: schemas.ChatMessageRoleUser,
 						Content: &schemas.ChatMessageContent{
-							ContentStr: schemas.Ptr("Test"),
+							ContentStr: new("Test"),
 						},
 					},
 				},
@@ -349,7 +349,7 @@ func TestBifrostToReplicateChatRequestConversion(t *testing.T) {
 					{
 						Role: schemas.ChatMessageRoleUser,
 						Content: &schemas.ChatMessageContent{
-							ContentStr: schemas.Ptr("Test version ID"),
+							ContentStr: new("Test version ID"),
 						},
 					},
 				},
@@ -369,7 +369,7 @@ func TestBifrostToReplicateChatRequestConversion(t *testing.T) {
 					{
 						Role: schemas.ChatMessageRoleUser,
 						Content: &schemas.ChatMessageContent{
-							ContentStr: schemas.Ptr("Test all params"),
+							ContentStr: new("Test all params"),
 						},
 					},
 				},
@@ -403,7 +403,7 @@ func TestBifrostToReplicateChatRequestConversion(t *testing.T) {
 						Content: &schemas.ChatMessageContent{
 							ContentBlocks: []schemas.ChatContentBlock{
 								{
-									Text: schemas.Ptr("Describe this image"),
+									Text: new("Describe this image"),
 								},
 								{
 									ImageURLStruct: &schemas.ChatInputImage{
@@ -437,7 +437,7 @@ func TestBifrostToReplicateChatRequestConversion(t *testing.T) {
 						Content: &schemas.ChatMessageContent{
 							ContentBlocks: []schemas.ChatContentBlock{
 								{
-									Text: schemas.Ptr("Test"),
+									Text: new("Test"),
 								},
 								{
 									ImageURLStruct: &schemas.ChatInputImage{
@@ -463,13 +463,13 @@ func TestBifrostToReplicateChatRequestConversion(t *testing.T) {
 					{
 						Role: schemas.ChatMessageRoleUser,
 						Content: &schemas.ChatMessageContent{
-							ContentStr: schemas.Ptr("Test reasoning"),
+							ContentStr: new("Test reasoning"),
 						},
 					},
 				},
 				Params: &schemas.ChatParameters{
 					Reasoning: &schemas.ChatReasoning{
-						Effort: schemas.Ptr("high"),
+						Effort: new("high"),
 					},
 				},
 			},
@@ -594,7 +594,7 @@ func TestBifrostToReplicateImageGenerationConversion(t *testing.T) {
 					Prompt: prompt,
 				},
 				Params: &schemas.ImageGenerationParameters{
-					ExtraParams: map[string]interface{}{
+					ExtraParams: map[string]any{
 						"custom_param": "value",
 					},
 				},
@@ -664,7 +664,7 @@ func TestBifrostToReplicateResponsesRequestConversion(t *testing.T) {
 						Type: schemas.Ptr(schemas.ResponsesMessageTypeMessage),
 						Role: schemas.Ptr(schemas.ResponsesInputMessageRoleUser),
 						Content: &schemas.ResponsesMessageContent{
-							ContentStr: schemas.Ptr("Hello, how are you?"),
+							ContentStr: new("Hello, how are you?"),
 						},
 					},
 				},
@@ -695,7 +695,7 @@ func TestBifrostToReplicateResponsesRequestConversion(t *testing.T) {
 						Type: schemas.Ptr(schemas.ResponsesMessageTypeMessage),
 						Role: schemas.Ptr(schemas.ResponsesInputMessageRoleUser),
 						Content: &schemas.ResponsesMessageContent{
-							ContentStr: schemas.Ptr("What's the weather?"),
+							ContentStr: new("What's the weather?"),
 						},
 					},
 				},
@@ -703,13 +703,13 @@ func TestBifrostToReplicateResponsesRequestConversion(t *testing.T) {
 					Tools: []schemas.ResponsesTool{
 						{
 							Type:        schemas.ResponsesToolTypeFunction,
-							Name:        schemas.Ptr("get_weather"),
-							Description: schemas.Ptr("Get weather information"),
+							Name:        new("get_weather"),
+							Description: new("Get weather information"),
 							ResponsesToolFunction: &schemas.ResponsesToolFunction{
 								Parameters: &schemas.ToolFunctionParameters{
 									Type: "object",
 									Properties: schemas.NewOrderedMapFromPairs(
-										schemas.KV("location", map[string]interface{}{
+										schemas.KV("location", map[string]any{
 											"type": "string",
 										}),
 									),
@@ -737,14 +737,14 @@ func TestBifrostToReplicateResponsesRequestConversion(t *testing.T) {
 						Type: schemas.Ptr(schemas.ResponsesMessageTypeMessage),
 						Role: schemas.Ptr(schemas.ResponsesInputMessageRoleSystem),
 						Content: &schemas.ResponsesMessageContent{
-							ContentStr: schemas.Ptr("You are helpful."),
+							ContentStr: new("You are helpful."),
 						},
 					},
 					{
 						Type: schemas.Ptr(schemas.ResponsesMessageTypeMessage),
 						Role: schemas.Ptr(schemas.ResponsesInputMessageRoleUser),
 						Content: &schemas.ResponsesMessageContent{
-							ContentStr: schemas.Ptr("Hello!"),
+							ContentStr: new("Hello!"),
 						},
 					},
 				},
@@ -769,14 +769,14 @@ func TestBifrostToReplicateResponsesRequestConversion(t *testing.T) {
 						Type: schemas.Ptr(schemas.ResponsesMessageTypeMessage),
 						Role: schemas.Ptr(schemas.ResponsesInputMessageRoleSystem),
 						Content: &schemas.ResponsesMessageContent{
-							ContentStr: schemas.Ptr("Be helpful."),
+							ContentStr: new("Be helpful."),
 						},
 					},
 					{
 						Type: schemas.Ptr(schemas.ResponsesMessageTypeMessage),
 						Role: schemas.Ptr(schemas.ResponsesInputMessageRoleUser),
 						Content: &schemas.ResponsesMessageContent{
-							ContentStr: schemas.Ptr("Hi there!"),
+							ContentStr: new("Hi there!"),
 						},
 					},
 				},
@@ -800,14 +800,14 @@ func TestBifrostToReplicateResponsesRequestConversion(t *testing.T) {
 						Type: schemas.Ptr(schemas.ResponsesMessageTypeMessage),
 						Role: schemas.Ptr(schemas.ResponsesInputMessageRoleSystem),
 						Content: &schemas.ResponsesMessageContent{
-							ContentStr: schemas.Ptr("You are a code assistant."),
+							ContentStr: new("You are a code assistant."),
 						},
 					},
 					{
 						Type: schemas.Ptr(schemas.ResponsesMessageTypeMessage),
 						Role: schemas.Ptr(schemas.ResponsesInputMessageRoleUser),
 						Content: &schemas.ResponsesMessageContent{
-							ContentStr: schemas.Ptr("Write a function."),
+							ContentStr: new("Write a function."),
 						},
 					},
 				},
@@ -833,10 +833,10 @@ func TestBifrostToReplicateResponsesRequestConversion(t *testing.T) {
 						Content: &schemas.ResponsesMessageContent{
 							ContentBlocks: []schemas.ResponsesMessageContentBlock{
 								{
-									Text: schemas.Ptr("Part 1"),
+									Text: new("Part 1"),
 								},
 								{
-									Text: schemas.Ptr("Part 2"),
+									Text: new("Part 2"),
 								},
 							},
 						},
@@ -862,11 +862,11 @@ func TestBifrostToReplicateResponsesRequestConversion(t *testing.T) {
 						Content: &schemas.ResponsesMessageContent{
 							ContentBlocks: []schemas.ResponsesMessageContentBlock{
 								{
-									Text: schemas.Ptr("Describe this"),
+									Text: new("Describe this"),
 								},
 								{
 									ResponsesInputMessageContentBlockImage: &schemas.ResponsesInputMessageContentBlockImage{
-										ImageURL: schemas.Ptr("https://example.com/image.jpg"),
+										ImageURL: new("https://example.com/image.jpg"),
 									},
 								},
 							},
@@ -896,11 +896,11 @@ func TestBifrostToReplicateResponsesRequestConversion(t *testing.T) {
 						Content: &schemas.ResponsesMessageContent{
 							ContentBlocks: []schemas.ResponsesMessageContentBlock{
 								{
-									Text: schemas.Ptr("Test"),
+									Text: new("Test"),
 								},
 								{
 									ResponsesInputMessageContentBlockImage: &schemas.ResponsesInputMessageContentBlockImage{
-										ImageURL: schemas.Ptr("data:image/png;base64,abc123"),
+										ImageURL: new("data:image/png;base64,abc123"),
 									},
 								},
 							},
@@ -923,21 +923,21 @@ func TestBifrostToReplicateResponsesRequestConversion(t *testing.T) {
 						Type: schemas.Ptr(schemas.ResponsesMessageTypeMessage),
 						Role: schemas.Ptr(schemas.ResponsesInputMessageRoleUser),
 						Content: &schemas.ResponsesMessageContent{
-							ContentStr: schemas.Ptr("What is AI?"),
+							ContentStr: new("What is AI?"),
 						},
 					},
 					{
 						Type: schemas.Ptr(schemas.ResponsesMessageTypeMessage),
 						Role: schemas.Ptr(schemas.ResponsesInputMessageRoleAssistant),
 						Content: &schemas.ResponsesMessageContent{
-							ContentStr: schemas.Ptr("AI is artificial intelligence."),
+							ContentStr: new("AI is artificial intelligence."),
 						},
 					},
 					{
 						Type: schemas.Ptr(schemas.ResponsesMessageTypeMessage),
 						Role: schemas.Ptr(schemas.ResponsesInputMessageRoleUser),
 						Content: &schemas.ResponsesMessageContent{
-							ContentStr: schemas.Ptr("Tell me more."),
+							ContentStr: new("Tell me more."),
 						},
 					},
 				},
@@ -961,7 +961,7 @@ func TestBifrostToReplicateResponsesRequestConversion(t *testing.T) {
 						Type: schemas.Ptr(schemas.ResponsesMessageTypeMessage),
 						Role: schemas.Ptr(schemas.ResponsesInputMessageRoleUser),
 						Content: &schemas.ResponsesMessageContent{
-							ContentStr: schemas.Ptr("Test"),
+							ContentStr: new("Test"),
 						},
 					},
 				},
@@ -992,7 +992,7 @@ func TestBifrostToReplicateResponsesRequestConversion(t *testing.T) {
 						Type: schemas.Ptr(schemas.ResponsesMessageTypeMessage),
 						Role: schemas.Ptr(schemas.ResponsesInputMessageRoleUser),
 						Content: &schemas.ResponsesMessageContent{
-							ContentStr: schemas.Ptr("Test"),
+							ContentStr: new("Test"),
 						},
 					},
 				},
@@ -1020,7 +1020,7 @@ func TestBifrostToReplicateResponsesRequestConversion(t *testing.T) {
 						Type: schemas.Ptr(schemas.ResponsesMessageTypeMessage),
 						Role: schemas.Ptr(schemas.ResponsesInputMessageRoleUser),
 						Content: &schemas.ResponsesMessageContent{
-							ContentStr: schemas.Ptr("Test reasoning"),
+							ContentStr: new("Test reasoning"),
 						},
 					},
 				},
@@ -1046,7 +1046,7 @@ func TestBifrostToReplicateResponsesRequestConversion(t *testing.T) {
 						Type: schemas.Ptr(schemas.ResponsesMessageTypeMessage),
 						Role: schemas.Ptr(schemas.ResponsesInputMessageRoleUser),
 						Content: &schemas.ResponsesMessageContent{
-							ContentStr: schemas.Ptr("Hello"),
+							ContentStr: new("Hello"),
 						},
 					},
 				},
@@ -1071,7 +1071,7 @@ func TestBifrostToReplicateResponsesRequestConversion(t *testing.T) {
 						Type: schemas.Ptr(schemas.ResponsesMessageTypeMessage),
 						Role: schemas.Ptr(schemas.ResponsesInputMessageRoleUser),
 						Content: &schemas.ResponsesMessageContent{
-							ContentStr: schemas.Ptr("Hello"),
+							ContentStr: new("Hello"),
 						},
 					},
 				},
@@ -1098,7 +1098,7 @@ func TestBifrostToReplicateResponsesRequestConversion(t *testing.T) {
 						Type: schemas.Ptr(schemas.ResponsesMessageTypeMessage),
 						Role: schemas.Ptr(schemas.ResponsesInputMessageRoleUser),
 						Content: &schemas.ResponsesMessageContent{
-							ContentStr: schemas.Ptr("Existing content"),
+							ContentStr: new("Existing content"),
 						},
 					},
 				},
@@ -1126,7 +1126,7 @@ func TestBifrostToReplicateResponsesRequestConversion(t *testing.T) {
 						Type: schemas.Ptr(schemas.ResponsesMessageTypeMessage),
 						Role: schemas.Ptr(schemas.ResponsesInputMessageRoleUser),
 						Content: &schemas.ResponsesMessageContent{
-							ContentStr: schemas.Ptr("Test version"),
+							ContentStr: new("Test version"),
 						},
 					},
 				},
@@ -1147,14 +1147,14 @@ func TestBifrostToReplicateResponsesRequestConversion(t *testing.T) {
 						Type: schemas.Ptr(schemas.ResponsesMessageTypeMessage),
 						Role: schemas.Ptr(schemas.ResponsesInputMessageRoleUser),
 						Content: &schemas.ResponsesMessageContent{
-							ContentStr: schemas.Ptr(""),
+							ContentStr: new(""),
 						},
 					},
 					{
 						Type: schemas.Ptr(schemas.ResponsesMessageTypeMessage),
 						Role: schemas.Ptr(schemas.ResponsesInputMessageRoleUser),
 						Content: &schemas.ResponsesMessageContent{
-							ContentStr: schemas.Ptr("Valid message"),
+							ContentStr: new("Valid message"),
 						},
 					},
 				},
@@ -1212,9 +1212,9 @@ func TestReplicateToBifrostResponsesResponse(t *testing.T) {
 				CreatedAt: createdAt,
 				Status:    replicate.ReplicatePredictionStatusSucceeded,
 				Output: &replicate.ReplicateOutput{
-					OutputStr: schemas.Ptr("This is the response text."),
+					OutputStr: new("This is the response text."),
 				},
-				Logs: schemas.Ptr("Input token count: 10\nOutput token count: 20\nTotal token count: 30"),
+				Logs: new("Input token count: 10\nOutput token count: 20\nTotal token count: 30"),
 			},
 			validate: func(t *testing.T, result *schemas.BifrostResponsesResponse) {
 				require.NotNil(t, result)
@@ -1263,7 +1263,7 @@ func TestReplicateToBifrostResponsesResponse(t *testing.T) {
 				Status:    replicate.ReplicatePredictionStatusSucceeded,
 				Output: &replicate.ReplicateOutput{
 					OutputObject: &replicate.ReplicateOutputText{
-						Text: schemas.Ptr("Object text content"),
+						Text: new("Object text content"),
 					},
 				},
 			},
@@ -1344,7 +1344,7 @@ func TestReplicateToBifrostResponsesResponse(t *testing.T) {
 				CompletedAt: &completedAt,
 				Status:      replicate.ReplicatePredictionStatusSucceeded,
 				Output: &replicate.ReplicateOutput{
-					OutputStr: schemas.Ptr("Done"),
+					OutputStr: new("Done"),
 				},
 			},
 			validate: func(t *testing.T, result *schemas.BifrostResponsesResponse) {
@@ -1362,9 +1362,9 @@ func TestReplicateToBifrostResponsesResponse(t *testing.T) {
 				CreatedAt: createdAt,
 				Status:    replicate.ReplicatePredictionStatusSucceeded,
 				Output: &replicate.ReplicateOutput{
-					OutputStr: schemas.Ptr("Response"),
+					OutputStr: new("Response"),
 				},
-				Logs: schemas.Ptr("Input token count: 15\nOutput token count: 0"),
+				Logs: new("Input token count: 15\nOutput token count: 0"),
 			},
 			validate: func(t *testing.T, result *schemas.BifrostResponsesResponse) {
 				require.NotNil(t, result)
@@ -1382,7 +1382,7 @@ func TestReplicateToBifrostResponsesResponse(t *testing.T) {
 				CreatedAt: createdAt,
 				Status:    replicate.ReplicatePredictionStatusSucceeded,
 				Output: &replicate.ReplicateOutput{
-					OutputStr: schemas.Ptr(""),
+					OutputStr: new(""),
 				},
 			},
 			validate: func(t *testing.T, result *schemas.BifrostResponsesResponse) {
@@ -1412,7 +1412,7 @@ func TestReplicateToBifrostResponsesResponse(t *testing.T) {
 				Model:     model,
 				CreatedAt: createdAt,
 				Status:    replicate.ReplicatePredictionStatusFailed,
-				Error:     schemas.Ptr(""),
+				Error:     new(""),
 			},
 			validate: func(t *testing.T, result *schemas.BifrostResponsesResponse) {
 				require.NotNil(t, result)
@@ -1438,4 +1438,3 @@ func TestReplicateToBifrostResponsesResponse(t *testing.T) {
 		})
 	}
 }
-

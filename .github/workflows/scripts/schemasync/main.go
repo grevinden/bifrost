@@ -36,7 +36,7 @@ type entrypoint struct {
 
 var entrypoints = []entrypoint{
 	{
-		pkg:        "github.com/maximhq/bifrost/transports/bifrost-http/lib",
+		pkg:        "github.com/grevinden/bifrost/transports/bifrost-http/lib",
 		typeName:   "ConfigData",
 		schemaPath: "", // root schema node — collectProperties will find .properties
 		moduleDir:  "transports",
@@ -121,7 +121,7 @@ var ignoreGoFieldNames = map[string]string{
 // should be treated as leaves. The walker does NOT recurse into their fields,
 // and they are collected for downstream checks (e.g., SecretVar → helm secret).
 var opaqueLeafTypes = map[string]string{
-	"github.com/maximhq/bifrost/core/schemas.SecretVar": "env-aware string; custom JSON",
+	"github.com/grevinden/bifrost/core/schemas.SecretVar": "env-aware string; custom JSON",
 }
 
 // secretVarLocation records where an SecretVar-typed field appears in config.json
@@ -701,7 +701,7 @@ func (c *checker) walkType(t types.Type, schemaPath, goPath string) {
 		key := named.Obj().Pkg().Path() + "." + named.Obj().Name()
 		// Treat opaque types (like schemas.SecretVar) as leaves.
 		if _, isOpaque := opaqueLeafTypes[key]; isOpaque {
-			if key == "github.com/maximhq/bifrost/core/schemas.SecretVar" {
+			if key == "github.com/grevinden/bifrost/core/schemas.SecretVar" {
 				c.secretVarFields = append(c.secretVarFields, secretVarLocation{schemaPath, goPath})
 			}
 			return
@@ -806,7 +806,7 @@ func (c *checker) walkField(t types.Type, schemaNode map[string]any, schemaPath,
 	if named, ok := t.(*types.Named); ok {
 		key := named.Obj().Pkg().Path() + "." + named.Obj().Name()
 		if _, isOpaque := opaqueLeafTypes[key]; isOpaque {
-			if key == "github.com/maximhq/bifrost/core/schemas.SecretVar" {
+			if key == "github.com/grevinden/bifrost/core/schemas.SecretVar" {
 				c.secretVarFields = append(c.secretVarFields, secretVarLocation{schemaPath, goPath})
 			}
 			return // do not recurse into opaque types

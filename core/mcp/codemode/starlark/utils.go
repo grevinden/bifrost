@@ -10,14 +10,14 @@ import (
 	"unicode"
 
 	"github.com/bytedance/sonic"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/maximhq/bifrost/core/schemas"
 	"go.starlark.net/starlark"
 	"go.starlark.net/starlarkstruct"
 )
 
 // starlarkToGo converts a Starlark value to a Go value
-func starlarkToGo(v starlark.Value) interface{} {
+func starlarkToGo(v starlark.Value) any {
 	switch val := v.(type) {
 	case starlark.NoneType:
 		return nil
@@ -36,19 +36,19 @@ func starlarkToGo(v starlark.Value) interface{} {
 	case starlark.String:
 		return string(val)
 	case *starlark.List:
-		result := make([]interface{}, val.Len())
+		result := make([]any, val.Len())
 		for i := 0; i < val.Len(); i++ {
 			result[i] = starlarkToGo(val.Index(i))
 		}
 		return result
 	case starlark.Tuple:
-		result := make([]interface{}, len(val))
+		result := make([]any, len(val))
 		for i, item := range val {
 			result[i] = starlarkToGo(item)
 		}
 		return result
 	case *starlark.Dict:
-		result := make(map[string]interface{})
+		result := make(map[string]any)
 		for _, item := range val.Items() {
 			if keyStr, ok := item[0].(starlark.String); ok {
 				result[string(keyStr)] = starlarkToGo(item[1])
@@ -59,7 +59,7 @@ func starlarkToGo(v starlark.Value) interface{} {
 		}
 		return result
 	case *starlarkstruct.Struct:
-		result := make(map[string]interface{})
+		result := make(map[string]any)
 		for _, name := range val.AttrNames() {
 			if attrVal, err := val.Attr(name); err == nil {
 				result[name] = starlarkToGo(attrVal)
@@ -72,7 +72,7 @@ func starlarkToGo(v starlark.Value) interface{} {
 }
 
 // goToStarlark converts a Go value to a Starlark value
-func goToStarlark(v interface{}) starlark.Value {
+func goToStarlark(v any) starlark.Value {
 	if v == nil {
 		return starlark.None
 	}
@@ -90,13 +90,13 @@ func goToStarlark(v interface{}) starlark.Value {
 		return starlark.Float(val)
 	case string:
 		return starlark.String(val)
-	case []interface{}:
+	case []any:
 		items := make([]starlark.Value, len(val))
 		for i, item := range val {
 			items[i] = goToStarlark(item)
 		}
 		return starlark.NewList(items)
-	case map[string]interface{}:
+	case map[string]any:
 		dict := starlark.NewDict(len(val))
 		for k, v := range val {
 			dict.SetKey(starlark.String(k), goToStarlark(v))
@@ -105,7 +105,7 @@ func goToStarlark(v interface{}) starlark.Value {
 	default:
 		// Try to marshal to JSON and parse as a generic structure
 		if jsonBytes, err := schemas.MarshalSorted(val); err == nil {
-			var generic interface{}
+			var generic any
 			if schemas.Unmarshal(jsonBytes, &generic) == nil {
 				return goToStarlark(generic)
 			}
@@ -115,14 +115,14 @@ func goToStarlark(v interface{}) starlark.Value {
 }
 
 // extractResultFromChatMessage extracts the result from a chat message and parses it as JSON if possible.
-func extractResultFromChatMessage(msg *schemas.ChatMessage) interface{} {
+func extractResultFromChatMessage(msg *schemas.ChatMessage) any {
 	if msg == nil || msg.Content == nil || msg.Content.ContentStr == nil {
 		return nil
 	}
 
 	rawResult := *msg.Content.ContentStr
 
-	var finalResult interface{}
+	var finalResult any
 	if err := sonic.Unmarshal([]byte(rawResult), &finalResult); err != nil {
 		return rawResult
 	}
@@ -131,7 +131,7 @@ func extractResultFromChatMessage(msg *schemas.ChatMessage) interface{} {
 }
 
 // extractResultFromResponsesMessage extracts the result or error from a ResponsesMessage.
-func extractResultFromResponsesMessage(msg *schemas.ResponsesMessage) (interface{}, error) {
+func extractResultFromResponsesMessage(msg *schemas.ResponsesMessage) (any, error) {
 	if msg == nil {
 		return nil, nil
 	}
@@ -145,7 +145,7 @@ func extractResultFromResponsesMessage(msg *schemas.ResponsesMessage) (interface
 			if msg.ResponsesToolMessage.Output.ResponsesToolCallOutputStr != nil {
 				rawResult := *msg.ResponsesToolMessage.Output.ResponsesToolCallOutputStr
 
-				var finalResult interface{}
+				var finalResult any
 				if err := sonic.Unmarshal([]byte(rawResult), &finalResult); err != nil {
 					return rawResult, nil
 				}
@@ -161,7 +161,7 @@ func extractResultFromResponsesMessage(msg *schemas.ResponsesMessage) (interface
 				}
 				if len(textParts) > 0 {
 					result := strings.Join(textParts, "\n")
-					var finalResult interface{}
+					var finalResult any
 					if err := sonic.Unmarshal([]byte(result), &finalResult); err != nil {
 						return result, nil
 					}
@@ -175,7 +175,7 @@ func extractResultFromResponsesMessage(msg *schemas.ResponsesMessage) (interface
 }
 
 // formatResultForLog formats a result value for logging purposes.
-func formatResultForLog(result interface{}) string {
+func formatResultForLog(result any) string {
 	var resultStr string
 	if result == nil {
 		resultStr = "null"
@@ -280,7 +280,7 @@ func extractTextFromMCPResponse(toolResponse *mcp.CallToolResult, toolName strin
 		default:
 			// Fallback: try to extract from map structure
 			if jsonBytes, err := schemas.MarshalSorted(contentBlock); err == nil {
-				var contentMap map[string]interface{}
+				var contentMap map[string]any
 				if json.Unmarshal(jsonBytes, &contentMap) == nil {
 					if text, ok := contentMap["text"].(string); ok {
 						result.WriteString(fmt.Sprintf("[Text Response: %s]\n", text))
@@ -435,8 +435,8 @@ func validateNormalizedToolName(normalizedName string) error {
 // stripClientPrefix removes the client name prefix from a tool name.
 func stripClientPrefix(prefixedToolName, clientName string) string {
 	prefix := clientName + "-"
-	if strings.HasPrefix(prefixedToolName, prefix) {
-		return strings.TrimPrefix(prefixedToolName, prefix)
+	if after, ok := strings.CutPrefix(prefixedToolName, prefix); ok {
+		return after
 	}
 	// If prefix doesn't match, return as-is (shouldn't happen, but be safe)
 	return prefixedToolName

@@ -17,40 +17,40 @@ import (
 	"github.com/bytedance/sonic"
 	"github.com/google/uuid"
 
-	"github.com/maximhq/bifrost/core/keyselectors"
-	"github.com/maximhq/bifrost/core/mcp"
-	"github.com/maximhq/bifrost/core/mcp/codemode/starlark"
-	"github.com/maximhq/bifrost/core/mcp/credstore"
-	"github.com/maximhq/bifrost/core/providers/anthropic"
-	"github.com/maximhq/bifrost/core/providers/azure"
-	"github.com/maximhq/bifrost/core/providers/bedrock"
-	"github.com/maximhq/bifrost/core/providers/bedrockmantle"
-	"github.com/maximhq/bifrost/core/providers/cerebras"
-	"github.com/maximhq/bifrost/core/providers/cohere"
-	"github.com/maximhq/bifrost/core/providers/deepseek"
-	"github.com/maximhq/bifrost/core/providers/elevenlabs"
-	"github.com/maximhq/bifrost/core/providers/fireworks"
-	"github.com/maximhq/bifrost/core/providers/gemini"
-	"github.com/maximhq/bifrost/core/providers/groq"
-	"github.com/maximhq/bifrost/core/providers/huggingface"
-	"github.com/maximhq/bifrost/core/providers/mistral"
-	"github.com/maximhq/bifrost/core/providers/nebius"
-	"github.com/maximhq/bifrost/core/providers/ollama"
-	"github.com/maximhq/bifrost/core/providers/openai"
-	"github.com/maximhq/bifrost/core/providers/opencode"
-	"github.com/maximhq/bifrost/core/providers/openrouter"
-	"github.com/maximhq/bifrost/core/providers/parasail"
-	"github.com/maximhq/bifrost/core/providers/perplexity"
-	"github.com/maximhq/bifrost/core/providers/replicate"
-	"github.com/maximhq/bifrost/core/providers/runware"
-	"github.com/maximhq/bifrost/core/providers/runway"
-	"github.com/maximhq/bifrost/core/providers/sarvam"
-	"github.com/maximhq/bifrost/core/providers/sgl"
-	providerUtils "github.com/maximhq/bifrost/core/providers/utils"
-	"github.com/maximhq/bifrost/core/providers/vertex"
-	"github.com/maximhq/bifrost/core/providers/vllm"
-	"github.com/maximhq/bifrost/core/providers/xai"
-	schemas "github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/keyselectors"
+	"github.com/grevinden/bifrost/core/mcp"
+	"github.com/grevinden/bifrost/core/mcp/codemode/starlark"
+	"github.com/grevinden/bifrost/core/mcp/credstore"
+	"github.com/grevinden/bifrost/core/providers/anthropic"
+	"github.com/grevinden/bifrost/core/providers/azure"
+	"github.com/grevinden/bifrost/core/providers/bedrock"
+	"github.com/grevinden/bifrost/core/providers/bedrockmantle"
+	"github.com/grevinden/bifrost/core/providers/cerebras"
+	"github.com/grevinden/bifrost/core/providers/cohere"
+	"github.com/grevinden/bifrost/core/providers/deepseek"
+	"github.com/grevinden/bifrost/core/providers/elevenlabs"
+	"github.com/grevinden/bifrost/core/providers/fireworks"
+	"github.com/grevinden/bifrost/core/providers/gemini"
+	"github.com/grevinden/bifrost/core/providers/groq"
+	"github.com/grevinden/bifrost/core/providers/huggingface"
+	"github.com/grevinden/bifrost/core/providers/mistral"
+	"github.com/grevinden/bifrost/core/providers/nebius"
+	"github.com/grevinden/bifrost/core/providers/ollama"
+	"github.com/grevinden/bifrost/core/providers/openai"
+	"github.com/grevinden/bifrost/core/providers/opencode"
+	"github.com/grevinden/bifrost/core/providers/openrouter"
+	"github.com/grevinden/bifrost/core/providers/parasail"
+	"github.com/grevinden/bifrost/core/providers/perplexity"
+	"github.com/grevinden/bifrost/core/providers/replicate"
+	"github.com/grevinden/bifrost/core/providers/runware"
+	"github.com/grevinden/bifrost/core/providers/runway"
+	"github.com/grevinden/bifrost/core/providers/sarvam"
+	"github.com/grevinden/bifrost/core/providers/sgl"
+	providerUtils "github.com/grevinden/bifrost/core/providers/utils"
+	"github.com/grevinden/bifrost/core/providers/vertex"
+	"github.com/grevinden/bifrost/core/providers/vllm"
+	"github.com/grevinden/bifrost/core/providers/xai"
+	schemas "github.com/grevinden/bifrost/core/schemas"
 	"github.com/valyala/fasthttp"
 )
 
@@ -266,27 +266,27 @@ func Init(ctx context.Context, config schemas.BifrostConfig) (*Bifrost, error) {
 
 	// Initialize object pools
 	bifrost.channelMessagePool = sync.Pool{
-		New: func() interface{} {
+		New: func() any {
 			return &ChannelMessage{}
 		},
 	}
 	bifrost.responseChannelPool = sync.Pool{
-		New: func() interface{} {
+		New: func() any {
 			return make(chan *schemas.BifrostResponse, 1)
 		},
 	}
 	bifrost.errorChannelPool = sync.Pool{
-		New: func() interface{} {
+		New: func() any {
 			return make(chan schemas.BifrostError, 1)
 		},
 	}
 	bifrost.responseStreamPool = sync.Pool{
-		New: func() interface{} {
+		New: func() any {
 			return make(chan chan *schemas.BifrostStreamChunk, 1)
 		},
 	}
 	bifrost.pluginPipelinePool = sync.Pool{
-		New: func() interface{} {
+		New: func() any {
 			return &PluginPipeline{
 				preHookErrors:  make([]error, 0),
 				postHookErrors: make([]error, 0),
@@ -294,7 +294,7 @@ func Init(ctx context.Context, config schemas.BifrostConfig) (*Bifrost, error) {
 		},
 	}
 	bifrost.bifrostRequestPool = sync.Pool{
-		New: func() interface{} {
+		New: func() any {
 			return &schemas.BifrostRequest{}
 		},
 	}
@@ -323,10 +323,10 @@ func Init(ctx context.Context, config schemas.BifrostConfig) (*Bifrost, error) {
 		bifrost.mcpInitOnce.Do(func() {
 			// Set up plugin pipeline provider functions for executeCode tool hooks
 			mcpConfig := *config.MCPConfig
-			mcpConfig.PluginPipelineProvider = func() interface{} {
+			mcpConfig.PluginPipelineProvider = func() any {
 				return bifrost.getPluginPipeline()
 			}
-			mcpConfig.ReleasePluginPipeline = func(pipeline interface{}) {
+			mcpConfig.ReleasePluginPipeline = func(pipeline any) {
 				if pp, ok := pipeline.(*PluginPipeline); ok {
 					bifrost.releasePluginPipeline(pp)
 				}
@@ -3988,10 +3988,10 @@ func (bifrost *Bifrost) AddMCPClient(ctx context.Context, config *schemas.MCPCli
 				ClientConfigs: []*schemas.MCPClientConfig{},
 			}
 			// Set up plugin pipeline provider functions for executeCode tool hooks
-			mcpConfig.PluginPipelineProvider = func() interface{} {
+			mcpConfig.PluginPipelineProvider = func() any {
 				return bifrost.getPluginPipeline()
 			}
-			mcpConfig.ReleasePluginPipeline = func(pipeline interface{}) {
+			mcpConfig.ReleasePluginPipeline = func(pipeline any) {
 				if pp, ok := pipeline.(*PluginPipeline); ok {
 					bifrost.releasePluginPipeline(pp)
 				}
@@ -4139,10 +4139,10 @@ func (bifrost *Bifrost) VerifyPerUserOAuthConnection(ctx context.Context, config
 			mcpConfig := schemas.MCPConfig{
 				ClientConfigs: []*schemas.MCPClientConfig{},
 			}
-			mcpConfig.PluginPipelineProvider = func() interface{} {
+			mcpConfig.PluginPipelineProvider = func() any {
 				return bifrost.getPluginPipeline()
 			}
-			mcpConfig.ReleasePluginPipeline = func(pipeline interface{}) {
+			mcpConfig.ReleasePluginPipeline = func(pipeline any) {
 				if pp, ok := pipeline.(*PluginPipeline); ok {
 					bifrost.releasePluginPipeline(pp)
 				}
@@ -4167,10 +4167,10 @@ func (bifrost *Bifrost) VerifyHeadersConnection(ctx context.Context, config *sch
 			mcpConfig := schemas.MCPConfig{
 				ClientConfigs: []*schemas.MCPClientConfig{},
 			}
-			mcpConfig.PluginPipelineProvider = func() interface{} {
+			mcpConfig.PluginPipelineProvider = func() any {
 				return bifrost.getPluginPipeline()
 			}
-			mcpConfig.ReleasePluginPipeline = func(pipeline interface{}) {
+			mcpConfig.ReleasePluginPipeline = func(pipeline any) {
 				if pp, ok := pipeline.(*PluginPipeline); ok {
 					bifrost.releasePluginPipeline(pp)
 				}
@@ -8440,14 +8440,14 @@ func (bifrost *Bifrost) Shutdown() {
 	// Signal all provider queues to close. Workers exit via pq.done;
 	// we never close pq.queue to avoid "send on closed channel" panics in
 	// producers that are concurrently in tryRequest.
-	bifrost.requestQueues.Range(func(key, value interface{}) bool {
+	bifrost.requestQueues.Range(func(key, value any) bool {
 		pq := value.(*ProviderQueue)
 		pq.signalClosing()
 		return true
 	})
 
 	// Wait for all workers to exit
-	bifrost.waitGroups.Range(func(key, value interface{}) bool {
+	bifrost.waitGroups.Range(func(key, value any) bool {
 		waitGroup := value.(*sync.WaitGroup)
 		waitGroup.Wait()
 		return true
@@ -8459,7 +8459,7 @@ func (bifrost *Bifrost) Shutdown() {
 	bifrost.oldWorkerCleanups.Wait()
 
 	// Final drain sweep — same reasoning as RemoveProvider's Step 3b.
-	bifrost.requestQueues.Range(func(key, value interface{}) bool {
+	bifrost.requestQueues.Range(func(key, value any) bool {
 		bifrost.drainQueueWithErrors(value.(*ProviderQueue))
 		return true
 	})

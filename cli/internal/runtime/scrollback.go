@@ -141,10 +141,7 @@ func rowsEqual(a, b []vt10x.Glyph) bool {
 // as blank.
 func composeScrollbackView(sbRows [][]vt10x.Glyph, liveRows [][]vt10x.Glyph, cols, contentRows, offset int) string {
 	totalAvail := len(sbRows) + len(liveRows)
-	maxOffset := totalAvail - contentRows
-	if maxOffset < 0 {
-		maxOffset = 0
-	}
+	maxOffset := max(totalAvail-contentRows, 0)
 	if offset > maxOffset {
 		offset = maxOffset
 	}
@@ -163,7 +160,7 @@ func composeScrollbackView(sbRows [][]vt10x.Glyph, liveRows [][]vt10x.Glyph, col
 	var b strings.Builder
 	b.Grow(cols * contentRows * 3)
 
-	for y := 0; y < contentRows; y++ {
+	for y := range contentRows {
 		if y > 0 {
 			b.WriteString("\x1b[0m\r\n")
 		}
@@ -189,15 +186,12 @@ func composeScrollbackView(sbRows [][]vt10x.Glyph, liveRows [][]vt10x.Glyph, col
 func snapshotLiveGrid(vt vt10x.View, cols, rows int) [][]vt10x.Glyph {
 	vtCols, vtRows := vt.Size()
 	out := make([][]vt10x.Glyph, rows)
-	for y := 0; y < rows; y++ {
-		rowWidth := cols
-		if vtCols < rowWidth {
-			rowWidth = vtCols
-		}
+	for y := range rows {
+		rowWidth := min(vtCols, cols)
 		var row []vt10x.Glyph
 		if y < vtRows && rowWidth > 0 {
 			row = make([]vt10x.Glyph, rowWidth)
-			for x := 0; x < rowWidth; x++ {
+			for x := range rowWidth {
 				row[x] = vt.Cell(x, y)
 			}
 		}
@@ -224,13 +218,10 @@ func writeRowGlyphs(b *strings.Builder, row []vt10x.Glyph, cols int) {
 	truncate := effectiveLen > cols
 	contentEnd := effectiveLen
 	if truncate {
-		contentEnd = cols - 1
-		if contentEnd < 0 {
-			contentEnd = 0
-		}
+		contentEnd = max(cols-1, 0)
 	}
 
-	for x := 0; x < cols; x++ {
+	for x := range cols {
 		switch {
 		case x < contentEnd:
 			g := row[x]
@@ -280,7 +271,7 @@ func effectiveRowLen(row []vt10x.Glyph) int {
 
 func writeBlankRow(b *strings.Builder, cols int) {
 	b.WriteString("\x1b[0m")
-	for x := 0; x < cols; x++ {
+	for range cols {
 		b.WriteByte(' ')
 	}
 }

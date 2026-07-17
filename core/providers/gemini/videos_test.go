@@ -3,8 +3,8 @@ package gemini_test
 import (
 	"testing"
 
-	"github.com/maximhq/bifrost/core/providers/gemini"
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/providers/gemini"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -13,14 +13,14 @@ func TestToGeminiVideoGenerationRequest_PutsReferenceImagesAndLastFrameOnInstanc
 	seconds := "8"
 	referenceImage := gemini.VideoReferenceImage{
 		Image: gemini.VideoImageData{
-			BytesBase64Encoded: schemas.Ptr("cmVmZXJlbmNl"),
-			MimeType:           schemas.Ptr("image/png"),
+			BytesBase64Encoded: new("cmVmZXJlbmNl"),
+			MimeType:           new("image/png"),
 		},
 		ReferenceType: "asset",
 	}
 	lastFrame := &gemini.VideoImageData{
-		BytesBase64Encoded: schemas.Ptr("bGFzdA=="),
-		MimeType:           schemas.Ptr("image/jpeg"),
+		BytesBase64Encoded: new("bGFzdA=="),
+		MimeType:           new("image/jpeg"),
 	}
 
 	got, err := gemini.ToGeminiVideoGenerationRequest(&schemas.BifrostVideoGenerationRequest{
@@ -43,8 +43,8 @@ func TestToGeminiVideoGenerationRequest_PutsReferenceImagesAndLastFrameOnInstanc
 	assert.Equal(t, []gemini.VideoReferenceImage{referenceImage}, got.Instances[0].ReferenceImages)
 	assert.Equal(t, lastFrame, got.Instances[0].LastFrame)
 	require.NotNil(t, got.Parameters)
-	assert.Equal(t, schemas.Ptr(8), got.Parameters.DurationSeconds)
-	assert.Equal(t, schemas.Ptr("16:9"), got.Parameters.AspectRatio)
+	assert.Equal(t, new(8), got.Parameters.DurationSeconds)
+	assert.Equal(t, new("16:9"), got.Parameters.AspectRatio)
 	assert.Empty(t, got.Parameters.ReferenceImages)
 	assert.Nil(t, got.Parameters.LastFrame)
 }
@@ -78,11 +78,11 @@ func TestToGeminiVideoGenerationRequest_DecodesGenericReferenceImagesAndLastFram
 	require.Len(t, got.Instances, 1)
 	require.Len(t, got.Instances[0].ReferenceImages, 1)
 	assert.Equal(t, "style", got.Instances[0].ReferenceImages[0].ReferenceType)
-	assert.Equal(t, schemas.Ptr("cmVmZXJlbmNl"), got.Instances[0].ReferenceImages[0].Image.BytesBase64Encoded)
-	assert.Equal(t, schemas.Ptr("image/png"), got.Instances[0].ReferenceImages[0].Image.MimeType)
+	assert.Equal(t, new("cmVmZXJlbmNl"), got.Instances[0].ReferenceImages[0].Image.BytesBase64Encoded)
+	assert.Equal(t, new("image/png"), got.Instances[0].ReferenceImages[0].Image.MimeType)
 	require.NotNil(t, got.Instances[0].LastFrame)
-	assert.Equal(t, schemas.Ptr("bGFzdA=="), got.Instances[0].LastFrame.BytesBase64Encoded)
-	assert.Equal(t, schemas.Ptr("image/jpeg"), got.Instances[0].LastFrame.MimeType)
+	assert.Equal(t, new("bGFzdA=="), got.Instances[0].LastFrame.BytesBase64Encoded)
+	assert.Equal(t, new("image/jpeg"), got.Instances[0].LastFrame.MimeType)
 	require.NotNil(t, got.Parameters)
 	assert.Empty(t, got.Parameters.ReferenceImages)
 	assert.Nil(t, got.Parameters.LastFrame)
@@ -120,15 +120,15 @@ func TestGeminiVideoGenerationRequest_RoundTripsInstanceReferenceFields(t *testi
 				ReferenceImages: []gemini.VideoReferenceImage{
 					{
 						Image: gemini.VideoImageData{
-							BytesBase64Encoded: schemas.Ptr("cmVmZXJlbmNl"),
-							MimeType:           schemas.Ptr("image/png"),
+							BytesBase64Encoded: new("cmVmZXJlbmNl"),
+							MimeType:           new("image/png"),
 						},
 						ReferenceType: "asset",
 					},
 				},
 				LastFrame: &gemini.VideoImageData{
-					BytesBase64Encoded: schemas.Ptr("bGFzdA=="),
-					MimeType:           schemas.Ptr("image/jpeg"),
+					BytesBase64Encoded: new("bGFzdA=="),
+					MimeType:           new("image/jpeg"),
 				},
 			},
 		},

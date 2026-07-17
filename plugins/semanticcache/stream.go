@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"maps"
 	"sort"
 	"time"
 )
@@ -46,7 +47,7 @@ func chunkSortKey(c *StreamChunk) (int, int) {
 // creating one if none exists. Concurrency-safe: the underlying sync.Map's
 // LoadOrStore guarantees a single accumulator per request even under racing
 // PostLLMHook invocations.
-func (plugin *Plugin) getOrCreateStreamAccumulator(requestID string, storageID string, embedding []float32, metadata map[string]interface{}, ttl time.Duration) *StreamAccumulator {
+func (plugin *Plugin) getOrCreateStreamAccumulator(requestID string, storageID string, embedding []float32, metadata map[string]any, ttl time.Duration) *StreamAccumulator {
 	if existing, ok := plugin.streamAccumulators.Load(requestID); ok {
 		return existing.(*StreamAccumulator)
 	}
@@ -118,10 +119,8 @@ func (plugin *Plugin) processAccumulatedStream(ctx context.Context, requestID st
 		return nil
 	}
 
-	finalMetadata := make(map[string]interface{}, len(accumulator.Metadata)+1)
-	for k, v := range accumulator.Metadata {
-		finalMetadata[k] = v
-	}
+	finalMetadata := make(map[string]any, len(accumulator.Metadata)+1)
+	maps.Copy(finalMetadata, accumulator.Metadata)
 	finalMetadata["stream_chunks"] = streamResponses
 
 	if err := plugin.store.Add(ctx, plugin.config.VectorStoreNamespace, accumulator.StorageID, accumulator.Embedding, finalMetadata); err != nil {
@@ -156,7 +155,7 @@ func (plugin *Plugin) cleanupOldStreamAccumulators() {
 	cutoff := time.Now().Add(-streamAccumulatorMaxAge)
 	var toDelete []string
 
-	plugin.streamAccumulators.Range(func(key, value interface{}) bool {
+	plugin.streamAccumulators.Range(func(key, value any) bool {
 		requestID := key.(string)
 		accumulator := value.(*StreamAccumulator)
 		accumulator.mu.Lock()

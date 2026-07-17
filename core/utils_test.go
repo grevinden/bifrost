@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/maximhq/bifrost/core/network"
+	"github.com/grevinden/bifrost/core/network"
 )
 
 func TestValidateExternalURL(t *testing.T) {

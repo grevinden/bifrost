@@ -11,16 +11,16 @@ import (
 
 	"github.com/cespare/xxhash/v2"
 	"github.com/google/uuid"
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/vectorstore"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/vectorstore"
 )
 
 // performDirectSearch does an O(1) point fetch on the deterministic directCacheID
 // derived from (provider, model, cacheKey, request_hash, params_hash). Caller
 // supplies the prebuilt metadata + paramsHash so we don't recompute them when
 // semantic search runs as well.
-func (plugin *Plugin) performDirectSearch(ctx *schemas.BifrostContext, state *cacheState, req *schemas.BifrostRequest, cacheKey string, metadata map[string]interface{}, paramsHash string) (*schemas.LLMPluginShortCircuit, error) {
+func (plugin *Plugin) performDirectSearch(ctx *schemas.BifrostContext, state *cacheState, req *schemas.BifrostRequest, cacheKey string, metadata map[string]any, paramsHash string) (*schemas.LLMPluginShortCircuit, error) {
 	requestHash, err := plugin.generateRequestHash(req, metadata)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate request hash: %w", err)
@@ -193,8 +193,8 @@ func (plugin *Plugin) generateEmbedding(ctx *schemas.BifrostContext, text string
 
 // generateRequestHash creates an xxhash of the (normalized input, params).
 // Fallbacks are excluded since they only affect error handling.
-func (plugin *Plugin) generateRequestHash(req *schemas.BifrostRequest, params map[string]interface{}) (string, error) {
-	hashInput := map[string]interface{}{
+func (plugin *Plugin) generateRequestHash(req *schemas.BifrostRequest, params map[string]any) (string, error) {
+	hashInput := map[string]any{
 		"input":  plugin.getNormalizedInputForCaching(req),
 		"params": params,
 	}
@@ -251,15 +251,13 @@ func (plugin *Plugin) buildResponseFromResult(ctx *schemas.BifrostContext, state
 		// Async best-effort cleanup of the stale entry. Tracked on writersWg
 		// so WaitForPendingOperations + Cleanup block until it finishes,
 		// avoiding a delete racing with namespace teardown.
-		plugin.writersWg.Add(1)
-		go func() {
-			defer plugin.writersWg.Done()
+		plugin.writersWg.Go(func() {
 			deleteCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel()
 			if err := plugin.store.Delete(deleteCtx, plugin.config.VectorStoreNamespace, result.ID); err != nil {
 				plugin.logger.Warn("Failed to delete expired entry %s: %v", result.ID, err)
 			}
-		}()
+		})
 		return nil, nil
 	} else if miss {
 		// Unparseable expires_at — treat as miss to be safe.
@@ -295,7 +293,7 @@ func (plugin *Plugin) buildResponseFromResult(ctx *schemas.BifrostContext, state
 
 // isExpiredEntry returns (expired, parseFailed). A nil/missing expires_at is
 // treated as never-expires.
-func isExpiredEntry(properties map[string]interface{}) (bool, bool) {
+func isExpiredEntry(properties map[string]any) (bool, bool) {
 	expiresAtRaw, exists := properties["expires_at"]
 	if !exists || expiresAtRaw == nil {
 		return false, false
@@ -321,7 +319,7 @@ func isExpiredEntry(properties map[string]interface{}) (bool, bool) {
 }
 
 // buildNonStreamingResponseFromResult constructs a single response from cached data.
-func (plugin *Plugin) buildNonStreamingResponseFromResult(ctx *schemas.BifrostContext, state *cacheState, req *schemas.BifrostRequest, result vectorstore.SearchResult, responseData interface{}, cacheType CacheType, threshold *float64, similarity *float64, inputTokens *int) (*schemas.LLMPluginShortCircuit, error) {
+func (plugin *Plugin) buildNonStreamingResponseFromResult(ctx *schemas.BifrostContext, state *cacheState, req *schemas.BifrostRequest, result vectorstore.SearchResult, responseData any, cacheType CacheType, threshold *float64, similarity *float64, inputTokens *int) (*schemas.LLMPluginShortCircuit, error) {
 	requestedProvider, requestedModel, _ := req.GetRequestFields()
 
 	responseStr, ok := responseData.(string)
@@ -431,14 +429,14 @@ func (plugin *Plugin) stampCacheDebugForHit(
 	}
 	cd := extraFields.CacheDebug
 	cd.CacheHit = true
-	cd.HitType = bifrost.Ptr(string(cacheType))
-	cd.CacheID = bifrost.Ptr(cacheID)
-	cd.RequestedProvider = bifrost.Ptr(string(requestedProvider))
-	cd.RequestedModel = bifrost.Ptr(requestedModel)
-	cd.CacheHitLatency = bifrost.Ptr(time.Since(state.CreatedAt).Milliseconds())
+	cd.HitType = new(string(cacheType))
+	cd.CacheID = new(cacheID)
+	cd.RequestedProvider = new(string(requestedProvider))
+	cd.RequestedModel = new(requestedModel)
+	cd.CacheHitLatency = new(time.Since(state.CreatedAt).Milliseconds())
 	if cacheType == CacheTypeSemantic {
-		cd.ProviderUsed = bifrost.Ptr(string(plugin.config.Provider))
-		cd.ModelUsed = bifrost.Ptr(plugin.config.EmbeddingModel)
+		cd.ProviderUsed = new(string(plugin.config.Provider))
+		cd.ModelUsed = new(plugin.config.EmbeddingModel)
 		cd.Threshold = threshold
 		cd.Similarity = similarity
 		cd.InputTokens = inputTokens

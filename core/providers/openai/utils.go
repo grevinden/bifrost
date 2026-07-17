@@ -3,8 +3,8 @@ package openai
 import (
 	"strings"
 
-	"github.com/maximhq/bifrost/core/providers/utils"
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/providers/utils"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // CustomResponseHandler is a function that produces a Bifrost response from a Bifrost request.

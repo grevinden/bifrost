@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 func ToReplicateResponsesRequest(bifrostReq *schemas.BifrostResponsesRequest) (*ReplicatePredictionRequest, error) {
@@ -163,7 +163,7 @@ func ToReplicateResponsesRequest(bifrostReq *schemas.BifrostResponsesRequest) (*
 				} else {
 					if input.Prompt != nil && *input.Prompt != "" {
 						prefixed := *params.Instructions + "\n\n" + *input.Prompt
-						input.Prompt = schemas.Ptr(prefixed)
+						input.Prompt = new(prefixed)
 					} else if input.Prompt == nil {
 						input.Prompt = params.Instructions
 					}
@@ -218,7 +218,7 @@ func (response *ReplicatePredictionResponse) ToBifrostResponsesResponse() *schem
 
 	// Initialize Bifrost response
 	bifrostResponse := &schemas.BifrostResponsesResponse{
-		ID:          schemas.Ptr(response.ID),
+		ID:          new(response.ID),
 		Model:       response.Model,
 		CreatedAt:   int(createdAt),
 		CompletedAt: completedAt,

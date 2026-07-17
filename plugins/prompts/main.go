@@ -13,9 +13,9 @@ import (
 	"strings"
 	"sync"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
-	configstoreTables "github.com/maximhq/bifrost/framework/configstore/tables"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
+	configstoreTables "github.com/grevinden/bifrost/framework/configstore/tables"
 )
 
 const (
@@ -298,11 +298,11 @@ var knownSyntheticChatParamKeys = map[string]struct{}{
 // buildMergedParamsMap builds a merged map[string]interface{} where version params
 // serve as defaults and request params take priority. reqParamsBytes is the JSON of
 // the request's standard params (ExtraParams excluded); reqExtraParams is its ExtraParams map.
-func buildMergedParamsMap(versionParams configstoreTables.ModelParams, reqParamsBytes []byte, reqExtraParams map[string]interface{}) (map[string]interface{}, error) {
-	merged := make(map[string]interface{}, len(versionParams))
+func buildMergedParamsMap(versionParams configstoreTables.ModelParams, reqParamsBytes []byte, reqExtraParams map[string]any) (map[string]any, error) {
+	merged := make(map[string]any, len(versionParams))
 	maps.Copy(merged, versionParams)
 	if len(reqParamsBytes) > 0 && string(reqParamsBytes) != "null" {
-		var reqMap map[string]interface{}
+		var reqMap map[string]any
 		if err := schemas.Unmarshal(reqParamsBytes, &reqMap); err != nil {
 			return nil, fmt.Errorf("unmarshal request params: %w", err)
 		}
@@ -320,7 +320,7 @@ func applyVersionParamsToChatRequest(version *configstoreTables.TablePromptVersi
 	}
 
 	var reqParamsBytes []byte
-	var reqExtraParams map[string]interface{}
+	var reqExtraParams map[string]any
 	if req.Params != nil {
 		b, err := schemas.Marshal(req.Params)
 		if err != nil {
@@ -351,7 +351,7 @@ func applyVersionParamsToChatRequest(version *configstoreTables.TablePromptVersi
 
 	// Detect keys from merged that were not recognized as standard ChatParameters fields
 	// (i.e. they won't appear in the re-marshaled output) and put them in ExtraParams.
-	var recognizedMap map[string]interface{}
+	var recognizedMap map[string]any
 	recognizedBytes, err := schemas.Marshal(&result)
 	if err != nil {
 		logger.Warn("prompts plugin: failed to marshal result chat params: %v", err)
@@ -369,7 +369,7 @@ func applyVersionParamsToChatRequest(version *configstoreTables.TablePromptVersi
 			continue
 		}
 		if result.ExtraParams == nil {
-			result.ExtraParams = make(map[string]interface{})
+			result.ExtraParams = make(map[string]any)
 		}
 		if _, alreadySet := result.ExtraParams[k]; !alreadySet {
 			result.ExtraParams[k] = v
@@ -387,7 +387,7 @@ func applyVersionParamsToResponsesRequest(version *configstoreTables.TablePrompt
 	}
 
 	var reqParamsBytes []byte
-	var reqExtraParams map[string]interface{}
+	var reqExtraParams map[string]any
 	if req.Params != nil {
 		b, err := schemas.Marshal(req.Params)
 		if err != nil {
@@ -417,7 +417,7 @@ func applyVersionParamsToResponsesRequest(version *configstoreTables.TablePrompt
 	}
 
 	// Detect unrecognized keys and add them to ExtraParams.
-	var recognizedMap map[string]interface{}
+	var recognizedMap map[string]any
 	recognizedBytes, err := schemas.Marshal(&result)
 	if err != nil {
 		logger.Warn("prompts plugin: failed to marshal result responses params: %v", err)
@@ -432,7 +432,7 @@ func applyVersionParamsToResponsesRequest(version *configstoreTables.TablePrompt
 			continue
 		}
 		if result.ExtraParams == nil {
-			result.ExtraParams = make(map[string]interface{})
+			result.ExtraParams = make(map[string]any)
 		}
 		if _, alreadySet := result.ExtraParams[k]; !alreadySet {
 			result.ExtraParams[k] = v

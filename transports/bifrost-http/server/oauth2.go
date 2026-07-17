@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/maximhq/bifrost/framework/configstore"
+	"github.com/grevinden/bifrost/framework/configstore"
 )
 
 // oauth2SweepWorker periodically removes expired authorize requests and old

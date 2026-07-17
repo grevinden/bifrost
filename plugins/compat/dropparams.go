@@ -3,7 +3,7 @@ package compat
 import (
 	"fmt"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // dropUnsupportedParams removes unsupported model parameters from a request in place.

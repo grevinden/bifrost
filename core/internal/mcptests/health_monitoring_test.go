@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -136,7 +136,7 @@ func TestHealthCheckSSELongRunning(t *testing.T) {
 	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
 
-	for i := 0; i < 6; i++ {
+	for i := range 6 {
 		<-ticker.C
 		clients = manager.GetClients()
 		if len(clients) > 0 {
@@ -304,7 +304,7 @@ func TestHealthCheckConcurrentFailures(t *testing.T) {
 	// Create multiple clients with invalid URLs
 	var clientConfigs []schemas.MCPClientConfig
 
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		config := GetSampleHTTPClientConfig("http://invalid-concurrent-test:9999")
 		id := string(rune('a'+i)) + "-concurrent-client"
 		config.ID = id

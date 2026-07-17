@@ -1,7 +1,9 @@
 package sarvam
 
 import (
-	schemas "github.com/maximhq/bifrost/core/schemas"
+	"maps"
+
+	schemas "github.com/grevinden/bifrost/core/schemas"
 )
 
 // ToSarvamSpeechRequest maps a Bifrost speech request onto Sarvam's text-to-speech request.
@@ -21,10 +23,8 @@ func ToSarvamSpeechRequest(bifrostReq *schemas.BifrostSpeechRequest) *SarvamSpee
 
 	// Copy so consuming keys below doesn't mutate the caller's request map.
 	if bifrostReq.Params.ExtraParams != nil {
-		sarvamReq.ExtraParams = make(map[string]interface{}, len(bifrostReq.Params.ExtraParams))
-		for k, v := range bifrostReq.Params.ExtraParams {
-			sarvamReq.ExtraParams[k] = v
-		}
+		sarvamReq.ExtraParams = make(map[string]any, len(bifrostReq.Params.ExtraParams))
+		maps.Copy(sarvamReq.ExtraParams, bifrostReq.Params.ExtraParams)
 	}
 
 	if bifrostReq.Params.LanguageCode != nil {

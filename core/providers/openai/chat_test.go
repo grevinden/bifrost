@@ -1,13 +1,14 @@
 package openai
 
 import (
+	"context"
 	"encoding/json"
 	"strings"
 	"testing"
 
 	"github.com/bytedance/sonic"
-	providerUtils "github.com/maximhq/bifrost/core/providers/utils"
-	"github.com/maximhq/bifrost/core/schemas"
+	providerUtils "github.com/grevinden/bifrost/core/providers/utils"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/require"
 )
 
@@ -97,7 +98,7 @@ func TestToOpenAIChatRequest_PreservesN(t *testing.T) {
 		},
 	}
 
-	out := ToOpenAIChatRequest(schemas.NewBifrostContext(nil, schemas.NoDeadline), req)
+	out := ToOpenAIChatRequest(schemas.NewBifrostContext(context.TODO, schemas.NoDeadline), req)
 	if out == nil {
 		t.Fatal("expected request")
 	}

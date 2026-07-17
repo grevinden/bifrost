@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	providerUtils "github.com/maximhq/bifrost/core/providers/utils"
-	"github.com/maximhq/bifrost/core/schemas"
+	providerUtils "github.com/grevinden/bifrost/core/providers/utils"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/valyala/fasthttp"
 )
 
@@ -19,9 +19,9 @@ func parseHuggingFaceImageError(resp *fasthttp.Response) *schemas.BifrostError {
 	}
 
 	if strings.TrimSpace(errorResp.Type) != "" {
-		bifrostErr.Type = schemas.Ptr(errorResp.Type)
+		bifrostErr.Type = new(errorResp.Type)
 		if bifrostErr.Error.Type == nil {
-			bifrostErr.Error.Type = schemas.Ptr(errorResp.Type)
+			bifrostErr.Error.Type = new(errorResp.Type)
 		}
 	}
 

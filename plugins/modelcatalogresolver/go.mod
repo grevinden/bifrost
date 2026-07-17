@@ -1,10 +1,10 @@
-module github.com/maximhq/bifrost/plugins/modelcatalogresolver
+module github.com/grevinden/bifrost/plugins/modelcatalogresolver
 
 go 1.26.4
 
 require (
-	github.com/maximhq/bifrost/core v1.7.1
-	github.com/maximhq/bifrost/framework v1.5.1
+	github.com/grevinden/bifrost/core v1.7.1
+	github.com/grevinden/bifrost/framework v1.5.1
 )
 
 require (

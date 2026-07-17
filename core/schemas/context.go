@@ -646,6 +646,21 @@ func (bc *BifrostContext) WithPluginScope(name *string) *BifrostContext {
 	return scoped
 }
 
+// IsScoped returns true if this context was created via WithPluginScope.
+// Plugins can use this to detect whether they're running inside a plugin scope.
+func (bc *BifrostContext) IsScoped() bool {
+	return bc.pluginScope != nil
+}
+
+// CurrentPluginName returns the name of the current plugin scope, if any.
+// Returns empty string and false if not scoped.
+func (bc *BifrostContext) CurrentPluginName() (name string, ok bool) {
+	if bc.pluginScope == nil {
+		return "", false
+	}
+	return *bc.pluginScope, true
+}
+
 // ReleasePluginScope marks a scoped context as released. Safe no-op if called
 // on a non-scoped context.
 //

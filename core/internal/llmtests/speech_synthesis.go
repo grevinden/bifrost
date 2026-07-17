@@ -8,8 +8,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // RunSpeechSynthesisTest executes the speech synthesis test scenario
@@ -85,10 +85,10 @@ func RunSpeechSynthesisTest(t *testing.T, client *bifrost.Bifrost, ctx context.C
 				retryConfig := GetTestRetryConfigForScenario("SpeechSynthesis", testConfig)
 				retryContext := TestRetryContext{
 					ScenarioName: "SpeechSynthesis_" + tc.name,
-					ExpectedBehavior: map[string]interface{}{
+					ExpectedBehavior: map[string]any{
 						"should_generate_audio": true,
 					},
-					TestMetadata: map[string]interface{}{
+					TestMetadata: map[string]any{
 						"provider": testConfig.Provider,
 						"model":    testConfig.SpeechSynthesisModel,
 						"format":   tc.format,
@@ -196,12 +196,12 @@ func RunSpeechSynthesisAdvancedTest(t *testing.T, client *bifrost.Bifrost, ctx c
 			retryConfig := GetTestRetryConfigForScenario("SpeechSynthesisHD", testConfig)
 			retryContext := TestRetryContext{
 				ScenarioName: "SpeechSynthesis_HD_LongText",
-				ExpectedBehavior: map[string]interface{}{
+				ExpectedBehavior: map[string]any{
 					"generate_hd_audio": true,
 					"handle_long_text":  true,
 					"min_audio_bytes":   5000,
 				},
-				TestMetadata: map[string]interface{}{
+				TestMetadata: map[string]any{
 					"provider":    testConfig.Provider,
 					"model":       testConfig.SpeechSynthesisModel,
 					"text_length": len(longText),
@@ -285,10 +285,10 @@ func RunSpeechSynthesisAdvancedTest(t *testing.T, client *bifrost.Bifrost, ctx c
 					voiceRetryConfig := GetTestRetryConfigForScenario("SpeechSynthesis", testConfig)
 					voiceRetryContext := TestRetryContext{
 						ScenarioName: "SpeechSynthesis_VoiceType_" + voiceType,
-						ExpectedBehavior: map[string]interface{}{
+						ExpectedBehavior: map[string]any{
 							"should_generate_audio": true,
 						},
-						TestMetadata: map[string]interface{}{
+						TestMetadata: map[string]any{
 							"provider":   testConfig.Provider,
 							"model":      testConfig.SpeechSynthesisModel,
 							"voice_type": voiceType,

@@ -3,7 +3,7 @@ package tables
 import (
 	"encoding/json"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"gorm.io/gorm"
 )
 

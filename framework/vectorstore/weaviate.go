@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/weaviate/weaviate-go-client/v5/weaviate"
 	"github.com/weaviate/weaviate-go-client/v5/weaviate/auth"
 	"github.com/weaviate/weaviate-go-client/v5/weaviate/filters"
@@ -25,12 +25,12 @@ const (
 type WeaviateConfig struct {
 	// Connection settings
 	Scheme     string              `json:"scheme"`                // "http" or "https" - REQUIRED
-	Host       *schemas.SecretVar     `json:"host"`                  // "localhost:8080" - REQUIRED
+	Host       *schemas.SecretVar  `json:"host"`                  // "localhost:8080" - REQUIRED
 	GrpcConfig *WeaviateGrpcConfig `json:"grpc_config,omitempty"` // grpc config for weaviate (optional)
 
 	// Authentication settings (optional)
-	APIKey  *schemas.SecretVar   `json:"api_key,omitempty"` // API key for authentication
-	Headers map[string]string `json:"headers,omitempty"` // Additional headers
+	APIKey  *schemas.SecretVar `json:"api_key,omitempty"` // API key for authentication
+	Headers map[string]string  `json:"headers,omitempty"` // Additional headers
 
 	// Connection settings
 	// Timeout accepts either a Go duration string (e.g. "5s", "30s") or an
@@ -60,7 +60,7 @@ func (s *WeaviateStore) Ping(ctx context.Context) error {
 }
 
 // Add stores a new object (with or without embedding)
-func (s *WeaviateStore) Add(ctx context.Context, className string, id string, embedding []float32, metadata map[string]interface{}) error {
+func (s *WeaviateStore) Add(ctx context.Context, className string, id string, embedding []float32, metadata map[string]any) error {
 	if strings.TrimSpace(id) == "" {
 		return fmt.Errorf("id is required")
 	}
@@ -102,7 +102,7 @@ func (s *WeaviateStore) GetChunk(ctx context.Context, className string, id strin
 		return SearchResult{}, fmt.Errorf("not found: %s", id)
 	}
 
-	props, ok := obj[0].Properties.(map[string]interface{})
+	props, ok := obj[0].Properties.(map[string]any)
 	if !ok {
 		return SearchResult{}, fmt.Errorf("invalid properties")
 	}
@@ -126,7 +126,7 @@ func (s *WeaviateStore) GetChunks(ctx context.Context, className string, ids []s
 			return nil, err
 		}
 		if len(obj) > 0 {
-			props, ok := obj[0].Properties.(map[string]interface{})
+			props, ok := obj[0].Properties.(map[string]any)
 			if !ok {
 				return nil, fmt.Errorf("invalid properties")
 			}
@@ -179,7 +179,7 @@ func (s *WeaviateStore) GetAll(ctx context.Context, className string, queries []
 		return nil, nil, fmt.Errorf("graphql errors: %v", errorMsgs)
 	}
 
-	data, ok := resp.Data["Get"].(map[string]interface{})
+	data, ok := resp.Data["Get"].(map[string]any)
 	if !ok {
 		return nil, nil, fmt.Errorf("invalid graphql response: missing 'Get' key, got: %+v", resp.Data)
 	}
@@ -191,7 +191,7 @@ func (s *WeaviateStore) GetAll(ctx context.Context, className string, queries []
 		return nil, nil, nil
 	}
 
-	objs, ok := objsRaw.([]interface{})
+	objs, ok := objsRaw.([]any)
 	if !ok {
 		s.logger.Debug(fmt.Sprintf("Class '%s' exists but data is not an array: %+v", className, objsRaw))
 		return nil, nil, nil
@@ -200,7 +200,7 @@ func (s *WeaviateStore) GetAll(ctx context.Context, className string, queries []
 	results := make([]SearchResult, 0, len(objs))
 	var nextCursor *string
 	for _, o := range objs {
-		obj, ok := o.(map[string]interface{})
+		obj, ok := o.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -210,7 +210,7 @@ func (s *WeaviateStore) GetAll(ctx context.Context, className string, queries []
 			Properties: obj,
 		}
 
-		if additional, ok := obj["_additional"].(map[string]interface{}); ok {
+		if additional, ok := obj["_additional"].(map[string]any); ok {
 			if id, ok := additional["id"].(string); ok {
 				searchResult.ID = id
 				nextCursor = &id
@@ -274,7 +274,7 @@ func (s *WeaviateStore) GetNearest(
 		return nil, fmt.Errorf("graphql errors: %v", errorMsgs)
 	}
 
-	data, ok := resp.Data["Get"].(map[string]interface{})
+	data, ok := resp.Data["Get"].(map[string]any)
 	if !ok {
 		return nil, fmt.Errorf("invalid graphql response: missing 'Get' key, got: %+v", resp.Data)
 	}
@@ -286,7 +286,7 @@ func (s *WeaviateStore) GetNearest(
 		return nil, nil
 	}
 
-	objs, ok := objsRaw.([]interface{})
+	objs, ok := objsRaw.([]any)
 	if !ok {
 		s.logger.Debug(fmt.Sprintf("Class '%s' exists but data is not an array: %+v", className, objsRaw))
 		return nil, nil
@@ -294,12 +294,12 @@ func (s *WeaviateStore) GetNearest(
 
 	results := make([]SearchResult, 0, len(objs))
 	for _, o := range objs {
-		obj, ok := o.(map[string]interface{})
+		obj, ok := o.(map[string]any)
 		if !ok {
 			continue
 		}
 
-		additional, ok := obj["_additional"].(map[string]interface{})
+		additional, ok := obj["_additional"].(map[string]any)
 		if !ok {
 			continue
 		}
@@ -525,7 +525,7 @@ func (s *WeaviateStore) CreateNamespace(ctx context.Context, className string, d
 	}
 
 	if dimension > 0 {
-		classSchema.VectorIndexConfig = map[string]interface{}{
+		classSchema.VectorIndexConfig = map[string]any{
 			"vectorDimensions": dimension,
 		}
 	}

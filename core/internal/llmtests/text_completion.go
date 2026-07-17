@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // RunTextCompletionTest tests text completion functionality
@@ -29,7 +29,7 @@ func RunTextCompletionTest(t *testing.T, client *bifrost.Bifrost, ctx context.Co
 				PromptStr: &prompt,
 			},
 			Params: &schemas.TextCompletionParameters{
-				MaxTokens: bifrost.Ptr(100),
+				MaxTokens: new(100),
 			},
 			Fallbacks: testConfig.TextCompletionFallbacks,
 		}
@@ -38,11 +38,11 @@ func RunTextCompletionTest(t *testing.T, client *bifrost.Bifrost, ctx context.Co
 		retryConfig := GetTestRetryConfigForScenario("TextCompletion", testConfig)
 		retryContext := TestRetryContext{
 			ScenarioName: "TextCompletion",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"should_continue_prompt": true,
 				"should_be_coherent":     true,
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider": testConfig.Provider,
 				"model":    testConfig.TextModel,
 				"prompt":   prompt,
@@ -50,7 +50,7 @@ func RunTextCompletionTest(t *testing.T, client *bifrost.Bifrost, ctx context.Co
 		}
 
 		// Enhanced validation expectations
-		expectations := GetExpectationsForScenario("TextCompletion", testConfig, map[string]interface{}{})
+		expectations := GetExpectationsForScenario("TextCompletion", testConfig, map[string]any{})
 		expectations = ModifyExpectationsForProvider(expectations, testConfig.Provider)
 		// Note: Removed strict keyword checks as LLMs are non-deterministic
 		// Tests focus on functionality, not exact content

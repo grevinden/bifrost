@@ -1,7 +1,7 @@
 package anthropic
 
 import (
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // ToBifrostCountTokensResponse converts an Anthropic count tokens response to Bifrost format

@@ -5,7 +5,7 @@ package mcp
 import (
 	"context"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // MCPManagerInterface defines the interface for MCP management functionality.

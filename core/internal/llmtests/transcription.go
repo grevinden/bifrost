@@ -11,8 +11,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // RunTranscriptionTest executes the transcription test scenario
@@ -36,21 +36,21 @@ func RunTranscriptionTest(t *testing.T, client *bifrost.Bifrost, ctx context.Con
 				text:           TTSTestTextBasic,
 				voiceType:      "primary",
 				format:         GetProviderDefaultFormat(testConfig.Provider),
-				responseFormat: bifrost.Ptr("json"),
+				responseFormat: new("json"),
 			},
 			{
 				name:           "RoundTrip_Medium_MP3",
 				text:           TTSTestTextMedium,
 				voiceType:      "secondary",
 				format:         GetProviderDefaultFormat(testConfig.Provider),
-				responseFormat: bifrost.Ptr("json"),
+				responseFormat: new("json"),
 			},
 			{
 				name:           "RoundTrip_Technical_MP3",
 				text:           TTSTestTextTechnical,
 				voiceType:      "tertiary",
 				format:         GetProviderDefaultFormat(testConfig.Provider),
-				responseFormat: bifrost.Ptr("json"),
+				responseFormat: new("json"),
 			},
 		}
 
@@ -87,8 +87,8 @@ func RunTranscriptionTest(t *testing.T, client *bifrost.Bifrost, ctx context.Con
 							File: fileContent,
 						},
 						Params: &schemas.TranscriptionParameters{
-							Language:       bifrost.Ptr("en"),
-							Format:         bifrost.Ptr("mp3"),
+							Language:       new("en"),
+							Format:         new("mp3"),
 							ResponseFormat: tc.responseFormat,
 						},
 						Fallbacks: testConfig.TranscriptionFallbacks,
@@ -116,10 +116,10 @@ func RunTranscriptionTest(t *testing.T, client *bifrost.Bifrost, ctx context.Con
 					ttsRetryConfig := GetTestRetryConfigForScenario("SpeechSynthesis", testConfig)
 					ttsRetryContext := TestRetryContext{
 						ScenarioName: "Transcription_RoundTrip_TTS_" + tc.name,
-						ExpectedBehavior: map[string]interface{}{
+						ExpectedBehavior: map[string]any{
 							"should_generate_audio": true,
 						},
-						TestMetadata: map[string]interface{}{
+						TestMetadata: map[string]any{
 							"provider": speechSynthesisProvider,
 							"model":    speechSynthesisModel,
 							"format":   tc.format,
@@ -169,8 +169,8 @@ func RunTranscriptionTest(t *testing.T, client *bifrost.Bifrost, ctx context.Con
 							File: ttsResponse.Audio,
 						},
 						Params: &schemas.TranscriptionParameters{
-							Language:       bifrost.Ptr("en"),
-							Format:         schemas.Ptr(tc.format),
+							Language:       new("en"),
+							Format:         new(tc.format),
 							ResponseFormat: tc.responseFormat,
 						},
 						Fallbacks: testConfig.TranscriptionFallbacks,
@@ -181,11 +181,11 @@ func RunTranscriptionTest(t *testing.T, client *bifrost.Bifrost, ctx context.Con
 				retryConfig := GetTestRetryConfigForScenario("Transcription", testConfig)
 				retryContext := TestRetryContext{
 					ScenarioName: "Transcription_RoundTrip_" + tc.name,
-					ExpectedBehavior: map[string]interface{}{
+					ExpectedBehavior: map[string]any{
 						"should_transcribe_audio": true,
 						"round_trip_test":         true,
 					},
-					TestMetadata: map[string]interface{}{
+					TestMetadata: map[string]any{
 						"provider": testConfig.Provider,
 						"model":    testConfig.TranscriptionModel,
 						"format":   tc.format,
@@ -233,14 +233,14 @@ func RunTranscriptionTest(t *testing.T, client *bifrost.Bifrost, ctx context.Con
 				{
 					name:           "Numbers_And_Punctuation",
 					text:           "Testing numbers 1, 2, 3 and punctuation marks! Question?",
-					language:       bifrost.Ptr("en"),
-					responseFormat: bifrost.Ptr("json"),
+					language:       new("en"),
+					responseFormat: new("json"),
 				},
 				{
 					name:           "Technical_Terms",
 					text:           "API gateway processes HTTP requests with JSON payloads",
-					language:       bifrost.Ptr("en"),
-					responseFormat: bifrost.Ptr("json"),
+					language:       new("en"),
+					responseFormat: new("json"),
 				},
 			}
 
@@ -297,10 +297,10 @@ func RunTranscriptionTest(t *testing.T, client *bifrost.Bifrost, ctx context.Con
 					customRetryConfig := GetTestRetryConfigForScenario("Transcription", testConfig)
 					customRetryContext := TestRetryContext{
 						ScenarioName: "Transcription_Custom_" + tc.name,
-						ExpectedBehavior: map[string]interface{}{
+						ExpectedBehavior: map[string]any{
 							"should_transcribe_audio": true,
 						},
-						TestMetadata: map[string]interface{}{
+						TestMetadata: map[string]any{
 							"provider": testConfig.Provider,
 							"model":    testConfig.TranscriptionModel,
 						},
@@ -406,10 +406,10 @@ func RunTranscriptionAdvancedTest(t *testing.T, client *bifrost.Bifrost, ctx con
 					formatRetryConfig := GetTestRetryConfigForScenario("Transcription", testConfig)
 					formatRetryContext := TestRetryContext{
 						ScenarioName: "Transcription_Format_" + format,
-						ExpectedBehavior: map[string]interface{}{
+						ExpectedBehavior: map[string]any{
 							"should_transcribe_audio": true,
 						},
-						TestMetadata: map[string]interface{}{
+						TestMetadata: map[string]any{
 							"provider": testConfig.Provider,
 							"model":    testConfig.TranscriptionModel,
 							"format":   format,
@@ -491,10 +491,10 @@ func RunTranscriptionAdvancedTest(t *testing.T, client *bifrost.Bifrost, ctx con
 					File: audioData,
 				},
 				Params: &schemas.TranscriptionParameters{
-					Language:       bifrost.Ptr("en"),
+					Language:       new("en"),
 					Format:         &audioFormat,
-					Prompt:         bifrost.Ptr("This audio contains technical terminology and proper nouns."),
-					ResponseFormat: bifrost.Ptr("json"), // Use json instead of verbose_json for whisper-1
+					Prompt:         new("This audio contains technical terminology and proper nouns."),
+					ResponseFormat: new("json"), // Use json instead of verbose_json for whisper-1
 				},
 				Fallbacks: testConfig.TranscriptionFallbacks,
 			}
@@ -503,10 +503,10 @@ func RunTranscriptionAdvancedTest(t *testing.T, client *bifrost.Bifrost, ctx con
 			advancedRetryConfig := GetTestRetryConfigForScenario("Transcription", testConfig)
 			advancedRetryContext := TestRetryContext{
 				ScenarioName: "Transcription_Advanced_CustomParams",
-				ExpectedBehavior: map[string]interface{}{
+				ExpectedBehavior: map[string]any{
 					"should_transcribe_audio": true,
 				},
-				TestMetadata: map[string]interface{}{
+				TestMetadata: map[string]any{
 					"provider": testConfig.Provider,
 					"model":    testConfig.TranscriptionModel,
 				},
@@ -600,10 +600,10 @@ func RunTranscriptionAdvancedTest(t *testing.T, client *bifrost.Bifrost, ctx con
 					langRetryConfig := GetTestRetryConfigForScenario("Transcription", testConfig)
 					langRetryContext := TestRetryContext{
 						ScenarioName: "Transcription_Language_" + lang,
-						ExpectedBehavior: map[string]interface{}{
+						ExpectedBehavior: map[string]any{
 							"should_transcribe_audio": true,
 						},
-						TestMetadata: map[string]interface{}{
+						TestMetadata: map[string]any{
 							"provider": testConfig.Provider,
 							"model":    testConfig.TranscriptionModel,
 							"language": lang,

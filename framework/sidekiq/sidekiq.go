@@ -7,8 +7,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/configstore/tables"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/configstore/tables"
 )
 
 // Store is the narrow subset of configstore the runner needs.
@@ -155,9 +155,7 @@ func (r *Runner) spawn(job tables.TableSidekiqJob) {
 	if !r.tryMarkInflight(job.ID) {
 		return
 	}
-	r.wg.Add(1)
-	go func() {
-		defer r.wg.Done()
+	r.wg.Go(func() {
 		defer r.clearInflight(job.ID)
 		select {
 		case r.sem <- struct{}{}:
@@ -166,7 +164,7 @@ func (r *Runner) spawn(job tables.TableSidekiqJob) {
 		}
 		defer func() { <-r.sem }()
 		r.execute(job)
-	}()
+	})
 }
 
 // execute claims the job and runs its handler. Uses a non-blocking claim so multiple nodes
@@ -245,9 +243,7 @@ func (r *Runner) execute(job tables.TableSidekiqJob) {
 func (r *Runner) startHeartbeat(jobCtx context.Context, cancel context.CancelFunc, id string) (stop func()) {
 	ticker := time.NewTicker(r.heartbeatInterval)
 	done := make(chan struct{})
-	r.wg.Add(1)
-	go func() {
-		defer r.wg.Done()
+	r.wg.Go(func() {
 		defer ticker.Stop()
 		for {
 			select {
@@ -268,7 +264,7 @@ func (r *Runner) startHeartbeat(jobCtx context.Context, cancel context.CancelFun
 				}
 			}
 		}
-	}()
+	})
 	var once sync.Once
 	return func() { once.Do(func() { close(done) }) }
 }
@@ -286,9 +282,7 @@ func (r *Runner) StartDispatcher(interval, staleAfter time.Duration) (stop func(
 	r.staleAfter.Store(int64(staleAfter))
 	ticker := time.NewTicker(interval)
 	done := make(chan struct{})
-	r.wg.Add(1)
-	go func() {
-		defer r.wg.Done()
+	r.wg.Go(func() {
 		defer ticker.Stop()
 		r.dispatchOnce()
 		for {
@@ -301,7 +295,7 @@ func (r *Runner) StartDispatcher(interval, staleAfter time.Duration) (stop func(
 				r.dispatchOnce()
 			}
 		}
-	}()
+	})
 	var once sync.Once
 	return func() { once.Do(func() { close(done) }) }
 }
@@ -331,13 +325,11 @@ func (r *Runner) dispatchOnce() {
 			return
 		}
 		job := job
-		r.wg.Add(1)
-		go func() {
-			defer r.wg.Done()
+		r.wg.Go(func() {
 			defer r.clearInflight(job.ID)
 			defer func() { <-r.sem }()
 			r.execute(job)
-		}()
+		})
 	}
 }
 

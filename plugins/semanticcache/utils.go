@@ -11,8 +11,8 @@ import (
 
 	"github.com/cespare/xxhash/v2"
 	"github.com/google/uuid"
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // directCacheNamespace is a fixed namespace UUID for generating deterministic
@@ -79,7 +79,7 @@ func hashSortedSet[T any](items []T, key func(T) string) (string, error) {
 // hashMap returns a deterministic xxhash hex digest of the map. Uses
 // MarshalDeeplySorted because plain json.Marshal doesn't guarantee key
 // ordering on Go maps.
-func hashMap(m map[string]interface{}) (string, error) {
+func hashMap(m map[string]any) (string, error) {
 	jsonData, err := schemas.MarshalDeeplySorted(m)
 	if err != nil {
 		return "", fmt.Errorf("failed to marshal metadata for metadata hash: %w", err)
@@ -191,8 +191,8 @@ func flattenToFloat32Embedding(values [][]float64) []float32 {
 // set for the request: anything that should change the cache key when it
 // changes. The returned map is fed to hashMap to derive params_hash, which
 // then anchors both direct and semantic lookups.
-func (plugin *Plugin) buildRequestMetadataForCaching(state *cacheState, req *schemas.BifrostRequest) (map[string]interface{}, error) {
-	metadata := map[string]interface{}{
+func (plugin *Plugin) buildRequestMetadataForCaching(state *cacheState, req *schemas.BifrostRequest) (map[string]any, error) {
+	metadata := map[string]any{
 		"stream": bifrost.IsStreamRequestType(req.RequestType),
 	}
 
@@ -439,8 +439,8 @@ func (plugin *Plugin) extractTextForEmbedding(state *cacheState, req *schemas.Bi
 // provider, model, params_hash, expires_at) plus the from_bifrost marker
 // used by Cleanup and ClearCacheForKey to scope deletes. Caller still adds
 // the response payload (response or stream_chunks) before Add.
-func (plugin *Plugin) buildUnifiedMetadata(provider schemas.ModelProvider, model string, paramsHash string, cacheKey string, ttl time.Duration) map[string]interface{} {
-	unifiedMetadata := make(map[string]interface{})
+func (plugin *Plugin) buildUnifiedMetadata(provider schemas.ModelProvider, model string, paramsHash string, cacheKey string, ttl time.Duration) map[string]any {
+	unifiedMetadata := make(map[string]any)
 	unifiedMetadata["provider"] = string(provider)
 	unifiedMetadata["model"] = model
 	unifiedMetadata["cache_key"] = cacheKey
@@ -457,7 +457,7 @@ func (plugin *Plugin) buildUnifiedMetadata(provider schemas.ModelProvider, model
 // — safe because the calling goroutine owns it. The ttl parameter is
 // retained for symmetry with addStreamingResponse; the actual expiry is
 // already encoded in metadata["expires_at"] by buildUnifiedMetadata.
-func (plugin *Plugin) addNonStreamingResponse(ctx context.Context, responseID string, res *schemas.BifrostResponse, embedding []float32, metadata map[string]interface{}, ttl time.Duration) error {
+func (plugin *Plugin) addNonStreamingResponse(ctx context.Context, responseID string, res *schemas.BifrostResponse, embedding []float32, metadata map[string]any, ttl time.Duration) error {
 	responseData, err := json.Marshal(res)
 	if err != nil {
 		return fmt.Errorf("failed to marshal response: %w", err)
@@ -478,7 +478,7 @@ func (plugin *Plugin) addNonStreamingResponse(ctx context.Context, responseID st
 // Errors never reach this function: PostLLMHook returns early on bifrostErr
 // (errors are always delivered as the final chunk), so an errored stream
 // simply leaves its accumulator behind for the periodic reaper.
-func (plugin *Plugin) addStreamingResponse(ctx context.Context, requestID string, storageID string, res *schemas.BifrostResponse, embedding []float32, metadata map[string]interface{}, ttl time.Duration, isFinalChunk bool) error {
+func (plugin *Plugin) addStreamingResponse(ctx context.Context, requestID string, storageID string, res *schemas.BifrostResponse, embedding []float32, metadata map[string]any, ttl time.Duration, isFinalChunk bool) error {
 	accumulator := plugin.getOrCreateStreamAccumulator(requestID, storageID, embedding, metadata, ttl)
 
 	chunk := &StreamChunk{
@@ -519,7 +519,7 @@ func (plugin *Plugin) addStreamingResponse(ctx context.Context, requestID string
 // Non-string elements in the []interface{} case are dropped with a warning
 // rather than failing the whole replay — partial cache hits are better than
 // no hit at all.
-func (plugin *Plugin) parseStreamChunks(streamData interface{}) ([]string, error) {
+func (plugin *Plugin) parseStreamChunks(streamData any) ([]string, error) {
 	if streamData == nil {
 		return nil, fmt.Errorf("stream data is nil")
 	}
@@ -527,7 +527,7 @@ func (plugin *Plugin) parseStreamChunks(streamData interface{}) ([]string, error
 	switch v := streamData.(type) {
 	case []string:
 		return v, nil
-	case []interface{}:
+	case []any:
 		result := make([]string, 0, len(v))
 		for i, item := range v {
 			s, ok := item.(string)
@@ -560,12 +560,12 @@ func (plugin *Plugin) parseStreamChunks(streamData interface{}) ([]string, error
 // embedding text extraction, and the history-threshold check reuse the same
 // slice instead of re-walking on each call. State may be nil (tests /
 // pre-state callers), in which case nothing is cached.
-func (plugin *Plugin) getInputForCaching(state *cacheState, req *schemas.BifrostRequest) interface{} {
+func (plugin *Plugin) getInputForCaching(state *cacheState, req *schemas.BifrostRequest) any {
 	if state != nil && state.FilteredInput != nil {
 		return state.FilteredInput
 	}
 	excludeSystem := plugin.config.ExcludeSystemPrompt != nil && *plugin.config.ExcludeSystemPrompt
-	var out interface{}
+	var out any
 	switch req.RequestType {
 	case schemas.TextCompletionRequest, schemas.TextCompletionStreamRequest:
 		out = req.TextCompletionRequest.Input
@@ -632,7 +632,7 @@ func filterResponsesMessages(msgs []schemas.ResponsesMessage, excludeSystem bool
 // (the only field we normalize), sharing all other pointer fields with the
 // original. This avoids the per-call message-graph deep copy that
 // schemas.DeepCopy*Message would otherwise do.
-func (plugin *Plugin) getNormalizedInputForCaching(req *schemas.BifrostRequest) interface{} {
+func (plugin *Plugin) getNormalizedInputForCaching(req *schemas.BifrostRequest) any {
 	excludeSystem := plugin.config.ExcludeSystemPrompt != nil && *plugin.config.ExcludeSystemPrompt
 	switch req.RequestType {
 	case schemas.TextCompletionRequest, schemas.TextCompletionStreamRequest:
@@ -759,7 +759,7 @@ func normalizeResponsesMessage(msg schemas.ResponsesMessage) schemas.ResponsesMe
 }
 
 // extractChatParametersToMetadata extracts Chat API parameters into metadata map.
-func (plugin *Plugin) extractChatParametersToMetadata(params *schemas.ChatParameters, metadata map[string]interface{}) {
+func (plugin *Plugin) extractChatParametersToMetadata(params *schemas.ChatParameters, metadata map[string]any) {
 	if params.ToolChoice != nil {
 		if params.ToolChoice.ChatToolChoiceStr != nil {
 			metadata["tool_choice"] = *params.ToolChoice.ChatToolChoiceStr
@@ -814,7 +814,7 @@ func (plugin *Plugin) extractChatParametersToMetadata(params *schemas.ChatParame
 }
 
 // extractResponsesParametersToMetadata extracts Responses API parameters into metadata map.
-func (plugin *Plugin) extractResponsesParametersToMetadata(params *schemas.ResponsesParameters, metadata map[string]interface{}) {
+func (plugin *Plugin) extractResponsesParametersToMetadata(params *schemas.ResponsesParameters, metadata map[string]any) {
 	if params.ToolChoice != nil {
 		if params.ToolChoice.ResponsesToolChoiceStr != nil {
 			metadata["tool_choice"] = *params.ToolChoice.ResponsesToolChoiceStr
@@ -869,7 +869,7 @@ func (plugin *Plugin) extractResponsesParametersToMetadata(params *schemas.Respo
 }
 
 // extractTextCompletionParametersToMetadata extracts Text Completion parameters into metadata map.
-func (plugin *Plugin) extractTextCompletionParametersToMetadata(params *schemas.TextCompletionParameters, metadata map[string]interface{}) {
+func (plugin *Plugin) extractTextCompletionParametersToMetadata(params *schemas.TextCompletionParameters, metadata map[string]any) {
 	putIfSet(metadata, "temperature", params.Temperature)
 	putIfSet(metadata, "top_p", params.TopP)
 	putIfSet(metadata, "max_tokens", params.MaxTokens)
@@ -890,7 +890,7 @@ func (plugin *Plugin) extractTextCompletionParametersToMetadata(params *schemas.
 }
 
 // extractSpeechParametersToMetadata extracts Speech parameters into metadata map.
-func (plugin *Plugin) extractSpeechParametersToMetadata(params *schemas.SpeechParameters, metadata map[string]interface{}) {
+func (plugin *Plugin) extractSpeechParametersToMetadata(params *schemas.SpeechParameters, metadata map[string]any) {
 	if params == nil {
 		return
 	}
@@ -924,7 +924,7 @@ func (plugin *Plugin) extractSpeechParametersToMetadata(params *schemas.SpeechPa
 }
 
 // extractEmbeddingParametersToMetadata extracts Embedding parameters into metadata map.
-func (plugin *Plugin) extractEmbeddingParametersToMetadata(params *schemas.EmbeddingParameters, metadata map[string]interface{}) {
+func (plugin *Plugin) extractEmbeddingParametersToMetadata(params *schemas.EmbeddingParameters, metadata map[string]any) {
 	putIfSet(metadata, "encoding_format", params.EncodingFormat)
 	putIfSet(metadata, "dimensions", params.Dimensions)
 	if len(params.ExtraParams) > 0 {
@@ -933,7 +933,7 @@ func (plugin *Plugin) extractEmbeddingParametersToMetadata(params *schemas.Embed
 }
 
 // extractTranscriptionParametersToMetadata extracts Transcription parameters into metadata map.
-func (plugin *Plugin) extractTranscriptionParametersToMetadata(params *schemas.TranscriptionParameters, metadata map[string]interface{}) {
+func (plugin *Plugin) extractTranscriptionParametersToMetadata(params *schemas.TranscriptionParameters, metadata map[string]any) {
 	putIfSet(metadata, "language", params.Language)
 	putIfSet(metadata, "response_format", params.ResponseFormat)
 	putIfSet(metadata, "prompt", params.Prompt)
@@ -955,7 +955,7 @@ func (plugin *Plugin) extractTranscriptionParametersToMetadata(params *schemas.T
 }
 
 // extractImageGenerationParametersToMetadata extracts Image Generation parameters into metadata map.
-func (plugin *Plugin) extractImageGenerationParametersToMetadata(params *schemas.ImageGenerationParameters, metadata map[string]interface{}) {
+func (plugin *Plugin) extractImageGenerationParametersToMetadata(params *schemas.ImageGenerationParameters, metadata map[string]any) {
 	if params == nil {
 		return
 	}

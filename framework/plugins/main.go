@@ -2,7 +2,7 @@
 package plugins
 
 import (
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // PluginConfig is the generic configuration for any plugin type

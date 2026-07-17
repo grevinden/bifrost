@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -65,7 +65,7 @@ func TestAgent_MaxDepthEnforcement(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Long task"),
+					ContentStr: new("Long task"),
 				},
 			},
 		},
@@ -129,7 +129,7 @@ func TestAgent_MaxDepthCustomValue(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Test"),
+					ContentStr: new("Test"),
 				},
 			},
 		},
@@ -189,7 +189,7 @@ func TestAgent_MaxDepthReached_ChatFormat(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Test"),
+					ContentStr: new("Test"),
 				},
 			},
 		},
@@ -226,16 +226,16 @@ func TestAgent_MaxDepthReached_ResponsesFormat(t *testing.T) {
 		responsesResponses: []*schemas.BifrostResponsesResponse{
 			CreateResponsesResponseWithToolCalls([]schemas.ResponsesToolMessage{
 				{
-					CallID:    schemas.Ptr("call-1"),
-					Name: schemas.Ptr("bifrostInternal-echo"),
-					Arguments: schemas.Ptr(`{"message": "first"}`),
+					CallID:    new("call-1"),
+					Name:      new("bifrostInternal-echo"),
+					Arguments: new(`{"message": "first"}`),
 				},
 			}),
 			CreateResponsesResponseWithToolCalls([]schemas.ResponsesToolMessage{
 				{
-					CallID:    schemas.Ptr("call-2"),
-					Name: schemas.Ptr("bifrostInternal-echo"),
-					Arguments: schemas.Ptr(`{"message": "second"}`),
+					CallID:    new("call-2"),
+					Name:      new("bifrostInternal-echo"),
+					Arguments: new(`{"message": "second"}`),
 				},
 			}),
 			CreateResponsesResponseWithText("Should not reach"),
@@ -253,7 +253,7 @@ func TestAgent_MaxDepthReached_ResponsesFormat(t *testing.T) {
 				Type: schemas.Ptr(schemas.ResponsesMessageTypeMessage),
 				Role: schemas.Ptr(schemas.ResponsesInputMessageRoleUser),
 				Content: &schemas.ResponsesMessageContent{
-					ContentStr: schemas.Ptr("Test"),
+					ContentStr: new("Test"),
 				},
 			},
 		},
@@ -299,30 +299,30 @@ func TestAgent_MaxDepth_CodeMode(t *testing.T) {
 		chatResponses: []*schemas.BifrostChatResponse{
 			CreateChatResponseWithToolCalls([]schemas.ChatAssistantMessageToolCall{
 				{
-					ID:   schemas.Ptr("call-1"),
-					Type: schemas.Ptr("function"),
+					ID:   new("call-1"),
+					Type: new("function"),
 					Function: schemas.ChatAssistantMessageToolCallFunction{
-						Name:      schemas.Ptr("executeToolCode"),
+						Name:      new("executeToolCode"),
 						Arguments: `{"code": "await mcpserver.echo({message: 'iter 1'}); return 'done1';"}`,
 					},
 				},
 			}),
 			CreateChatResponseWithToolCalls([]schemas.ChatAssistantMessageToolCall{
 				{
-					ID:   schemas.Ptr("call-2"),
-					Type: schemas.Ptr("function"),
+					ID:   new("call-2"),
+					Type: new("function"),
 					Function: schemas.ChatAssistantMessageToolCallFunction{
-						Name:      schemas.Ptr("executeToolCode"),
+						Name:      new("executeToolCode"),
 						Arguments: `{"code": "await mcpserver.echo({message: 'iter 2'}); return 'done2';"}`,
 					},
 				},
 			}),
 			CreateChatResponseWithToolCalls([]schemas.ChatAssistantMessageToolCall{
 				{
-					ID:   schemas.Ptr("call-3"),
-					Type: schemas.Ptr("function"),
+					ID:   new("call-3"),
+					Type: new("function"),
 					Function: schemas.ChatAssistantMessageToolCallFunction{
-						Name:      schemas.Ptr("executeToolCode"),
+						Name:      new("executeToolCode"),
 						Arguments: `{"code": "await mcpserver.echo({message: 'iter 3'}); return 'done3';"}`,
 					},
 				},
@@ -341,7 +341,7 @@ func TestAgent_MaxDepth_CodeMode(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Code mode test"),
+					ContentStr: new("Code mode test"),
 				},
 			},
 		},
@@ -381,20 +381,20 @@ func TestAgent_MaxDepth_CodeMode_ChatFormat(t *testing.T) {
 		chatResponses: []*schemas.BifrostChatResponse{
 			CreateChatResponseWithToolCalls([]schemas.ChatAssistantMessageToolCall{
 				{
-					ID:   schemas.Ptr("call-1"),
-					Type: schemas.Ptr("function"),
+					ID:   new("call-1"),
+					Type: new("function"),
 					Function: schemas.ChatAssistantMessageToolCallFunction{
-						Name:      schemas.Ptr("executeToolCode"),
+						Name:      new("executeToolCode"),
 						Arguments: `{"code": "return 'test1';"}`,
 					},
 				},
 			}),
 			CreateChatResponseWithToolCalls([]schemas.ChatAssistantMessageToolCall{
 				{
-					ID:   schemas.Ptr("call-2"),
-					Type: schemas.Ptr("function"),
+					ID:   new("call-2"),
+					Type: new("function"),
 					Function: schemas.ChatAssistantMessageToolCallFunction{
-						Name:      schemas.Ptr("executeToolCode"),
+						Name:      new("executeToolCode"),
 						Arguments: `{"code": "return 'test2';"}`,
 					},
 				},
@@ -413,7 +413,7 @@ func TestAgent_MaxDepth_CodeMode_ChatFormat(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Test"),
+					ContentStr: new("Test"),
 				},
 			},
 		},
@@ -452,16 +452,16 @@ func TestAgent_MaxDepth_CodeMode_ResponsesFormat(t *testing.T) {
 		responsesResponses: []*schemas.BifrostResponsesResponse{
 			CreateResponsesResponseWithToolCalls([]schemas.ResponsesToolMessage{
 				{
-					CallID:    schemas.Ptr("call-1"),
-					Name:      schemas.Ptr("executeToolCode"),
-					Arguments: schemas.Ptr(`{"code": "return 'test1';"}`),
+					CallID:    new("call-1"),
+					Name:      new("executeToolCode"),
+					Arguments: new(`{"code": "return 'test1';"}`),
 				},
 			}),
 			CreateResponsesResponseWithToolCalls([]schemas.ResponsesToolMessage{
 				{
-					CallID:    schemas.Ptr("call-2"),
-					Name:      schemas.Ptr("executeToolCode"),
-					Arguments: schemas.Ptr(`{"code": "return 'test2';"}`),
+					CallID:    new("call-2"),
+					Name:      new("executeToolCode"),
+					Arguments: new(`{"code": "return 'test2';"}`),
 				},
 			}),
 			CreateResponsesResponseWithText("Done"),
@@ -479,7 +479,7 @@ func TestAgent_MaxDepth_CodeMode_ResponsesFormat(t *testing.T) {
 				Type: schemas.Ptr(schemas.ResponsesMessageTypeMessage),
 				Role: schemas.Ptr(schemas.ResponsesInputMessageRoleUser),
 				Content: &schemas.ResponsesMessageContent{
-					ContentStr: schemas.Ptr("Test"),
+					ContentStr: new("Test"),
 				},
 			},
 		},
@@ -512,7 +512,7 @@ func TestAgent_Timeout(t *testing.T) {
 		Type: schemas.ChatToolTypeFunction,
 		Function: &schemas.ChatToolFunction{
 			Name:        "slow_tool",
-			Description: schemas.Ptr("A tool that takes a long time"),
+			Description: new("A tool that takes a long time"),
 			Parameters: &schemas.ToolFunctionParameters{
 				Type:       "object",
 				Properties: schemas.NewOrderedMap(),
@@ -542,7 +542,7 @@ func TestAgent_Timeout(t *testing.T) {
 	mockLLM := &MockLLMCaller{
 		chatResponses: []*schemas.BifrostChatResponse{
 			CreateChatResponseWithToolCalls([]schemas.ChatAssistantMessageToolCall{
-				CreateInProcessToolCall("call-1", "slow_tool", map[string]interface{}{}),
+				CreateInProcessToolCall("call-1", "slow_tool", map[string]any{}),
 			}),
 		},
 	}
@@ -556,7 +556,7 @@ func TestAgent_Timeout(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Test timeout"),
+					ContentStr: new("Test timeout"),
 				},
 			},
 		},
@@ -586,7 +586,7 @@ func TestAgent_TimeoutDuringExecution(t *testing.T) {
 		Type: schemas.ChatToolTypeFunction,
 		Function: &schemas.ChatToolFunction{
 			Name:        "very_slow_tool",
-			Description: schemas.Ptr("A tool that takes 1 full second"),
+			Description: new("A tool that takes 1 full second"),
 			Parameters: &schemas.ToolFunctionParameters{
 				Type:       "object",
 				Properties: schemas.NewOrderedMap(),
@@ -616,7 +616,7 @@ func TestAgent_TimeoutDuringExecution(t *testing.T) {
 	mockLLM := &MockLLMCaller{
 		chatResponses: []*schemas.BifrostChatResponse{
 			CreateChatResponseWithToolCalls([]schemas.ChatAssistantMessageToolCall{
-				CreateInProcessToolCall("call-1", "very_slow_tool", map[string]interface{}{}),
+				CreateInProcessToolCall("call-1", "very_slow_tool", map[string]any{}),
 			}),
 		},
 	}
@@ -626,7 +626,7 @@ func TestAgent_TimeoutDuringExecution(t *testing.T) {
 		&schemas.BifrostChatRequest{
 			Provider: schemas.OpenAI,
 			Model:    "gpt-4o",
-			Input:    []schemas.ChatMessage{{Role: schemas.ChatMessageRoleUser, Content: &schemas.ChatMessageContent{ContentStr: schemas.Ptr("Test")}}},
+			Input:    []schemas.ChatMessage{{Role: schemas.ChatMessageRoleUser, Content: &schemas.ChatMessageContent{ContentStr: new("Test")}}},
 		},
 		mockLLM.chatResponses[0],
 		mockLLM.MakeChatRequest,
@@ -647,7 +647,7 @@ func TestAgent_Timeout_ChatFormat(t *testing.T) {
 		Type: schemas.ChatToolTypeFunction,
 		Function: &schemas.ChatToolFunction{
 			Name:        "slow_chat_tool",
-			Description: schemas.Ptr("Tool for chat format timeout test"),
+			Description: new("Tool for chat format timeout test"),
 			Parameters:  &schemas.ToolFunctionParameters{Type: "object", Properties: schemas.NewOrderedMap()},
 		},
 	}
@@ -668,14 +668,14 @@ func TestAgent_Timeout_ChatFormat(t *testing.T) {
 	mockLLM := &MockLLMCaller{
 		chatResponses: []*schemas.BifrostChatResponse{
 			CreateChatResponseWithToolCalls([]schemas.ChatAssistantMessageToolCall{
-				CreateInProcessToolCall("call-1", "slow_chat_tool", map[string]interface{}{}),
+				CreateInProcessToolCall("call-1", "slow_chat_tool", map[string]any{}),
 			}),
 		},
 	}
 
 	_, bifrostErr := manager.CheckAndExecuteAgentForChatRequest(ctx,
 		&schemas.BifrostChatRequest{Provider: schemas.OpenAI, Model: "gpt-4o",
-			Input: []schemas.ChatMessage{{Role: schemas.ChatMessageRoleUser, Content: &schemas.ChatMessageContent{ContentStr: schemas.Ptr("Test")}}}},
+			Input: []schemas.ChatMessage{{Role: schemas.ChatMessageRoleUser, Content: &schemas.ChatMessageContent{ContentStr: new("Test")}}}},
 		mockLLM.chatResponses[0], mockLLM.MakeChatRequest)
 
 	require.NotNil(t, bifrostErr, "Chat format timeout not enforced!")
@@ -692,7 +692,7 @@ func TestAgent_Timeout_ResponsesFormat(t *testing.T) {
 		Type: schemas.ChatToolTypeFunction,
 		Function: &schemas.ChatToolFunction{
 			Name:        "slow_responses_tool",
-			Description: schemas.Ptr("Tool for responses format timeout test"),
+			Description: new("Tool for responses format timeout test"),
 			Parameters:  &schemas.ToolFunctionParameters{Type: "object", Properties: schemas.NewOrderedMap()},
 		},
 	}
@@ -713,7 +713,7 @@ func TestAgent_Timeout_ResponsesFormat(t *testing.T) {
 	mockLLM := &MockLLMCaller{
 		responsesResponses: []*schemas.BifrostResponsesResponse{
 			CreateResponsesResponseWithToolCalls([]schemas.ResponsesToolMessage{
-				{CallID: schemas.Ptr("call-1"), Name: schemas.Ptr("bifrostInternal-slow_responses_tool"), Arguments: schemas.Ptr(`{}`)},
+				{CallID: new("call-1"), Name: new("bifrostInternal-slow_responses_tool"), Arguments: new(`{}`)},
 			}),
 		},
 	}
@@ -721,7 +721,7 @@ func TestAgent_Timeout_ResponsesFormat(t *testing.T) {
 	_, bifrostErr := manager.CheckAndExecuteAgentForResponsesRequest(ctx,
 		&schemas.BifrostResponsesRequest{Provider: schemas.OpenAI, Model: "gpt-4o",
 			Input: []schemas.ResponsesMessage{{Type: schemas.Ptr(schemas.ResponsesMessageTypeMessage), Role: schemas.Ptr(schemas.ResponsesInputMessageRoleUser),
-				Content: &schemas.ResponsesMessageContent{ContentStr: schemas.Ptr("Test")}}}},
+				Content: &schemas.ResponsesMessageContent{ContentStr: new("Test")}}}},
 		mockLLM.responsesResponses[0], mockLLM.MakeResponsesRequest)
 
 	require.NotNil(t, bifrostErr, "Responses format timeout not enforced!")
@@ -748,10 +748,10 @@ func TestAgent_ErrorPropagation(t *testing.T) {
 			// Call a non-existent tool
 			CreateChatResponseWithToolCalls([]schemas.ChatAssistantMessageToolCall{
 				{
-					ID:   schemas.Ptr("call-error"),
-					Type: schemas.Ptr("function"),
+					ID:   new("call-error"),
+					Type: new("function"),
 					Function: schemas.ChatAssistantMessageToolCallFunction{
-						Name: schemas.Ptr("bifrostInternal-nonexistent_tool"),
+						Name:      new("bifrostInternal-nonexistent_tool"),
 						Arguments: `{}`,
 					},
 				},
@@ -770,7 +770,7 @@ func TestAgent_ErrorPropagation(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Test error"),
+					ContentStr: new("Test error"),
 				},
 			},
 		},
@@ -812,10 +812,10 @@ func TestAgent_ErrorInMiddleOfLoop(t *testing.T) {
 			// Second tool has error
 			CreateChatResponseWithToolCalls([]schemas.ChatAssistantMessageToolCall{
 				{
-					ID:   schemas.Ptr("call-2"),
-					Type: schemas.Ptr("function"),
+					ID:   new("call-2"),
+					Type: new("function"),
 					Function: schemas.ChatAssistantMessageToolCallFunction{
-						Name: schemas.Ptr("bifrostInternal-nonexistent"),
+						Name:      new("bifrostInternal-nonexistent"),
 						Arguments: `{}`,
 					},
 				},
@@ -834,7 +834,7 @@ func TestAgent_ErrorInMiddleOfLoop(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Multi-step with error"),
+					ContentStr: new("Multi-step with error"),
 				},
 			},
 		},
@@ -886,7 +886,7 @@ func TestAgent_LLMError(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Test LLM error"),
+					ContentStr: new("Test LLM error"),
 				},
 			},
 		},
@@ -955,7 +955,7 @@ func TestAgent_MaxDepthAndTimeout(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Test combined limits"),
+					ContentStr: new("Test combined limits"),
 				},
 			},
 		},
@@ -1017,7 +1017,7 @@ func TestAgent_MaxDepthZero(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Test zero depth"),
+					ContentStr: new("Test zero depth"),
 				},
 			},
 		},
@@ -1074,7 +1074,7 @@ func TestAgent_ParallelToolExecution(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Parallel test"),
+					ContentStr: new("Parallel test"),
 				},
 			},
 		},
@@ -1136,7 +1136,7 @@ func TestAgent_IterationTracking(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Track iterations"),
+					ContentStr: new("Track iterations"),
 				},
 			},
 		},

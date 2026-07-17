@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // chunkTiming tracks the arrival time of each streaming chunk
@@ -80,7 +80,7 @@ func RunChatCompletionStreamTest(t *testing.T, client *bifrost.Bifrost, ctx cont
 			Model:    testConfig.ChatModel,
 			Input:    messages,
 			Params: &schemas.ChatParameters{
-				MaxCompletionTokens: bifrost.Ptr(1000),
+				MaxCompletionTokens: new(1000),
 			},
 			Fallbacks: testConfig.Fallbacks,
 		}
@@ -89,12 +89,12 @@ func RunChatCompletionStreamTest(t *testing.T, client *bifrost.Bifrost, ctx cont
 		retryConfig := StreamingRetryConfig()
 		retryContext := TestRetryContext{
 			ScenarioName: "ChatCompletionStream",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"should_stream_content": true,
 				"should_tell_story":     true,
 				"topic":                 "robot painting",
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider": testConfig.Provider,
 				"model":    testConfig.ChatModel,
 			},
@@ -263,7 +263,7 @@ func RunChatCompletionStreamTest(t *testing.T, client *bifrost.Bifrost, ctx cont
 		}
 
 		// Enhanced validation expectations for streaming
-		expectations := GetExpectationsForScenario("ChatCompletionStream", testConfig, map[string]interface{}{})
+		expectations := GetExpectationsForScenario("ChatCompletionStream", testConfig, map[string]any{})
 		expectations = ModifyExpectationsForProvider(expectations, testConfig.Provider)
 		expectations.ShouldContainAnyOf = append(expectations.ShouldContainAnyOf, []string{"paris"}...) // Should include story elements                                                         // Reasonable upper bound
 
@@ -311,7 +311,7 @@ func RunChatCompletionStreamTest(t *testing.T, client *bifrost.Bifrost, ctx cont
 				Model:    testConfig.ChatModel,
 				Input:    messages,
 				Params: &schemas.ChatParameters{
-					MaxCompletionTokens: bifrost.Ptr(1000),
+					MaxCompletionTokens: new(1000),
 					Tools:               []schemas.ChatTool{*tool},
 				},
 				Fallbacks: testConfig.Fallbacks,
@@ -321,12 +321,12 @@ func RunChatCompletionStreamTest(t *testing.T, client *bifrost.Bifrost, ctx cont
 			retryConfig := StreamingRetryConfig()
 			retryContext := TestRetryContext{
 				ScenarioName: "ChatCompletionStreamWithTools",
-				ExpectedBehavior: map[string]interface{}{
+				ExpectedBehavior: map[string]any{
 					"should_stream_content":  true,
 					"should_have_tool_calls": true,
 					"tool_name":              "get_weather",
 				},
-				TestMetadata: map[string]interface{}{
+				TestMetadata: map[string]any{
 					"provider": testConfig.Provider,
 					"model":    testConfig.ChatModel,
 					"tools":    true,
@@ -477,10 +477,10 @@ func RunChatCompletionStreamTest(t *testing.T, client *bifrost.Bifrost, ctx cont
 				Model:    testConfig.ReasoningModel,
 				Input:    messages,
 				Params: &schemas.ChatParameters{
-					MaxCompletionTokens: bifrost.Ptr(1800),
+					MaxCompletionTokens: new(1800),
 					Reasoning: &schemas.ChatReasoning{
-						Effort:    bifrost.Ptr("high"),
-						MaxTokens: bifrost.Ptr(1500),
+						Effort:    new("high"),
+						MaxTokens: new(1500),
 					},
 				},
 				Fallbacks: testConfig.Fallbacks,
@@ -490,12 +490,12 @@ func RunChatCompletionStreamTest(t *testing.T, client *bifrost.Bifrost, ctx cont
 			retryConfig := StreamingRetryConfig()
 			retryContext := TestRetryContext{
 				ScenarioName: "ChatCompletionStreamWithReasoning",
-				ExpectedBehavior: map[string]interface{}{
+				ExpectedBehavior: map[string]any{
 					"should_stream_reasoning":      true,
 					"should_have_reasoning_events": true,
 					"problem_type":                 "mathematical",
 				},
-				TestMetadata: map[string]interface{}{
+				TestMetadata: map[string]any{
 					"provider":  testConfig.Provider,
 					"model":     testConfig.ReasoningModel,
 					"reasoning": true,
@@ -673,10 +673,10 @@ func RunChatCompletionStreamTest(t *testing.T, client *bifrost.Bifrost, ctx cont
 				Model:    testConfig.ReasoningModel,
 				Input:    messages,
 				Params: &schemas.ChatParameters{
-					MaxCompletionTokens: bifrost.Ptr(1800),
+					MaxCompletionTokens: new(1800),
 					Reasoning: &schemas.ChatReasoning{
-						Effort:    bifrost.Ptr("high"),
-						MaxTokens: bifrost.Ptr(1500),
+						Effort:    new("high"),
+						MaxTokens: new(1500),
 					},
 				},
 				Fallbacks: testConfig.Fallbacks,
@@ -686,12 +686,12 @@ func RunChatCompletionStreamTest(t *testing.T, client *bifrost.Bifrost, ctx cont
 			retryConfig := StreamingRetryConfig()
 			retryContext := TestRetryContext{
 				ScenarioName: "ChatCompletionStreamWithReasoningValidated",
-				ExpectedBehavior: map[string]interface{}{
+				ExpectedBehavior: map[string]any{
 					"should_stream_reasoning":          true,
 					"should_have_reasoning_indicators": true,
 					"problem_type":                     "mathematical",
 				},
-				TestMetadata: map[string]interface{}{
+				TestMetadata: map[string]any{
 					"provider":  testConfig.Provider,
 					"model":     testConfig.ReasoningModel,
 					"reasoning": true,

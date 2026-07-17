@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"github.com/bytedance/sonic"
-	"github.com/maximhq/bifrost/core/schemas"
-	bfws "github.com/maximhq/bifrost/transports/bifrost-http/websocket"
+	"github.com/grevinden/bifrost/core/schemas"
+	bfws "github.com/grevinden/bifrost/transports/bifrost-http/websocket"
 )
 
 type realtimeTurnSource string

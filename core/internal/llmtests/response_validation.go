@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // =============================================================================
@@ -43,25 +43,25 @@ type ResponseExpectations struct {
 	ShouldHaveRawResponse bool // Should have non-nil, compact JSON rawResponse in ExtraFields
 
 	// Provider-specific expectations
-	ProviderSpecific map[string]interface{} // Provider-specific validation data
+	ProviderSpecific map[string]any // Provider-specific validation data
 }
 
 // ToolCallExpectation defines expectations for a specific tool call
 type ToolCallExpectation struct {
-	FunctionName     string                 // Expected function name
-	RequiredArgs     []string               // Arguments that must be present
-	ForbiddenArgs    []string               // Arguments that should NOT be present
-	ArgumentTypes    map[string]string      // Expected types for arguments ("string", "number", "boolean", "array", "object")
-	ArgumentValues   map[string]interface{} // Specific expected values for arguments
-	ValidateArgsJSON bool                   // Whether arguments should be valid JSON
+	FunctionName     string            // Expected function name
+	RequiredArgs     []string          // Arguments that must be present
+	ForbiddenArgs    []string          // Arguments that should NOT be present
+	ArgumentTypes    map[string]string // Expected types for arguments ("string", "number", "boolean", "array", "object")
+	ArgumentValues   map[string]any    // Specific expected values for arguments
+	ValidateArgsJSON bool              // Whether arguments should be valid JSON
 }
 
 // ValidationResult contains the results of response validation
 type ValidationResult struct {
-	Passed           bool                   // Overall validation result
-	Errors           []string               // List of validation errors
-	Warnings         []string               // List of validation warnings
-	MetricsCollected map[string]interface{} // Collected metrics for analysis
+	Passed           bool           // Overall validation result
+	Errors           []string       // List of validation errors
+	Warnings         []string       // List of validation warnings
+	MetricsCollected map[string]any // Collected metrics for analysis
 }
 
 // =============================================================================
@@ -74,7 +74,7 @@ func ValidateChatResponse(t *testing.T, response *schemas.BifrostChatResponse, e
 		Passed:           true,
 		Errors:           make([]string, 0),
 		Warnings:         make([]string, 0),
-		MetricsCollected: make(map[string]interface{}),
+		MetricsCollected: make(map[string]any),
 	}
 
 	// If there's an error when we expected success, that's a failure
@@ -120,7 +120,7 @@ func ValidateTextCompletionResponse(t *testing.T, response *schemas.BifrostTextC
 		Passed:           true,
 		Errors:           make([]string, 0),
 		Warnings:         make([]string, 0),
-		MetricsCollected: make(map[string]interface{}),
+		MetricsCollected: make(map[string]any),
 	}
 
 	// If there's an error when we expected success, that's a failure
@@ -163,7 +163,7 @@ func ValidateResponsesResponse(t *testing.T, response *schemas.BifrostResponsesR
 		Passed:           true,
 		Errors:           make([]string, 0),
 		Warnings:         make([]string, 0),
-		MetricsCollected: make(map[string]interface{}),
+		MetricsCollected: make(map[string]any),
 	}
 
 	// If there's an error when we expected success, that's a failure
@@ -209,7 +209,7 @@ func ValidateSpeechResponse(t *testing.T, response *schemas.BifrostSpeechRespons
 		Passed:           true,
 		Errors:           make([]string, 0),
 		Warnings:         make([]string, 0),
-		MetricsCollected: make(map[string]interface{}),
+		MetricsCollected: make(map[string]any),
 	}
 
 	// If there's an error when we expected success, that's a failure
@@ -250,7 +250,7 @@ func ValidateImageGenerationResponse(t *testing.T, response *schemas.BifrostImag
 		Passed:           true,
 		Errors:           make([]string, 0),
 		Warnings:         make([]string, 0),
-		MetricsCollected: make(map[string]interface{}),
+		MetricsCollected: make(map[string]any),
 	}
 
 	// If there's an error when we expected success, that's a failure
@@ -290,7 +290,7 @@ func ValidateTranscriptionResponse(t *testing.T, response *schemas.BifrostTransc
 		Passed:           true,
 		Errors:           make([]string, 0),
 		Warnings:         make([]string, 0),
-		MetricsCollected: make(map[string]interface{}),
+		MetricsCollected: make(map[string]any),
 	}
 
 	// If there's an error when we expected success, that's a failure
@@ -330,7 +330,7 @@ func ValidateListModelsResponse(t *testing.T, response *schemas.BifrostListModel
 		Passed:           true,
 		Errors:           make([]string, 0),
 		Warnings:         make([]string, 0),
-		MetricsCollected: make(map[string]interface{}),
+		MetricsCollected: make(map[string]any),
 	}
 
 	// If there's an error when we expected success, that's a failure
@@ -370,7 +370,7 @@ func ValidateEmbeddingResponse(t *testing.T, response *schemas.BifrostEmbeddingR
 		Passed:           true,
 		Errors:           make([]string, 0),
 		Warnings:         make([]string, 0),
-		MetricsCollected: make(map[string]interface{}),
+		MetricsCollected: make(map[string]any),
 	}
 
 	// If there's an error when we expected success, that's a failure
@@ -410,7 +410,7 @@ func ValidateCountTokensResponse(t *testing.T, response *schemas.BifrostCountTok
 		Passed:           true,
 		Errors:           make([]string, 0),
 		Warnings:         make([]string, 0),
-		MetricsCollected: make(map[string]interface{}),
+		MetricsCollected: make(map[string]any),
 	}
 
 	// If there's an error when we expected success, that's a failure
@@ -1380,10 +1380,10 @@ func validateEmbeddingFields(t *testing.T, response *schemas.BifrostEmbeddingRes
 	// Validate each embedding has non-empty vector data
 	for i, embedding := range response.Data {
 		hasData := false
-		if embedding.Embedding.EmbeddingArray != nil && len(embedding.Embedding.EmbeddingArray) > 0 {
+		if len(embedding.Embedding.EmbeddingArray) > 0 {
 			hasData = true
 		}
-		if embedding.Embedding.Embedding2DArray != nil && len(embedding.Embedding.Embedding2DArray) > 0 {
+		if len(embedding.Embedding.Embedding2DArray) > 0 {
 			hasData = true
 		}
 		if !hasData {
@@ -1595,7 +1595,7 @@ func ValidateBatchCreateResponse(t *testing.T, response *schemas.BifrostBatchCre
 		Passed:           true,
 		Errors:           make([]string, 0),
 		Warnings:         make([]string, 0),
-		MetricsCollected: make(map[string]interface{}),
+		MetricsCollected: make(map[string]any),
 	}
 
 	if err != nil {
@@ -1646,7 +1646,7 @@ func ValidateBatchListResponse(t *testing.T, response *schemas.BifrostBatchListR
 		Passed:           true,
 		Errors:           make([]string, 0),
 		Warnings:         make([]string, 0),
-		MetricsCollected: make(map[string]interface{}),
+		MetricsCollected: make(map[string]any),
 	}
 
 	if err != nil {
@@ -1690,7 +1690,7 @@ func ValidateBatchRetrieveResponse(t *testing.T, response *schemas.BifrostBatchR
 		Passed:           true,
 		Errors:           make([]string, 0),
 		Warnings:         make([]string, 0),
-		MetricsCollected: make(map[string]interface{}),
+		MetricsCollected: make(map[string]any),
 	}
 
 	if err != nil {
@@ -1741,7 +1741,7 @@ func ValidateBatchCancelResponse(t *testing.T, response *schemas.BifrostBatchCan
 		Passed:           true,
 		Errors:           make([]string, 0),
 		Warnings:         make([]string, 0),
-		MetricsCollected: make(map[string]interface{}),
+		MetricsCollected: make(map[string]any),
 	}
 
 	if err != nil {
@@ -1791,7 +1791,7 @@ func ValidateBatchResultsResponse(t *testing.T, response *schemas.BifrostBatchRe
 		Passed:           true,
 		Errors:           make([]string, 0),
 		Warnings:         make([]string, 0),
-		MetricsCollected: make(map[string]interface{}),
+		MetricsCollected: make(map[string]any),
 	}
 
 	if err != nil {
@@ -1846,7 +1846,7 @@ func ValidateFileUploadResponse(t *testing.T, response *schemas.BifrostFileUploa
 		Passed:           true,
 		Errors:           make([]string, 0),
 		Warnings:         make([]string, 0),
-		MetricsCollected: make(map[string]interface{}),
+		MetricsCollected: make(map[string]any),
 	}
 
 	if err != nil {
@@ -1898,7 +1898,7 @@ func ValidateFileListResponse(t *testing.T, response *schemas.BifrostFileListRes
 		Passed:           true,
 		Errors:           make([]string, 0),
 		Warnings:         make([]string, 0),
-		MetricsCollected: make(map[string]interface{}),
+		MetricsCollected: make(map[string]any),
 	}
 
 	if err != nil {
@@ -1942,7 +1942,7 @@ func ValidateFileRetrieveResponse(t *testing.T, response *schemas.BifrostFileRet
 		Passed:           true,
 		Errors:           make([]string, 0),
 		Warnings:         make([]string, 0),
-		MetricsCollected: make(map[string]interface{}),
+		MetricsCollected: make(map[string]any),
 	}
 
 	if err != nil {
@@ -1994,7 +1994,7 @@ func ValidateFileDeleteResponse(t *testing.T, response *schemas.BifrostFileDelet
 		Passed:           true,
 		Errors:           make([]string, 0),
 		Warnings:         make([]string, 0),
-		MetricsCollected: make(map[string]interface{}),
+		MetricsCollected: make(map[string]any),
 	}
 
 	if err != nil {
@@ -2050,7 +2050,7 @@ func ValidateFileContentResponse(t *testing.T, response *schemas.BifrostFileCont
 		Passed:           true,
 		Errors:           make([]string, 0),
 		Warnings:         make([]string, 0),
-		MetricsCollected: make(map[string]interface{}),
+		MetricsCollected: make(map[string]any),
 	}
 
 	if err != nil {
@@ -2217,7 +2217,7 @@ func truncateContentForError(content string, maxLength int) string {
 }
 
 // getJSONType returns the JSON type of a value
-func getJSONType(value interface{}) string {
+func getJSONType(value any) string {
 	switch value.(type) {
 	case string:
 		return "string"
@@ -2225,9 +2225,9 @@ func getJSONType(value interface{}) string {
 		return "number"
 	case bool:
 		return "boolean"
-	case []interface{}:
+	case []any:
 		return "array"
-	case map[string]interface{}:
+	case map[string]any:
 		return "object"
 	case nil:
 		return "null"
@@ -2237,20 +2237,20 @@ func getJSONType(value interface{}) string {
 }
 
 // validateSingleToolCall validates a specific tool call against expectations
-func validateSingleToolCall(arguments interface{}, expected ToolCallExpectation, choiceIdx, callIdx int, result *ValidationResult) {
+func validateSingleToolCall(arguments any, expected ToolCallExpectation, choiceIdx, callIdx int, result *ValidationResult) {
 	// Parse arguments with safe type handling
-	var args map[string]interface{}
+	var args map[string]any
 
 	if expected.ValidateArgsJSON {
 		// Handle nil arguments
 		if arguments == nil {
 			args = nil
-		} else if argsMap, ok := arguments.(map[string]interface{}); ok {
+		} else if argsMap, ok := arguments.(map[string]any); ok {
 			// Already a map, use directly
 			args = argsMap
-		} else if argsMapInterface, ok := arguments.(map[interface{}]interface{}); ok {
+		} else if argsMapInterface, ok := arguments.(map[any]any); ok {
 			// Convert map[interface{}]interface{} to map[string]interface{}
-			args = make(map[string]interface{})
+			args = make(map[string]any)
 			for k, v := range argsMapInterface {
 				if keyStr, ok := k.(string); ok {
 					args[keyStr] = v

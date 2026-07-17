@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	core "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	core "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -286,7 +286,7 @@ func TestPlugin_MultiplePlugins(t *testing.T) {
 
 	// Setup Bifrost with multiple plugins in pipeline
 	bifrost, err := core.Init(context.Background(), schemas.BifrostConfig{
-		Account:    &testAccount{},
+		Account: &testAccount{},
 		MCPPlugins: []schemas.MCPPlugin{
 			loggingPlugin,
 			modifyPlugin,
@@ -550,7 +550,7 @@ func TestPlugin_ResponsesFormat(t *testing.T) {
 	ctx := createTestContext()
 
 	// Execute tool using Responses format
-	responsesToolCall := GetSampleResponsesToolCallMessage("test-responses-format", "bifrostInternal-echo", map[string]interface{}{
+	responsesToolCall := GetSampleResponsesToolCallMessage("test-responses-format", "bifrostInternal-echo", map[string]any{
 		"message": "test message",
 	})
 	result, bifrostErr := bifrost.ExecuteResponsesMCPTool(ctx, responsesToolCall.ResponsesToolMessage)

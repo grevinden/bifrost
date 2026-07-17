@@ -6,8 +6,8 @@ import (
 	"fmt"
 
 	"github.com/bytedance/sonic"
-	providerUtils "github.com/maximhq/bifrost/core/providers/utils"
-	"github.com/maximhq/bifrost/core/schemas"
+	providerUtils "github.com/grevinden/bifrost/core/providers/utils"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // # MODELS TYPES
@@ -92,10 +92,10 @@ type HuggingFaceChatRequest struct {
 	Tools            []schemas.ChatTool         `json:"tools,omitempty"`
 	TopLogprobs      *int                       `json:"top_logprobs,omitempty"`
 	TopP             *float64                   `json:"top_p,omitempty"`
-	ExtraParams      map[string]interface{}     `json:"-"`
+	ExtraParams      map[string]any             `json:"-"`
 }
 
-func (req *HuggingFaceChatRequest) GetExtraParams() map[string]interface{} {
+func (req *HuggingFaceChatRequest) GetExtraParams() map[string]any {
 	return req.ExtraParams
 }
 
@@ -162,10 +162,10 @@ type HuggingFaceResponseError struct {
 }
 
 type HuggingFaceErrorDetail struct {
-	Loc  []interface{}          `json:"loc"`
-	Msg  string                 `json:"msg"`
-	Type string                 `json:"type"`
-	Ctx  map[string]interface{} `json:"ctx,omitempty"`
+	Loc  []any          `json:"loc"`
+	Msg  string         `json:"msg"`
+	Type string         `json:"type"`
+	Ctx  map[string]any `json:"ctx,omitempty"`
 }
 
 // # EMBEDDING TYPES
@@ -173,20 +173,20 @@ type HuggingFaceErrorDetail struct {
 // HuggingFaceEmbeddingRequest represents the request format for HuggingFace embeddings API
 // Based on the HuggingFace Router API specification
 type HuggingFaceEmbeddingRequest struct {
-	Input               *InputsCustomType      `json:"input,omitempty"`    // string or []string used by all inference providers other than hf-inference
-	Inputs              *InputsCustomType      `json:"inputs,omitempty"`   // string or []string used by hf-inference provider
-	Provider            *string                `json:"provider,omitempty"` // used by all inference providers other than hf-inference
-	Model               *string                `json:"model,omitempty"`    // used by all inference providers other than hf-inference
-	Normalize           *bool                  `json:"normalize,omitempty"`
-	PromptName          *string                `json:"prompt_name,omitempty"`
-	Truncate            *bool                  `json:"truncate,omitempty"`
-	TruncationDirection *string                `json:"truncation_direction,omitempty"` // "left" or "right"
-	EncodingFormat      *EncodingType          `json:"encoding_format,omitempty"`
-	Dimensions          *int                   `json:"dimensions,omitempty"`
-	ExtraParams         map[string]interface{} `json:"-"`
+	Input               *InputsCustomType `json:"input,omitempty"`    // string or []string used by all inference providers other than hf-inference
+	Inputs              *InputsCustomType `json:"inputs,omitempty"`   // string or []string used by hf-inference provider
+	Provider            *string           `json:"provider,omitempty"` // used by all inference providers other than hf-inference
+	Model               *string           `json:"model,omitempty"`    // used by all inference providers other than hf-inference
+	Normalize           *bool             `json:"normalize,omitempty"`
+	PromptName          *string           `json:"prompt_name,omitempty"`
+	Truncate            *bool             `json:"truncate,omitempty"`
+	TruncationDirection *string           `json:"truncation_direction,omitempty"` // "left" or "right"
+	EncodingFormat      *EncodingType     `json:"encoding_format,omitempty"`
+	Dimensions          *int              `json:"dimensions,omitempty"`
+	ExtraParams         map[string]any    `json:"-"`
 }
 
-func (req *HuggingFaceEmbeddingRequest) GetExtraParams() map[string]interface{} {
+func (req *HuggingFaceEmbeddingRequest) GetExtraParams() map[string]any {
 	return req.ExtraParams
 }
 
@@ -250,10 +250,10 @@ type HuggingFaceSpeechRequest struct {
 	Provider    string                       `json:"provider" validate:"required"`
 	Model       string                       `json:"model" validate:"required"`
 	Parameters  *HuggingFaceSpeechParameters `json:"parameters,omitempty"`
-	ExtraParams map[string]interface{}       `json:"-"`
+	ExtraParams map[string]any               `json:"-"`
 }
 
-func (req *HuggingFaceSpeechRequest) GetExtraParams() map[string]interface{} {
+func (req *HuggingFaceSpeechRequest) GetExtraParams() map[string]any {
 	return req.ExtraParams
 }
 
@@ -284,10 +284,10 @@ type HuggingFaceTranscriptionRequest struct {
 	Provider    *string                                    `json:"provider,omitempty"`
 	Model       *string                                    `json:"model,omitempty"`
 	Parameters  *HuggingFaceTranscriptionRequestParameters `json:"parameters,omitempty"`
-	ExtraParams map[string]interface{}                     `json:"-"`
+	ExtraParams map[string]any                             `json:"-"`
 }
 
-func (req *HuggingFaceTranscriptionRequest) GetExtraParams() map[string]interface{} {
+func (req *HuggingFaceTranscriptionRequest) GetExtraParams() map[string]any {
 	return req.ExtraParams
 }
 

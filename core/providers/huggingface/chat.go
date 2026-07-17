@@ -6,8 +6,8 @@ import (
 
 	"github.com/bytedance/sonic"
 
-	providerUtils "github.com/maximhq/bifrost/core/providers/utils"
-	schemas "github.com/maximhq/bifrost/core/schemas"
+	providerUtils "github.com/grevinden/bifrost/core/providers/utils"
+	schemas "github.com/grevinden/bifrost/core/schemas"
 )
 
 // sanitizeMessagesForHuggingFace removes unsupported ChatAssistantMessage fields
@@ -80,7 +80,7 @@ func ToHuggingFaceChatCompletionRequest(bifrostReq *schemas.BifrostChatRequest) 
 		// Handle response format (direct type assertion to avoid marshal→unmarshal round-trip)
 		if params.ResponseFormat != nil {
 			var hfRF *HuggingFaceResponseFormat
-			if rfMap, ok := (*params.ResponseFormat).(map[string]interface{}); ok {
+			if rfMap, ok := (*params.ResponseFormat).(map[string]any); ok {
 				hfRF = &HuggingFaceResponseFormat{}
 				if t, ok := rfMap["type"].(string); ok {
 					hfRF.Type = t

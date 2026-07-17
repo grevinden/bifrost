@@ -5,8 +5,8 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/configstore"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/configstore"
 )
 
 // providersWithPartialListModels enumerates providers whose /v1/models response

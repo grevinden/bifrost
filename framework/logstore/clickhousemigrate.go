@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 )
@@ -19,7 +19,7 @@ import (
 func clickhouseColumnType(f *schema.Field) string {
 	ft := f.FieldType
 	nullable := false
-	for ft.Kind() == reflect.Ptr {
+	for ft.Kind() == reflect.Pointer {
 		nullable = true
 		ft = ft.Elem()
 	}

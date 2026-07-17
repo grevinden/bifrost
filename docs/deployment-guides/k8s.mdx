@@ -11,14 +11,14 @@ Bifrost also provides a ready-to-use Terraform module that handles all the infra
 You can use it directly from GitHub:
 ```hcl
 module "bifrost" {
-  source         = "github.com/maximhq/bifrost//terraform/modules/bifrost?ref=terraform/v0.1.0"
+  source         = "github.com/grevinden/bifrost//terraform/modules/bifrost?ref=terraform/v0.1.0"
   cloud_provider = "aws"          # "aws" | "gcp" | "azure" | "kubernetes"
   service        = "eks"          # AWS: "ecs" | "eks", GCP: "gke" | "cloud-run", Azure: "aks" | "aci", K8s: "deployment"
   region         = "us-east-1"
   image_tag      = "latest"
 }
 ```
-See the [Terraform module README](https://github.com/maximhq/bifrost/tree/main/terraform) for full documentation and examples.
+See the [Terraform module README](https://github.com/grevinden/bifrost/tree/main/terraform) for full documentation and examples.
 </Note>
 
 <Note>

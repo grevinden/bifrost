@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 func newTestContext() *schemas.BifrostContext {
@@ -87,8 +87,8 @@ func TestDropUnsupportedParams_MaxOutputTokens(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			req := newResponsesRequest(tt.provider, tt.model, &schemas.ResponsesParameters{
-				MaxOutputTokens: schemas.Ptr(16),
-				Temperature:     schemas.Ptr(0.5),
+				MaxOutputTokens: new(16),
+				Temperature:     new(0.5),
 			})
 
 			dropped := dropUnsupportedParams(newTestContext(), req, tt.supported)
@@ -122,9 +122,9 @@ func TestDropUnsupportedParams_MaxOutputTokens(t *testing.T) {
 // token cap supported) while an unsupported sibling (top_p) is still dropped.
 func TestDropUnsupportedParams_MaxOutputTokensSurgical(t *testing.T) {
 	req := newResponsesRequest(schemas.OpenAI, "gpt-4o-mini", &schemas.ResponsesParameters{
-		MaxOutputTokens: schemas.Ptr(16),
-		TopP:            schemas.Ptr(0.9),
-		Temperature:     schemas.Ptr(0.5),
+		MaxOutputTokens: new(16),
+		TopP:            new(0.9),
+		Temperature:     new(0.5),
 	})
 
 	dropped := dropUnsupportedParams(newTestContext(), req, []string{"max_tokens", "temperature"})
@@ -153,7 +153,7 @@ func TestDropUnsupportedParams_ChatMaxCompletionTokensUnchanged(t *testing.T) {
 			ChatRequest: &schemas.BifrostChatRequest{
 				Provider: schemas.OpenAI,
 				Model:    "gpt-4o-mini",
-				Params:   &schemas.ChatParameters{MaxCompletionTokens: schemas.Ptr(16)},
+				Params:   &schemas.ChatParameters{MaxCompletionTokens: new(16)},
 			},
 		}
 	}
@@ -184,7 +184,7 @@ func TestDropUnsupportedParams_ChatReasoningWithUnsupportedTools(t *testing.T) {
 						Type: schemas.ChatToolTypeFunction,
 						Function: &schemas.ChatToolFunction{
 							Name:        "get_weather",
-							Description: schemas.Ptr("Returns weather"),
+							Description: new("Returns weather"),
 						},
 					}},
 				},

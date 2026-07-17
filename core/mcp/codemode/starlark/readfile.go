@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"strings"
 
-	codemcp "github.com/maximhq/bifrost/core/mcp"
-	"github.com/maximhq/bifrost/core/schemas"
+	codemcp "github.com/grevinden/bifrost/core/mcp"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // createReadToolFileTool creates the readToolFile tool definition for code mode.
@@ -45,15 +45,15 @@ func (s *StarlarkCodeMode) createReadToolFileTool() schemas.ChatTool {
 	}
 
 	readToolFileProps := schemas.NewOrderedMapFromPairs(
-		schemas.KV("fileName", map[string]interface{}{
+		schemas.KV("fileName", map[string]any{
 			"type":        "string",
 			"description": fileNameDescription,
 		}),
-		schemas.KV("startLine", map[string]interface{}{
+		schemas.KV("startLine", map[string]any{
 			"type":        "number",
 			"description": "Optional 1-based starting line number for partial file read. Usually not needed - omit to read the entire file. Files are typically small (under 50 lines).",
 		}),
-		schemas.KV("endLine", map[string]interface{}{
+		schemas.KV("endLine", map[string]any{
 			"type":        "number",
 			"description": "Optional 1-based ending line number for partial file read. Usually not needed - omit to read the entire file. Will be clamped to actual file size if too large.",
 		}),
@@ -62,7 +62,7 @@ func (s *StarlarkCodeMode) createReadToolFileTool() schemas.ChatTool {
 		Type: schemas.ChatToolTypeFunction,
 		Function: &schemas.ChatToolFunction{
 			Name:        codemcp.ToolTypeReadToolFile,
-			Description: schemas.Ptr(toolDescription),
+			Description: new(toolDescription),
 			Parameters: &schemas.ToolFunctionParameters{
 				Type:       "object",
 				Properties: readToolFileProps,
@@ -75,7 +75,7 @@ func (s *StarlarkCodeMode) createReadToolFileTool() schemas.ChatTool {
 // handleReadToolFile handles the readToolFile tool call.
 func (s *StarlarkCodeMode) handleReadToolFile(ctx context.Context, toolCall schemas.ChatAssistantMessageToolCall) (*schemas.ChatMessage, error) {
 	// Parse tool arguments
-	var arguments map[string]interface{}
+	var arguments map[string]any
 	if err := json.Unmarshal([]byte(toolCall.Function.Arguments), &arguments); err != nil {
 		return nil, fmt.Errorf("failed to parse tool arguments: %v", err)
 	}
@@ -113,14 +113,15 @@ func (s *StarlarkCodeMode) handleReadToolFile(ctx context.Context, toolCall sche
 			matchCount++
 			if matchCount > 1 {
 				// Multiple matches found
-				errorMsg := fmt.Sprintf("Multiple servers match filename '%s':\n", fileName)
+				var errorMsg strings.Builder
+				errorMsg.WriteString(fmt.Sprintf("Multiple servers match filename '%s':\n", fileName))
 				for name := range availableToolsPerClient {
 					if strings.ToLower(name) == serverNameLower {
-						errorMsg += fmt.Sprintf("  - %s\n", name)
+						errorMsg.WriteString(fmt.Sprintf("  - %s\n", name))
 					}
 				}
-				errorMsg += "\nPlease use a more specific filename. Use the exact display name from listToolFiles to avoid ambiguity."
-				return createToolResponseMessage(toolCall, errorMsg), nil
+				errorMsg.WriteString("\nPlease use a more specific filename. Use the exact display name from listToolFiles to avoid ambiguity.")
+				return createToolResponseMessage(toolCall, errorMsg.String()), nil
 			}
 
 			matchedClientName = clientName
@@ -144,11 +145,12 @@ func (s *StarlarkCodeMode) handleReadToolFile(ctx context.Context, toolCall sche
 							availableTools = append(availableTools, getCanonicalToolName(clientName, tool.Function.Name))
 						}
 					}
-					errorMsg := fmt.Sprintf("Tool '%s' not found in server '%s'. Available tools in this server are:\n", toolName, clientName)
+					var errorMsg strings.Builder
+					errorMsg.WriteString(fmt.Sprintf("Tool '%s' not found in server '%s'. Available tools in this server are:\n", toolName, clientName))
 					for _, t := range availableTools {
-						errorMsg += fmt.Sprintf("  - servers/%s/%s.pyi\n", clientName, t)
+						errorMsg.WriteString(fmt.Sprintf("  - servers/%s/%s.pyi\n", clientName, t))
 					}
-					return createToolResponseMessage(toolCall, errorMsg), nil
+					return createToolResponseMessage(toolCall, errorMsg.String()), nil
 				}
 
 				matchedTools = []schemas.ChatTool{*foundTool}
@@ -181,11 +183,12 @@ func (s *StarlarkCodeMode) handleReadToolFile(ctx context.Context, toolCall sche
 			}
 		}
 
-		errorMsg := fmt.Sprintf("No server found matching '%s'. Available virtual files are:\n", serverName)
+		var errorMsg strings.Builder
+		errorMsg.WriteString(fmt.Sprintf("No server found matching '%s'. Available virtual files are:\n", serverName))
 		for _, f := range availableFiles {
-			errorMsg += fmt.Sprintf("  - %s\n", f)
+			errorMsg.WriteString(fmt.Sprintf("  - %s\n", f))
 		}
-		return createToolResponseMessage(toolCall, errorMsg), nil
+		return createToolResponseMessage(toolCall, errorMsg.String()), nil
 	}
 
 	// Generate compact Python signatures
@@ -348,7 +351,7 @@ func formatPythonParams(params *schemas.ToolFunctionParameters) string {
 	// Sort properties: required first, then optional, alphabetically within each group
 	requiredNames := make([]string, 0)
 	optionalNames := make([]string, 0)
-	props.Range(func(name string, _ interface{}) bool {
+	props.Range(func(name string, _ any) bool {
 		if required[name] {
 			requiredNames = append(requiredNames, name)
 		} else {
@@ -377,7 +380,7 @@ func formatPythonParams(params *schemas.ToolFunctionParameters) string {
 	// Add required params first
 	for _, propName := range requiredNames {
 		prop, _ := props.Get(propName)
-		propMap, ok := prop.(map[string]interface{})
+		propMap, ok := prop.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -388,7 +391,7 @@ func formatPythonParams(params *schemas.ToolFunctionParameters) string {
 	// Add optional params with default None
 	for _, propName := range optionalNames {
 		prop, _ := props.Get(propName)
-		propMap, ok := prop.(map[string]interface{})
+		propMap, ok := prop.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -400,9 +403,9 @@ func formatPythonParams(params *schemas.ToolFunctionParameters) string {
 }
 
 // jsonSchemaToPython converts a JSON Schema type definition to a Python type string.
-func jsonSchemaToPython(prop map[string]interface{}) string {
+func jsonSchemaToPython(prop map[string]any) string {
 	// Check for enum first - takes precedence over type to show allowed values
-	if enum, ok := prop["enum"].([]interface{}); ok && len(enum) > 0 {
+	if enum, ok := prop["enum"].([]any); ok && len(enum) > 0 {
 		enumStrs := make([]string, 0, len(enum))
 		for _, e := range enum {
 			enumStrs = append(enumStrs, fmt.Sprintf("%q", e))
@@ -428,7 +431,7 @@ func jsonSchemaToPython(prop map[string]interface{}) string {
 			return "bool"
 		case "array":
 			itemsType := "Any"
-			if items, ok := prop["items"].(map[string]interface{}); ok {
+			if items, ok := prop["items"].(map[string]any); ok {
 				itemsType = jsonSchemaToPython(items)
 			}
 			return fmt.Sprintf("list[%s]", itemsType)

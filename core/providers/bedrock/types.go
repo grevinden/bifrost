@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 
 	"github.com/bytedance/sonic"
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // DefaultBedrockRegion is the default region for Bedrock

@@ -3,12 +3,12 @@ package runway
 import (
 	"testing"
 
-	schemas "github.com/maximhq/bifrost/core/schemas"
+	schemas "github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func makeVideoReq(model string, extraParams map[string]interface{}) *schemas.BifrostVideoGenerationRequest {
+func makeVideoReq(model string, extraParams map[string]any) *schemas.BifrostVideoGenerationRequest {
 	return &schemas.BifrostVideoGenerationRequest{
 		Model: model,
 		Input: &schemas.VideoGenerationInput{
@@ -23,7 +23,7 @@ func makeVideoReq(model string, extraParams map[string]interface{}) *schemas.Bif
 func TestToRunwayVideoGenerationRequest_References(t *testing.T) {
 	t.Run("direct_typed_references", func(t *testing.T) {
 		refs := []Reference{{Type: "image", URI: "https://example.com/img.jpg"}}
-		req := makeVideoReq("gen3", map[string]interface{}{
+		req := makeVideoReq("gen3", map[string]any{
 			"references": refs,
 		})
 
@@ -37,9 +37,9 @@ func TestToRunwayVideoGenerationRequest_References(t *testing.T) {
 
 	t.Run("map_fallback_references", func(t *testing.T) {
 		// Simulates what happens when references arrive via JSON deserialization
-		req := makeVideoReq("gen3", map[string]interface{}{
-			"references": []interface{}{
-				map[string]interface{}{"type": "image", "uri": "https://example.com/img.jpg"},
+		req := makeVideoReq("gen3", map[string]any{
+			"references": []any{
+				map[string]any{"type": "image", "uri": "https://example.com/img.jpg"},
 			},
 		})
 
@@ -55,7 +55,7 @@ func TestToRunwayVideoGenerationRequest_References(t *testing.T) {
 func TestToRunwayVideoGenerationRequest_ReferenceImages(t *testing.T) {
 	t.Run("direct_typed_reference_images", func(t *testing.T) {
 		refImages := []ReferenceImage{{URI: "https://example.com/ref.jpg", Tag: "style"}}
-		req := makeVideoReq("gen3", map[string]interface{}{
+		req := makeVideoReq("gen3", map[string]any{
 			"reference_images": refImages,
 		})
 
@@ -68,9 +68,9 @@ func TestToRunwayVideoGenerationRequest_ReferenceImages(t *testing.T) {
 	})
 
 	t.Run("map_fallback_reference_images", func(t *testing.T) {
-		req := makeVideoReq("gen3", map[string]interface{}{
-			"reference_images": []interface{}{
-				map[string]interface{}{"uri": "https://example.com/ref.jpg", "tag": "style"},
+		req := makeVideoReq("gen3", map[string]any{
+			"reference_images": []any{
+				map[string]any{"uri": "https://example.com/ref.jpg", "tag": "style"},
 			},
 		})
 
@@ -86,8 +86,8 @@ func TestToRunwayVideoGenerationRequest_ReferenceImages(t *testing.T) {
 func TestToRunwayVideoGenerationRequest_ContentModeration(t *testing.T) {
 	// ContentModeration handling only applies to veo models
 	t.Run("pointer_content_moderation", func(t *testing.T) {
-		cm := &ContentModeration{PublicFigureThreshold: schemas.Ptr("high")}
-		req := makeVideoReq("veo-model", map[string]interface{}{
+		cm := &ContentModeration{PublicFigureThreshold: new("high")}
+		req := makeVideoReq("veo-model", map[string]any{
 			"content_moderation": cm,
 		})
 
@@ -100,8 +100,8 @@ func TestToRunwayVideoGenerationRequest_ContentModeration(t *testing.T) {
 	})
 
 	t.Run("map_fallback_content_moderation", func(t *testing.T) {
-		req := makeVideoReq("veo-model", map[string]interface{}{
-			"content_moderation": map[string]interface{}{
+		req := makeVideoReq("veo-model", map[string]any{
+			"content_moderation": map[string]any{
 				"public_figure_threshold": "high",
 			},
 		})

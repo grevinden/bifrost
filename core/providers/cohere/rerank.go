@@ -1,10 +1,11 @@
 package cohere
 
 import (
+	"maps"
 	"sort"
 
 	"github.com/bytedance/sonic"
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"gopkg.in/yaml.v3"
 )
 
@@ -93,7 +94,7 @@ func (response *CohereRerankResponse) ToBifrostRerankResponse(documents []schema
 
 		// Convert document if present
 		if len(result.Document) > 0 {
-			var docMap map[string]interface{}
+			var docMap map[string]any
 			if err := sonic.Unmarshal(result.Document, &docMap); err == nil {
 				doc := &schemas.RerankDocument{}
 				populated := false
@@ -106,15 +107,11 @@ func (response *CohereRerankResponse) ToBifrostRerankResponse(documents []schema
 					populated = true
 				}
 				// Collect metadata: unwrap "metadata"/"meta" keys to avoid nesting
-				meta := make(map[string]interface{})
-				if rawMeta, ok := docMap["metadata"].(map[string]interface{}); ok {
-					for k, v := range rawMeta {
-						meta[k] = v
-					}
-				} else if rawMeta, ok := docMap["meta"].(map[string]interface{}); ok {
-					for k, v := range rawMeta {
-						meta[k] = v
-					}
+				meta := make(map[string]any)
+				if rawMeta, ok := docMap["metadata"].(map[string]any); ok {
+					maps.Copy(meta, rawMeta)
+				} else if rawMeta, ok := docMap["meta"].(map[string]any); ok {
+					maps.Copy(meta, rawMeta)
 				}
 				for k, v := range docMap {
 					if k != "text" && k != "id" && k != "metadata" && k != "meta" {
@@ -143,7 +140,7 @@ func (response *CohereRerankResponse) ToBifrostRerankResponse(documents []schema
 		for i := range bifrostResponse.Results {
 			resultIndex := bifrostResponse.Results[i].Index
 			if resultIndex >= 0 && resultIndex < len(documents) {
-				bifrostResponse.Results[i].Document = schemas.Ptr(documents[resultIndex])
+				bifrostResponse.Results[i].Document = new(documents[resultIndex])
 			}
 		}
 	}
@@ -190,7 +187,7 @@ func formatCohereRerankDocument(doc schemas.RerankDocument) string {
 	}
 
 	// Keep metadata/id available by encoding a structured string document.
-	documentPayload := map[string]interface{}{
+	documentPayload := map[string]any{
 		"text": doc.Text,
 	}
 	if doc.ID != nil {

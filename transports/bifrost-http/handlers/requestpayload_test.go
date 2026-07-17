@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/maximhq/bifrost/framework/configstore"
+	"github.com/grevinden/bifrost/framework/configstore"
 	"github.com/valyala/fasthttp"
 )
 

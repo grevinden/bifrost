@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/bytedance/sonic"
-	providerUtils "github.com/maximhq/bifrost/core/providers/utils"
-	"github.com/maximhq/bifrost/core/schemas"
+	providerUtils "github.com/grevinden/bifrost/core/providers/utils"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/valyala/fasthttp"
 )
 
@@ -18,7 +18,7 @@ import (
 // "messages") have their messages converted to Gemini "contents"/"systemInstruction";
 // bodies already in Gemini form are unmarshaled directly. Shared by the Gemini and Vertex
 // batch paths so both emit identical request bodies.
-func ToGeminiBatchGenerateContentRequest(body map[string]interface{}) (GeminiBatchGenerateContentRequest, error) {
+func ToGeminiBatchGenerateContentRequest(body map[string]any) (GeminiBatchGenerateContentRequest, error) {
 	var geminiReq GeminiBatchGenerateContentRequest
 
 	requestBytes, err := providerUtils.MarshalSorted(body)
@@ -167,10 +167,7 @@ func ToGeminiBatchRetrieveResponse(resp *schemas.BifrostBatchRetrieveResponse) *
 		if processedCount == 0 {
 			processedCount = succeededCount
 		}
-		pendingCount = resp.RequestCounts.Total - processedCount - resp.RequestCounts.Failed
-		if pendingCount < 0 {
-			pendingCount = 0
-		}
+		pendingCount = max(resp.RequestCounts.Total-processedCount-resp.RequestCounts.Failed, 0)
 	}
 
 	geminiResp := &GeminiBatchJobResponse{
@@ -385,8 +382,8 @@ func geminiBatchOutput(resp *GeminiBatchJobResponse) (fileName string, inlined [
 
 // geminiGenerateContentToBatchResultBody flattens a Gemini GenerateContentResponse into
 // the compact result body shape shared by the inline and file-based batch result paths.
-func geminiGenerateContentToBatchResultBody(resp *GenerateContentResponse) map[string]interface{} {
-	body := make(map[string]interface{})
+func geminiGenerateContentToBatchResultBody(resp *GenerateContentResponse) map[string]any {
+	body := make(map[string]any)
 	if resp == nil {
 		return body
 	}
@@ -406,7 +403,7 @@ func geminiGenerateContentToBatchResultBody(resp *GenerateContentResponse) map[s
 		body["finish_reason"] = string(candidate.FinishReason)
 	}
 	if resp.UsageMetadata != nil {
-		body["usage"] = map[string]interface{}{
+		body["usage"] = map[string]any{
 			"prompt_tokens":     resp.UsageMetadata.PromptTokenCount,
 			"completion_tokens": resp.UsageMetadata.CandidatesTokenCount,
 			"total_tokens":      resp.UsageMetadata.TotalTokenCount,

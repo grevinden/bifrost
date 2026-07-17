@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	clickhousedriver "gorm.io/driver/clickhouse"
 	"gorm.io/gorm"
 )

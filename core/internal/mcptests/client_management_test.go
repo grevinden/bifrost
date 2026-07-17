@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -426,7 +426,7 @@ func TestConcurrentClientOperations(t *testing.T) {
 	done := make(chan bool, 5)
 	errors := make(chan error, 5)
 
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		go func(id int) {
 			clientConfig := GetSampleHTTPClientConfig(config.HTTPServerURL)
 			clientConfig.ID = string(rune('a'+id)) + "-concurrent-client"
@@ -441,7 +441,7 @@ func TestConcurrentClientOperations(t *testing.T) {
 	}
 
 	// Wait for all operations
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		<-done
 	}
 	close(errors)

@@ -3,9 +3,9 @@ package datasheet
 import (
 	"testing"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
-	configstoreTables "github.com/maximhq/bifrost/framework/configstore/tables"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
+	configstoreTables "github.com/grevinden/bifrost/framework/configstore/tables"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -43,8 +43,8 @@ func TestGetPricing_OverridePrecedenceExactWildcard(t *testing.T) {
 		Model:              "gpt-4o",
 		Provider:           "openai",
 		Mode:               "chat",
-		InputCostPerToken:  bifrost.Ptr(1.0),
-		OutputCostPerToken: bifrost.Ptr(2.0),
+		InputCostPerToken:  new(1.0),
+		OutputCostPerToken: new(2.0),
 	}
 
 	providerID := "openai"
@@ -82,8 +82,8 @@ func TestGetPricing_RequestTypeSpecificOverrideBeatsGeneric(t *testing.T) {
 		Model:              "gpt-4o",
 		Provider:           "openai",
 		Mode:               "responses",
-		InputCostPerToken:  bifrost.Ptr(1.0),
-		OutputCostPerToken: bifrost.Ptr(2.0),
+		InputCostPerToken:  new(1.0),
+		OutputCostPerToken: new(2.0),
 	}
 
 	providerID := "openai"
@@ -119,8 +119,8 @@ func TestGetPricing_AppliesOverrideAfterFallbackResolution(t *testing.T) {
 		Model:              "gpt-4o",
 		Provider:           "vertex",
 		Mode:               "chat",
-		InputCostPerToken:  bifrost.Ptr(1.0),
-		OutputCostPerToken: bifrost.Ptr(2.0),
+		InputCostPerToken:  new(1.0),
+		OutputCostPerToken: new(2.0),
 	}
 
 	geminiProviderID := "gemini"
@@ -146,8 +146,8 @@ func TestGetPricing_DeploymentLookupUsesResolvedModelForOverrideMatching(t *test
 		Model:              "dep-gpt4o",
 		Provider:           "openai",
 		Mode:               "chat",
-		InputCostPerToken:  bifrost.Ptr(1.0),
-		OutputCostPerToken: bifrost.Ptr(2.0),
+		InputCostPerToken:  new(1.0),
+		OutputCostPerToken: new(2.0),
 	}
 
 	providerID := "openai"
@@ -177,8 +177,8 @@ func TestGetPricing_FallbackUsesRequestedProviderForScopeMatching(t *testing.T) 
 		Model:              "gpt-4o",
 		Provider:           "vertex",
 		Mode:               "chat",
-		InputCostPerToken:  bifrost.Ptr(1.0),
-		OutputCostPerToken: bifrost.Ptr(2.0),
+		InputCostPerToken:  new(1.0),
+		OutputCostPerToken: new(2.0),
 	}
 
 	geminiProviderID := "gemini"
@@ -217,8 +217,8 @@ func TestGetPricing_ExactOverrideDoesNotMatchProviderPrefixedModel(t *testing.T)
 		Model:              "openai/gpt-4o",
 		Provider:           "openai",
 		Mode:               "chat",
-		InputCostPerToken:  bifrost.Ptr(1.0),
-		OutputCostPerToken: bifrost.Ptr(2.0),
+		InputCostPerToken:  new(1.0),
+		OutputCostPerToken: new(2.0),
 	}
 
 	providerID := "openai"
@@ -246,8 +246,8 @@ func TestGetPricing_NoMatchingOverrideLeavesPricingUnchanged(t *testing.T) {
 		Model:                   "gpt-4o",
 		Provider:                "openai",
 		Mode:                    "chat",
-		InputCostPerToken:       bifrost.Ptr(1.0),
-		OutputCostPerToken:      bifrost.Ptr(2.0),
+		InputCostPerToken:       new(1.0),
+		OutputCostPerToken:      new(2.0),
 		CacheReadInputTokenCost: &baseCacheRead,
 	}
 
@@ -278,8 +278,8 @@ func TestDeleteProviderOverrides_StopsApplying(t *testing.T) {
 		Model:              "gpt-4o",
 		Provider:           "openai",
 		Mode:               "chat",
-		InputCostPerToken:  bifrost.Ptr(1.0),
-		OutputCostPerToken: bifrost.Ptr(2.0),
+		InputCostPerToken:  new(1.0),
+		OutputCostPerToken: new(2.0),
 	}
 
 	providerID := "openai"
@@ -312,8 +312,8 @@ func TestGetPricing_WildcardSpecificityLongerLiteralWins(t *testing.T) {
 		Model:              "gpt-4o-mini",
 		Provider:           "openai",
 		Mode:               "chat",
-		InputCostPerToken:  bifrost.Ptr(1.0),
-		OutputCostPerToken: bifrost.Ptr(2.0),
+		InputCostPerToken:  new(1.0),
+		OutputCostPerToken: new(2.0),
 	}
 
 	providerID := "openai"
@@ -347,8 +347,8 @@ func TestGetPricing_FirstInsertionWinsOnTie(t *testing.T) {
 		Model:              "gpt-4o-mini",
 		Provider:           "openai",
 		Mode:               "chat",
-		InputCostPerToken:  bifrost.Ptr(1.0),
-		OutputCostPerToken: bifrost.Ptr(2.0),
+		InputCostPerToken:  new(1.0),
+		OutputCostPerToken: new(2.0),
 	}
 
 	providerID := "openai"
@@ -387,15 +387,15 @@ func TestPatchPricing_PartialPatchOnlyChangesSpecifiedFields(t *testing.T) {
 		Model:                   "gpt-4o",
 		Provider:                "openai",
 		Mode:                    "chat",
-		InputCostPerToken:       bifrost.Ptr(1.0),
-		OutputCostPerToken:      bifrost.Ptr(2.0),
+		InputCostPerToken:       new(1.0),
+		OutputCostPerToken:      new(2.0),
 		CacheReadInputTokenCost: &baseCacheRead,
 		InputCostPerImage:       &baseInputImage,
 	}
 
 	cacheRead := 0.9
 	patched := patchPricing(base, Options{
-		InputCostPerToken:       bifrost.Ptr(3.0),
+		InputCostPerToken:       new(3.0),
 		CacheReadInputTokenCost: &cacheRead,
 	})
 
@@ -457,8 +457,8 @@ func TestApplyScopedOverrides_ScopePrecedence(t *testing.T) {
 		Model:              "gpt-5-nano",
 		Provider:           "openai",
 		Mode:               "chat",
-		InputCostPerToken:  bifrost.Ptr(1.0),
-		OutputCostPerToken: bifrost.Ptr(2.0),
+		InputCostPerToken:  new(1.0),
+		OutputCostPerToken: new(2.0),
 	}
 
 	tests := []struct {

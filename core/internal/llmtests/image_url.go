@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // RunImageURLTest executes the image URL test scenario using dual API testing framework
@@ -34,12 +34,12 @@ func RunImageURLTest(t *testing.T, client *bifrost.Bifrost, ctx context.Context,
 		retryConfig := GetTestRetryConfigForScenario("ImageURL", testConfig)
 		retryContext := TestRetryContext{
 			ScenarioName: "ImageURL",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"should_describe_image":  true,
 				"should_identify_object": "ant or insect",
 				"vision_processing":      true,
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider":          testConfig.Provider,
 				"model":             testConfig.VisionModel,
 				"image_type":        "url",
@@ -62,7 +62,7 @@ func RunImageURLTest(t *testing.T, client *bifrost.Bifrost, ctx context.Context,
 				Provider: testConfig.Provider,
 				Model:    testConfig.VisionModel,
 				Params: &schemas.ChatParameters{
-					MaxCompletionTokens: bifrost.Ptr(200),
+					MaxCompletionTokens: new(200),
 				},
 				Fallbacks: testConfig.Fallbacks,
 			}
@@ -76,7 +76,7 @@ func RunImageURLTest(t *testing.T, client *bifrost.Bifrost, ctx context.Context,
 				Provider: testConfig.Provider,
 				Model:    testConfig.VisionModel,
 				Params: &schemas.ResponsesParameters{
-					MaxOutputTokens: bifrost.Ptr(200),
+					MaxOutputTokens: new(200),
 				},
 				Fallbacks: testConfig.Fallbacks,
 			}

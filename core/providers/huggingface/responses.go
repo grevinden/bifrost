@@ -3,7 +3,7 @@ package huggingface
 import (
 	"fmt"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // ToHuggingFaceResponsesRequest converts a Bifrost Responses request into the Hugging Face

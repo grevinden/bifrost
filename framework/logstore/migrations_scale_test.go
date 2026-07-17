@@ -58,11 +58,9 @@ func TestScalePostgresLogstoreMigrations(t *testing.T) {
 	var sampleMu sync.Mutex
 	var samples []lockWaitSample
 	var monitorWG sync.WaitGroup
-	monitorWG.Add(1)
-	go func() {
-		defer monitorWG.Done()
+	monitorWG.Go(func() {
 		monitorScaleMigrationLocks(monitorCtx, t, sqlDB, &sampleMu, &samples)
-	}()
+	})
 	defer monitorWG.Wait()
 	defer stopMonitor()
 

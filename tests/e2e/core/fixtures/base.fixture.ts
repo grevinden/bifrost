@@ -19,7 +19,7 @@ import { ModelLimitsPage } from "../../features/model-limits/pages/model-limits.
 /**
  * Custom test fixtures type
  */
-type BifrostFixtures = {
+export type BifrostFixtures = {
 	closeDevProfiler: void;
 	sidebarPage: SidebarPage;
 	providersPage: ProvidersPage;

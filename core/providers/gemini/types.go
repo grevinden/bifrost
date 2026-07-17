@@ -13,8 +13,8 @@ import (
 
 	"cloud.google.com/go/civil"
 	"github.com/bytedance/sonic"
-	providerUtils "github.com/maximhq/bifrost/core/providers/utils"
-	"github.com/maximhq/bifrost/core/schemas"
+	providerUtils "github.com/grevinden/bifrost/core/providers/utils"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 const (
@@ -105,7 +105,7 @@ type GeminiGenerationRequest struct {
 	Contents          []Content                `json:"contents,omitempty"` // For chat completion requests
 	Requests          []GeminiEmbeddingRequest `json:"requests,omitempty"` // For batch embedding requests
 	SystemInstruction *Content                 `json:"systemInstruction,omitempty"`
-	GenerationConfig  GenerationConfig         `json:"generationConfig,omitempty"`
+	GenerationConfig  GenerationConfig         `json:"generationConfig"`
 	SafetySettings    []SafetySetting          `json:"safetySettings,omitempty"`
 	Tools             []Tool                   `json:"tools,omitempty"`
 	ToolConfig        *ToolConfig              `json:"toolConfig,omitempty"`
@@ -126,12 +126,12 @@ type GeminiGenerationRequest struct {
 	Parameters *GeminiImagenParameters `json:"parameters,omitempty"`
 
 	// Bifrost specific field (only parsed when converting from Provider -> Bifrost request)
-	Fallbacks   []string               `json:"fallbacks,omitempty"`
-	ExtraParams map[string]interface{} `json:"-"` // Optional: Extra parameters
+	Fallbacks   []string       `json:"fallbacks,omitempty"`
+	ExtraParams map[string]any `json:"-"` // Optional: Extra parameters
 }
 
 // GetExtraParams implements the RequestBodyWithExtraParams interface
-func (r *GeminiGenerationRequest) GetExtraParams() map[string]interface{} {
+func (r *GeminiGenerationRequest) GetExtraParams() map[string]any {
 	return r.ExtraParams
 }
 
@@ -159,17 +159,17 @@ type SafetySetting struct {
 
 // SafeExtractSafetySettings safely extracts []SafetySetting from an interface{} with type checking.
 // Handles both direct []SafetySetting and JSON-deserialized []interface{} cases.
-func SafeExtractSafetySettings(value interface{}) ([]SafetySetting, bool) {
+func SafeExtractSafetySettings(value any) ([]SafetySetting, bool) {
 	if value == nil {
 		return nil, false
 	}
 	switch v := value.(type) {
 	case []SafetySetting:
 		return v, true
-	case []interface{}:
+	case []any:
 		settings := make([]SafetySetting, 0, len(v))
 		for _, item := range v {
-			if m, ok := item.(map[string]interface{}); ok {
+			if m, ok := item.(map[string]any); ok {
 				setting := SafetySetting{}
 				if method, ok := m["method"].(string); ok {
 					setting.Method = method
@@ -314,9 +314,9 @@ const (
 // When both start and end are unspecified, the interval matches any time.
 type Interval struct {
 	// Optional. The start time of the interval.
-	StartTime time.Time `json:"startTime,omitempty"`
+	StartTime time.Time `json:"startTime"`
 	// Optional. The end time of the interval.
-	EndTime time.Time `json:"endTime,omitempty"`
+	EndTime time.Time `json:"endTime"`
 }
 
 func (i *Interval) UnmarshalJSON(data []byte) error {
@@ -1244,27 +1244,27 @@ func (tc *GenerationConfigThinkingConfig) UnmarshalJSON(data []byte) error {
 
 type GeminiBatchEmbeddingRequest struct {
 	Requests    []GeminiEmbeddingRequest `json:"requests,omitempty"`
-	ExtraParams map[string]interface{}   `json:"-"` // Optional: Extra parameters
+	ExtraParams map[string]any           `json:"-"` // Optional: Extra parameters
 }
 
 // GetExtraParams implements the RequestBodyWithExtraParams interface
-func (r *GeminiBatchEmbeddingRequest) GetExtraParams() map[string]interface{} {
+func (r *GeminiBatchEmbeddingRequest) GetExtraParams() map[string]any {
 	return r.ExtraParams
 }
 
 // GeminiEmbeddingRequest represents a single embedding request in a batch.
 type GeminiEmbeddingRequest struct {
-	Content              *Content               `json:"content,omitempty"`
-	TaskType             *string                `json:"taskType,omitempty"`
-	Title                *string                `json:"title,omitempty"`
-	OutputDimensionality *int                   `json:"outputDimensionality,omitempty"`
-	Model                string                 `json:"model,omitempty"`
-	Fallbacks            []string               `json:"fallbacks,omitempty"`
-	ExtraParams          map[string]interface{} `json:"-"` // Optional: Extra parameters
+	Content              *Content       `json:"content,omitempty"`
+	TaskType             *string        `json:"taskType,omitempty"`
+	Title                *string        `json:"title,omitempty"`
+	OutputDimensionality *int           `json:"outputDimensionality,omitempty"`
+	Model                string         `json:"model,omitempty"`
+	Fallbacks            []string       `json:"fallbacks,omitempty"`
+	ExtraParams          map[string]any `json:"-"` // Optional: Extra parameters
 }
 
 // GetExtraParams implements the RequestBodyWithExtraParams interface
-func (r *GeminiEmbeddingRequest) GetExtraParams() map[string]interface{} {
+func (r *GeminiEmbeddingRequest) GetExtraParams() map[string]any {
 	return r.ExtraParams
 }
 
@@ -1698,7 +1698,7 @@ type Citation struct {
 	// Output only. License of the attribution.
 	License string `json:"license,omitempty"`
 	// Output only. Publication date of the attribution.
-	PublicationDate civil.Date `json:"publicationDate,omitempty"`
+	PublicationDate civil.Date `json:"publicationDate"`
 	// Output only. Start index into the content.
 	StartIndex int32 `json:"startIndex,omitempty"`
 	// Output only. Title of the attribution.
@@ -2065,7 +2065,7 @@ type GenerateContentResponse struct {
 	// Response variations returned by the model.
 	Candidates []*Candidate `json:"candidates,omitempty"`
 	// Timestamp when the request is made to the server.
-	CreateTime time.Time `json:"createTime,omitempty"`
+	CreateTime time.Time `json:"createTime"`
 	// Output only. The model version used to generate the response.
 	ModelVersion string `json:"modelVersion,omitempty"`
 	// Output only. Content filter results for a prompt sent in the request. Note: Sent
@@ -2396,10 +2396,10 @@ type GeminiCountTokensResponse struct {
 type GeminiImagenRequest struct {
 	Instances   []ImagenInstance       `json:"instances"`
 	Parameters  GeminiImagenParameters `json:"parameters"`
-	ExtraParams map[string]interface{} `json:"-"` // Optional: Extra parameters
+	ExtraParams map[string]any         `json:"-"` // Optional: Extra parameters
 }
 
-func (r *GeminiImagenRequest) GetExtraParams() map[string]interface{} {
+func (r *GeminiImagenRequest) GetExtraParams() map[string]any {
 	return r.ExtraParams
 }
 
@@ -2477,10 +2477,10 @@ type GeminiVideoGenerationRequest struct {
 	Instances   []GeminiVideoGenerationInstance `json:"instances"`
 	Parameters  *VideoGenerationParameters      `json:"parameters,omitempty"` // Optional parameters including reference images
 	Fallbacks   []string                        `json:"fallbacks,omitempty"`
-	ExtraParams map[string]interface{}          `json:"-"` // Optional: Extra parameters
+	ExtraParams map[string]any                  `json:"-"` // Optional: Extra parameters
 }
 
-func (r *GeminiVideoGenerationRequest) GetExtraParams() map[string]interface{} {
+func (r *GeminiVideoGenerationRequest) GetExtraParams() map[string]any {
 	return r.ExtraParams
 }
 

@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/bytedance/sonic"
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -36,7 +36,7 @@ func TestToMistralOCRRequest(t *testing.T) {
 				Model: "mistral-ocr-latest",
 				Document: schemas.OCRDocument{
 					Type:        schemas.OCRDocumentTypeDocumentURL,
-					DocumentURL: schemas.Ptr("https://example.com/doc.pdf"),
+					DocumentURL: new("https://example.com/doc.pdf"),
 				},
 			},
 			validate: func(t *testing.T, result *MistralOCRRequest) {
@@ -54,7 +54,7 @@ func TestToMistralOCRRequest(t *testing.T) {
 				Model: "mistral-ocr-latest",
 				Document: schemas.OCRDocument{
 					Type:     schemas.OCRDocumentTypeImageURL,
-					ImageURL: schemas.Ptr("https://example.com/image.png"),
+					ImageURL: new("https://example.com/image.png"),
 				},
 			},
 			validate: func(t *testing.T, result *MistralOCRRequest) {
@@ -69,10 +69,10 @@ func TestToMistralOCRRequest(t *testing.T) {
 			name: "request with ID",
 			input: &schemas.BifrostOCRRequest{
 				Model: "mistral-ocr-latest",
-				ID:    schemas.Ptr("req-123"),
+				ID:    new("req-123"),
 				Document: schemas.OCRDocument{
 					Type:        schemas.OCRDocumentTypeDocumentURL,
-					DocumentURL: schemas.Ptr("https://example.com/doc.pdf"),
+					DocumentURL: new("https://example.com/doc.pdf"),
 				},
 			},
 			validate: func(t *testing.T, result *MistralOCRRequest) {
@@ -86,19 +86,19 @@ func TestToMistralOCRRequest(t *testing.T) {
 				Model: "mistral-ocr-latest",
 				Document: schemas.OCRDocument{
 					Type:        schemas.OCRDocumentTypeDocumentURL,
-					DocumentURL: schemas.Ptr("https://example.com/doc.pdf"),
+					DocumentURL: new("https://example.com/doc.pdf"),
 				},
 				Params: &schemas.OCRParameters{
-					IncludeImageBase64:       schemas.Ptr(true),
+					IncludeImageBase64:       new(true),
 					Pages:                    []int{0, 1, 2},
-					ImageLimit:               schemas.Ptr(10),
-					ImageMinSize:             schemas.Ptr(100),
-					TableFormat:              schemas.Ptr("html"),
-					ExtractHeader:            schemas.Ptr(true),
-					ExtractFooter:            schemas.Ptr(false),
-					BBoxAnnotationFormat:     schemas.Ptr("json"),
-					DocumentAnnotationFormat: schemas.Ptr("markdown"),
-					DocumentAnnotationPrompt: schemas.Ptr("Summarize this document"),
+					ImageLimit:               new(10),
+					ImageMinSize:             new(100),
+					TableFormat:              new("html"),
+					ExtractHeader:            new(true),
+					ExtractFooter:            new(false),
+					BBoxAnnotationFormat:     new("json"),
+					DocumentAnnotationFormat: new("markdown"),
+					DocumentAnnotationPrompt: new("Summarize this document"),
 				},
 			},
 			validate: func(t *testing.T, result *MistralOCRRequest) {
@@ -134,7 +134,7 @@ func TestToMistralOCRRequest(t *testing.T) {
 				Model: "mistral-ocr-latest",
 				Document: schemas.OCRDocument{
 					Type:        schemas.OCRDocumentTypeDocumentURL,
-					DocumentURL: schemas.Ptr("https://example.com/doc.pdf"),
+					DocumentURL: new("https://example.com/doc.pdf"),
 				},
 				Params: nil,
 			},
@@ -217,7 +217,7 @@ func TestToBifrostOCRResponse(t *testing.T) {
 								TopLeftY:     20.3,
 								BottomRightX: 100.0,
 								BottomRightY: 200.0,
-								ImageBase64:  schemas.Ptr("base64encodeddata"),
+								ImageBase64:  new("base64encodeddata"),
 							},
 							{
 								ID:           "img-2",
@@ -302,7 +302,7 @@ func TestToBifrostOCRResponse(t *testing.T) {
 				Pages: []MistralOCRPage{
 					{Index: 0, Markdown: "Page content"},
 				},
-				DocumentAnnotation: schemas.Ptr("This is a legal contract."),
+				DocumentAnnotation: new("This is a legal contract."),
 			},
 			validate: func(t *testing.T, result *schemas.BifrostOCRResponse) {
 				require.NotNil(t, result)
@@ -336,7 +336,7 @@ func TestToBifrostOCRResponse(t *testing.T) {
 								TopLeftY:     0,
 								BottomRightX: 500,
 								BottomRightY: 300,
-								ImageBase64:  schemas.Ptr("aW1hZ2VkYXRh"),
+								ImageBase64:  new("aW1hZ2VkYXRh"),
 							},
 						},
 						Dimensions: &MistralOCRPageDimensions{
@@ -350,7 +350,7 @@ func TestToBifrostOCRResponse(t *testing.T) {
 					PagesProcessed: 1,
 					DocSizeBytes:   512000,
 				},
-				DocumentAnnotation: schemas.Ptr("A technical report."),
+				DocumentAnnotation: new("A technical report."),
 			},
 			validate: func(t *testing.T, result *schemas.BifrostOCRResponse) {
 				require.NotNil(t, result)
@@ -394,7 +394,7 @@ func TestOCRWithMockServer(t *testing.T) {
 		name           string
 		request        *schemas.BifrostOCRRequest
 		statusCode     int
-		responseBody   interface{}
+		responseBody   any
 		expectError    bool
 		errorContains  string
 		validateError  func(t *testing.T, err *schemas.BifrostError)
@@ -406,7 +406,7 @@ func TestOCRWithMockServer(t *testing.T) {
 				Model: "mistral-ocr-latest",
 				Document: schemas.OCRDocument{
 					Type:        schemas.OCRDocumentTypeDocumentURL,
-					DocumentURL: schemas.Ptr("https://example.com/doc.pdf"),
+					DocumentURL: new("https://example.com/doc.pdf"),
 				},
 			},
 			statusCode: http.StatusOK,
@@ -444,7 +444,7 @@ func TestOCRWithMockServer(t *testing.T) {
 				Model: "mistral-ocr-latest",
 				Document: schemas.OCRDocument{
 					Type:     schemas.OCRDocumentTypeImageURL,
-					ImageURL: schemas.Ptr("https://example.com/image.png"),
+					ImageURL: new("https://example.com/image.png"),
 				},
 			},
 			statusCode: http.StatusOK,
@@ -480,11 +480,11 @@ func TestOCRWithMockServer(t *testing.T) {
 				Model: "mistral-ocr-latest",
 				Document: schemas.OCRDocument{
 					Type:        schemas.OCRDocumentTypeDocumentURL,
-					DocumentURL: schemas.Ptr("https://example.com/doc.pdf"),
+					DocumentURL: new("https://example.com/doc.pdf"),
 				},
 			},
 			statusCode: http.StatusInternalServerError,
-			responseBody: map[string]interface{}{
+			responseBody: map[string]any{
 				"message": "Internal server error",
 				"type":    "server_error",
 				"code":    "internal_error",
@@ -508,11 +508,11 @@ func TestOCRWithMockServer(t *testing.T) {
 				Model: "mistral-ocr-latest",
 				Document: schemas.OCRDocument{
 					Type:        schemas.OCRDocumentTypeDocumentURL,
-					DocumentURL: schemas.Ptr("https://example.com/doc.pdf"),
+					DocumentURL: new("https://example.com/doc.pdf"),
 				},
 			},
 			statusCode: http.StatusUnauthorized,
-			responseBody: map[string]interface{}{
+			responseBody: map[string]any{
 				"message": "Unauthorized",
 				"type":    "authentication_error",
 				"code":    "invalid_api_key",
@@ -536,7 +536,7 @@ func TestOCRWithMockServer(t *testing.T) {
 				Model: "mistral-ocr-latest",
 				Document: schemas.OCRDocument{
 					Type:        schemas.OCRDocumentTypeDocumentURL,
-					DocumentURL: schemas.Ptr("https://example.com/doc.pdf"),
+					DocumentURL: new("https://example.com/doc.pdf"),
 				},
 			},
 			statusCode:    http.StatusOK,
@@ -550,7 +550,7 @@ func TestOCRWithMockServer(t *testing.T) {
 				Model: "mistral-ocr-latest",
 				Document: schemas.OCRDocument{
 					Type:        schemas.OCRDocumentTypeDocumentURL,
-					DocumentURL: schemas.Ptr("https://example.com/doc.pdf"),
+					DocumentURL: new("https://example.com/doc.pdf"),
 				},
 			},
 			statusCode:    http.StatusOK,
@@ -697,10 +697,10 @@ func TestOCRRequestValidation(t *testing.T) {
 		Model: "mistral-ocr-latest",
 		Document: schemas.OCRDocument{
 			Type:        schemas.OCRDocumentTypeDocumentURL,
-			DocumentURL: schemas.Ptr("https://example.com/doc.pdf"),
+			DocumentURL: new("https://example.com/doc.pdf"),
 		},
 		Params: &schemas.OCRParameters{
-			IncludeImageBase64: schemas.Ptr(true),
+			IncludeImageBase64: new(true),
 			Pages:              []int{0, 1},
 		},
 	}
@@ -736,7 +736,7 @@ func TestMistralOCRIntegration(t *testing.T) {
 		Model: "mistral-ocr-latest",
 		Document: schemas.OCRDocument{
 			Type:        schemas.OCRDocumentTypeDocumentURL,
-			DocumentURL: schemas.Ptr("https://arxiv.org/pdf/2201.04234"),
+			DocumentURL: new("https://arxiv.org/pdf/2201.04234"),
 		},
 		Params: &schemas.OCRParameters{
 			Pages: []int{0},

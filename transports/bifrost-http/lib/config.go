@@ -21,34 +21,35 @@ import (
 
 	"github.com/bytedance/sonic"
 	"github.com/google/uuid"
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/mcp"
-	mcputils "github.com/maximhq/bifrost/core/mcp/utils"
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework"
-	"github.com/maximhq/bifrost/framework/configstore"
-	configstoreTables "github.com/maximhq/bifrost/framework/configstore/tables"
-	"github.com/maximhq/bifrost/framework/encrypt"
-	"github.com/maximhq/bifrost/framework/envutils"
-	"github.com/maximhq/bifrost/framework/featureflags"
-	"github.com/maximhq/bifrost/framework/kvstore"
-	"github.com/maximhq/bifrost/framework/logstore"
-	"github.com/maximhq/bifrost/framework/mcp_headers"
-	"github.com/maximhq/bifrost/framework/mcpcatalog"
-	"github.com/maximhq/bifrost/framework/modelcatalog"
-	"github.com/maximhq/bifrost/framework/oauth2"
-	"github.com/maximhq/bifrost/framework/objectstore"
-	plugins "github.com/maximhq/bifrost/framework/plugins"
-	"github.com/maximhq/bifrost/framework/vectorstore"
-	"github.com/maximhq/bifrost/plugins/compat"
-	"github.com/maximhq/bifrost/plugins/governance"
-	"github.com/maximhq/bifrost/plugins/governance/complexity"
-	"github.com/maximhq/bifrost/plugins/logging"
-	"github.com/maximhq/bifrost/plugins/maxim"
-	"github.com/maximhq/bifrost/plugins/otel"
-	"github.com/maximhq/bifrost/plugins/prompts"
-	"github.com/maximhq/bifrost/plugins/semanticcache"
-	"github.com/maximhq/bifrost/plugins/telemetry"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/mcp"
+	mcputils "github.com/grevinden/bifrost/core/mcp/utils"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework"
+	"github.com/grevinden/bifrost/framework/configstore"
+	configstoreTables "github.com/grevinden/bifrost/framework/configstore/tables"
+	"github.com/grevinden/bifrost/framework/encrypt"
+	"github.com/grevinden/bifrost/framework/envutils"
+	"github.com/grevinden/bifrost/framework/featureflags"
+	"github.com/grevinden/bifrost/framework/kvstore"
+	"github.com/grevinden/bifrost/framework/logstore"
+	"github.com/grevinden/bifrost/framework/mcp_headers"
+	"github.com/grevinden/bifrost/framework/mcpcatalog"
+	"github.com/grevinden/bifrost/framework/modelcatalog"
+	"github.com/grevinden/bifrost/framework/oauth2"
+	"github.com/grevinden/bifrost/framework/objectstore"
+	plugins "github.com/grevinden/bifrost/framework/plugins"
+	"github.com/grevinden/bifrost/framework/vectorstore"
+	"github.com/grevinden/bifrost/plugins/compat"
+	"github.com/grevinden/bifrost/plugins/governance"
+	"github.com/grevinden/bifrost/plugins/governance/complexity"
+	"github.com/grevinden/bifrost/plugins/llmboster"
+	"github.com/grevinden/bifrost/plugins/logging"
+	"github.com/grevinden/bifrost/plugins/maxim"
+	"github.com/grevinden/bifrost/plugins/otel"
+	"github.com/grevinden/bifrost/plugins/prompts"
+	"github.com/grevinden/bifrost/plugins/semanticcache"
+	"github.com/grevinden/bifrost/plugins/telemetry"
 	"gorm.io/gorm"
 )
 
@@ -130,6 +131,7 @@ var builtinPluginNames = []string{
 	semanticcache.PluginName,
 	compat.PluginName,
 	maxim.PluginName,
+	llmboster.PluginName,
 }
 
 func GetBuiltinPluginNames() []string {
@@ -191,16 +193,16 @@ type SkillsRegistryConfig struct {
 
 // SkillsRegistryEntry describes a single skill to reconcile from config.json.
 type SkillsRegistryEntry struct {
-	Name             string                 `json:"name"`
-	Description      string                 `json:"description"`
-	License          string                 `json:"license,omitempty"`
-	Compatibility    string                 `json:"compatibility,omitempty"`
-	AllowedTools     string                 `json:"allowed_tools,omitempty"`
-	ExtraFrontmatter map[string]interface{} `json:"extra_frontmatter,omitempty"`
-	Metadata         map[string]string      `json:"metadata,omitempty"`
-	SkillMDBody      string                 `json:"skill_md_body"`
-	Version          string                 `json:"version"`
-	Files            []SkillsRegistryFile   `json:"files,omitempty"`
+	Name             string               `json:"name"`
+	Description      string               `json:"description"`
+	License          string               `json:"license,omitempty"`
+	Compatibility    string               `json:"compatibility,omitempty"`
+	AllowedTools     string               `json:"allowed_tools,omitempty"`
+	ExtraFrontmatter map[string]any       `json:"extra_frontmatter,omitempty"`
+	Metadata         map[string]string    `json:"metadata,omitempty"`
+	SkillMDBody      string               `json:"skill_md_body"`
+	Version          string               `json:"version"`
+	Files            []SkillsRegistryFile `json:"files,omitempty"`
 }
 
 // SkillsRegistryFile describes a file attached to a config-defined skill.
@@ -831,10 +833,7 @@ func LoadConfig(ctx context.Context, configDirPath string) (*Config, error) {
 			}
 			fmt.Printf("%s╔%s╗%s\n", yellowColor, strings.Repeat("═", boxWidth-2), resetColor)
 			for _, l := range lines {
-				padding := contentWidth - len(l)
-				if padding < 0 {
-					padding = 0
-				}
+				padding := max(contentWidth-len(l), 0)
 				fmt.Printf("%s║ %s%s ║%s\n", yellowColor, l, strings.Repeat(" ", padding), resetColor)
 			}
 			fmt.Printf("%s╚%s╝%s\n", yellowColor, strings.Repeat("═", boxWidth-2), resetColor)
@@ -2086,7 +2085,7 @@ func resolveGovernanceKeyReferences(ctx context.Context, config *Config, governa
 				if err != nil {
 					return fmt.Errorf("routing rule %q target provider_key_name resolution failed: %w", governanceConfig.RoutingRules[i].ID, err)
 				}
-				target.KeyID = bifrost.Ptr(keyID)
+				target.KeyID = new(keyID)
 				target.ProviderKeyName = nil
 			}
 		}
@@ -2110,7 +2109,7 @@ func resolveGovernanceKeyReferences(ctx context.Context, config *Config, governa
 			if err != nil {
 				return fmt.Errorf("pricing override %q provider_key_name resolution failed: %w", override.ID, err)
 			}
-			override.ProviderKeyID = bifrost.Ptr(keyID)
+			override.ProviderKeyID = new(keyID)
 			override.ProviderKeyName = nil
 		}
 
@@ -2713,7 +2712,7 @@ func pruneGovernanceConfigToFile(ctx context.Context, config *Config, configData
 				if err := tx.Model(&configstoreTables.TableProvider{}).
 					Where("name = ?", existing.Name).
 					Select("budget_id", "rate_limit_id").
-					Updates(map[string]interface{}{"budget_id": nil, "rate_limit_id": nil}).Error; err != nil {
+					Updates(map[string]any{"budget_id": nil, "rate_limit_id": nil}).Error; err != nil {
 					return fmt.Errorf("failed to clear provider governance mapping for %s: %w", existing.Name, err)
 				}
 			}
@@ -3109,7 +3108,7 @@ func updateGovernanceConfigInStore(
 			if err := validateProviderGovernanceOwnership(tx, provider); err != nil {
 				return err
 			}
-			updates := map[string]interface{}{
+			updates := map[string]any{
 				"budget_id":     provider.BudgetID,
 				"rate_limit_id": provider.RateLimitID,
 			}
@@ -3138,7 +3137,7 @@ func updateGovernanceConfigInStore(
 			if err := validateProviderGovernanceOwnership(tx, provider); err != nil {
 				return err
 			}
-			updates := map[string]interface{}{
+			updates := map[string]any{
 				"budget_id":     provider.BudgetID,
 				"rate_limit_id": provider.RateLimitID,
 			}
@@ -3582,7 +3581,7 @@ func mergePlugins(ctx context.Context, config *Config, configData *ConfigData) {
 		// Merge new plugins and update if version is higher
 		for _, plugin := range configData.Plugins {
 			if plugin.Version == nil {
-				plugin.Version = bifrost.Ptr(int16(1))
+				plugin.Version = new(int16(1))
 			}
 			existingIdx := slices.IndexFunc(config.PluginConfigs, func(p *schemas.PluginConfig) bool {
 				return p.Name == plugin.Name
@@ -3615,7 +3614,7 @@ func mergePlugins(ctx context.Context, config *Config, configData *ConfigData) {
 				continue
 			}
 			if plugin.Version == nil {
-				plugin.Version = bifrost.Ptr(int16(1))
+				plugin.Version = new(int16(1))
 			}
 			pluginConfig := &configstoreTables.TablePlugin{
 				Name:      plugin.Name,
@@ -3669,7 +3668,7 @@ func syncPluginsFromFile(ctx context.Context, config *Config, configData *Config
 				return fmt.Errorf("failed to deep copy plugin config for %s: %w", plugin.Name, err)
 			}
 			if plugin.Version == nil {
-				plugin.Version = bifrost.Ptr(int16(1))
+				plugin.Version = new(int16(1))
 			}
 			tablePlugin := &configstoreTables.TablePlugin{
 				Name:      plugin.Name,
@@ -5583,7 +5582,7 @@ func (c *Config) GetAllKeys() ([]configstoreTables.TableKey, error) {
 				Value:             *key.Value.Redacted(),
 				Models:            models,
 				BlacklistedModels: blacklisted,
-				Weight:            bifrost.Ptr(key.Weight),
+				Weight:            new(key.Weight),
 				Provider:          string(providerKey),
 				ConfigHash:        key.ConfigHash,
 			}
@@ -6236,7 +6235,7 @@ func (c *Config) ValidateSemanticCacheConfig(config *schemas.PluginConfig) error
 	}
 
 	// Type assert config.Config to map[string]interface{}
-	configMap, ok := config.Config.(map[string]interface{})
+	configMap, ok := config.Config.(map[string]any)
 	if !ok {
 		return fmt.Errorf("semantic_cache plugin config must be a map, got %T", config.Config)
 	}
@@ -6302,7 +6301,7 @@ func (c *Config) ValidateSemanticCacheConfig(config *schemas.PluginConfig) error
 	return nil
 }
 
-func semanticCacheConfigDimension(configMap map[string]interface{}) (int, bool, error) {
+func semanticCacheConfigDimension(configMap map[string]any) (int, bool, error) {
 	dimensionVal, exists := configMap["dimension"]
 	if !exists {
 		return 0, false, nil

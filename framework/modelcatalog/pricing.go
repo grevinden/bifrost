@@ -3,9 +3,9 @@ package modelcatalog
 import (
 	"context"
 
-	"github.com/maximhq/bifrost/core/schemas"
-	configstoreTables "github.com/maximhq/bifrost/framework/configstore/tables"
-	"github.com/maximhq/bifrost/framework/modelcatalog/datasheet"
+	"github.com/grevinden/bifrost/core/schemas"
+	configstoreTables "github.com/grevinden/bifrost/framework/configstore/tables"
+	"github.com/grevinden/bifrost/framework/modelcatalog/datasheet"
 )
 
 // GetModelCapabilityEntryForModel returns capability metadata for a

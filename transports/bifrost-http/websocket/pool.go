@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 const (
@@ -281,13 +281,7 @@ func (p *Pool) heartbeatInterval() time.Duration {
 	if idleTimeout <= 0 {
 		idleTimeout = time.Duration(schemas.DefaultWSIdleTimeoutSeconds) * time.Second
 	}
-	interval := idleTimeout / 3
-	if interval > 30*time.Second {
-		interval = 30 * time.Second
-	}
-	if interval < 5*time.Second {
-		interval = 5 * time.Second
-	}
+	interval := max(min(idleTimeout/3, 30*time.Second), 5*time.Second)
 	return interval
 }
 

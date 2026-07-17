@@ -6,8 +6,8 @@ import (
 	"mime/multipart"
 	"net/http"
 
-	providerUtils "github.com/maximhq/bifrost/core/providers/utils"
-	"github.com/maximhq/bifrost/core/schemas"
+	providerUtils "github.com/grevinden/bifrost/core/providers/utils"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // ToOpenAIVideoGenerationRequest converts a Bifrost Video Request to OpenAI format

@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // CreateFileURLChatMessage creates a ChatMessage with a file URL
@@ -16,11 +16,11 @@ func CreateFileURLChatMessage(text, fileURL string) schemas.ChatMessage {
 		Role: schemas.ChatMessageRoleUser,
 		Content: &schemas.ChatMessageContent{
 			ContentBlocks: []schemas.ChatContentBlock{
-				{Type: schemas.ChatContentBlockTypeText, Text: bifrost.Ptr(text)},
+				{Type: schemas.ChatContentBlockTypeText, Text: new(text)},
 				{
 					Type: schemas.ChatContentBlockTypeFile,
 					File: &schemas.ChatInputFile{
-						FileURL: bifrost.Ptr(fileURL),
+						FileURL: new(fileURL),
 					},
 				},
 			},
@@ -35,11 +35,11 @@ func CreateFileURLResponsesMessage(text, fileURL string) schemas.ResponsesMessag
 		Role: bifrost.Ptr(schemas.ResponsesInputMessageRoleUser),
 		Content: &schemas.ResponsesMessageContent{
 			ContentBlocks: []schemas.ResponsesMessageContentBlock{
-				{Type: schemas.ResponsesInputMessageContentBlockTypeText, Text: bifrost.Ptr(text)},
+				{Type: schemas.ResponsesInputMessageContentBlockTypeText, Text: new(text)},
 				{
 					Type: schemas.ResponsesInputMessageContentBlockTypeFile,
 					ResponsesInputMessageContentBlockFile: &schemas.ResponsesInputMessageContentBlockFile{
-						FileURL: bifrost.Ptr(fileURL),
+						FileURL: new(fileURL),
 					},
 				},
 			},
@@ -88,13 +88,13 @@ func RunFileURLChatCompletionsTest(t *testing.T, client *bifrost.Bifrost, ctx co
 		retryConfig := GetTestRetryConfigForScenario("FileInput", testConfig)
 		retryContext := TestRetryContext{
 			ScenarioName: "FileURL-ChatCompletions",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"should_fetch_url":       true,
 				"should_read_document":   true,
 				"should_extract_content": true,
 				"document_understanding": true,
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider":          testConfig.Provider,
 				"model":             testConfig.ChatModel,
 				"file_type":         "pdf",
@@ -105,7 +105,7 @@ func RunFileURLChatCompletionsTest(t *testing.T, client *bifrost.Bifrost, ctx co
 		}
 
 		// Enhanced validation for file URL processing
-		expectations := GetExpectationsForScenario("FileInput", testConfig, map[string]interface{}{})
+		expectations := GetExpectationsForScenario("FileInput", testConfig, map[string]any{})
 		expectations = ModifyExpectationsForProvider(expectations, testConfig.Provider)
 		// The test PDF is a Berkshire Hathaway shareholder letter - flexible keywords
 		expectations.ShouldContainKeywords = []string{} // Clear default keywords
@@ -131,7 +131,7 @@ func RunFileURLChatCompletionsTest(t *testing.T, client *bifrost.Bifrost, ctx co
 				Model:    testConfig.ChatModel,
 				Input:    chatMessages,
 				Params: &schemas.ChatParameters{
-					MaxCompletionTokens: bifrost.Ptr(500),
+					MaxCompletionTokens: new(500),
 				},
 				Fallbacks: testConfig.Fallbacks,
 			}
@@ -170,13 +170,13 @@ func RunFileURLResponsesTest(t *testing.T, client *bifrost.Bifrost, ctx context.
 		// Set up retry context for file URL requests
 		retryContext := TestRetryContext{
 			ScenarioName: "FileURL-Responses",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"should_fetch_url":       true,
 				"should_read_document":   true,
 				"should_extract_content": true,
 				"document_understanding": true,
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider":          testConfig.Provider,
 				"model":             testConfig.ChatModel,
 				"file_type":         "pdf",
@@ -187,7 +187,7 @@ func RunFileURLResponsesTest(t *testing.T, client *bifrost.Bifrost, ctx context.
 		}
 
 		// Enhanced validation for file URL processing
-		expectations := GetExpectationsForScenario("FileInput", testConfig, map[string]interface{}{})
+		expectations := GetExpectationsForScenario("FileInput", testConfig, map[string]any{})
 		expectations = ModifyExpectationsForProvider(expectations, testConfig.Provider)
 		// The test PDF is a Berkshire Hathaway shareholder letter - flexible keywords
 		expectations.ShouldContainKeywords = []string{} // Clear default keywords
@@ -206,7 +206,7 @@ func RunFileURLResponsesTest(t *testing.T, client *bifrost.Bifrost, ctx context.
 				Model:    testConfig.ChatModel,
 				Input:    responsesMessages,
 				Params: &schemas.ResponsesParameters{
-					MaxOutputTokens: bifrost.Ptr(500),
+					MaxOutputTokens: new(500),
 				},
 				Fallbacks: testConfig.Fallbacks,
 			}

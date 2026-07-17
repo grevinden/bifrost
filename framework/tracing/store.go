@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // DeferredSpanInfo stores information about a deferred span for streaming requests
@@ -399,16 +399,11 @@ func (s *TraceStore) startCleanup() {
 	}
 
 	// Cleanup interval is TTL / 2
-	cleanupInterval := s.ttl / 2
-	if cleanupInterval < time.Minute {
-		cleanupInterval = time.Minute
-	}
+	cleanupInterval := max(s.ttl/2, time.Minute)
 
 	s.cleanupTicker = time.NewTicker(cleanupInterval)
-	s.cleanupWg.Add(1)
 
-	go func() {
-		defer s.cleanupWg.Done()
+	s.cleanupWg.Go(func() {
 		for {
 			select {
 			case <-s.cleanupTicker.C:
@@ -417,7 +412,7 @@ func (s *TraceStore) startCleanup() {
 				return
 			}
 		}
-	}()
+	})
 }
 
 // cleanupOldTraces removes traces and deferred spans that have exceeded the TTL

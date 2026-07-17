@@ -3,7 +3,7 @@ package semanticcache
 import (
 	"testing"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // TestTextNormalizationDirectCache tests that text normalization works correctly
@@ -84,8 +84,8 @@ func testChatCompletionNormalization(t *testing.T, setup *TestSetup) {
 				},
 			},
 			Params: &schemas.ChatParameters{
-				Temperature:         PtrFloat64(0.5),
-				MaxCompletionTokens: PtrInt(50),
+				Temperature:         new(0.5),
+				MaxCompletionTokens: new(50),
 			},
 		}
 	}
@@ -243,8 +243,8 @@ func TestChatCompletionContentBlocksNormalization(t *testing.T) {
 				},
 			},
 			Params: &schemas.ChatParameters{
-				Temperature:         PtrFloat64(0.5),
-				MaxCompletionTokens: PtrInt(50),
+				Temperature:         new(0.5),
+				MaxCompletionTokens: new(50),
 			},
 		}
 	}
@@ -338,10 +338,13 @@ func TestNormalizationWithSemanticCache(t *testing.T) {
 }
 
 // Helper functions for pointer creation
+//
+//go:fix inline
 func PtrFloat64(f float64) *float64 {
-	return &f
+	return new(f)
 }
 
+//go:fix inline
 func PtrInt(i int) *int {
-	return &i
+	return new(i)
 }

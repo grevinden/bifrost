@@ -1,6 +1,6 @@
 package perplexity
 
-import "github.com/maximhq/bifrost/core/schemas"
+import "github.com/grevinden/bifrost/core/schemas"
 
 // PerplexityChatRequest represents a Perplexity chat completion request
 type PerplexityChatRequest struct {
@@ -24,7 +24,7 @@ type PerplexityChatRequest struct {
 	Stream                  *bool                   `json:"stream,omitempty"`                     // Optional: Enable streaming
 	PresencePenalty         *float64                `json:"presence_penalty,omitempty"`           // Optional: Presence penalty
 	FrequencyPenalty        *float64                `json:"frequency_penalty,omitempty"`          // Optional: Frequency penalty
-	ResponseFormat          *interface{}            `json:"response_format,omitempty"`            // Format for the response
+	ResponseFormat          *any                    `json:"response_format,omitempty"`            // Format for the response
 	DisableSearch           *bool                   `json:"disable_search,omitempty"`             // Optional: Disable search
 	EnableSearchClassifier  *bool                   `json:"enable_search_classifier,omitempty"`   // Optional: Enable search classifier
 	WebSearchOptions        []WebSearchOption       `json:"web_search_options,omitempty"`         // Optional: Web search options
@@ -42,11 +42,11 @@ type PerplexityChatRequest struct {
 	ImageDomainFilter       []string                `json:"image_domain_filter,omitempty"`        // Optional: Image domain filter
 	SafeSearch              *bool                   `json:"safe_search,omitempty"`                // Optional: Enable safe search
 	StreamMode              *string                 `json:"stream_mode,omitempty"`                // Optional: Stream mode
-	ExtraParams             map[string]interface{}  `json:"-"`
+	ExtraParams             map[string]any          `json:"-"`
 }
 
 // GetExtraParams implements the RequestBodyWithExtraParams interface
-func (r *PerplexityChatRequest) GetExtraParams() map[string]interface{} {
+func (r *PerplexityChatRequest) GetExtraParams() map[string]any {
 	return r.ExtraParams
 }
 
@@ -66,7 +66,7 @@ type WebSearchOptionUserLocation struct {
 }
 
 type MediaResponse struct {
-	Overrides MediaResponseOverrides `json:"overrides,omitempty"` // Optional: Overrides for the media response
+	Overrides MediaResponseOverrides `json:"overrides"` // Optional: Overrides for the media response
 }
 
 type MediaResponseOverrides struct {

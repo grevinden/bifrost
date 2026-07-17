@@ -1,0 +1,103 @@
+# --- UI Build Stage: Build the React + Vite frontend ---
+FROM node:25-bookworm AS ui-builder
+WORKDIR /app
+
+# Apply latest security patches before installing packages
+RUN apt-get update && apt-get upgrade -y --no-install-recommends && rm -rf /var/lib/apt/lists/*
+
+# Copy UI package files and install dependencies
+COPY ui/package*.json ./
+RUN npm ci
+
+# Copy UI source code
+COPY ui/ ./
+
+# Build UI (skip the copy-build step)
+RUN npm run build-enterprise
+
+# --- Go Build Stage: Compile the Go binary with dynamic linking for plugin support ---
+FROM golang:1.26.4-bookworm AS builder
+WORKDIR /app
+
+# Install dependencies including gcc for CGO and sqlite (glibc-based, required for plugins)
+RUN apt-get update && apt-get install -y \
+    gcc \
+    libc6-dev \
+    libsqlite3-dev \
+    binutils-gold \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set environment for CGO-enabled build (required for go-sqlite3 and plugins)
+ENV CGO_ENABLED=1 GOOS=linux
+
+COPY transports/go.mod transports/go.sum ./
+RUN go mod download
+
+# Copy source code and dependencies
+COPY transports/ ./
+
+COPY --from=ui-builder /app/out ./bifrost-http/ui
+
+# Build the binary with CGO enabled for DYNAMIC LINKING (plugin support)
+ENV GOWORK=off
+ARG VERSION=unknown
+RUN go build \
+    -ldflags="-w -s -X main.Version=v${VERSION}" \
+    -a -trimpath \
+    -o /app/main \
+    ./bifrost-http
+
+# Verify build succeeded
+RUN test -f /app/main || (echo "Build failed" && exit 1)
+
+# --- Runtime Stage: Minimal runtime image with glibc ---
+FROM debian:bookworm-slim
+WORKDIR /app
+
+# Install runtime dependencies for CGO-enabled dynamic binary
+# libc6: GNU C Library (required for glibc-linked binaries and plugins)
+RUN apt-get update && apt-get install -y \
+    libc6 \
+    ca-certificates \
+    wget \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create data directory and set up user
+COPY --from=builder /app/main .
+COPY --from=builder /app/docker-entrypoint.sh .
+
+# Getting arguments
+ARG ARG_APP_PORT=8080
+ARG ARG_APP_HOST=0.0.0.0
+ARG ARG_LOG_LEVEL=info
+ARG ARG_LOG_STYLE=json
+ARG ARG_APP_DIR=/app/data
+
+# Environment variables with defaults (can be overridden at runtime)
+ENV APP_PORT=$ARG_APP_PORT \
+    APP_HOST=$ARG_APP_HOST \
+    LOG_LEVEL=$ARG_LOG_LEVEL \
+    LOG_STYLE=$ARG_LOG_STYLE \
+    APP_DIR=$ARG_APP_DIR
+
+# Go runtime performance tuning
+ENV GOGC="" \
+    GOMEMLIMIT=""
+
+RUN mkdir -p "$APP_DIR/logs" && \
+    useradd -m -s /bin/sh appuser && \
+    chown -R appuser:appuser /app && \
+    { [ "$APP_DIR" = "/app" ] || [ "${APP_DIR#/app/}" != "$APP_DIR" ] || chown -R appuser:appuser "$APP_DIR"; } && \
+    chmod +x /app/docker-entrypoint.sh
+USER appuser
+
+# Declare volume for data persistence
+VOLUME ["${APP_DIR}"]
+EXPOSE $ARG_APP_PORT
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD wget -q -O /dev/null http://127.0.0.1:${APP_PORT}/health || exit 1
+
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
+CMD ["/app/main"]

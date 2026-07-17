@@ -477,3 +477,81 @@ func TestNewBifrostContext_WatchdogRaceWithReleasedScope(t *testing.T) {
 		_, _ = c.Deadline()
 	}
 }
+
+// ---------------------------------------------------------------------------
+// IsScoped / CurrentPluginName
+// ---------------------------------------------------------------------------
+
+func TestIsScoped_RootContext_NotScoped(t *testing.T) {
+	root := NewBifrostContext(context.Background(), NoDeadline)
+	if root.IsScoped() {
+		t.Error("root context should not be scoped")
+	}
+	name, ok := root.CurrentPluginName()
+	if ok {
+		t.Errorf("CurrentPluginName() = (%q, %v), want (\"\", false)", name, ok)
+	}
+}
+
+func TestIsScoped_ScopedContext_IsScoped(t *testing.T) {
+	root := NewBifrostContext(context.Background(), NoDeadline)
+	name := "test-plugin"
+	scope := root.WithPluginScope(&name)
+
+	if !scope.IsScoped() {
+		t.Error("scoped context should be scoped")
+	}
+
+	gotName, gotOk := scope.CurrentPluginName()
+	if !gotOk {
+		t.Fatal("CurrentPluginName() ok = false, want true")
+	}
+	if gotName != name {
+		t.Errorf("CurrentPluginName() = %q, want %q", gotName, name)
+	}
+
+	// Derived context from scoped should also be scoped.
+	derived := NewBifrostContext(scope, NoDeadline)
+	if !derived.IsScoped() {
+		t.Error("derived context should inherit scoped status")
+	}
+	gotName2, gotOk2 := derived.CurrentPluginName()
+	if !gotOk2 || gotName2 != name {
+		t.Errorf("derived CurrentPluginName() = (%q, %v), want (%q, true)", gotName2, gotOk2, name)
+	}
+
+	// After release, scope should no longer report as scoped.
+	scope.ReleasePluginScope()
+	if scope.IsScoped() {
+		t.Error("released context should not be scoped")
+	}
+	gotName3, gotOk3 := scope.CurrentPluginName()
+	if gotOk3 {
+		t.Errorf("after release: CurrentPluginName() ok = %v, want false", gotOk3)
+		_ = gotName3
+	}
+}
+
+func TestIsScoped_MultiplePlugins(t *testing.T) {
+	root := NewBifrostContext(context.Background(), NoDeadline)
+
+	nameA := "plugin-a"
+	scopeA := root.WithPluginScope(&nameA)
+	if name, ok := scopeA.CurrentPluginName(); !ok || name != nameA {
+		t.Errorf("scopeA: CurrentPluginName() = (%q, %v), want (%q, true)", name, ok, nameA)
+	}
+
+	nameB := "plugin-b"
+	scopeB := root.WithPluginScope(&nameB)
+	if name, ok := scopeB.CurrentPluginName(); !ok || name != nameB {
+		t.Errorf("scopeB: CurrentPluginName() = (%q, %v), want (%q, true)", name, ok, nameB)
+	}
+
+	// Each scope should report its own name independently.
+	if name, ok := scopeA.CurrentPluginName(); !ok || name != nameA {
+		t.Errorf("scopeA after scopeB: CurrentPluginName() = (%q, %v), want (%q, true)", name, ok, nameA)
+	}
+	if name, ok := scopeB.CurrentPluginName(); !ok || name != nameB {
+		t.Errorf("scopeB after scopeA: CurrentPluginName() = (%q, %v), want (%q, true)", name, ok, nameB)
+	}
+}

@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -328,7 +328,7 @@ func TestQdrantStore_Integration(t *testing.T) {
 	require.NoError(t, err)
 
 	key := generateUUID()
-	err = setup.Store.Add(setup.ctx, QdrantTestCollection, key, generateTestEmbedding(QdrantTestDimension), map[string]interface{}{"type": "document"})
+	err = setup.Store.Add(setup.ctx, QdrantTestCollection, key, generateTestEmbedding(QdrantTestDimension), map[string]any{"type": "document"})
 	require.NoError(t, err)
 
 	result, err := setup.Store.GetChunk(setup.ctx, QdrantTestCollection, key)
@@ -337,7 +337,7 @@ func TestQdrantStore_Integration(t *testing.T) {
 
 	keys := []string{generateUUID(), generateUUID()}
 	for i, k := range keys {
-		err = setup.Store.Add(setup.ctx, QdrantTestCollection, k, generateTestEmbedding(QdrantTestDimension), map[string]interface{}{"type": i})
+		err = setup.Store.Add(setup.ctx, QdrantTestCollection, k, generateTestEmbedding(QdrantTestDimension), map[string]any{"type": i})
 		require.NoError(t, err)
 	}
 
@@ -354,8 +354,8 @@ func TestQdrantStore_Filtering(t *testing.T) {
 	setup := NewQdrantTestSetup(t)
 	defer setup.Cleanup(t)
 
-	for i := 0; i < 3; i++ {
-		metadata := map[string]interface{}{"type": "pdf", "public": true}
+	for i := range 3 {
+		metadata := map[string]any{"type": "pdf", "public": true}
 		if i == 1 {
 			metadata["type"] = "docx"
 			metadata["public"] = false
@@ -387,10 +387,10 @@ func TestQdrantStore_VectorSearch(t *testing.T) {
 	defer setup.Cleanup(t)
 
 	emb := generateTestEmbedding(QdrantTestDimension)
-	err := setup.Store.Add(setup.ctx, QdrantTestCollection, generateUUID(), emb, map[string]interface{}{"type": "tech"})
+	err := setup.Store.Add(setup.ctx, QdrantTestCollection, generateUUID(), emb, map[string]any{"type": "tech"})
 	require.NoError(t, err)
 
-	err = setup.Store.Add(setup.ctx, QdrantTestCollection, generateUUID(), generateTestEmbedding(QdrantTestDimension), map[string]interface{}{"type": "sports"})
+	err = setup.Store.Add(setup.ctx, QdrantTestCollection, generateUUID(), generateTestEmbedding(QdrantTestDimension), map[string]any{"type": "sports"})
 	require.NoError(t, err)
 
 	results, err := setup.Store.GetNearest(setup.ctx, QdrantTestCollection, emb, nil, []string{"type"}, 0.1, 10)
@@ -456,7 +456,7 @@ func TestQdrantStore_DimensionHandling(t *testing.T) {
 	err := setup.Store.CreateNamespace(setup.ctx, testCollection, 512, props)
 	require.NoError(t, err)
 
-	err = setup.Store.Add(setup.ctx, testCollection, generateUUID(), generateTestEmbedding(512), map[string]interface{}{"type": "test"})
+	err = setup.Store.Add(setup.ctx, testCollection, generateUUID(), generateTestEmbedding(512), map[string]any{"type": "test"})
 	require.NoError(t, err)
 
 	err = setup.Store.DeleteNamespace(setup.ctx, testCollection)
@@ -466,7 +466,7 @@ func TestQdrantStore_DimensionHandling(t *testing.T) {
 	require.NoError(t, err)
 
 	emb := generateTestEmbedding(QdrantTestDimension)
-	err = setup.Store.Add(setup.ctx, testCollection, generateUUID(), emb, map[string]interface{}{"type": "test"})
+	err = setup.Store.Add(setup.ctx, testCollection, generateUUID(), emb, map[string]any{"type": "test"})
 	require.NoError(t, err)
 
 	results, err := setup.Store.GetNearest(setup.ctx, testCollection, emb, nil, []string{"type"}, 0.8, 10)
@@ -488,11 +488,11 @@ func TestQdrantStore_ErrorHandling(t *testing.T) {
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "not found")
 
-	err = setup.Store.Add(setup.ctx, QdrantTestCollection, "", generateTestEmbedding(QdrantTestDimension), map[string]interface{}{"type": "test"})
+	err = setup.Store.Add(setup.ctx, QdrantTestCollection, "", generateTestEmbedding(QdrantTestDimension), map[string]any{"type": "test"})
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "id is required")
 
-	err = setup.Store.Add(setup.ctx, QdrantTestCollection, "not-a-uuid", generateTestEmbedding(QdrantTestDimension), map[string]interface{}{"type": "test"})
+	err = setup.Store.Add(setup.ctx, QdrantTestCollection, "not-a-uuid", generateTestEmbedding(QdrantTestDimension), map[string]any{"type": "test"})
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "invalid id format")
 

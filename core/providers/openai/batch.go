@@ -3,7 +3,7 @@ package openai
 import (
 	"time"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // OpenAI Batch API Types

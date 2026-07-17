@@ -16,8 +16,8 @@ import (
 	"time"
 
 	"github.com/bytedance/sonic"
-	providerUtils "github.com/maximhq/bifrost/core/providers/utils"
-	schemas "github.com/maximhq/bifrost/core/schemas"
+	providerUtils "github.com/grevinden/bifrost/core/providers/utils"
+	schemas "github.com/grevinden/bifrost/core/schemas"
 	"github.com/valyala/fasthttp"
 )
 
@@ -105,7 +105,7 @@ func (provider *GeminiProvider) GetProviderKey() schemas.ModelProvider {
 // completeRequest handles the common HTTP request pattern for Gemini API calls.
 // When large response streaming is activated (BifrostContextKeyLargeResponseMode set in ctx),
 // returns (nil, nil, latency, nil) — callers must check the context flag.
-func (provider *GeminiProvider) completeRequest(ctx *schemas.BifrostContext, model string, key schemas.Key, jsonBody []byte, endpoint string) (*GenerateContentResponse, interface{}, time.Duration, map[string]string, *schemas.BifrostError) {
+func (provider *GeminiProvider) completeRequest(ctx *schemas.BifrostContext, model string, key schemas.Key, jsonBody []byte, endpoint string) (*GenerateContentResponse, any, time.Duration, map[string]string, *schemas.BifrostError) {
 	// Create request
 	req := fasthttp.AcquireRequest()
 	resp := fasthttp.AcquireResponse()
@@ -171,7 +171,7 @@ func (provider *GeminiProvider) completeRequest(ctx *schemas.BifrostContext, mod
 		return nil, nil, latency, providerResponseHeaders, providerUtils.NewBifrostOperationError(schemas.ErrProviderResponseUnmarshal, err)
 	}
 
-	var rawResponse interface{}
+	var rawResponse any
 	if providerUtils.ShouldSendBackRawResponse(ctx, provider.sendBackRawResponse) {
 		if err := sonic.Unmarshal(body, &rawResponse); err != nil {
 			return nil, nil, latency, providerResponseHeaders, providerUtils.NewBifrostOperationError(schemas.ErrProviderResponseUnmarshal, err)
@@ -561,7 +561,7 @@ func HandleGeminiChatCompletionStream(
 				if strings.Contains(err.Error(), "gemini api error") {
 					// Handle API error
 					bifrostErr := &schemas.BifrostError{
-						Type:           schemas.Ptr("gemini_api_error"),
+						Type:           new("gemini_api_error"),
 						IsBifrostError: false,
 						Error: &schemas.ErrorField{
 							Message: err.Error(),
@@ -796,7 +796,7 @@ func (provider *GeminiProvider) responsesWithLargeResponseDetection(
 		preview, _ := ctx.Value(schemas.BifrostContextKeyLargePayloadResponsePreview).(string)
 		usage := extractUsageFromResponsePrefetch([]byte(preview))
 		bifrostResponse := &schemas.BifrostResponsesResponse{
-			ID:        schemas.Ptr("resp_" + providerUtils.GetRandomString(50)),
+			ID:        new("resp_" + providerUtils.GetRandomString(50)),
 			CreatedAt: int(time.Now().Unix()),
 			Model:     request.Model,
 			Usage:     usage,
@@ -820,7 +820,7 @@ func (provider *GeminiProvider) responsesWithLargeResponseDetection(
 		providerUtils.ParseAndSetRawRequest(&bifrostResponse.ExtraFields, jsonData)
 	}
 	if providerUtils.ShouldSendBackRawResponse(ctx, provider.sendBackRawResponse) {
-		var rawResponse interface{}
+		var rawResponse any
 		sonic.Unmarshal(responseBody, &rawResponse) //nolint:errcheck
 		bifrostResponse.ExtraFields.RawResponse = rawResponse
 	}
@@ -1081,7 +1081,7 @@ func HandleGeminiResponsesStream(
 				if strings.Contains(err.Error(), "gemini api error") {
 					// Handle API error
 					bifrostErr := &schemas.BifrostError{
-						Type:           schemas.Ptr("gemini_api_error"),
+						Type:           new("gemini_api_error"),
 						IsBifrostError: false,
 						Error: &schemas.ErrorField{
 							Message: err.Error(),
@@ -1460,7 +1460,7 @@ func (provider *GeminiProvider) SpeechStream(ctx *schemas.BifrostContext, postHo
 		// Request failed before the first response byte (server closed an idle/pooled connection,
 		// broken pipe, connection refused, DNS failure, etc.). Surface as a retriable upstream
 		// connection error (502) so executeRequestWithRetries honors max_retries, matching the
-		// non-streaming path - see https://github.com/maximhq/bifrost/issues/4496.
+		// non-streaming path - see https://github.com/grevinden/bifrost/issues/4496.
 		return nil, providerUtils.EnrichError(ctx, providerUtils.NewBifrostUpstreamConnectionError(schemas.ErrProviderDoRequest, err), jsonBody, nil, provider.sendBackRawRequest, provider.sendBackRawResponse, latency)
 	}
 
@@ -1546,7 +1546,7 @@ func (provider *GeminiProvider) SpeechStream(ctx *schemas.BifrostContext, postHo
 				if strings.Contains(err.Error(), "gemini api error") {
 					// Handle API error
 					bifrostErr := &schemas.BifrostError{
-						Type:           schemas.Ptr("gemini_api_error"),
+						Type:           new("gemini_api_error"),
 						IsBifrostError: false,
 						Error: &schemas.ErrorField{
 							Message: err.Error(),
@@ -1755,7 +1755,7 @@ func (provider *GeminiProvider) TranscriptionStream(ctx *schemas.BifrostContext,
 		// Request failed before the first response byte (server closed an idle/pooled connection,
 		// broken pipe, connection refused, DNS failure, etc.). Surface as a retriable upstream
 		// connection error (502) so executeRequestWithRetries honors max_retries, matching the
-		// non-streaming path - see https://github.com/maximhq/bifrost/issues/4496.
+		// non-streaming path - see https://github.com/grevinden/bifrost/issues/4496.
 		return nil, providerUtils.EnrichError(ctx, providerUtils.NewBifrostUpstreamConnectionError(schemas.ErrProviderDoRequest, err), jsonBody, nil, provider.sendBackRawRequest, provider.sendBackRawResponse, latency)
 	}
 
@@ -1810,7 +1810,7 @@ func (provider *GeminiProvider) TranscriptionStream(ctx *schemas.BifrostContext,
 		usage := &schemas.TranscriptionUsage{}
 		lastChunkTime := startTime
 
-		var fullTranscriptionText string
+		var fullTranscriptionText strings.Builder
 
 		for {
 			// If context was cancelled/timed out, let defer handle it
@@ -1840,7 +1840,7 @@ func (provider *GeminiProvider) TranscriptionStream(ctx *schemas.BifrostContext,
 			if err != nil {
 				if strings.Contains(err.Error(), "gemini api error") {
 					bifrostErr := &schemas.BifrostError{
-						Type:           schemas.Ptr("gemini_api_error"),
+						Type:           new("gemini_api_error"),
 						IsBifrostError: false,
 						Error: &schemas.ErrorField{
 							Message: err.Error(),
@@ -1867,7 +1867,7 @@ func (provider *GeminiProvider) TranscriptionStream(ctx *schemas.BifrostContext,
 					}
 					if sb.Len() > 0 {
 						deltaText = sb.String()
-						fullTranscriptionText += deltaText
+						fullTranscriptionText.WriteString(deltaText)
 					}
 				}
 			}
@@ -1876,9 +1876,9 @@ func (provider *GeminiProvider) TranscriptionStream(ctx *schemas.BifrostContext,
 			if len(geminiResponse.Candidates) > 0 && (geminiResponse.Candidates[0].FinishReason != "" || geminiResponse.UsageMetadata != nil) {
 				// Extract usage metadata from Gemini response
 				inputTokens, outputTokens, totalTokens := extractGeminiUsageMetadata(geminiResponse)
-				usage.InputTokens = schemas.Ptr(inputTokens)
-				usage.OutputTokens = schemas.Ptr(outputTokens)
-				usage.TotalTokens = schemas.Ptr(totalTokens)
+				usage.InputTokens = new(inputTokens)
+				usage.OutputTokens = new(outputTokens)
+				usage.TotalTokens = new(totalTokens)
 			}
 
 			// Only send response if we have actual text content
@@ -1906,7 +1906,7 @@ func (provider *GeminiProvider) TranscriptionStream(ctx *schemas.BifrostContext,
 		}
 		response := &schemas.BifrostTranscriptionStreamResponse{
 			Type: schemas.TranscriptionStreamResponseTypeDone,
-			Text: fullTranscriptionText,
+			Text: fullTranscriptionText.String(),
 			Usage: &schemas.TranscriptionUsage{
 				Type:         "tokens",
 				InputTokens:  usage.InputTokens,
@@ -3128,7 +3128,7 @@ func (provider *GeminiProvider) BatchDelete(ctx *schemas.BifrostContext, keys []
 func processGeminiStreamChunk(jsonData []byte) (*GenerateContentResponse, error) {
 	// Error chunks are rare; avoid a second decode in the common path.
 	if bytes.Contains(jsonData, []byte(`"error"`)) {
-		var errorCheck map[string]interface{}
+		var errorCheck map[string]any
 		if err := sonic.Unmarshal(jsonData, &errorCheck); err == nil {
 			if errValue, hasError := errorCheck["error"]; hasError {
 				return nil, fmt.Errorf("gemini api error: %v", errValue)
@@ -3338,7 +3338,7 @@ func (provider *GeminiProvider) batchResultsByKey(ctx *schemas.BifrostContext, k
 			CustomID: "info",
 			Response: &schemas.BatchResultResponse{
 				StatusCode: 200,
-				Body: map[string]interface{}{
+				Body: map[string]any{
 					"message": fmt.Sprintf("Batch completed with state: %s. No results available.", geminiResp.Metadata.State),
 				},
 			},

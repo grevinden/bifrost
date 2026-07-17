@@ -16,10 +16,10 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/plugins/governance"
-	"github.com/maximhq/bifrost/plugins/maxim"
-	"github.com/maximhq/bifrost/plugins/semanticcache"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/plugins/governance"
+	"github.com/grevinden/bifrost/plugins/maxim"
+	"github.com/grevinden/bifrost/plugins/semanticcache"
 	"github.com/valyala/fasthttp"
 )
 
@@ -70,7 +70,7 @@ func EmitModelCatalogRoutingLog(bifrostCtx *schemas.BifrostContext, res *ModelCa
 // ParseSessionIDFromBaggage extracts the session-id baggage member value.
 // It supports simple W3C baggage parsing sufficient for log grouping.
 func ParseSessionIDFromBaggage(header string) string {
-	for _, member := range strings.Split(header, ",") {
+	for member := range strings.SplitSeq(header, ",") {
 		member = strings.TrimSpace(member)
 		if member == "" {
 			continue
@@ -321,7 +321,7 @@ func ConvertToBifrostContext(ctx *fasthttp.RequestCtx, store HandlerStore) (*sch
 				var parsedValues []string
 				if valueStr != "" {
 					// Split by comma and trim whitespace
-					for _, v := range strings.Split(valueStr, ",") {
+					for v := range strings.SplitSeq(valueStr, ",") {
 						if trimmed := strings.TrimSpace(v); trimmed != "" {
 							parsedValues = append(parsedValues, trimmed)
 						}

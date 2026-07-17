@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/bytedance/sonic"
-	providerUtils "github.com/maximhq/bifrost/core/providers/utils"
-	"github.com/maximhq/bifrost/core/schemas"
+	providerUtils "github.com/grevinden/bifrost/core/providers/utils"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 const defaultVideoContentType = "video/mp4"
@@ -202,7 +202,7 @@ func addVideoURLOutput(uri, contentType string) *schemas.VideoOutput {
 	}
 	return &schemas.VideoOutput{
 		Type:        schemas.VideoOutputTypeURL,
-		URL:         schemas.Ptr(uri),
+		URL:         new(uri),
 		ContentType: contentType,
 	}
 }
@@ -216,7 +216,7 @@ func addVideoBase64Output(base64Value, contentType string) *schemas.VideoOutput 
 	}
 	return &schemas.VideoOutput{
 		Type:        schemas.VideoOutputTypeBase64,
-		Base64Data:  schemas.Ptr(base64Value),
+		Base64Data:  new(base64Value),
 		ContentType: contentType,
 	}
 }
@@ -269,7 +269,7 @@ func ToGeminiVideoGenerationRequest(bifrostReq *schemas.BifrostVideoGenerationRe
 		if urlInfo.DataURLWithoutPrefix != nil {
 			image.BytesBase64Encoded = urlInfo.DataURLWithoutPrefix
 		}
-		image.MimeType = schemas.Ptr("image/png")
+		image.MimeType = new("image/png")
 		if urlInfo.MediaType != nil {
 			image.MimeType = urlInfo.MediaType
 		}
@@ -533,7 +533,7 @@ func ToBifrostVideoGenerationResponse(operation *GenerateVideosOperation, model 
 		}
 		if ut := providerUtils.GetJSONField([]byte(operation.Metadata), "updateTime"); ut.Exists() {
 			if t, err := time.Parse(time.RFC3339, ut.String()); err == nil && operation.Done {
-				response.CompletedAt = schemas.Ptr(t.Unix())
+				response.CompletedAt = new(t.Unix())
 			}
 		}
 	}
@@ -566,7 +566,7 @@ func (request *GeminiVideoGenerationRequest) ToBifrostVideoGenerationRequest(ctx
 		if instance.Image.MimeType != nil && *instance.Image.MimeType != "" {
 			mimeType = *instance.Image.MimeType
 		}
-		bifrostReq.Input.InputReference = schemas.Ptr(fmt.Sprintf("data:%s;base64,%s", mimeType, *instance.Image.BytesBase64Encoded))
+		bifrostReq.Input.InputReference = new(fmt.Sprintf("data:%s;base64,%s", mimeType, *instance.Image.BytesBase64Encoded))
 	}
 
 	// Helper to ensure params are initialized

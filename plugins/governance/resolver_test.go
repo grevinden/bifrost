@@ -5,10 +5,10 @@ import (
 	"testing"
 	"time"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/configstore"
-	configstoreTables "github.com/maximhq/bifrost/framework/configstore/tables"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/configstore"
+	configstoreTables "github.com/grevinden/bifrost/framework/configstore/tables"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -129,7 +129,7 @@ func TestBudgetResolver_EvaluateRequest_ModelBlocked(t *testing.T) {
 		{
 			Provider:      "openai",
 			AllowedModels: []string{"gpt-4", "gpt-4-turbo"}, // Only these models
-			Weight:        bifrost.Ptr(1.0),
+			Weight:        new(1.0),
 			RateLimit:     nil,
 			Keys:          []configstoreTables.TableKey{},
 		},

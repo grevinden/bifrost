@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	providerUtils "github.com/maximhq/bifrost/core/providers/utils"
-	"github.com/maximhq/bifrost/core/schemas"
+	providerUtils "github.com/grevinden/bifrost/core/providers/utils"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/valyala/fasthttp"
 )
 
@@ -51,12 +51,12 @@ func ParseMistralError(resp *fasthttp.Response) *schemas.BifrostError {
 		bifrostErr.Error.Message = errorResp.Message
 	}
 	if strings.TrimSpace(errorResp.Type) != "" {
-		errorType := schemas.Ptr(errorResp.Type)
+		errorType := new(errorResp.Type)
 		bifrostErr.Error.Type = errorType
 		bifrostErr.Type = errorType
 	}
 	if strings.TrimSpace(errorResp.Code) != "" {
-		bifrostErr.Error.Code = schemas.Ptr(errorResp.Code)
+		bifrostErr.Error.Code = new(errorResp.Code)
 	}
 
 	if strings.TrimSpace(bifrostErr.Error.Message) == "" {

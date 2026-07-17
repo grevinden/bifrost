@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // RunResponsesStreamTest executes the responses streaming test scenario
@@ -28,7 +28,7 @@ func RunResponsesStreamTest(t *testing.T, client *bifrost.Bifrost, ctx context.C
 			{
 				Role: schemas.Ptr(schemas.ResponsesInputMessageRoleUser),
 				Content: &schemas.ResponsesMessageContent{
-					ContentStr: schemas.Ptr("Tell me a short story about a robot learning to paint the city which has the eiffel tower. Keep it under 200 words."),
+					ContentStr: new("Tell me a short story about a robot learning to paint the city which has the eiffel tower. Keep it under 200 words."),
 				},
 			},
 		}
@@ -38,7 +38,7 @@ func RunResponsesStreamTest(t *testing.T, client *bifrost.Bifrost, ctx context.C
 			Model:    testConfig.ChatModel,
 			Input:    messages,
 			Params: &schemas.ResponsesParameters{
-				MaxOutputTokens: bifrost.Ptr(300),
+				MaxOutputTokens: new(300),
 			},
 			Fallbacks: testConfig.Fallbacks,
 		}
@@ -47,14 +47,14 @@ func RunResponsesStreamTest(t *testing.T, client *bifrost.Bifrost, ctx context.C
 		retryConfig := StreamingRetryConfig()
 		retryContext := TestRetryContext{
 			ScenarioName: "ResponsesStream",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"should_stream_content":        true,
 				"should_tell_story":            true,
 				"topic":                        "robot painting",
 				"should_have_streaming_events": true,
 				"should_have_sequence_numbers": true,
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider": testConfig.Provider,
 				"model":    testConfig.ChatModel,
 			},
@@ -282,7 +282,7 @@ func RunResponsesStreamTest(t *testing.T, client *bifrost.Bifrost, ctx context.C
 				finalContent := strings.TrimSpace(fullContent.String())
 
 				// Enhanced validation expectations for responses streaming
-				expectations := GetExpectationsForScenario("ResponsesStream", testConfig, map[string]interface{}{})
+				expectations := GetExpectationsForScenario("ResponsesStream", testConfig, map[string]any{})
 				expectations = ModifyExpectationsForProvider(expectations, testConfig.Provider)
 				expectations.ShouldContainKeywords = append(expectations.ShouldContainKeywords, []string{"paris"}...) // Should include story elements
 
@@ -329,7 +329,7 @@ func RunResponsesStreamTest(t *testing.T, client *bifrost.Bifrost, ctx context.C
 				{
 					Role: schemas.Ptr(schemas.ResponsesInputMessageRoleUser),
 					Content: &schemas.ResponsesMessageContent{
-						ContentStr: schemas.Ptr("What's the weather like in San Francisco in celsius? Please use the get_weather function."),
+						ContentStr: new("What's the weather like in San Francisco in celsius? Please use the get_weather function."),
 					},
 				},
 			}
@@ -337,17 +337,17 @@ func RunResponsesStreamTest(t *testing.T, client *bifrost.Bifrost, ctx context.C
 			// Create sample weather tool for responses API
 			tool := &schemas.ResponsesTool{
 				Type:        "function",
-				Name:        schemas.Ptr("get_weather"),
-				Description: schemas.Ptr("Get the current weather in a given location"),
+				Name:        new("get_weather"),
+				Description: new("Get the current weather in a given location"),
 				ResponsesToolFunction: &schemas.ResponsesToolFunction{
 					Parameters: &schemas.ToolFunctionParameters{
 						Type: "object",
 						Properties: schemas.NewOrderedMapFromPairs(
-							schemas.KV("location", map[string]interface{}{
+							schemas.KV("location", map[string]any{
 								"type":        "string",
 								"description": "The city and state, e.g. San Francisco, CA",
 							}),
-							schemas.KV("unit", map[string]interface{}{
+							schemas.KV("unit", map[string]any{
 								"type": "string",
 								"enum": []string{"celsius", "fahrenheit"},
 							}),
@@ -362,7 +362,7 @@ func RunResponsesStreamTest(t *testing.T, client *bifrost.Bifrost, ctx context.C
 				Model:    testConfig.ChatModel,
 				Input:    messages,
 				Params: &schemas.ResponsesParameters{
-					MaxOutputTokens: bifrost.Ptr(300),
+					MaxOutputTokens: new(300),
 					Tools:           []schemas.ResponsesTool{*tool},
 				},
 				Fallbacks: testConfig.Fallbacks,
@@ -372,12 +372,12 @@ func RunResponsesStreamTest(t *testing.T, client *bifrost.Bifrost, ctx context.C
 			retryConfig := StreamingRetryConfig()
 			retryContext := TestRetryContext{
 				ScenarioName: "ResponsesStreamWithTools",
-				ExpectedBehavior: map[string]interface{}{
+				ExpectedBehavior: map[string]any{
 					"should_stream_content":  true,
 					"should_have_tool_calls": true,
 					"tool_name":              "get_weather",
 				},
-				TestMetadata: map[string]interface{}{
+				TestMetadata: map[string]any{
 					"provider": testConfig.Provider,
 					"model":    testConfig.ChatModel,
 					"tools":    true,
@@ -525,7 +525,7 @@ func RunResponsesStreamTest(t *testing.T, client *bifrost.Bifrost, ctx context.C
 				{
 					Role: schemas.Ptr(schemas.ResponsesInputMessageRoleUser),
 					Content: &schemas.ResponsesMessageContent{
-						ContentStr: schemas.Ptr(problemPrompt),
+						ContentStr: new(problemPrompt),
 					},
 				},
 			}
@@ -535,9 +535,9 @@ func RunResponsesStreamTest(t *testing.T, client *bifrost.Bifrost, ctx context.C
 				Model:    testConfig.ReasoningModel,
 				Input:    messages,
 				Params: &schemas.ResponsesParameters{
-					MaxOutputTokens: bifrost.Ptr(1800),
+					MaxOutputTokens: new(1800),
 					Reasoning: &schemas.ResponsesParametersReasoning{
-						Effort: bifrost.Ptr("high"),
+						Effort: new("high"),
 						// Summary: bifrost.Ptr("detailed"),
 					},
 					Include: []string{"reasoning.encrypted_content"},
@@ -549,12 +549,12 @@ func RunResponsesStreamTest(t *testing.T, client *bifrost.Bifrost, ctx context.C
 			retryConfig := StreamingRetryConfig()
 			retryContext := TestRetryContext{
 				ScenarioName: "ResponsesStreamWithReasoning",
-				ExpectedBehavior: map[string]interface{}{
+				ExpectedBehavior: map[string]any{
 					"should_stream_reasoning":      true,
 					"should_have_reasoning_events": true,
 					"problem_type":                 "mathematical",
 				},
-				TestMetadata: map[string]interface{}{
+				TestMetadata: map[string]any{
 					"provider":  testConfig.Provider,
 					"model":     testConfig.ReasoningModel,
 					"reasoning": true,
@@ -679,7 +679,7 @@ func RunResponsesStreamTest(t *testing.T, client *bifrost.Bifrost, ctx context.C
 			{
 				Role: schemas.Ptr(schemas.ResponsesInputMessageRoleUser),
 				Content: &schemas.ResponsesMessageContent{
-					ContentStr: schemas.Ptr("Say hello in exactly 5 words."),
+					ContentStr: new("Say hello in exactly 5 words."),
 				},
 			},
 		}
@@ -689,7 +689,7 @@ func RunResponsesStreamTest(t *testing.T, client *bifrost.Bifrost, ctx context.C
 			Model:    testConfig.ChatModel,
 			Input:    messages,
 			Params: &schemas.ResponsesParameters{
-				MaxOutputTokens: bifrost.Ptr(500),
+				MaxOutputTokens: new(500),
 			},
 			Fallbacks: testConfig.Fallbacks,
 		}
@@ -698,11 +698,11 @@ func RunResponsesStreamTest(t *testing.T, client *bifrost.Bifrost, ctx context.C
 		retryConfig := StreamingRetryConfig()
 		retryContext := TestRetryContext{
 			ScenarioName: "ResponsesStreamLifecycle",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"should_have_lifecycle_events": true,
 				"should_have_sequence_numbers": true,
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider": testConfig.Provider,
 				"model":    testConfig.ChatModel,
 			},

@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	schemas "github.com/maximhq/bifrost/core/schemas"
+	schemas "github.com/grevinden/bifrost/core/schemas"
 )
 
 func TestCheckFirstStreamChunk_ErrorInFirstChunk(t *testing.T) {
@@ -13,7 +13,7 @@ func TestCheckFirstStreamChunk_ErrorInFirstChunk(t *testing.T) {
 	stream <- &schemas.BifrostStreamChunk{
 		BifrostError: &schemas.BifrostError{
 			Error: &schemas.ErrorField{
-				Code:    schemas.Ptr("limit_burst_rate"),
+				Code:    new("limit_burst_rate"),
 				Message: "Request rate increased too quickly",
 			},
 		},
@@ -300,7 +300,7 @@ func TestCheckFirstStreamChunk_CodeOnlyError(t *testing.T) {
 	stream <- &schemas.BifrostStreamChunk{
 		BifrostError: &schemas.BifrostError{
 			Error: &schemas.ErrorField{
-				Code: schemas.Ptr("limit_burst_rate"),
+				Code: new("limit_burst_rate"),
 			},
 		},
 	}

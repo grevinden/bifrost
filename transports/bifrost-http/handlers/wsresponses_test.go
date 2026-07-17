@@ -1,17 +1,18 @@
 package handlers
 
 import (
+	"context"
 	"errors"
 	"net"
 	"testing"
 	"time"
 
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/configstore"
-	configstoreTables "github.com/maximhq/bifrost/framework/configstore/tables"
-	"github.com/maximhq/bifrost/framework/kvstore"
-	"github.com/maximhq/bifrost/framework/logstore"
-	"github.com/maximhq/bifrost/transports/bifrost-http/lib"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/configstore"
+	configstoreTables "github.com/grevinden/bifrost/framework/configstore/tables"
+	"github.com/grevinden/bifrost/framework/kvstore"
+	"github.com/grevinden/bifrost/framework/logstore"
+	"github.com/grevinden/bifrost/transports/bifrost-http/lib"
 	"github.com/stretchr/testify/assert"
 	"github.com/valyala/fasthttp"
 )
@@ -220,7 +221,7 @@ func TestCreateBifrostContextFromAuth_BlocksWebSocketHandshakeForwardedHeaders(t
 }
 
 func TestMergeWebSocketHeaders_ForwardedHeadersOverrideProviderHeadersAndPreserveValues(t *testing.T) {
-	ctx := schemas.NewBifrostContext(nil, time.Time{})
+	ctx := schemas.NewBifrostContext(context.TODO, time.Time{})
 	ctx.SetValue(schemas.BifrostContextKeyExtraHeaders, map[string][]string{
 		"originator":    {"my-test-client"},
 		"authorization": {"Bearer malicious"},

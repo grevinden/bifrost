@@ -10,9 +10,9 @@ import (
 	"sync"
 	"time"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/vectorstore"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/vectorstore"
 )
 
 // Config contains configuration for the semantic cache plugin.
@@ -616,9 +616,7 @@ func (plugin *Plugin) PostLLMHook(ctx *schemas.BifrostContext, res *schemas.Bifr
 		return res, nil, nil
 	}
 
-	plugin.writersWg.Add(1)
-	go func() {
-		defer plugin.writersWg.Done()
+	plugin.writersWg.Go(func() {
 		cacheCtx, cancel := context.WithTimeout(context.Background(), CacheSetTimeout)
 		defer cancel()
 
@@ -632,7 +630,7 @@ func (plugin *Plugin) PostLLMHook(ctx *schemas.BifrostContext, res *schemas.Bifr
 				plugin.logger.Warn("Failed to cache single response (namespace=%s, id=%s): %v. The cache_id stamped on the response will not resolve on subsequent lookups.", plugin.config.VectorStoreNamespace, storageID, err)
 			}
 		}
-	}()
+	})
 
 	return res, nil, nil
 }
@@ -700,11 +698,11 @@ func (plugin *Plugin) stampCacheDebugForMiss(state *cacheState, extraFields *sch
 	}
 	cd := extraFields.CacheDebug
 	cd.CacheHit = false
-	cd.CacheID = bifrost.Ptr(storageID)
+	cd.CacheID = new(storageID)
 	if state.EmbeddingsInputTokens > 0 {
 		inputTokens := state.EmbeddingsInputTokens
-		cd.ProviderUsed = bifrost.Ptr(string(plugin.config.Provider))
-		cd.ModelUsed = bifrost.Ptr(plugin.config.EmbeddingModel)
+		cd.ProviderUsed = new(string(plugin.config.Provider))
+		cd.ModelUsed = new(plugin.config.EmbeddingModel)
 		cd.InputTokens = &inputTokens
 	}
 }

@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -70,7 +70,7 @@ func TestToolNameConflict_Resolution(t *testing.T) {
 	ctx := createTestContext()
 
 	// Execute "echo" tool multiple times to verify consistent execution
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		toolCall := GetSampleEchoToolCall("call-"+string(rune(i)), "test conflict resolution")
 		result, bifrostErr := bifrost.ExecuteChatMCPTool(ctx, &toolCall)
 		require.Nil(t, bifrostErr, "tool should execute")
@@ -145,7 +145,7 @@ func TestToolNameConflict_LocalVsExternal(t *testing.T) {
 	// Register "echo" tool in InProcess client
 	echoTool := GetSampleEchoTool()
 	echoToolHandler := func(args any) (string, error) {
-		argsMap, ok := args.(map[string]interface{})
+		argsMap, ok := args.(map[string]any)
 		if !ok {
 			return "", fmt.Errorf("invalid arguments type")
 		}
@@ -195,7 +195,7 @@ func TestMultipleSameNameTools_ThreeClients(t *testing.T) {
 	ctx := createTestContext()
 
 	// Execute calculator multiple times
-	for i := 0; i < 15; i++ {
+	for i := range 15 {
 		toolCall := GetSampleCalculatorToolCall("call-"+string(rune(i)), "add", float64(i), 1.0)
 		result, bifrostErr := bifrost.ExecuteChatMCPTool(ctx, &toolCall)
 		require.Nil(t, bifrostErr, "calculator should execute")
@@ -232,11 +232,11 @@ func TestMultipleSameNameTools_DifferentImplementations(t *testing.T) {
 		Type: schemas.ChatToolTypeFunction,
 		Function: &schemas.ChatToolFunction{
 			Name:        "process_data",
-			Description: schemas.Ptr("Custom data processor"),
+			Description: new("Custom data processor"),
 			Parameters: &schemas.ToolFunctionParameters{
 				Type: "object",
 				Properties: schemas.NewOrderedMapFromPairs(
-					schemas.KV("data", map[string]interface{}{
+					schemas.KV("data", map[string]any{
 						"type":        "string",
 						"description": "Data to process",
 					}),
@@ -246,7 +246,7 @@ func TestMultipleSameNameTools_DifferentImplementations(t *testing.T) {
 		},
 	}
 	processToolHandler := func(args any) (string, error) {
-		argsMap, ok := args.(map[string]interface{})
+		argsMap, ok := args.(map[string]any)
 		if !ok {
 			return "", fmt.Errorf("invalid arguments type")
 		}
@@ -263,12 +263,12 @@ func TestMultipleSameNameTools_DifferentImplementations(t *testing.T) {
 	ctx := createTestContext()
 
 	// Execute "process_data" tool multiple times
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		toolCall := schemas.ChatAssistantMessageToolCall{
-			ID:   schemas.Ptr("call-" + string(rune(i))),
-			Type: schemas.Ptr("function"),
+			ID:   new("call-" + string(rune(i))),
+			Type: new("function"),
 			Function: schemas.ChatAssistantMessageToolCallFunction{
-				Name:      schemas.Ptr("bifrostInternal-process_data"),
+				Name:      new("bifrostInternal-process_data"),
 				Arguments: `{"data": "test"}`,
 			},
 		}
@@ -462,25 +462,25 @@ func TestToolConflict_ResponsesFormat(t *testing.T) {
 		{
 			name: "echo_tool",
 			responsesToolMsg: schemas.ResponsesToolMessage{
-				CallID:    schemas.Ptr("call-echo"),
-				Name:      schemas.Ptr("bifrostInternal-echo"),
-				Arguments: schemas.Ptr(`{"message": "responses format conflict"}`),
+				CallID:    new("call-echo"),
+				Name:      new("bifrostInternal-echo"),
+				Arguments: new(`{"message": "responses format conflict"}`),
 			},
 		},
 		{
 			name: "calculator_tool",
 			responsesToolMsg: schemas.ResponsesToolMessage{
-				CallID:    schemas.Ptr("call-calc"),
-				Name:      schemas.Ptr("bifrostInternal-calculator"),
-				Arguments: schemas.Ptr(`{"operation": "add", "x": 15, "y": 25}`),
+				CallID:    new("call-calc"),
+				Name:      new("bifrostInternal-calculator"),
+				Arguments: new(`{"operation": "add", "x": 15, "y": 25}`),
 			},
 		},
 		{
 			name: "weather_tool",
 			responsesToolMsg: schemas.ResponsesToolMessage{
-				CallID:    schemas.Ptr("call-weather"),
-				Name:      schemas.Ptr("bifrostInternal-get_weather"),
-				Arguments: schemas.Ptr(`{"location": "Tokyo"}`),
+				CallID:    new("call-weather"),
+				Name:      new("bifrostInternal-get_weather"),
+				Arguments: new(`{"location": "Tokyo"}`),
 			},
 		},
 	}
@@ -547,7 +547,7 @@ func TestToolConflict_ComprehensiveScenarios(t *testing.T) {
 	for _, scenario := range scenarios {
 		t.Run(scenario.name, func(t *testing.T) {
 			toolCall := GetSampleEchoToolCall("call-"+scenario.toolName, "test")
-			toolCall.Function.Name = schemas.Ptr(scenario.toolName)
+			toolCall.Function.Name = new(scenario.toolName)
 
 			result, bifrostErr := bifrost.ExecuteChatMCPTool(ctx, &toolCall)
 

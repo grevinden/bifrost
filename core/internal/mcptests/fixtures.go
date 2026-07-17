@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
 	"strings"
@@ -11,10 +12,10 @@ import (
 	"testing"
 	"time"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/mcp"
-	"github.com/maximhq/bifrost/core/mcp/codemode/starlark"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/mcp"
+	"github.com/grevinden/bifrost/core/mcp/codemode/starlark"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -74,20 +75,20 @@ func GetSampleCalculatorTool() schemas.ChatTool {
 		Type: schemas.ChatToolTypeFunction,
 		Function: &schemas.ChatToolFunction{
 			Name:        "calculator",
-			Description: schemas.Ptr("Performs basic arithmetic operations (add, subtract, multiply, divide)"),
+			Description: new("Performs basic arithmetic operations (add, subtract, multiply, divide)"),
 			Parameters: &schemas.ToolFunctionParameters{
 				Type: "object",
 				Properties: schemas.NewOrderedMapFromPairs(
-					schemas.KV("operation", map[string]interface{}{
+					schemas.KV("operation", map[string]any{
 						"type":        "string",
 						"description": "The operation to perform",
 						"enum":        []string{"add", "subtract", "multiply", "divide"},
 					}),
-					schemas.KV("x", map[string]interface{}{
+					schemas.KV("x", map[string]any{
 						"type":        "number",
 						"description": "First number",
 					}),
-					schemas.KV("y", map[string]interface{}{
+					schemas.KV("y", map[string]any{
 						"type":        "number",
 						"description": "Second number",
 					}),
@@ -104,11 +105,11 @@ func GetSampleEchoTool() schemas.ChatTool {
 		Type: schemas.ChatToolTypeFunction,
 		Function: &schemas.ChatToolFunction{
 			Name:        "echo",
-			Description: schemas.Ptr("Echoes back the input message"),
+			Description: new("Echoes back the input message"),
 			Parameters: &schemas.ToolFunctionParameters{
 				Type: "object",
 				Properties: schemas.NewOrderedMapFromPairs(
-					schemas.KV("message", map[string]interface{}{
+					schemas.KV("message", map[string]any{
 						"type":        "string",
 						"description": "The message to echo",
 					}),
@@ -125,15 +126,15 @@ func GetSampleWeatherTool() schemas.ChatTool {
 		Type: schemas.ChatToolTypeFunction,
 		Function: &schemas.ChatToolFunction{
 			Name:        "get_weather",
-			Description: schemas.Ptr("Gets the current weather for a location"),
+			Description: new("Gets the current weather for a location"),
 			Parameters: &schemas.ToolFunctionParameters{
 				Type: "object",
 				Properties: schemas.NewOrderedMapFromPairs(
-					schemas.KV("location", map[string]interface{}{
+					schemas.KV("location", map[string]any{
 						"type":        "string",
 						"description": "The location to get weather for",
 					}),
-					schemas.KV("units", map[string]interface{}{
+					schemas.KV("units", map[string]any{
 						"type":        "string",
 						"description": "Temperature units (celsius or fahrenheit)",
 						"enum":        []string{"celsius", "fahrenheit"},
@@ -151,11 +152,11 @@ func GetSampleDelayTool() schemas.ChatTool {
 		Type: schemas.ChatToolTypeFunction,
 		Function: &schemas.ChatToolFunction{
 			Name:        "delay",
-			Description: schemas.Ptr("Delays execution for a specified number of seconds"),
+			Description: new("Delays execution for a specified number of seconds"),
 			Parameters: &schemas.ToolFunctionParameters{
 				Type: "object",
 				Properties: schemas.NewOrderedMapFromPairs(
-					schemas.KV("seconds", map[string]interface{}{
+					schemas.KV("seconds", map[string]any{
 						"type":        "number",
 						"description": "Number of seconds to delay",
 					}),
@@ -172,11 +173,11 @@ func GetSampleErrorTool() schemas.ChatTool {
 		Type: schemas.ChatToolTypeFunction,
 		Function: &schemas.ChatToolFunction{
 			Name:        "throw_error",
-			Description: schemas.Ptr("Throws an error for testing error handling"),
+			Description: new("Throws an error for testing error handling"),
 			Parameters: &schemas.ToolFunctionParameters{
 				Type: "object",
 				Properties: schemas.NewOrderedMapFromPairs(
-					schemas.KV("error_message", map[string]interface{}{
+					schemas.KV("error_message", map[string]any{
 						"type":        "string",
 						"description": "The error message to throw",
 					}),
@@ -236,7 +237,7 @@ func GetSampleToolResultMessage(toolCallID, content string) schemas.ChatMessage 
 
 // GetSampleCalculatorToolCall returns a sample calculator tool call
 func GetSampleCalculatorToolCall(id string, operation string, x, y float64) schemas.ChatAssistantMessageToolCall {
-	argsMap := map[string]interface{}{
+	argsMap := map[string]any{
 		"operation": operation,
 		"x":         x,
 		"y":         y,
@@ -245,9 +246,9 @@ func GetSampleCalculatorToolCall(id string, operation string, x, y float64) sche
 
 	return schemas.ChatAssistantMessageToolCall{
 		ID:   &id,
-		Type: schemas.Ptr("function"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("bifrostInternal-calculator"),
+			Name:      new("bifrostInternal-calculator"),
 			Arguments: string(argsJSON),
 		},
 	}
@@ -255,16 +256,16 @@ func GetSampleCalculatorToolCall(id string, operation string, x, y float64) sche
 
 // GetSampleEchoToolCall returns a sample echo tool call
 func GetSampleEchoToolCall(id string, message string) schemas.ChatAssistantMessageToolCall {
-	argsMap := map[string]interface{}{
+	argsMap := map[string]any{
 		"message": message,
 	}
 	argsJSON, _ := json.Marshal(argsMap)
 
 	return schemas.ChatAssistantMessageToolCall{
 		ID:   &id,
-		Type: schemas.Ptr("function"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("bifrostInternal-echo"),
+			Name:      new("bifrostInternal-echo"),
 			Arguments: string(argsJSON),
 		},
 	}
@@ -272,7 +273,7 @@ func GetSampleEchoToolCall(id string, message string) schemas.ChatAssistantMessa
 
 // GetSampleWeatherToolCall returns a sample weather tool call
 func GetSampleWeatherToolCall(id string, location string, units string) schemas.ChatAssistantMessageToolCall {
-	argsMap := map[string]interface{}{
+	argsMap := map[string]any{
 		"location": location,
 	}
 	if units != "" {
@@ -282,9 +283,9 @@ func GetSampleWeatherToolCall(id string, location string, units string) schemas.
 
 	return schemas.ChatAssistantMessageToolCall{
 		ID:   &id,
-		Type: schemas.Ptr("function"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("bifrostInternal-get_weather"),
+			Name:      new("bifrostInternal-get_weather"),
 			Arguments: string(argsJSON),
 		},
 	}
@@ -292,16 +293,16 @@ func GetSampleWeatherToolCall(id string, location string, units string) schemas.
 
 // GetSampleDelayToolCall returns a sample delay tool call
 func GetSampleDelayToolCall(id string, seconds float64) schemas.ChatAssistantMessageToolCall {
-	argsMap := map[string]interface{}{
+	argsMap := map[string]any{
 		"seconds": seconds,
 	}
 	argsJSON, _ := json.Marshal(argsMap)
 
 	return schemas.ChatAssistantMessageToolCall{
 		ID:   &id,
-		Type: schemas.Ptr("function"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("bifrostInternal-delay"),
+			Name:      new("bifrostInternal-delay"),
 			Arguments: string(argsJSON),
 		},
 	}
@@ -317,11 +318,11 @@ func RegisterEchoTool(manager *mcp.MCPManager) error {
 		Type: schemas.ChatToolTypeFunction,
 		Function: &schemas.ChatToolFunction{
 			Name:        "echo",
-			Description: schemas.Ptr("Echoes back the input message"),
+			Description: new("Echoes back the input message"),
 			Parameters: &schemas.ToolFunctionParameters{
 				Type: "object",
 				Properties: schemas.NewOrderedMapFromPairs(
-					schemas.KV("message", map[string]interface{}{
+					schemas.KV("message", map[string]any{
 						"type":        "string",
 						"description": "The message to echo back",
 					}),
@@ -335,7 +336,7 @@ func RegisterEchoTool(manager *mcp.MCPManager) error {
 		"echo",
 		"Echoes back the input message",
 		func(args any) (string, error) {
-			argsMap, ok := args.(map[string]interface{})
+			argsMap, ok := args.(map[string]any)
 			if !ok {
 				return "", fmt.Errorf("invalid arguments type")
 			}
@@ -343,7 +344,7 @@ func RegisterEchoTool(manager *mcp.MCPManager) error {
 			if !ok {
 				return "", fmt.Errorf("message must be a string")
 			}
-			result := map[string]interface{}{
+			result := map[string]any{
 				"echoed": message,
 			}
 			resultJSON, _ := json.Marshal(result)
@@ -359,20 +360,20 @@ func RegisterCalculatorTool(manager *mcp.MCPManager) error {
 		Type: schemas.ChatToolTypeFunction,
 		Function: &schemas.ChatToolFunction{
 			Name:        "calculator",
-			Description: schemas.Ptr("Performs basic arithmetic operations"),
+			Description: new("Performs basic arithmetic operations"),
 			Parameters: &schemas.ToolFunctionParameters{
 				Type: "object",
 				Properties: schemas.NewOrderedMapFromPairs(
-					schemas.KV("operation", map[string]interface{}{
+					schemas.KV("operation", map[string]any{
 						"type":        "string",
 						"description": "The operation to perform (add, subtract, multiply, divide)",
 						"enum":        []string{"add", "subtract", "multiply", "divide"},
 					}),
-					schemas.KV("x", map[string]interface{}{
+					schemas.KV("x", map[string]any{
 						"type":        "number",
 						"description": "First number",
 					}),
-					schemas.KV("y", map[string]interface{}{
+					schemas.KV("y", map[string]any{
 						"type":        "number",
 						"description": "Second number",
 					}),
@@ -386,7 +387,7 @@ func RegisterCalculatorTool(manager *mcp.MCPManager) error {
 		"calculator",
 		"Performs basic arithmetic operations",
 		func(args any) (string, error) {
-			argsMap, ok := args.(map[string]interface{})
+			argsMap, ok := args.(map[string]any)
 			if !ok {
 				return "", fmt.Errorf("invalid arguments type")
 			}
@@ -423,7 +424,7 @@ func RegisterCalculatorTool(manager *mcp.MCPManager) error {
 				return "", fmt.Errorf("unknown operation: %s", operation)
 			}
 
-			resultMap := map[string]interface{}{
+			resultMap := map[string]any{
 				"result": result,
 			}
 			resultJSON, _ := json.Marshal(resultMap)
@@ -439,15 +440,15 @@ func RegisterWeatherTool(manager *mcp.MCPManager) error {
 		Type: schemas.ChatToolTypeFunction,
 		Function: &schemas.ChatToolFunction{
 			Name:        "get_weather",
-			Description: schemas.Ptr("Gets the current weather for a location"),
+			Description: new("Gets the current weather for a location"),
 			Parameters: &schemas.ToolFunctionParameters{
 				Type: "object",
 				Properties: schemas.NewOrderedMapFromPairs(
-					schemas.KV("location", map[string]interface{}{
+					schemas.KV("location", map[string]any{
 						"type":        "string",
 						"description": "The city and state, e.g. San Francisco, CA",
 					}),
-					schemas.KV("units", map[string]interface{}{
+					schemas.KV("units", map[string]any{
 						"type":        "string",
 						"description": "The temperature unit (celsius or fahrenheit)",
 						"enum":        []string{"celsius", "fahrenheit"},
@@ -462,7 +463,7 @@ func RegisterWeatherTool(manager *mcp.MCPManager) error {
 		"get_weather",
 		"Gets the current weather for a location",
 		func(args any) (string, error) {
-			argsMap, ok := args.(map[string]interface{})
+			argsMap, ok := args.(map[string]any)
 			if !ok {
 				return "", fmt.Errorf("invalid arguments type")
 			}
@@ -478,7 +479,7 @@ func RegisterWeatherTool(manager *mcp.MCPManager) error {
 			}
 
 			// Return mock weather data
-			result := map[string]interface{}{
+			result := map[string]any{
 				"location":    location,
 				"temperature": 72,
 				"units":       units,
@@ -497,15 +498,15 @@ func RegisterSearchTool(manager *mcp.MCPManager) error {
 		Type: schemas.ChatToolTypeFunction,
 		Function: &schemas.ChatToolFunction{
 			Name:        "search",
-			Description: schemas.Ptr("Searches for information on a topic"),
+			Description: new("Searches for information on a topic"),
 			Parameters: &schemas.ToolFunctionParameters{
 				Type: "object",
 				Properties: schemas.NewOrderedMapFromPairs(
-					schemas.KV("query", map[string]interface{}{
+					schemas.KV("query", map[string]any{
 						"type":        "string",
 						"description": "The search query",
 					}),
-					schemas.KV("max_results", map[string]interface{}{
+					schemas.KV("max_results", map[string]any{
 						"type":        "number",
 						"description": "Maximum number of results to return",
 					}),
@@ -519,7 +520,7 @@ func RegisterSearchTool(manager *mcp.MCPManager) error {
 		"search",
 		"Searches for information on a topic",
 		func(args any) (string, error) {
-			argsMap, ok := args.(map[string]interface{})
+			argsMap, ok := args.(map[string]any)
 			if !ok {
 				return "", fmt.Errorf("invalid arguments type")
 			}
@@ -535,7 +536,7 @@ func RegisterSearchTool(manager *mcp.MCPManager) error {
 			}
 
 			// Return mock search results
-			result := map[string]interface{}{
+			result := map[string]any{
 				"query":   query,
 				"results": []string{"Result 1 for " + query, "Result 2 for " + query},
 				"count":   int(maxResults),
@@ -553,11 +554,11 @@ func RegisterGetTemperatureTool(manager *mcp.MCPManager) error {
 		Type: schemas.ChatToolTypeFunction,
 		Function: &schemas.ChatToolFunction{
 			Name:        "get_temperature",
-			Description: schemas.Ptr("Get the current temperature for a popular city"),
+			Description: new("Get the current temperature for a popular city"),
 			Parameters: &schemas.ToolFunctionParameters{
 				Type: "object",
 				Properties: schemas.NewOrderedMapFromPairs(
-					schemas.KV("location", map[string]interface{}{
+					schemas.KV("location", map[string]any{
 						"type":        "string",
 						"description": "The name of the city (e.g., 'New York', 'London', 'Tokyo')",
 					}),
@@ -571,7 +572,7 @@ func RegisterGetTemperatureTool(manager *mcp.MCPManager) error {
 		"get_temperature",
 		"Get the current temperature for a popular city",
 		func(args any) (string, error) {
-			argsMap, ok := args.(map[string]interface{})
+			argsMap, ok := args.(map[string]any)
 			if !ok {
 				return "", fmt.Errorf("invalid arguments type")
 			}
@@ -582,7 +583,7 @@ func RegisterGetTemperatureTool(manager *mcp.MCPManager) error {
 			}
 
 			// Return mock temperature data (InProcess version - different from STDIO)
-			result := map[string]interface{}{
+			result := map[string]any{
 				"location":    location,
 				"temperature": 68,
 				"unit":        "F",
@@ -602,11 +603,11 @@ func RegisterGetTimeTool(manager *mcp.MCPManager) error {
 		Type: schemas.ChatToolTypeFunction,
 		Function: &schemas.ChatToolFunction{
 			Name:        "get_time",
-			Description: schemas.Ptr("Gets the current date and time"),
+			Description: new("Gets the current date and time"),
 			Parameters: &schemas.ToolFunctionParameters{
 				Type: "object",
 				Properties: schemas.NewOrderedMapFromPairs(
-					schemas.KV("timezone", map[string]interface{}{
+					schemas.KV("timezone", map[string]any{
 						"type":        "string",
 						"description": "The timezone (e.g., UTC, America/New_York)",
 					}),
@@ -619,7 +620,7 @@ func RegisterGetTimeTool(manager *mcp.MCPManager) error {
 		"get_time",
 		"Gets the current date and time",
 		func(args any) (string, error) {
-			argsMap, ok := args.(map[string]interface{})
+			argsMap, ok := args.(map[string]any)
 			timezone := "UTC"
 			if ok {
 				if tz, ok := argsMap["timezone"].(string); ok {
@@ -628,7 +629,7 @@ func RegisterGetTimeTool(manager *mcp.MCPManager) error {
 			}
 
 			// Return mock time data
-			result := map[string]interface{}{
+			result := map[string]any{
 				"timezone": timezone,
 				"datetime": "2024-01-15T10:30:00Z",
 				"unix":     1705317000,
@@ -646,11 +647,11 @@ func RegisterReadFileTool(manager *mcp.MCPManager) error {
 		Type: schemas.ChatToolTypeFunction,
 		Function: &schemas.ChatToolFunction{
 			Name:        "read_file",
-			Description: schemas.Ptr("Reads the contents of a file"),
+			Description: new("Reads the contents of a file"),
 			Parameters: &schemas.ToolFunctionParameters{
 				Type: "object",
 				Properties: schemas.NewOrderedMapFromPairs(
-					schemas.KV("path", map[string]interface{}{
+					schemas.KV("path", map[string]any{
 						"type":        "string",
 						"description": "The file path to read",
 					}),
@@ -664,7 +665,7 @@ func RegisterReadFileTool(manager *mcp.MCPManager) error {
 		"read_file",
 		"Reads the contents of a file",
 		func(args any) (string, error) {
-			argsMap, ok := args.(map[string]interface{})
+			argsMap, ok := args.(map[string]any)
 			if !ok {
 				return "", fmt.Errorf("invalid arguments type")
 			}
@@ -675,7 +676,7 @@ func RegisterReadFileTool(manager *mcp.MCPManager) error {
 			}
 
 			// Return mock file contents
-			result := map[string]interface{}{
+			result := map[string]any{
 				"path":     path,
 				"content":  "Mock file contents for " + path,
 				"encoding": "utf-8",
@@ -693,11 +694,11 @@ func RegisterDelayTool(manager *mcp.MCPManager) error {
 		Type: schemas.ChatToolTypeFunction,
 		Function: &schemas.ChatToolFunction{
 			Name:        "delay",
-			Description: schemas.Ptr("Delays execution for specified seconds"),
+			Description: new("Delays execution for specified seconds"),
 			Parameters: &schemas.ToolFunctionParameters{
 				Type: "object",
 				Properties: schemas.NewOrderedMapFromPairs(
-					schemas.KV("seconds", map[string]interface{}{
+					schemas.KV("seconds", map[string]any{
 						"type":        "number",
 						"description": "Number of seconds to delay",
 					}),
@@ -711,7 +712,7 @@ func RegisterDelayTool(manager *mcp.MCPManager) error {
 		"delay",
 		"Delays execution for specified seconds",
 		func(args any) (string, error) {
-			argsMap, ok := args.(map[string]interface{})
+			argsMap, ok := args.(map[string]any)
 			if !ok {
 				return "", fmt.Errorf("invalid arguments type")
 			}
@@ -724,7 +725,7 @@ func RegisterDelayTool(manager *mcp.MCPManager) error {
 			// Sleep for the specified duration
 			time.Sleep(time.Duration(seconds*1000) * time.Millisecond)
 
-			result := map[string]interface{}{
+			result := map[string]any{
 				"delayed_seconds": seconds,
 				"message":         fmt.Sprintf("Delayed for %.2f seconds", seconds),
 			}
@@ -741,11 +742,11 @@ func RegisterThrowErrorTool(manager *mcp.MCPManager) error {
 		Type: schemas.ChatToolTypeFunction,
 		Function: &schemas.ChatToolFunction{
 			Name:        "throw_error",
-			Description: schemas.Ptr("Throws an error with specified message"),
+			Description: new("Throws an error with specified message"),
 			Parameters: &schemas.ToolFunctionParameters{
 				Type: "object",
 				Properties: schemas.NewOrderedMapFromPairs(
-					schemas.KV("error_message", map[string]interface{}{
+					schemas.KV("error_message", map[string]any{
 						"type":        "string",
 						"description": "The error message to throw",
 					}),
@@ -759,7 +760,7 @@ func RegisterThrowErrorTool(manager *mcp.MCPManager) error {
 		"throw_error",
 		"Throws an error with specified message",
 		func(args any) (string, error) {
-			argsMap, ok := args.(map[string]interface{})
+			argsMap, ok := args.(map[string]any)
 			if !ok {
 				return "", fmt.Errorf("invalid arguments type")
 			}
@@ -854,7 +855,7 @@ func GetSampleResponsesAssistantMessage(content string) schemas.ResponsesMessage
 }
 
 // GetSampleResponsesToolCallMessage returns a sample Responses API tool call
-func GetSampleResponsesToolCallMessage(callID, toolName string, args map[string]interface{}) schemas.ResponsesMessage {
+func GetSampleResponsesToolCallMessage(callID, toolName string, args map[string]any) schemas.ResponsesMessage {
 	argsJSON, _ := json.Marshal(args)
 	argsStr := string(argsJSON)
 
@@ -1065,7 +1066,7 @@ func GetBifrostRoot(t *testing.T) string {
 	cwd, err := os.Getwd()
 	require.NoError(t, err, "should get current working directory")
 
-	// Walk up the directory tree to find the bifrost root (contains go.mod with module github.com/maximhq/bifrost)
+	// Walk up the directory tree to find the bifrost root (contains go.mod with module github.com/grevinden/bifrost)
 	dir := cwd
 	for {
 		goModPath := filepath.Join(dir, "go.mod")
@@ -1487,10 +1488,10 @@ func setupMCPManager(t *testing.T, clientConfigs ...schemas.MCPClientConfig) *mc
 	// work correctly even when no Bifrost instance is attached.
 	mcpConfig := &schemas.MCPConfig{
 		ClientConfigs: clientConfigPtrs,
-		PluginPipelineProvider: func() interface{} {
+		PluginPipelineProvider: func() any {
 			return &noopPluginPipeline{}
 		},
-		ReleasePluginPipeline: func(pipeline interface{}) {},
+		ReleasePluginPipeline: func(pipeline any) {},
 	}
 
 	// Create Starlark CodeMode
@@ -1603,9 +1604,7 @@ func applyTestConfigHeaders(t *testing.T, clientConfig *schemas.MCPClientConfig)
 		if clientConfig.Headers == nil {
 			clientConfig.Headers = make(map[string]schemas.SecretVar)
 		}
-		for key, value := range config.HTTPHeaders {
-			clientConfig.Headers[key] = value
-		}
+		maps.Copy(clientConfig.Headers, config.HTTPHeaders)
 	}
 
 	// Apply SSE headers if this is an SSE connection and headers are configured
@@ -1613,9 +1612,7 @@ func applyTestConfigHeaders(t *testing.T, clientConfig *schemas.MCPClientConfig)
 		if clientConfig.Headers == nil {
 			clientConfig.Headers = make(map[string]schemas.SecretVar)
 		}
-		for key, value := range config.SSEHeaders {
-			clientConfig.Headers[key] = value
-		}
+		maps.Copy(clientConfig.Headers, config.SSEHeaders)
 	}
 }
 
@@ -1721,10 +1718,10 @@ func CreateExecuteToolCodeCall(callID string, code string) schemas.ChatAssistant
 	// JSON escape the code string
 	codeJSON, _ := json.Marshal(code)
 	return schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr(callID),
-		Type: schemas.Ptr("function"),
+		ID:   new(callID),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("executeToolCode"),
+			Name:      new("executeToolCode"),
 			Arguments: fmt.Sprintf(`{"code": %s}`, string(codeJSON)),
 		},
 	}
@@ -1734,9 +1731,9 @@ func CreateExecuteToolCodeCall(callID string, code string) schemas.ChatAssistant
 func CreateExecuteToolCodeCallResponses(callID string, code string) schemas.ResponsesToolMessage {
 	codeJSON, _ := json.Marshal(code)
 	return schemas.ResponsesToolMessage{
-		CallID:    schemas.Ptr(callID),
-		Name:      schemas.Ptr("executeToolCode"),
-		Arguments: schemas.Ptr(fmt.Sprintf(`{"code": %s}`, string(codeJSON))),
+		CallID:    new(callID),
+		Name:      new("executeToolCode"),
+		Arguments: new(fmt.Sprintf(`{"code": %s}`, string(codeJSON))),
 	}
 }
 
@@ -1782,7 +1779,7 @@ func AssertCodeExecutionError(t *testing.T, result *schemas.ChatMessage, expecte
 
 	// Check if return value contains an error field (e.g., from try/catch in code)
 	if returnValue != nil {
-		if returnObj, ok := returnValue.(map[string]interface{}); ok {
+		if returnObj, ok := returnValue.(map[string]any); ok {
 			if errorField, hasErrorField := returnObj["error"]; hasErrorField {
 				if expectedErrorContains != "" {
 					errorStr := fmt.Sprintf("%v", errorField)
@@ -2021,7 +2018,7 @@ func CreateTestContextWithCustomTimeout(timeout time.Duration) (*schemas.Bifrost
 // =============================================================================
 
 // MustMarshalJSON marshals value to JSON or fails test
-func MustMarshalJSON(t *testing.T, v interface{}) string {
+func MustMarshalJSON(t *testing.T, v any) string {
 	t.Helper()
 	b, err := json.Marshal(v)
 	require.NoError(t, err, "should marshal to JSON")
@@ -2029,7 +2026,7 @@ func MustMarshalJSON(t *testing.T, v interface{}) string {
 }
 
 // MustUnmarshalJSON unmarshals JSON to value or fails test
-func MustUnmarshalJSON(t *testing.T, data string, v interface{}) {
+func MustUnmarshalJSON(t *testing.T, data string, v any) {
 	t.Helper()
 	err := json.Unmarshal([]byte(data), v)
 	require.NoError(t, err, "should unmarshal from JSON")
@@ -2048,7 +2045,7 @@ func MustUnmarshalJSON(t *testing.T, data string, v interface{}) {
 //	Execution runtime error:
 //	<error message>
 //	...
-func ParseCodeModeResponse(t *testing.T, responseText string) (returnValue interface{}, hasError bool, errorMsg string) {
+func ParseCodeModeResponse(t *testing.T, responseText string) (returnValue any, hasError bool, errorMsg string) {
 	t.Helper()
 
 	t.Logf("Response text: %s", responseText)
@@ -2084,7 +2081,7 @@ func ParseCodeModeResponse(t *testing.T, responseText string) (returnValue inter
 	fmt.Println("returning json value from ParseCodeModeResponse:", jsonStr)
 
 	// Parse the JSON return value
-	var result interface{}
+	var result any
 	err := json.Unmarshal([]byte(jsonStr), &result)
 	if err != nil {
 		return nil, true, fmt.Sprintf("Failed to parse return value JSON: %v (json: %s)", err, jsonStr)
@@ -2571,12 +2568,12 @@ func CreateChatResponseWithToolCalls(toolCalls []schemas.ChatAssistantMessageToo
 	return &schemas.BifrostChatResponse{
 		Choices: []schemas.BifrostResponseChoice{
 			{
-				FinishReason: schemas.Ptr("tool_calls"),
+				FinishReason: new("tool_calls"),
 				ChatNonStreamResponseChoice: &schemas.ChatNonStreamResponseChoice{
 					Message: &schemas.ChatMessage{
 						Role: schemas.ChatMessageRoleAssistant,
 						Content: &schemas.ChatMessageContent{
-							ContentStr: schemas.Ptr(""),
+							ContentStr: new(""),
 						},
 						ChatAssistantMessage: &schemas.ChatAssistantMessage{
 							ToolCalls: toolCalls,
@@ -2593,12 +2590,12 @@ func CreateChatResponseWithText(text string) *schemas.BifrostChatResponse {
 	return &schemas.BifrostChatResponse{
 		Choices: []schemas.BifrostResponseChoice{
 			{
-				FinishReason: schemas.Ptr("stop"),
+				FinishReason: new("stop"),
 				ChatNonStreamResponseChoice: &schemas.ChatNonStreamResponseChoice{
 					Message: &schemas.ChatMessage{
 						Role: schemas.ChatMessageRoleAssistant,
 						Content: &schemas.ChatMessageContent{
-							ContentStr: schemas.Ptr(text),
+							ContentStr: new(text),
 						},
 					},
 				},
@@ -2634,7 +2631,7 @@ func CreateResponsesResponseWithText(text string) *schemas.BifrostResponsesRespo
 				Type: &msgType,
 				Role: &role,
 				Content: &schemas.ResponsesMessageContent{
-					ContentStr: schemas.Ptr(text),
+					ContentStr: new(text),
 				},
 			},
 		},
@@ -2674,7 +2671,7 @@ func CreateValidatingChatResponse(callID string, mustContain []string, successTe
 			itemFound := false
 
 			// Try to parse as JSON and check recursively
-			var jsonData interface{}
+			var jsonData any
 			if err := json.Unmarshal([]byte(result), &jsonData); err == nil {
 				// Check JSON structure
 				if containsInJSON(jsonData, required) {
@@ -2715,17 +2712,17 @@ func findSubstring(s, substr string) bool {
 }
 
 // containsInJSON recursively searches for a string in JSON structure
-func containsInJSON(data interface{}, search string) bool {
+func containsInJSON(data any, search string) bool {
 	switch v := data.(type) {
 	case string:
 		return containsString(v, search)
-	case map[string]interface{}:
+	case map[string]any:
 		for _, val := range v {
 			if containsInJSON(val, search) {
 				return true
 			}
 		}
-	case []interface{}:
+	case []any:
 		for _, val := range v {
 			if containsInJSON(val, search) {
 				return true
@@ -2880,13 +2877,13 @@ mocker.AddChatResponse(CreateDynamicChatResponse(func(history []schemas.ChatMess
 // for direct execution via ExecuteChatMCPTool.
 // The tool name is automatically prefixed with "bifrostInternal-" to match
 // how tools are stored in the MCP manager.
-func CreateToolCallForExecution(callID string, toolName string, args map[string]interface{}) schemas.ChatAssistantMessageToolCall {
+func CreateToolCallForExecution(callID string, toolName string, args map[string]any) schemas.ChatAssistantMessageToolCall {
 	argsJSON, _ := json.Marshal(args)
 	prefixedToolName := "bifrostInternal-" + toolName
 
 	return schemas.ChatAssistantMessageToolCall{
 		ID:   &callID,
-		Type: schemas.Ptr("function"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
 			Name:      &prefixedToolName,
 			Arguments: string(argsJSON),
@@ -2898,7 +2895,7 @@ func CreateToolCallForExecution(callID string, toolName string, args map[string]
 // for direct execution via ExecuteResponsesMCPTool.
 // The tool name is automatically prefixed with "bifrostInternal-" to match
 // how tools are stored in the MCP manager.
-func CreateResponsesToolCallForExecution(callID string, toolName string, args map[string]interface{}) schemas.ResponsesToolMessage {
+func CreateResponsesToolCallForExecution(callID string, toolName string, args map[string]any) schemas.ResponsesToolMessage {
 	argsJSON, _ := json.Marshal(args)
 	argsStr := string(argsJSON)
 	prefixedToolName := "bifrostInternal-" + toolName

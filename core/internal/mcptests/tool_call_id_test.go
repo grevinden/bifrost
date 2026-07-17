@@ -3,9 +3,10 @@ package mcptests
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 	"testing"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -83,7 +84,7 @@ func TestToolCallID_PreservationThroughExecution_ResponsesFormat(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			args := map[string]interface{}{"message": "test"}
+			args := map[string]any{"message": "test"}
 			toolCall := CreateResponsesToolCallForExecution(tc.callID, "echo", args)
 
 			result, bifrostErr := bifrost.ExecuteResponsesMCPTool(ctx, &toolCall)
@@ -142,7 +143,7 @@ func TestToolCallID_DuplicateIDsInParallelExecution(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Test duplicate IDs"),
+					ContentStr: new("Test duplicate IDs"),
 				},
 			},
 		},
@@ -177,14 +178,14 @@ func TestToolCallID_MissingOrNilIDs(t *testing.T) {
 	ctx := createTestContext()
 
 	t.Run("nil_tool_call_id", func(t *testing.T) {
-		argsMap := map[string]interface{}{"message": "test"}
+		argsMap := map[string]any{"message": "test"}
 		argsJSON, _ := json.Marshal(argsMap)
 
 		toolCall := schemas.ChatAssistantMessageToolCall{
 			ID:   nil, // Nil ID
-			Type: schemas.Ptr("function"),
+			Type: new("function"),
 			Function: schemas.ChatAssistantMessageToolCallFunction{
-				Name:      schemas.Ptr("echo"),
+				Name:      new("echo"),
 				Arguments: string(argsJSON),
 			},
 		}
@@ -254,7 +255,7 @@ func TestToolCallID_PreservationThroughFormatConversion(t *testing.T) {
 
 	t.Run("responses_to_chat", func(t *testing.T) {
 		// Execute in Responses format
-		args := map[string]interface{}{"message": "test"}
+		args := map[string]any{"message": "test"}
 		responsesToolCall := CreateResponsesToolCallForExecution(testID, "echo", args)
 		responsesResult, responsesErr := bifrost.ExecuteResponsesMCPTool(ctx, &responsesToolCall)
 
@@ -289,7 +290,7 @@ func TestToolCallID_UniqueIDsInBatch(t *testing.T) {
 	uniqueIDs := []string{}
 	toolCalls := []schemas.ChatAssistantMessageToolCall{}
 
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		id := fmt.Sprintf("unique_id_%03d", i)
 		uniqueIDs = append(uniqueIDs, id)
 
@@ -313,7 +314,7 @@ func TestToolCallID_UniqueIDsInBatch(t *testing.T) {
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Execute batch"),
+					ContentStr: new("Execute batch"),
 				},
 			},
 		},
@@ -401,12 +402,12 @@ func TestToolCallID_LongIDs(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// Generate ID of specific length
-			longID := ""
+			var longID strings.Builder
 			for i := 0; i < tc.idLength; i++ {
-				longID += fmt.Sprintf("%d", i%10)
+				longID.WriteString(fmt.Sprintf("%d", i%10))
 			}
 
-			toolCall := GetSampleEchoToolCall(longID, "test")
+			toolCall := GetSampleEchoToolCall(longID.String(), "test")
 
 			result, bifrostErr := bifrost.ExecuteChatMCPTool(ctx, &toolCall)
 
@@ -416,7 +417,7 @@ func TestToolCallID_LongIDs(t *testing.T) {
 			require.NotNil(t, result.ChatToolMessage.ToolCallID)
 
 			returnedID := *result.ChatToolMessage.ToolCallID
-			assert.Equal(t, longID, returnedID, "long ID should be preserved")
+			assert.Equal(t, longID.String(), returnedID, "long ID should be preserved")
 			assert.Equal(t, tc.idLength, len(returnedID), "ID length should match")
 
 			t.Logf("✅ Long ID (%d chars) preserved", tc.idLength)
@@ -439,14 +440,14 @@ func TestToolCallID_PreservationWithError(t *testing.T) {
 	ctx := createTestContext()
 
 	testID := "error_test_id_999"
-	argsMap := map[string]interface{}{"error_message": "Test error"}
+	argsMap := map[string]any{"error_message": "Test error"}
 	argsJSON, _ := json.Marshal(argsMap)
 
 	toolCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr(testID),
-		Type: schemas.Ptr("function"),
+		ID:   new(testID),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("throw_error"),
+			Name:      new("throw_error"),
 			Arguments: string(argsJSON),
 		},
 	}
@@ -483,7 +484,7 @@ func TestToolCallID_ConsistencyAcrossRetries(t *testing.T) {
 	toolCall := GetSampleEchoToolCall(testID, "retry test")
 
 	// Execute same tool call multiple times
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		result, bifrostErr := bifrost.ExecuteChatMCPTool(ctx, &toolCall)
 
 		require.Nil(t, bifrostErr, "retry %d should succeed", i)

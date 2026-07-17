@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // driveResponsesStream replays a sequence of Anthropic SSE events through
@@ -366,7 +366,7 @@ func TestToAnthropicResponsesStreamResponse_RedactedThinkingEgress(t *testing.T)
 		t.Fatal("expected an output_item.added event to feed the egress converter")
 	}
 
-	ctx := schemas.NewBifrostContext(nil, time.Time{})
+	ctx := schemas.NewBifrostContext(context.TODO, time.Time{})
 	frames := ToAnthropicResponsesStreamResponse(ctx, addedEvent)
 
 	found := false

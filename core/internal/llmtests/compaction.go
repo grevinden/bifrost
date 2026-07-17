@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/providers/anthropic"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/providers/anthropic"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // RunCompactionTest tests that context_management with compaction is correctly
@@ -47,7 +47,7 @@ func RunCompactionTest(t *testing.T, client *bifrost.Bifrost, ctx context.Contex
 						Trigger: &anthropic.CompactManagementEditTypeAndValue{
 							TypeAndValueObject: &anthropic.CompactManagementEditTypeAndValueObject{
 								Type:  "input_tokens",
-								Value: schemas.Ptr(50000),
+								Value: new(50000),
 							},
 						},
 					},
@@ -74,8 +74,8 @@ func RunCompactionTest(t *testing.T, client *bifrost.Bifrost, ctx context.Contex
 				Model:    compactionModel,
 				Input:    messages,
 				Params: &schemas.ResponsesParameters{
-					MaxOutputTokens: bifrost.Ptr(100),
-					ExtraParams: map[string]interface{}{
+					MaxOutputTokens: new(100),
+					ExtraParams: map[string]any{
 						"context_management": contextManagement,
 					},
 				},
@@ -113,8 +113,8 @@ func RunCompactionTest(t *testing.T, client *bifrost.Bifrost, ctx context.Contex
 				Model:    compactionModel,
 				Input:    messages,
 				Params: &schemas.ResponsesParameters{
-					MaxOutputTokens: bifrost.Ptr(100),
-					ExtraParams: map[string]interface{}{
+					MaxOutputTokens: new(100),
+					ExtraParams: map[string]any{
 						"context_management": contextManagement,
 					},
 				},
@@ -202,14 +202,14 @@ func RunExternalCompactionTest(t *testing.T, client *bifrost.Bifrost, ctx contex
 			{
 				Role: schemas.Ptr(schemas.ResponsesInputMessageRoleAssistant),
 				Content: &schemas.ResponsesMessageContent{
-					ContentStr: schemas.Ptr("The capital of France is Paris."),
+					ContentStr: new("The capital of France is Paris."),
 				},
 			},
 			CreateBasicResponsesMessage("What is the capital of Germany?"),
 			{
 				Role: schemas.Ptr(schemas.ResponsesInputMessageRoleAssistant),
 				Content: &schemas.ResponsesMessageContent{
-					ContentStr: schemas.Ptr("The capital of Germany is Berlin."),
+					ContentStr: new("The capital of Germany is Berlin."),
 				},
 			},
 			CreateBasicResponsesMessage("Summarize the two capitals we discussed."),
@@ -295,7 +295,7 @@ func RunExternalCompactionTest(t *testing.T, client *bifrost.Bifrost, ctx contex
 				Provider: testConfig.Provider,
 				Model:    model,
 				Input:    followUpInput,
-				Params:   &schemas.ResponsesParameters{MaxOutputTokens: bifrost.Ptr(100)},
+				Params:   &schemas.ResponsesParameters{MaxOutputTokens: new(100)},
 			})
 			if followUpErr != nil {
 				t.Fatalf("Follow-up ResponsesRequest with compacted input failed: %s", GetErrorMessage(followUpErr))

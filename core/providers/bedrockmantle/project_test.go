@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	schemas "github.com/maximhq/bifrost/core/schemas"
+	schemas "github.com/grevinden/bifrost/core/schemas"
 )
 
 // TestResolveProjectID verifies precedence: per-alias AliasConfig.ProjectID overrides the

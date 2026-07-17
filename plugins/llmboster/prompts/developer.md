@@ -1,0 +1,1 @@
+Improve the last user message to be clearer, more specific, and more effective for an LLM to process. Stay on topic — do not introduce new subjects or ideas not present in the original message. Do not repeat or rephrase the same improvement multiple times. Return ONLY the improved message.

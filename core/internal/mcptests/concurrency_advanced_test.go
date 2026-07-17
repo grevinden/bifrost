@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -37,7 +37,7 @@ func TestConcurrent_CodeModeExecution(t *testing.T) {
 	errors := make(chan error, numConcurrent)
 	successCount := atomic.Int32{}
 
-	for i := 0; i < numConcurrent; i++ {
+	for i := range numConcurrent {
 		wg.Add(1)
 		go func(id int) {
 			defer wg.Done()
@@ -94,7 +94,7 @@ func TestConcurrent_CodeModeExecutionWithToolCalls(t *testing.T) {
 	var wg sync.WaitGroup
 	errors := make(chan error, numConcurrent)
 
-	for i := 0; i < numConcurrent; i++ {
+	for i := range numConcurrent {
 		wg.Add(1)
 		go func(id int) {
 			defer wg.Done()
@@ -147,7 +147,7 @@ func TestConcurrent_AddRemoveClients(t *testing.T) {
 	removeCount := atomic.Int32{}
 
 	// Concurrently add and remove clients
-	for i := 0; i < numOperations; i++ {
+	for i := range numOperations {
 		wg.Add(2)
 
 		// Add client
@@ -228,7 +228,7 @@ func TestConcurrent_EditClientDuringExecution_Advanced(t *testing.T) {
 	errors := make(chan error, 100)
 
 	// Start multiple tool executions
-	for i := 0; i < 50; i++ {
+	for i := range 50 {
 		wg.Add(1)
 		go func(id int) {
 			defer wg.Done()
@@ -244,7 +244,7 @@ func TestConcurrent_EditClientDuringExecution_Advanced(t *testing.T) {
 	}
 
 	// Concurrently edit the client configuration
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		wg.Add(1)
 		go func(id int) {
 			defer wg.Done()
@@ -305,18 +305,18 @@ func TestConcurrent_HealthCheckDuringExecution_Advanced(t *testing.T) {
 	errors := make(chan error, 30)
 
 	// Start long-running tool executions
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		wg.Add(1)
 		go func(id int) {
 			defer wg.Done()
 
 			ctx := createTestContext()
-			argsMap := map[string]interface{}{"seconds": 2.0}
+			argsMap := map[string]any{"seconds": 2.0}
 			toolCall := schemas.ChatAssistantMessageToolCall{
-				ID:   schemas.Ptr(fmt.Sprintf("call-%d", id)),
-				Type: schemas.Ptr("function"),
+				ID:   new(fmt.Sprintf("call-%d", id)),
+				Type: new("function"),
 				Function: schemas.ChatAssistantMessageToolCallFunction{
-					Name:      schemas.Ptr("bifrostInternal-delay"),
+					Name:      new("bifrostInternal-delay"),
 					Arguments: toJSON(argsMap),
 				},
 			}
@@ -329,7 +329,7 @@ func TestConcurrent_HealthCheckDuringExecution_Advanced(t *testing.T) {
 	}
 
 	// Concurrently check client health
-	for i := 0; i < 20; i++ {
+	for i := range 20 {
 		wg.Add(1)
 		go func(id int) {
 			defer wg.Done()
@@ -368,7 +368,7 @@ func TestConcurrent_ToolRegistration(t *testing.T) {
 	successCount := atomic.Int32{}
 
 	// Register tools concurrently
-	for i := 0; i < numTools; i++ {
+	for i := range numTools {
 		wg.Add(1)
 		go func(id int) {
 			defer wg.Done()
@@ -378,7 +378,7 @@ func TestConcurrent_ToolRegistration(t *testing.T) {
 				Type: schemas.ChatToolTypeFunction,
 				Function: &schemas.ChatToolFunction{
 					Name:        toolName,
-					Description: schemas.Ptr(fmt.Sprintf("Test tool %d", id)),
+					Description: new(fmt.Sprintf("Test tool %d", id)),
 					Parameters: &schemas.ToolFunctionParameters{
 						Type:       "object",
 						Properties: schemas.NewOrderedMap(),
@@ -441,7 +441,7 @@ func TestConcurrent_ToolExecutionMixedClients(t *testing.T) {
 	errors := make(chan error, numConcurrent)
 	successCount := atomic.Int32{}
 
-	for i := 0; i < numConcurrent; i++ {
+	for i := range numConcurrent {
 		wg.Add(1)
 		go func(id int) {
 			defer wg.Done()
@@ -456,22 +456,22 @@ func TestConcurrent_ToolExecutionMixedClients(t *testing.T) {
 			case 1:
 				toolCall = GetSampleCalculatorToolCall(fmt.Sprintf("call-%d", id), "add", float64(id), 10)
 			case 2:
-				argsMap := map[string]interface{}{"timezone": "UTC"}
+				argsMap := map[string]any{"timezone": "UTC"}
 				toolCall = schemas.ChatAssistantMessageToolCall{
-					ID:   schemas.Ptr(fmt.Sprintf("call-%d", id)),
-					Type: schemas.Ptr("function"),
+					ID:   new(fmt.Sprintf("call-%d", id)),
+					Type: new("function"),
 					Function: schemas.ChatAssistantMessageToolCallFunction{
-						Name:      schemas.Ptr("bifrostInternal-get_time"),
+						Name:      new("bifrostInternal-get_time"),
 						Arguments: toJSON(argsMap),
 					},
 				}
 			case 3:
-				argsMap := map[string]interface{}{"query": fmt.Sprintf("search-%d", id), "max_results": 5.0}
+				argsMap := map[string]any{"query": fmt.Sprintf("search-%d", id), "max_results": 5.0}
 				toolCall = schemas.ChatAssistantMessageToolCall{
-					ID:   schemas.Ptr(fmt.Sprintf("call-%d", id)),
-					Type: schemas.Ptr("function"),
+					ID:   new(fmt.Sprintf("call-%d", id)),
+					Type: new("function"),
 					Function: schemas.ChatAssistantMessageToolCallFunction{
-						Name:      schemas.Ptr("bifrostInternal-search"),
+						Name:      new("bifrostInternal-search"),
 						Arguments: toJSON(argsMap),
 					},
 				}
@@ -521,7 +521,7 @@ func TestConcurrent_FilteringChanges(t *testing.T) {
 	errors := make(chan error, 100)
 
 	// Execute tools while concurrently changing filters
-	for i := 0; i < 50; i++ {
+	for i := range 50 {
 		wg.Add(1)
 		go func(id int) {
 			defer wg.Done()
@@ -586,7 +586,7 @@ func TestConcurrent_HighLoad(t *testing.T) {
 	successCount := atomic.Int32{}
 	stopTime := time.Now().Add(duration)
 
-	for i := 0; i < numConcurrent; i++ {
+	for i := range numConcurrent {
 		wg.Add(1)
 		go func(id int) {
 			defer wg.Done()
@@ -636,7 +636,7 @@ func TestConcurrent_HighLoad(t *testing.T) {
 // HELPER FUNCTIONS
 // =============================================================================
 
-func toJSON(v interface{}) string {
+func toJSON(v any) string {
 	b, _ := json.Marshal(v)
 	return string(b)
 }

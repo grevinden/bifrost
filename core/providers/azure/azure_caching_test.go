@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/maximhq/bifrost/core/providers/openai"
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/providers/openai"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // TestAzure_OpenAIModel_CachingDeterminism verifies that Azure's delegation to

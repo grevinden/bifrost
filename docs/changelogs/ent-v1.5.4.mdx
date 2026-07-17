@@ -96,36 +96,36 @@ Release on `transports/v1.6.4`. Ships a full guardrails redaction engine (PII, s
 
 ## 🐙 Closed OSS Issues
 
-- [#2347](https://github.com/maximhq/bifrost/issues/2347) - MCP tool ordering is non-deterministic, breaking prefix-based prompt caching
-- [#3455](https://github.com/maximhq/bifrost/issues/3455) - Segfault/nil dereference panic in Bedrock provider
-- [#4318](https://github.com/maximhq/bifrost/issues/4318) - allowed_models persisted as bare "*" string blocks subsequent provider updates
-- [#4353](https://github.com/maximhq/bifrost/issues/4353) - config.db corruption from masked-key preview in provider_configs JSON column
-- [#4367](https://github.com/maximhq/bifrost/issues/4367) - Image incompatible with OpenShift arbitrary UIDs
-- [#4402](https://github.com/maximhq/bifrost/issues/4402) - Vertex provider drops image blocks whose URL uses gs:// scheme
-- [#4477](https://github.com/maximhq/bifrost/issues/4477) - Passthrough calls using a Virtual Key log as actual key
-- [#4679](https://github.com/maximhq/bifrost/issues/4679) - Bedrock Responses API does not signal max_output_tokens truncation
-- [#4689](https://github.com/maximhq/bifrost/issues/4689) - Custom providers cannot set budget
-- [#4712](https://github.com/maximhq/bifrost/issues/4712) - ElevenLabs sound effects (/v1/sound-generation)
-- [#4780](https://github.com/maximhq/bifrost/issues/4780) - Anthropic server-side tool_search results are dropped on /v1/responses
-- [#4834](https://github.com/maximhq/bifrost/issues/4834) - /v1/rerank is not available with custom providers
-- [#4846](https://github.com/maximhq/bifrost/issues/4846) - Responses stream usage present in response.completed but not persisted in LLM Logs
-- [#4851](https://github.com/maximhq/bifrost/issues/4851) - Governance rate-limit reset causes high CPU in BumpRateLimitUsage
-- [#4870](https://github.com/maximhq/bifrost/issues/4870) - Pooled ChannelMessage retains request body, context, and undelivered response while idle
-- [#4940](https://github.com/maximhq/bifrost/issues/4940) - Show canonical model names instead of Bedrock inference-profile IDs in Model Rankings
-- [#4963](https://github.com/maximhq/bifrost/issues/4963) - Streaming finish_reason dropped from the accumulated (logged) response
-- [#5002](https://github.com/maximhq/bifrost/issues/5002) - gpt-4o-transcribe-diarize transcription fails due to string segment IDs
-- [#5013](https://github.com/maximhq/bifrost/issues/5013) - OpenAI /responses/compact input serialized as a JSON object causing 400
-- [#5027](https://github.com/maximhq/bifrost/issues/5027) - MCP Tool Execution Timeout placeholder shows 0 instead of real global default
-- [#5036](https://github.com/maximhq/bifrost/issues/5036) - Plugin StreamInterceptionError is flattened on integration routes
-- [#5037](https://github.com/maximhq/bifrost/issues/5037) - Disabled keys break provider model discovery
-- [#5051](https://github.com/maximhq/bifrost/issues/5051) - Add Sarvam AI provider (chat + TTS/STT)
-- [#5061](https://github.com/maximhq/bifrost/issues/5061) - Streaming responses drop citation annotations from the accumulated message
-- [#5093](https://github.com/maximhq/bifrost/issues/5093) - Streaming /v1/responses drops Anthropic redacted_thinking blocks
-- [#5097](https://github.com/maximhq/bifrost/issues/5097) - Anthropic rejects replayed tool_use/tool_result ids from non-conforming upstream providers
-- [#5100](https://github.com/maximhq/bifrost/issues/5100) - additional_tools loses nested tool types on /v1/responses
-- [#5101](https://github.com/maximhq/bifrost/issues/5101) - Chat-to-Responses tool replay sends role on function_call input items
-- [#5108](https://github.com/maximhq/bifrost/issues/5108) - Bedrock reasoning_config silently dropped on cross-provider translation
-- [#5113](https://github.com/maximhq/bifrost/issues/5113) - Gemini/Vertex streaming stops emitting web_search_call items after first grounded request
+- [#2347](https://github.com/grevinden/bifrost/issues/2347) - MCP tool ordering is non-deterministic, breaking prefix-based prompt caching
+- [#3455](https://github.com/grevinden/bifrost/issues/3455) - Segfault/nil dereference panic in Bedrock provider
+- [#4318](https://github.com/grevinden/bifrost/issues/4318) - allowed_models persisted as bare "*" string blocks subsequent provider updates
+- [#4353](https://github.com/grevinden/bifrost/issues/4353) - config.db corruption from masked-key preview in provider_configs JSON column
+- [#4367](https://github.com/grevinden/bifrost/issues/4367) - Image incompatible with OpenShift arbitrary UIDs
+- [#4402](https://github.com/grevinden/bifrost/issues/4402) - Vertex provider drops image blocks whose URL uses gs:// scheme
+- [#4477](https://github.com/grevinden/bifrost/issues/4477) - Passthrough calls using a Virtual Key log as actual key
+- [#4679](https://github.com/grevinden/bifrost/issues/4679) - Bedrock Responses API does not signal max_output_tokens truncation
+- [#4689](https://github.com/grevinden/bifrost/issues/4689) - Custom providers cannot set budget
+- [#4712](https://github.com/grevinden/bifrost/issues/4712) - ElevenLabs sound effects (/v1/sound-generation)
+- [#4780](https://github.com/grevinden/bifrost/issues/4780) - Anthropic server-side tool_search results are dropped on /v1/responses
+- [#4834](https://github.com/grevinden/bifrost/issues/4834) - /v1/rerank is not available with custom providers
+- [#4846](https://github.com/grevinden/bifrost/issues/4846) - Responses stream usage present in response.completed but not persisted in LLM Logs
+- [#4851](https://github.com/grevinden/bifrost/issues/4851) - Governance rate-limit reset causes high CPU in BumpRateLimitUsage
+- [#4870](https://github.com/grevinden/bifrost/issues/4870) - Pooled ChannelMessage retains request body, context, and undelivered response while idle
+- [#4940](https://github.com/grevinden/bifrost/issues/4940) - Show canonical model names instead of Bedrock inference-profile IDs in Model Rankings
+- [#4963](https://github.com/grevinden/bifrost/issues/4963) - Streaming finish_reason dropped from the accumulated (logged) response
+- [#5002](https://github.com/grevinden/bifrost/issues/5002) - gpt-4o-transcribe-diarize transcription fails due to string segment IDs
+- [#5013](https://github.com/grevinden/bifrost/issues/5013) - OpenAI /responses/compact input serialized as a JSON object causing 400
+- [#5027](https://github.com/grevinden/bifrost/issues/5027) - MCP Tool Execution Timeout placeholder shows 0 instead of real global default
+- [#5036](https://github.com/grevinden/bifrost/issues/5036) - Plugin StreamInterceptionError is flattened on integration routes
+- [#5037](https://github.com/grevinden/bifrost/issues/5037) - Disabled keys break provider model discovery
+- [#5051](https://github.com/grevinden/bifrost/issues/5051) - Add Sarvam AI provider (chat + TTS/STT)
+- [#5061](https://github.com/grevinden/bifrost/issues/5061) - Streaming responses drop citation annotations from the accumulated message
+- [#5093](https://github.com/grevinden/bifrost/issues/5093) - Streaming /v1/responses drops Anthropic redacted_thinking blocks
+- [#5097](https://github.com/grevinden/bifrost/issues/5097) - Anthropic rejects replayed tool_use/tool_result ids from non-conforming upstream providers
+- [#5100](https://github.com/grevinden/bifrost/issues/5100) - additional_tools loses nested tool types on /v1/responses
+- [#5101](https://github.com/grevinden/bifrost/issues/5101) - Chat-to-Responses tool replay sends role on function_call input items
+- [#5108](https://github.com/grevinden/bifrost/issues/5108) - Bedrock reasoning_config silently dropped on cross-provider translation
+- [#5113](https://github.com/grevinden/bifrost/issues/5113) - Gemini/Vertex streaming stops emitting web_search_call items after first grounded request
 
 ## 📀 Base OSS version
 
@@ -134,7 +134,7 @@ Release on `transports/v1.6.4`. Ships a full guardrails redaction engine (PII, s
 ## 🔌 If you are compiling plugin against this release - use following deps
 
 ```go
-module github.com/maximhq/bifrost-enterprise
+module github.com/grevinden/bifrost-enterprise
 
 go 1.26.4
 
@@ -164,13 +164,13 @@ require (
 	github.com/hashicorp/memberlist v0.5.4
 	github.com/hashicorp/vault/api v1.23.0
 	github.com/klauspost/compress v1.18.6
-	github.com/maximhq/bifrost/core v1.7.1
-	github.com/maximhq/bifrost/framework v1.5.1
-	github.com/maximhq/bifrost/plugins/governance v1.6.5
-	github.com/maximhq/bifrost/plugins/logging v1.6.1
-	github.com/maximhq/bifrost/plugins/prompts v1.0.28
-	github.com/maximhq/bifrost/plugins/semanticcache v1.5.28
-	github.com/maximhq/bifrost/transports v1.6.4
+	github.com/grevinden/bifrost/core v1.7.1
+	github.com/grevinden/bifrost/framework v1.5.1
+	github.com/grevinden/bifrost/plugins/governance v1.6.5
+	github.com/grevinden/bifrost/plugins/logging v1.6.1
+	github.com/grevinden/bifrost/plugins/prompts v1.0.28
+	github.com/grevinden/bifrost/plugins/semanticcache v1.5.28
+	github.com/grevinden/bifrost/transports v1.6.4
 	github.com/nakabonne/tstorage v0.3.6
 	github.com/segmentio/kafka-go v0.4.47
 	github.com/stretchr/testify v1.11.1
@@ -383,12 +383,12 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect
 	github.com/mattn/go-sqlite3 v1.14.32 // indirect
-	github.com/maximhq/bifrost/plugins/compat v0.1.27 // indirect
-	github.com/maximhq/bifrost/plugins/maxim v1.6.28 // indirect
-	github.com/maximhq/bifrost/plugins/mocker v1.5.28 // indirect
-	github.com/maximhq/bifrost/plugins/modelcatalogresolver v1.0.9 // indirect
-	github.com/maximhq/bifrost/plugins/otel v1.4.0 // indirect
-	github.com/maximhq/bifrost/plugins/telemetry v1.5.28 // indirect
+	github.com/grevinden/bifrost/plugins/compat v0.1.27 // indirect
+	github.com/grevinden/bifrost/plugins/maxim v1.6.28 // indirect
+	github.com/grevinden/bifrost/plugins/mocker v1.5.28 // indirect
+	github.com/grevinden/bifrost/plugins/modelcatalogresolver v1.0.9 // indirect
+	github.com/grevinden/bifrost/plugins/otel v1.4.0 // indirect
+	github.com/grevinden/bifrost/plugins/telemetry v1.5.28 // indirect
 	github.com/maximhq/maxim-go v0.2.1 // indirect
 	github.com/mholt/archives v0.1.2 // indirect
 	github.com/miekg/dns v1.1.68 // indirect

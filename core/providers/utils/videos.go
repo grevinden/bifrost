@@ -4,7 +4,7 @@ import (
 	"net/url"
 	"strings"
 
-	schemas "github.com/maximhq/bifrost/core/schemas"
+	schemas "github.com/grevinden/bifrost/core/schemas"
 )
 
 // StripVideoIDProviderSuffix removes ":<provider>" from a video ID if present.

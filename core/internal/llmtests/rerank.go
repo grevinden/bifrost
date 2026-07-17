@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // BasicRerankExpectations validates common rerank invariants for provider tests.
@@ -87,7 +87,7 @@ func RunRerankTest(t *testing.T, client *bifrost.Bifrost, ctx context.Context, t
 			Query:     query,
 			Documents: documents,
 			Params: &schemas.RerankParameters{
-				ReturnDocuments: bifrost.Ptr(true),
+				ReturnDocuments: new(true),
 			},
 			Fallbacks: testConfig.RerankFallbacks,
 		}

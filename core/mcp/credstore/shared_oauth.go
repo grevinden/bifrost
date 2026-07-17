@@ -3,7 +3,7 @@ package credstore
 import (
 	"net/http"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // sharedOAuthResolver handles MCPAuthTypeOauth — admin-once OAuth where the

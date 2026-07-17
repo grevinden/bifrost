@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	schemas "github.com/maximhq/bifrost/core/schemas"
+	schemas "github.com/grevinden/bifrost/core/schemas"
 )
 
 // ToNebiusImageGenerationRequest converts a bifrost image generation request to nebius format.
@@ -48,7 +48,7 @@ func (provider *NebiusProvider) ToNebiusImageGenerationRequest(bifrostReq *schem
 			req.ResponseExtension = bifrostReq.Params.OutputFormat
 		}
 		if req.ResponseExtension != nil && strings.ToLower(*req.ResponseExtension) == "jpeg" {
-			req.ResponseExtension = schemas.Ptr("jpg")
+			req.ResponseExtension = new("jpg")
 		}
 		if bifrostReq.Params.Seed != nil {
 			req.Seed = bifrostReq.Params.Seed
@@ -72,9 +72,9 @@ func (provider *NebiusProvider) ToNebiusImageGenerationRequest(bifrostReq *schem
 			if lorasValue, exists := bifrostReq.Params.ExtraParams["loras"]; exists && lorasValue != nil {
 				delete(req.ExtraParams, "loras")
 				// Check if lorasValue is an array of maps
-				if lorasArray, ok := lorasValue.([]interface{}); ok {
+				if lorasArray, ok := lorasValue.([]any); ok {
 					for _, item := range lorasArray {
-						if loraMap, ok := item.(map[string]interface{}); ok {
+						if loraMap, ok := item.(map[string]any); ok {
 							if url, ok := schemas.SafeExtractString(loraMap["url"]); ok {
 								if scale, ok := schemas.SafeExtractInt(loraMap["scale"]); ok {
 									req.Loras = append(req.Loras, NebiusLora{URL: url, Scale: scale})

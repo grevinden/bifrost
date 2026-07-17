@@ -1,15 +1,15 @@
-module github.com/maximhq/bifrost/tests/cmd/seed
+module github.com/grevinden/bifrost/tests/cmd/seed
 
 go 1.26.4
 
 replace (
-	github.com/maximhq/bifrost/core => ../../../core
-	github.com/maximhq/bifrost/framework => ../../../framework
+	github.com/grevinden/bifrost/core => ../../../core
+	github.com/grevinden/bifrost/framework => ../../../framework
 )
 
 require (
-	github.com/maximhq/bifrost/core v1.6.3
-	github.com/maximhq/bifrost/framework v1.3.16
+	github.com/grevinden/bifrost/core v1.7.1
+	github.com/grevinden/bifrost/framework v1.3.16
 	gorm.io/driver/postgres v1.6.0
 	gorm.io/driver/sqlite v1.6.0
 	gorm.io/gorm v1.31.1

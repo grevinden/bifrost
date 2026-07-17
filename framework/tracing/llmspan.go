@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 func formatTraceValue(v any) string {

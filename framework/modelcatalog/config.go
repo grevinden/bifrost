@@ -3,9 +3,9 @@ package modelcatalog
 import (
 	"time"
 
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/modelcatalog/datasheet"
-	"github.com/maximhq/bifrost/framework/modelcatalog/keyconfig"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/modelcatalog/datasheet"
+	"github.com/grevinden/bifrost/framework/modelcatalog/keyconfig"
 )
 
 const (

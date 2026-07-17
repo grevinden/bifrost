@@ -98,31 +98,31 @@ Optional provider settings include `network_config` for timeouts, retries, proxy
 | Parameter | Type | Required | Notes |
 |-----------|------|----------|-------|
 | `model` | string | ✅ | Model identifier |
-| `messages` | [array](https://github.com/maximhq/bifrost/blob/main/core/schemas/chatcompletions.go#L15) | ✅ | [`ChatMessage`](https://github.com/maximhq/bifrost/blob/main/core/schemas/chatcompletions.go#L370) array with roles ([docs](https://platform.openai.com/docs/api-reference/chat/create#chat-create-messages)) |
+| `messages` | [array](https://github.com/grevinden/bifrost/blob/main/core/schemas/chatcompletions.go#L15) | ✅ | [`ChatMessage`](https://github.com/grevinden/bifrost/blob/main/core/schemas/chatcompletions.go#L370) array with roles ([docs](https://platform.openai.com/docs/api-reference/chat/create#chat-create-messages)) |
 | `temperature` | float | ❌ | Sampling temperature (0-2) |
 | `top_p` | float | ❌ | Nucleus sampling parameter |
 | `stop` | string/array | ❌ | Stop sequences |
 | `max_completion_tokens` | int | ❌ | Min 16, max output tokens |
 | `frequency_penalty` | float | ❌ | Frequency penalty (-2 to 2) |
 | `presence_penalty` | float | ❌ | Presence penalty (-2 to 2) |
-| `logit_bias` | [object](https://github.com/maximhq/bifrost/blob/main/core/schemas/chatcompletions.go#L25) | ❌ | Token logit adjustments |
+| `logit_bias` | [object](https://github.com/grevinden/bifrost/blob/main/core/schemas/chatcompletions.go#L25) | ❌ | Token logit adjustments |
 | `logprobs` | bool | ❌ | Include log probabilities |
 | `top_logprobs` | int | ❌ | Number of log probabilities per token |
 | `seed` | int | ❌ | Reproducibility seed |
-| `response_format` | [object](https://github.com/maximhq/bifrost/blob/main/core/schemas/chatcompletions.go#L23) | ❌ | Output format ([docs](https://platform.openai.com/docs/api-reference/chat/create#chat-create-response_format)) |
-| `tools` | [array](https://github.com/maximhq/bifrost/blob/main/core/schemas/chatcompletions.go#L21) | ❌ | [`Tool`](https://github.com/maximhq/bifrost/blob/main/core/schemas/chatcompletions.go#L600) objects ([docs](https://platform.openai.com/docs/api-reference/chat/create#chat-create-tools)) |
-| `tool_choice` | string/[object](https://github.com/maximhq/bifrost/blob/main/core/schemas/chatcompletions.go#L22) | ❌ | `"auto"`, `"none"`, `"required"`, or specific tool |
+| `response_format` | [object](https://github.com/grevinden/bifrost/blob/main/core/schemas/chatcompletions.go#L23) | ❌ | Output format ([docs](https://platform.openai.com/docs/api-reference/chat/create#chat-create-response_format)) |
+| `tools` | [array](https://github.com/grevinden/bifrost/blob/main/core/schemas/chatcompletions.go#L21) | ❌ | [`Tool`](https://github.com/grevinden/bifrost/blob/main/core/schemas/chatcompletions.go#L600) objects ([docs](https://platform.openai.com/docs/api-reference/chat/create#chat-create-tools)) |
+| `tool_choice` | string/[object](https://github.com/grevinden/bifrost/blob/main/core/schemas/chatcompletions.go#L22) | ❌ | `"auto"`, `"none"`, `"required"`, or specific tool |
 | `parallel_tool_calls` | bool | ❌ | Allow multiple simultaneous tool calls |
-| `stream_options` | [object](https://github.com/maximhq/bifrost/blob/main/core/schemas/chatcompletions.go#L26) | ❌ | Streaming options ([docs](https://platform.openai.com/docs/api-reference/chat/create#chat-create-stream_options)) |
-| `reasoning` | [object](https://github.com/maximhq/bifrost/blob/main/core/schemas/chatcompletions.go#L24) | ❌ | Reasoning parameters ([Bifrost docs](/providers/reasoning), [OpenAI docs](https://platform.openai.com/docs/api-reference/chat/create#chat-create-reasoning)) |
+| `stream_options` | [object](https://github.com/grevinden/bifrost/blob/main/core/schemas/chatcompletions.go#L26) | ❌ | Streaming options ([docs](https://platform.openai.com/docs/api-reference/chat/create#chat-create-stream_options)) |
+| `reasoning` | [object](https://github.com/grevinden/bifrost/blob/main/core/schemas/chatcompletions.go#L24) | ❌ | Reasoning parameters ([Bifrost docs](/providers/reasoning), [OpenAI docs](https://platform.openai.com/docs/api-reference/chat/create#chat-create-reasoning)) |
 | `user` | string | ❌ | **Truncated to 64 chars** |
-| `metadata` | [object](https://github.com/maximhq/bifrost/blob/main/core/schemas/chatcompletions.go#L27) | ❌ | Custom metadata |
+| `metadata` | [object](https://github.com/grevinden/bifrost/blob/main/core/schemas/chatcompletions.go#L27) | ❌ | Custom metadata |
 | `store` | bool | ❌ | **Filtered for non-OpenAI routing** |
 | `service_tier` | string | ❌ | **Filtered for non-OpenAI routing** |
 | `prompt_cache_key` | string | ❌ | **Filtered for non-OpenAI routing** |
-| `prediction` | [object](https://github.com/maximhq/bifrost/blob/main/core/schemas/chatcompletions.go#L28) | ❌ | Predicted output for acceleration |
-| `audio` | [object](https://github.com/maximhq/bifrost/blob/main/core/schemas/chatcompletions.go#L29) | ❌ | Audio output config |
-| `modalities` | [array](https://github.com/maximhq/bifrost/blob/main/core/schemas/chatcompletions.go#L30) | ❌ | Response modalities (text, audio) |
+| `prediction` | [object](https://github.com/grevinden/bifrost/blob/main/core/schemas/chatcompletions.go#L28) | ❌ | Predicted output for acceleration |
+| `audio` | [object](https://github.com/grevinden/bifrost/blob/main/core/schemas/chatcompletions.go#L29) | ❌ | Audio output config |
+| `modalities` | [array](https://github.com/grevinden/bifrost/blob/main/core/schemas/chatcompletions.go#L30) | ❌ | Response modalities (text, audio) |
 
 ---
 
@@ -146,28 +146,28 @@ The Responses API is OpenAI's structured output API.
 | Parameter | Type | Required | Notes |
 |-----------|------|----------|-------|
 | `model` | string | ✅ | Model identifier |
-| `input` | string/[array](https://github.com/maximhq/bifrost/blob/main/core/schemas/responses.go#L40) | ✅ | Text or [`ContentBlock`](https://github.com/maximhq/bifrost/blob/main/core/schemas/responses.go#L500) array ([docs](https://platform.openai.com/docs/api-reference/responses/create#responses-create-input)) |
+| `input` | string/[array](https://github.com/grevinden/bifrost/blob/main/core/schemas/responses.go#L40) | ✅ | Text or [`ContentBlock`](https://github.com/grevinden/bifrost/blob/main/core/schemas/responses.go#L500) array ([docs](https://platform.openai.com/docs/api-reference/responses/create#responses-create-input)) |
 | `max_output_tokens` | int | ✅ | Maximum output length |
 | `background` | bool | ❌ | Run request in background mode |
 | `conversation` | string | ❌ | Conversation ID for continuing a conversation |
 | `include` | array | ❌ | Array of fields to include in response (e.g., `"web_search_call.action.sources"`) |
 | `instructions` | string | ❌ | System instructions |
 | `max_tool_calls` | int | ❌ | Maximum number of tool calls |
-| `metadata` | [object](https://github.com/maximhq/bifrost/blob/main/core/schemas/responses.go#L94) | ❌ | Custom metadata |
+| `metadata` | [object](https://github.com/grevinden/bifrost/blob/main/core/schemas/responses.go#L94) | ❌ | Custom metadata |
 | `parallel_tool_calls` | bool | ❌ | Allow multiple simultaneous tool calls |
 | `previous_response_id` | string | ❌ | ID of previous response to continue from |
 | `prompt_cache_key` | string | ❌ | Prompt caching key |
-| `reasoning` | [object](https://github.com/maximhq/bifrost/blob/main/core/schemas/responses.go#L238) | ❌ | [`ResponsesParametersReasoning`](https://github.com/maximhq/bifrost/blob/main/core/schemas/responses.go#L238) configuration ([Bifrost docs](/providers/reasoning)) |
+| `reasoning` | [object](https://github.com/grevinden/bifrost/blob/main/core/schemas/responses.go#L238) | ❌ | [`ResponsesParametersReasoning`](https://github.com/grevinden/bifrost/blob/main/core/schemas/responses.go#L238) configuration ([Bifrost docs](/providers/reasoning)) |
 | `safety_identifier` | string | ❌ | Safety identifier for content filtering |
 | `service_tier` | string | ❌ | Service tier for the request |
-| `stream_options` | [object](https://github.com/maximhq/bifrost/blob/main/core/schemas/responses.go#L116) | ❌ | [`ResponsesStreamOptions`](https://github.com/maximhq/bifrost/blob/main/core/schemas/responses.go#L116) configuration |
+| `stream_options` | [object](https://github.com/grevinden/bifrost/blob/main/core/schemas/responses.go#L116) | ❌ | [`ResponsesStreamOptions`](https://github.com/grevinden/bifrost/blob/main/core/schemas/responses.go#L116) configuration |
 | `store` | bool | ❌ | Store the response for later retrieval |
 | `temperature` | float | ❌ | Sampling temperature |
-| `text` | [object](https://github.com/maximhq/bifrost/blob/main/core/schemas/responses.go#L120) | ❌ | [`ResponsesTextConfig`](https://github.com/maximhq/bifrost/blob/main/core/schemas/responses.go#L120) for output formatting |
+| `text` | [object](https://github.com/grevinden/bifrost/blob/main/core/schemas/responses.go#L120) | ❌ | [`ResponsesTextConfig`](https://github.com/grevinden/bifrost/blob/main/core/schemas/responses.go#L120) for output formatting |
 | `top_logprobs` | int | ❌ | Number of log probabilities to return per token |
 | `top_p` | float | ❌ | Nucleus sampling parameter |
-| `tool_choice` | string/[object](https://github.com/maximhq/bifrost/blob/main/core/schemas/responses.go#L969) | ❌ | [`ResponsesToolChoice`](https://github.com/maximhq/bifrost/blob/main/core/schemas/responses.go#L969) strategy |
-| `tools` | [array](https://github.com/maximhq/bifrost/blob/main/core/schemas/responses.go#L1050) | ❌ | [`ResponsesTool`](https://github.com/maximhq/bifrost/blob/main/core/schemas/responses.go#L1050) objects ([docs](https://platform.openai.com/docs/api-reference/responses/create#responses-create-tools)) |
+| `tool_choice` | string/[object](https://github.com/grevinden/bifrost/blob/main/core/schemas/responses.go#L969) | ❌ | [`ResponsesToolChoice`](https://github.com/grevinden/bifrost/blob/main/core/schemas/responses.go#L969) strategy |
+| `tools` | [array](https://github.com/grevinden/bifrost/blob/main/core/schemas/responses.go#L1050) | ❌ | [`ResponsesTool`](https://github.com/grevinden/bifrost/blob/main/core/schemas/responses.go#L1050) objects ([docs](https://platform.openai.com/docs/api-reference/responses/create#responses-create-tools)) |
 | `truncation` | string | ❌ | Truncation strategy (`auto` or `off`) |
 | `user` | string | ❌ | **Truncated to 64 chars** |
 
@@ -228,14 +228,14 @@ Text Completions is a legacy API. Use Chat Completions for new implementations.
 | Parameter | Type | Required | Notes |
 |-----------|------|----------|-------|
 | `model` | string | ✅ | Model identifier |
-| `input` | string/[array](https://github.com/maximhq/bifrost/blob/main/core/schemas/embedding.go#L12) | ✅ | Text(s) to embed ([docs](https://platform.openai.com/docs/api-reference/embeddings/create#embeddings-create-input)) |
+| `input` | string/[array](https://github.com/grevinden/bifrost/blob/main/core/schemas/embedding.go#L12) | ✅ | Text(s) to embed ([docs](https://platform.openai.com/docs/api-reference/embeddings/create#embeddings-create-input)) |
 | `encoding_format` | string | ❌ | `float` or `base64` |
 | `dimensions` | int | ❌ | Output embedding dimensions |
 | `user` | string | ❌ | **NOT truncated** (unlike chat/text) |
 
 ---
 
-- No streaming support. Returns [`embedding`](https://github.com/maximhq/bifrost/blob/main/core/schemas/embedding.go#L30) array with usage counts.
+- No streaming support. Returns [`embedding`](https://github.com/grevinden/bifrost/blob/main/core/schemas/embedding.go#L30) array with usage counts.
 
 ---
 
@@ -456,7 +456,7 @@ Requests use **multipart/form-data**, not JSON.
 | `purpose` | string | ✅ | batch, fine-tune, or assistants |
 | `filename` | string | ❌ | Custom filename (defaults to file.jsonl) |
 
-Response: [`FileObject`](https://github.com/maximhq/bifrost/blob/main/core/schemas/files.go#L40) with `id`, `bytes`, `created_at`, `filename`, `purpose`, `status` ([docs](https://platform.openai.com/docs/api-reference/files/create))
+Response: [`FileObject`](https://github.com/grevinden/bifrost/blob/main/core/schemas/files.go#L40) with `id`, `bytes`, `created_at`, `filename`, `purpose`, `status` ([docs](https://platform.openai.com/docs/api-reference/files/create))
 
 ## List Files
 
@@ -489,12 +489,12 @@ Operations:
 | Parameter | Type | Required | Notes |
 |-----------|------|----------|-------|
 | `input_file_id` | string | Conditional | File ID OR requests array (not both) |
-| `requests` | [array](https://github.com/maximhq/bifrost/blob/main/core/schemas/batch.go#L75) | Conditional | [`BatchRequestItem`](https://github.com/maximhq/bifrost/blob/main/core/schemas/batch.go#L31) objects (converted to JSONL) |
+| `requests` | [array](https://github.com/grevinden/bifrost/blob/main/core/schemas/batch.go#L75) | Conditional | [`BatchRequestItem`](https://github.com/grevinden/bifrost/blob/main/core/schemas/batch.go#L31) objects (converted to JSONL) |
 | `endpoint` | string | ✅ | Target endpoint (e.g., /v1/chat/completions) |
 | `completion_window` | string | ❌ | 24h (default) |
-| `metadata` | [object](https://github.com/maximhq/bifrost/blob/main/core/schemas/batch.go#L89) | ❌ | Custom metadata |
+| `metadata` | [object](https://github.com/grevinden/bifrost/blob/main/core/schemas/batch.go#L89) | ❌ | Custom metadata |
 
-**Response:** [`BifrostBatchCreateResponse`](https://github.com/maximhq/bifrost/blob/main/core/schemas/batch.go#L91) with `id`, `endpoint`, `input_file_id`, `status`, `created_at`, `request_counts` ([docs](https://platform.openai.com/docs/api-reference/batch/create)). Statuses: [`BatchStatus`](https://github.com/maximhq/bifrost/blob/main/core/schemas/batch.go#L5) (validating, failed, in_progress, finalizing, completed, expired, cancelling, cancelled)
+**Response:** [`BifrostBatchCreateResponse`](https://github.com/grevinden/bifrost/blob/main/core/schemas/batch.go#L91) with `id`, `endpoint`, `input_file_id`, `status`, `created_at`, `request_counts` ([docs](https://platform.openai.com/docs/api-reference/batch/create)). Statuses: [`BatchStatus`](https://github.com/grevinden/bifrost/blob/main/core/schemas/batch.go#L5) (validating, failed, in_progress, finalizing, completed, expired, cancelling, cancelled)
 
 ## List Batches
 
@@ -508,14 +508,14 @@ Operations:
 ## Retrieve / Cancel Batch
 
 Operations:
-- GET `/v1/batches/{batch_id}` - Get batch [`BifrostBatchRetrieveResponse`](https://github.com/maximhq/bifrost/blob/main/core/schemas/batch.go#L167) ([docs](https://platform.openai.com/docs/api-reference/batch/retrieve))
+- GET `/v1/batches/{batch_id}` - Get batch [`BifrostBatchRetrieveResponse`](https://github.com/grevinden/bifrost/blob/main/core/schemas/batch.go#L167) ([docs](https://platform.openai.com/docs/api-reference/batch/retrieve))
 - POST `/v1/batches/{batch_id}/cancel` - Cancel batch ([docs](https://platform.openai.com/docs/api-reference/batch/cancel))
 
 ## Get Results
 
 1. Batch must be `completed` (has `output_file_id`)
 2. Download output file via Files API
-3. Parse JSONL - each [`BatchResultItem`](https://github.com/maximhq/bifrost/blob/main/core/schemas/batch.go#L254): `{id, custom_id, response: {status_code, body}}`
+3. Parse JSONL - each [`BatchResultItem`](https://github.com/grevinden/bifrost/blob/main/core/schemas/batch.go#L254): `{id, custom_id, response: {status_code, body}}`
 
 ---
 
@@ -540,7 +540,7 @@ GET `/v1/models` - Lists available models with metadata. Model IDs in Bifrost re
 | `seconds` | string | ❌ | Duration in seconds |
 | `size` | string | ❌ | Resolution: `720x1280` (default), `1280x720`, `1024x1792`, `1792x1024` |
 
-**Response**: [`BifrostVideoGenerationResponse`](https://github.com/maximhq/bifrost/blob/main/core/schemas/videos.go) - `id`, `status`, `model`, `prompt`, `created_at`
+**Response**: [`BifrostVideoGenerationResponse`](https://github.com/grevinden/bifrost/blob/main/core/schemas/videos.go) - `id`, `status`, `model`, `prompt`, `created_at`
 
 **Job Statuses**: `queued` → `in_progress` → `completed` / `failed`
 

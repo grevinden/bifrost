@@ -28,8 +28,8 @@ import (
 
 	"github.com/bytedance/sonic"
 	"github.com/cespare/xxhash/v2"
-	"github.com/maximhq/bifrost/core/network"
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/network"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 	"github.com/valyala/fasthttp"
@@ -109,18 +109,18 @@ func StripThoughtSignature(callID string) string {
 var sortedAPI = sonic.Config{SortMapKeys: true}.Froze()
 
 // MarshalSorted marshals v to JSON with map keys sorted alphabetically.
-func MarshalSorted(v interface{}) ([]byte, error) {
+func MarshalSorted(v any) ([]byte, error) {
 	return sortedAPI.Marshal(v)
 }
 
 // MarshalSortedIndent marshals v to indented JSON with map keys sorted alphabetically.
-func MarshalSortedIndent(v interface{}, prefix, indent string) ([]byte, error) {
+func MarshalSortedIndent(v any, prefix, indent string) ([]byte, error) {
 	return sortedAPI.MarshalIndent(v, prefix, indent)
 }
 
 // SetJSONField sets a field in JSON bytes without disturbing other fields' ordering.
 // Uses in-place byte manipulation for minimal allocations and preserves nested structure.
-func SetJSONField(data []byte, path string, value interface{}) ([]byte, error) {
+func SetJSONField(data []byte, path string, value any) ([]byte, error) {
 	return sjson.SetBytes(data, path, value)
 }
 
@@ -808,7 +808,7 @@ func CheckAndGetRawRequestBody(ctx context.Context, request RequestBodyGetter) (
 }
 
 type RequestBodyWithExtraParams interface {
-	GetExtraParams() map[string]interface{}
+	GetExtraParams() map[string]any
 }
 
 type RequestBodyConverter func() (RequestBodyWithExtraParams, error)
@@ -991,11 +991,11 @@ func RewriteLargePayloadModelInMultipartPrefix(reader io.Reader, fromModel, toMo
 	// the model string (e.g. "openai/whisper-1") is unique within the form metadata.
 	from := []byte(fromModel)
 	to := []byte(toModel)
-	if idx := bytes.Index(prefix, from); idx >= 0 {
+	if before, after, ok := bytes.Cut(prefix, from); ok {
 		rewritten := make([]byte, 0, len(prefix)-len(from)+len(to))
-		rewritten = append(rewritten, prefix[:idx]...)
+		rewritten = append(rewritten, before...)
 		rewritten = append(rewritten, to...)
-		rewritten = append(rewritten, prefix[idx+len(from):]...)
+		rewritten = append(rewritten, after...)
 		return io.MultiReader(bytes.NewReader(rewritten), reader), len(rewritten) - len(prefix)
 	}
 	return io.MultiReader(bytes.NewReader(prefix), reader), 0
@@ -1188,11 +1188,11 @@ func peekHasPrefix(reader *bufio.Reader, prefix []byte) bool {
 }
 
 // MergeExtraParams merges extraParams into jsonMap, handling nested maps recursively.
-func MergeExtraParams(jsonMap map[string]interface{}, extraParams map[string]interface{}) {
+func MergeExtraParams(jsonMap map[string]any, extraParams map[string]any) {
 	for k, v := range extraParams {
 		if existingVal, exists := jsonMap[k]; exists {
-			if existingMap, ok := existingVal.(map[string]interface{}); ok {
-				if newMap, ok := v.(map[string]interface{}); ok {
+			if existingMap, ok := existingVal.(map[string]any); ok {
+				if newMap, ok := v.(map[string]any); ok {
 					MergeExtraParams(existingMap, newMap)
 					continue
 				}
@@ -1206,7 +1206,7 @@ func MergeExtraParams(jsonMap map[string]interface{}, extraParams map[string]int
 // the original key ordering. This avoids the order-destroying roundtrip through
 // map[string]interface{} that would lose key ordering in tool schemas and other
 // order-sensitive JSON structures.
-func MergeExtraParamsIntoJSON(jsonBody []byte, extraParams map[string]interface{}) ([]byte, error) {
+func MergeExtraParamsIntoJSON(jsonBody []byte, extraParams map[string]any) ([]byte, error) {
 	trimmed := bytes.TrimSpace(jsonBody)
 	if len(trimmed) < 2 || trimmed[0] != '{' {
 		return jsonBody, nil // not a JSON object, return as-is
@@ -1263,7 +1263,7 @@ func MergeExtraParamsIntoJSON(jsonBody []byte, extraParams map[string]interface{
 			newTrimmed := bytes.TrimSpace(newValBytes)
 			if len(existingTrimmed) > 0 && existingTrimmed[0] == '{' &&
 				len(newTrimmed) > 0 && newTrimmed[0] == '{' {
-				var existingMap, newMap map[string]interface{}
+				var existingMap, newMap map[string]any
 				existingDec := json.NewDecoder(bytes.NewReader(existingTrimmed))
 				existingDec.UseNumber()
 				newDec := json.NewDecoder(bytes.NewReader(newTrimmed))
@@ -1400,7 +1400,7 @@ func HandleProviderAPIError(resp *fasthttp.Response, errorResp any) *schemas.Bif
 	if err != nil {
 		// Decode failed - still capture raw body for RawResponse
 		rawBody := resp.Body()
-		var rawErrorResponse interface{}
+		var rawErrorResponse any
 		if len(rawBody) > 0 {
 			// Try to unmarshal, but if that fails, store as string
 			if unmarshalErr := sonic.Unmarshal(rawBody, &rawErrorResponse); unmarshalErr != nil {
@@ -1421,7 +1421,7 @@ func HandleProviderAPIError(resp *fasthttp.Response, errorResp any) *schemas.Bif
 	}
 
 	// Try to unmarshal decoded body for RawResponse
-	var rawErrorResponse interface{}
+	var rawErrorResponse any
 	if err := sonic.Unmarshal(decodedBody, &rawErrorResponse); err != nil {
 		// Store raw body as string for RawResponse when JSON parsing fails
 		// Continue to HTML detection and proper error handling below
@@ -1545,7 +1545,7 @@ func EnrichError(
 // If sendBackRawResponse is true, it returns the raw response interface, otherwise nil.
 // HTML detection only runs if JSON parsing fails to avoid expensive regex operations
 // on responses that are almost certainly valid JSON.
-func HandleProviderResponse[T any](responseBody []byte, response *T, requestBody []byte, sendBackRawRequest bool, sendBackRawResponse bool) (rawRequest interface{}, rawResponse interface{}, bifrostErr *schemas.BifrostError) {
+func HandleProviderResponse[T any](responseBody []byte, response *T, requestBody []byte, sendBackRawRequest bool, sendBackRawResponse bool) (rawRequest any, rawResponse any, bifrostErr *schemas.BifrostError) {
 	// Check for empty response
 	trimmed := strings.TrimSpace(string(responseBody))
 	if len(trimmed) == 0 {
@@ -1651,7 +1651,7 @@ func NewUnsupportedOperationError(requestType schemas.RequestType, providerName 
 		IsBifrostError: false,
 		Error: &schemas.ErrorField{
 			Message: fmt.Sprintf("%s is not supported by %s provider", requestType, providerName),
-			Code:    schemas.Ptr("unsupported_operation"),
+			Code:    new("unsupported_operation"),
 		},
 		ExtraFields: schemas.BifrostErrorExtraFields{
 			Provider:    providerName,
@@ -2673,7 +2673,7 @@ func HandleStreamTimeout(
 	}
 	// Create timeout error
 	timeoutErr := &schemas.BifrostError{
-		StatusCode: schemas.Ptr(504), // Gateway Timeout
+		StatusCode: new(504), // Gateway Timeout
 		Error: &schemas.ErrorField{
 			Message: "Request timed out: deadline exceeded",
 			Type:    schemas.Ptr(schemas.RequestTimedOut),
@@ -2940,7 +2940,7 @@ func aggregateListModelsResponses(responses []*schemas.BifrostListModelsResponse
 	}
 
 	// Aggregate all models with deduplication, and collect raw responses
-	var rawResponses []interface{}
+	var rawResponses []any
 
 	for _, response := range responses {
 		if response == nil {

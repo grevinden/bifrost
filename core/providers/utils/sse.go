@@ -5,7 +5,7 @@ import (
 	"bytes"
 	"io"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 const (

@@ -7,14 +7,16 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"maps"
 	"math"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -109,7 +111,7 @@ func (s *RedisStore) CreateNamespace(ctx context.Context, namespace string, dime
 		return fmt.Errorf("redis vector index %q: dimension must be > 0 (got %d)", namespace, dimension)
 	}
 
-	args := []interface{}{
+	args := []any{
 		"FT.CREATE", namespace,
 		"ON", "HASH",
 		"PREFIX", "1", keyPrefix,
@@ -169,7 +171,7 @@ func (s *RedisStore) GetChunk(ctx context.Context, namespace string, id string) 
 	// Build SearchResult
 	searchResult := SearchResult{
 		ID:         id,
-		Properties: make(map[string]interface{}),
+		Properties: make(map[string]any),
 	}
 
 	// Parse fields
@@ -230,7 +232,7 @@ func (s *RedisStore) GetChunks(ctx context.Context, namespace string, ids []stri
 		// Build SearchResult
 		searchResult := SearchResult{
 			ID:         ids[i],
-			Properties: make(map[string]interface{}),
+			Properties: make(map[string]any),
 		}
 
 		// Parse fields
@@ -263,10 +265,7 @@ func (s *RedisStore) GetAll(ctx context.Context, namespace string, queries []Que
 	}
 
 	// For explicit limit, cap to Redis maximum and use single query with cursor support
-	searchLimit := limit
-	if searchLimit > RedisMaxSearchResults {
-		searchLimit = RedisMaxSearchResults
-	}
+	searchLimit := min(limit, RedisMaxSearchResults)
 
 	// Add OFFSET for pagination if cursor is provided
 	offset, err := parseOffsetCursor(cursor)
@@ -327,7 +326,7 @@ func (s *RedisStore) getAllWithPagination(ctx context.Context, namespace string,
 
 // executeSearch performs a single FT.SEARCH query with the given offset and limit.
 func (s *RedisStore) executeSearch(ctx context.Context, namespace string, redisQuery string, queries []Query, selectFields []string, offset int, searchLimit int) ([]SearchResult, error) {
-	args := []interface{}{
+	args := []any{
 		"FT.SEARCH", namespace,
 		redisQuery,
 	}
@@ -346,7 +345,7 @@ func (s *RedisStore) executeSearch(ctx context.Context, namespace string, redisQ
 		errMsg := strings.ToLower(result.Err().Error())
 		if isQuerySyntaxError(errMsg) {
 			s.logger.Debug(fmt.Sprintf("FT.SEARCH DIALECT fallback triggered for namespace %s: %s", namespace, result.Err()))
-			compatArgs := make([]interface{}, 0, len(args)-2)
+			compatArgs := make([]any, 0, len(args)-2)
 			for i := 0; i < len(args); i++ {
 				if i+1 < len(args) && args[i] == "DIALECT" {
 					i++
@@ -409,10 +408,7 @@ func (s *RedisStore) getAllByScan(ctx context.Context, namespace string, queries
 		limit = BatchLimit
 	}
 
-	end := offset + int(limit)
-	if end > len(all) {
-		end = len(all)
-	}
+	end := min(offset+int(limit), len(all))
 
 	results := all[offset:end]
 	var next *string
@@ -531,7 +527,7 @@ func (s *RedisStore) fetchMatchingSearchResults(ctx context.Context, client redi
 			continue
 		}
 
-		properties := make(map[string]interface{}, len(fields))
+		properties := make(map[string]any, len(fields))
 		for k, v := range fields {
 			properties[k] = v
 		}
@@ -542,7 +538,7 @@ func (s *RedisStore) fetchMatchingSearchResults(ctx context.Context, client redi
 
 		searchResult := SearchResult{
 			ID:         id,
-			Properties: make(map[string]interface{}),
+			Properties: make(map[string]any),
 		}
 
 		if len(selectFields) == 0 {
@@ -561,7 +557,7 @@ func (s *RedisStore) fetchMatchingSearchResults(ctx context.Context, client redi
 	return results, nil
 }
 
-func matchesQueriesForScan(properties map[string]interface{}, queries []Query) bool {
+func matchesQueriesForScan(properties map[string]any, queries []Query) bool {
 	for _, q := range queries {
 		raw, exists := properties[q.Field]
 
@@ -672,18 +668,18 @@ func matchesQueriesForScan(properties map[string]interface{}, queries []Query) b
 }
 
 // parseSearchResults parses FT.SEARCH results into SearchResult slice.
-func (s *RedisStore) parseSearchResults(result interface{}, namespace string, selectFields []string) ([]SearchResult, error) {
+func (s *RedisStore) parseSearchResults(result any, namespace string, selectFields []string) ([]SearchResult, error) {
 	results := []SearchResult{}
 
 	// RESP3 style in Redis/Valkey:
 	// map{ "results": [ { "id": "...", "extra_attributes": {...} } ] }
 	switch typed := result.(type) {
-	case map[interface{}]interface{}:
+	case map[any]any:
 		rawResults, ok := typed["results"]
 		if !ok {
 			return results, nil
 		}
-		resultItems, ok := rawResults.([]interface{})
+		resultItems, ok := rawResults.([]any)
 		if !ok {
 			return results, nil
 		}
@@ -693,12 +689,12 @@ func (s *RedisStore) parseSearchResults(result interface{}, namespace string, se
 			}
 		}
 		return results, nil
-	case map[string]interface{}:
+	case map[string]any:
 		rawResults, ok := typed["results"]
 		if !ok {
 			return results, nil
 		}
-		resultItems, ok := rawResults.([]interface{})
+		resultItems, ok := rawResults.([]any)
 		if !ok {
 			return results, nil
 		}
@@ -708,7 +704,7 @@ func (s *RedisStore) parseSearchResults(result interface{}, namespace string, se
 			}
 		}
 		return results, nil
-	case []interface{}:
+	case []any:
 		// RESP2 style in Redis/Valkey:
 		// [total, "namespace:id", ["field", "value", ...], ...]
 		if len(typed) < 3 {
@@ -717,7 +713,7 @@ func (s *RedisStore) parseSearchResults(result interface{}, namespace string, se
 		for i := 1; i+1 < len(typed); i += 2 {
 			idValue := typed[i]
 			attrsValue := typed[i+1]
-			doc := map[string]interface{}{
+			doc := map[string]any{
 				"id":               idValue,
 				"extra_attributes": attrsValue,
 			}
@@ -731,9 +727,9 @@ func (s *RedisStore) parseSearchResults(result interface{}, namespace string, se
 	}
 }
 
-func parseSearchResultIDs(result interface{}, namespace string) []string {
+func parseSearchResultIDs(result any, namespace string) []string {
 	ids := make([]string, 0)
-	appendID := func(value interface{}) {
+	appendID := func(value any) {
 		id, ok := toString(value)
 		if !ok {
 			return
@@ -744,8 +740,8 @@ func parseSearchResultIDs(result interface{}, namespace string) []string {
 		}
 		if namespace != "" {
 			prefix := namespace + ":"
-			if strings.HasPrefix(id, prefix) {
-				id = strings.TrimPrefix(id, prefix)
+			if after, ok0 := strings.CutPrefix(id, prefix); ok0 {
+				id = after
 			}
 		}
 		if id == "" {
@@ -754,16 +750,16 @@ func parseSearchResultIDs(result interface{}, namespace string) []string {
 		ids = append(ids, id)
 	}
 
-	extractRESP3IDs := func(rawResults interface{}) {
-		resultItems, ok := rawResults.([]interface{})
+	extractRESP3IDs := func(rawResults any) {
+		resultItems, ok := rawResults.([]any)
 		if !ok {
 			return
 		}
 		for _, item := range resultItems {
 			switch doc := item.(type) {
-			case map[string]interface{}:
+			case map[string]any:
 				appendID(doc["id"])
-			case map[interface{}]interface{}:
+			case map[any]any:
 				appendID(doc["id"])
 			default:
 				appendID(item)
@@ -772,11 +768,11 @@ func parseSearchResultIDs(result interface{}, namespace string) []string {
 	}
 
 	switch typed := result.(type) {
-	case map[interface{}]interface{}:
+	case map[any]any:
 		extractRESP3IDs(typed["results"])
-	case map[string]interface{}:
+	case map[string]any:
 		extractRESP3IDs(typed["results"])
-	case []interface{}:
+	case []any:
 		if len(typed) < 2 {
 			return ids
 		}
@@ -786,7 +782,7 @@ func parseSearchResultIDs(result interface{}, namespace string) []string {
 			// RESP2 payloads can be [total, id, attrs, id, attrs, ...].
 			if i+1 < len(typed) {
 				switch typed[i+1].(type) {
-				case []interface{}, map[string]interface{}, map[interface{}]interface{}:
+				case []any, map[string]any, map[any]any:
 					i++
 				}
 			}
@@ -796,14 +792,14 @@ func parseSearchResultIDs(result interface{}, namespace string) []string {
 	return ids
 }
 
-func parseSearchResultDocument(resultItem interface{}, namespace string, selectFields []string) (SearchResult, bool) {
-	var docMap map[string]interface{}
+func parseSearchResultDocument(resultItem any, namespace string, selectFields []string) (SearchResult, bool) {
+	var docMap map[string]any
 
 	switch item := resultItem.(type) {
-	case map[string]interface{}:
+	case map[string]any:
 		docMap = item
-	case map[interface{}]interface{}:
-		docMap = make(map[string]interface{}, len(item))
+	case map[any]any:
+		docMap = make(map[string]any, len(item))
 		for k, v := range item {
 			docMap[fmt.Sprintf("%v", k)] = v
 		}
@@ -824,8 +820,8 @@ func parseSearchResultDocument(resultItem interface{}, namespace string, selectF
 	docID := id
 	if namespace != "" {
 		prefix := namespace + ":"
-		if strings.HasPrefix(id, prefix) {
-			docID = strings.TrimPrefix(id, prefix)
+		if after, ok0 := strings.CutPrefix(id, prefix); ok0 {
+			docID = after
 		}
 	}
 
@@ -841,7 +837,7 @@ func parseSearchResultDocument(resultItem interface{}, namespace string, selectF
 
 	searchResult := SearchResult{
 		ID:         docID,
-		Properties: make(map[string]interface{}, len(attrs)),
+		Properties: make(map[string]any, len(attrs)),
 	}
 
 	for fieldName, fieldValue := range attrs {
@@ -863,22 +859,22 @@ func parseSearchResultDocument(resultItem interface{}, namespace string, selectF
 	return searchResult, true
 }
 
-func attributesToMap(value interface{}) map[string]interface{} {
+func attributesToMap(value any) map[string]any {
 	switch attrs := value.(type) {
-	case map[string]interface{}:
+	case map[string]any:
 		return attrs
-	case map[interface{}]interface{}:
-		out := make(map[string]interface{}, len(attrs))
+	case map[any]any:
+		out := make(map[string]any, len(attrs))
 		for k, v := range attrs {
 			out[fmt.Sprintf("%v", k)] = v
 		}
 		return out
-	case []interface{}:
+	case []any:
 		// RESP2 attribute pairs: ["field", "value", "field2", "value2", ...]
 		if len(attrs)%2 != 0 {
 			return nil
 		}
-		out := make(map[string]interface{}, len(attrs)/2)
+		out := make(map[string]any, len(attrs)/2)
 		for i := 0; i+1 < len(attrs); i += 2 {
 			key, ok := toString(attrs[i])
 			if !ok {
@@ -892,7 +888,7 @@ func attributesToMap(value interface{}) map[string]interface{} {
 	}
 }
 
-func toString(value interface{}) (string, bool) {
+func toString(value any) (string, bool) {
 	switch v := value.(type) {
 	case string:
 		return v, true
@@ -903,7 +899,7 @@ func toString(value interface{}) (string, bool) {
 	}
 }
 
-func toFloat64(value interface{}) (float64, bool) {
+func toFloat64(value any) (float64, bool) {
 	switch v := value.(type) {
 	case float64:
 		return v, true
@@ -931,12 +927,7 @@ func toFloat64(value interface{}) (float64, bool) {
 }
 
 func containsField(fields []string, candidate string) bool {
-	for _, field := range fields {
-		if field == candidate {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(fields, candidate)
 }
 
 func (s *RedisStore) cacheNamespaceFieldTypes(namespace string, properties map[string]VectorStoreProperties) {
@@ -980,9 +971,7 @@ func (s *RedisStore) getNamespaceFieldTypes(namespace string) map[string]VectorS
 	}
 
 	copied := make(map[string]VectorStorePropertyType, len(fieldTypes))
-	for field, dataType := range fieldTypes {
-		copied[field] = dataType
-	}
+	maps.Copy(copied, fieldTypes)
 	return copied
 }
 
@@ -1008,7 +997,7 @@ func buildRedisQuery(queries []Query, fieldTypes map[string]VectorStorePropertyT
 	return strings.Join(conditions, " ")
 }
 
-func shouldUseNumericEquality(field string, value interface{}, fieldTypes map[string]VectorStorePropertyType) (string, bool) {
+func shouldUseNumericEquality(field string, value any, fieldTypes map[string]VectorStorePropertyType) (string, bool) {
 	if fieldTypes != nil {
 		if dataType, ok := fieldTypes[field]; ok {
 			if dataType == VectorStorePropertyTypeInteger {
@@ -1020,7 +1009,7 @@ func shouldUseNumericEquality(field string, value interface{}, fieldTypes map[st
 	return normalizeNumericQueryValue(value)
 }
 
-func normalizeNumericQueryValue(value interface{}) (string, bool) {
+func normalizeNumericQueryValue(value any) (string, bool) {
 	switch v := value.(type) {
 	case int:
 		return strconv.FormatInt(int64(v), 10), true
@@ -1112,7 +1101,7 @@ func buildRedisQueryCondition(query Query, fieldTypes map[string]VectorStoreProp
 		// Field exists
 		return fmt.Sprintf("@%s:*", field)
 	case QueryOperatorContainsAny:
-		if values, ok := value.([]interface{}); ok {
+		if values, ok := value.([]any); ok {
 			var orConditions []string
 			for _, v := range values {
 				vStr := fmt.Sprintf("%v", v)
@@ -1122,7 +1111,7 @@ func buildRedisQueryCondition(query Query, fieldTypes map[string]VectorStoreProp
 		}
 		return fmt.Sprintf("@%s:{%s}", field, escapedValue)
 	case QueryOperatorContainsAll:
-		if values, ok := value.([]interface{}); ok {
+		if values, ok := value.([]any); ok {
 			var andConditions []string
 			for _, v := range values {
 				vStr := fmt.Sprintf("%v", v)
@@ -1165,7 +1154,7 @@ func (s *RedisStore) GetNearest(ctx context.Context, namespace string, vector []
 		knnLimit = math.MaxInt32
 	}
 
-	args := []interface{}{
+	args := []any{
 		"FT.SEARCH", namespace,
 		fmt.Sprintf("%s=>[KNN %d @embedding $vec AS score]", hybridQuery, knnLimit),
 		"PARAMS", "2", "vec", queryBytes,
@@ -1196,7 +1185,7 @@ func (s *RedisStore) GetNearest(ctx context.Context, namespace string, vector []
 		errMsg := strings.ToLower(result.Err().Error())
 		// Some Valkey implementations reject SORTBY in KNN search (already distance-ordered).
 		if strings.Contains(errMsg, "unexpected argument `sortby`") || strings.Contains(errMsg, "unexpected argument sortby") {
-			compatArgs := make([]interface{}, 0, len(args)-2)
+			compatArgs := make([]any, 0, len(args)-2)
 			for i := 0; i < len(args); i++ {
 				if i+1 < len(args) && args[i] == "SORTBY" {
 					i++ // skip sort field value too
@@ -1247,7 +1236,7 @@ func (s *RedisStore) GetNearest(ctx context.Context, namespace string, vector []
 }
 
 // Add stores a new chunk in the Redis vector store.
-func (s *RedisStore) Add(ctx context.Context, namespace string, id string, embedding []float32, metadata map[string]interface{}) error {
+func (s *RedisStore) Add(ctx context.Context, namespace string, id string, embedding []float32, metadata map[string]any) error {
 	ctx, cancel := withTimeout(ctx, time.Duration(s.config.ContextTimeout))
 	defer cancel()
 
@@ -1259,7 +1248,7 @@ func (s *RedisStore) Add(ctx context.Context, namespace string, id string, embed
 	key := buildKey(namespace, id)
 
 	// Prepare hash fields: binary embedding + metadata
-	fields := make(map[string]interface{})
+	fields := make(map[string]any)
 
 	// Only add embedding if it's not empty
 	if len(embedding) > 0 {
@@ -1275,7 +1264,7 @@ func (s *RedisStore) Add(ctx context.Context, namespace string, id string, embed
 			fields[k] = val
 		case int, int64, float64, bool:
 			fields[k] = fmt.Sprintf("%v", val)
-		case []interface{}:
+		case []any:
 			// Preserve arrays as JSON to support round-trips (e.g., stream_chunks)
 			b, err := json.Marshal(val)
 			if err != nil {
@@ -1351,10 +1340,7 @@ func (s *RedisStore) deleteAllBySnapshot(ctx context.Context, namespace string, 
 	batchSize := BatchLimit // Process in batches to avoid overwhelming Redis
 
 	for i := 0; i < len(ids); i += batchSize {
-		end := i + batchSize
-		if end > len(ids) {
-			end = len(ids)
-		}
+		end := min(i+batchSize, len(ids))
 		batch := ids[i:end]
 
 		// Create pipeline for batch deletion
@@ -1415,7 +1401,7 @@ func (s *RedisStore) getAllMatchingIDs(ctx context.Context, namespace string, qu
 	ids := make([]string, 0)
 
 	for {
-		args := []interface{}{
+		args := []any{
 			"FT.SEARCH", namespace,
 			redisQuery,
 			"RETURN", 0,
@@ -1428,7 +1414,7 @@ func (s *RedisStore) getAllMatchingIDs(ctx context.Context, namespace string, qu
 			errMsg := strings.ToLower(result.Err().Error())
 			if isQuerySyntaxError(errMsg) {
 				s.logger.Debug(fmt.Sprintf("FT.SEARCH DIALECT fallback triggered for namespace %s while collecting ids: %s", namespace, result.Err()))
-				compatArgs := make([]interface{}, 0, len(args)-2)
+				compatArgs := make([]any, 0, len(args)-2)
 				for i := 0; i < len(args); i++ {
 					if i+1 < len(args) && args[i] == "DIALECT" {
 						i++
@@ -1630,11 +1616,11 @@ func parseOffsetCursor(cursor *string) (int, error) {
 	return offset, nil
 }
 
-func parseStringValuesForContains(value interface{}) ([]string, bool) {
+func parseStringValuesForContains(value any) ([]string, bool) {
 	switch v := value.(type) {
 	case []string:
 		return v, true
-	case []interface{}:
+	case []any:
 		out := make([]string, 0, len(v))
 		for _, item := range v {
 			out = append(out, fmt.Sprintf("%v", item))
@@ -1647,7 +1633,7 @@ func parseStringValuesForContains(value interface{}) ([]string, bool) {
 		}
 		// Redis scan fallback values may be JSON-encoded arrays.
 		if strings.HasPrefix(trimmed, "[") {
-			var arr []interface{}
+			var arr []any
 			if err := json.Unmarshal([]byte(trimmed), &arr); err == nil {
 				out := make([]string, 0, len(arr))
 				for _, item := range arr {
@@ -1662,9 +1648,9 @@ func parseStringValuesForContains(value interface{}) ([]string, bool) {
 	}
 }
 
-func parseQueryContainsValues(value interface{}) ([]string, bool) {
+func parseQueryContainsValues(value any) ([]string, bool) {
 	switch v := value.(type) {
-	case []interface{}:
+	case []any:
 		out := make([]string, 0, len(v))
 		for _, item := range v {
 			out = append(out, fmt.Sprintf("%v", item))

@@ -11,11 +11,11 @@ import (
 	"testing"
 	"time"
 
+	core "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/mcp"
+	"github.com/grevinden/bifrost/core/schemas"
 	mcpgo "github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
-	core "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/mcp"
-	"github.com/maximhq/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -291,9 +291,9 @@ func TestExtraHeadersToolCallReachWire(t *testing.T) {
 	require.NoError(t, manager.AddClient(context.Background(), cfg))
 
 	toolCall := schemas.ChatAssistantMessageToolCall{
-		ID: schemas.Ptr("call-1"),
+		ID: new("call-1"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("call_extra-echo"),
+			Name:      new("call_extra-echo"),
 			Arguments: `{"message":"hi"}`,
 		},
 	}
@@ -369,9 +369,9 @@ func TestExtraHeadersSSEToolCallReachWire(t *testing.T) {
 	require.NoError(t, manager.AddClient(context.Background(), cfg))
 
 	toolCall := schemas.ChatAssistantMessageToolCall{
-		ID: schemas.Ptr("sse-call-1"),
+		ID: new("sse-call-1"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("sse_call_extra-echo"),
+			Name:      new("sse_call_extra-echo"),
 			Arguments: `{"message":"hi"}`,
 		},
 	}

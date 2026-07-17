@@ -3,7 +3,7 @@ package utils
 import (
 	"testing"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // makeKeys returns a slice of n dummy keys for use in pagination tests.
@@ -15,7 +15,8 @@ func makeKeys(n int) []schemas.Key {
 	return keys
 }
 
-func strPtr(s string) *string { return &s }
+//go:fix inline
+func strPtr(s string) *string { return new(s) }
 
 // --- SerialCursor encode/decode ---
 
@@ -75,7 +76,7 @@ func TestNewSerialListHelper_NilCursor(t *testing.T) {
 }
 
 func TestNewSerialListHelper_EmptyCursor(t *testing.T) {
-	helper, err := NewSerialListHelper(makeKeys(1), strPtr(""), nil, false)
+	helper, err := NewSerialListHelper(makeKeys(1), new(""), nil, false)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

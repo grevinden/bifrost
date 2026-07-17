@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/require"
 )
 
@@ -33,9 +33,9 @@ func RunWebSearchToolTest(t *testing.T, client *bifrost.Bifrost, ctx context.Con
 			Type: schemas.ResponsesToolTypeWebSearch,
 			ResponsesToolWebSearch: &schemas.ResponsesToolWebSearch{
 				UserLocation: &schemas.ResponsesToolWebSearchUserLocation{
-					Type:    bifrost.Ptr("approximate"),
-					Country: bifrost.Ptr("US"),
-					City:    bifrost.Ptr("New York"),
+					Type:    new("approximate"),
+					Country: new("US"),
+					City:    new("New York"),
 				},
 			},
 		}
@@ -44,10 +44,10 @@ func RunWebSearchToolTest(t *testing.T, client *bifrost.Bifrost, ctx context.Con
 		retryConfig := WebSearchRetryConfig()
 		retryContext := TestRetryContext{
 			ScenarioName: "WebSearchTool",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"expected_tool_type": "web_search",
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider": testConfig.Provider,
 				"model":    testConfig.ChatModel,
 			},
@@ -189,11 +189,11 @@ func RunWebSearchToolStreamTest(t *testing.T, client *bifrost.Bifrost, ctx conte
 			Type: schemas.ResponsesToolTypeWebSearch,
 			ResponsesToolWebSearch: &schemas.ResponsesToolWebSearch{
 				UserLocation: &schemas.ResponsesToolWebSearchUserLocation{
-					Type:     bifrost.Ptr("approximate"),
-					Country:  bifrost.Ptr("US"),
-					City:     bifrost.Ptr("San Francisco"),
-					Region:   bifrost.Ptr("California"),
-					Timezone: bifrost.Ptr("America/Los_Angeles"),
+					Type:     new("approximate"),
+					Country:  new("US"),
+					City:     new("San Francisco"),
+					Region:   new("California"),
+					Timezone: new("America/Los_Angeles"),
 				},
 			},
 		}
@@ -204,7 +204,7 @@ func RunWebSearchToolStreamTest(t *testing.T, client *bifrost.Bifrost, ctx conte
 			Input:    responsesMessages,
 			Params: &schemas.ResponsesParameters{
 				Tools:           []schemas.ResponsesTool{*webSearchTool},
-				MaxOutputTokens: bifrost.Ptr(1500),
+				MaxOutputTokens: new(1500),
 			},
 			Fallbacks: testConfig.Fallbacks,
 		}
@@ -212,12 +212,12 @@ func RunWebSearchToolStreamTest(t *testing.T, client *bifrost.Bifrost, ctx conte
 		retryConfig := StreamingRetryConfig()
 		retryContext := TestRetryContext{
 			ScenarioName: "WebSearchToolStream",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"should_stream_content":        true,
 				"should_have_web_search_call":  true,
 				"should_have_streaming_events": true,
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider": testConfig.Provider,
 				"model":    testConfig.ChatModel,
 			},
@@ -367,11 +367,11 @@ func RunWebSearchToolWithDomainsTest(t *testing.T, client *bifrost.Bifrost, ctx 
 		retryConfig := WebSearchRetryConfig()
 		retryContext := TestRetryContext{
 			ScenarioName: "WebSearchToolWithDomains",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"expected_tool_type": "web_search",
 				"domain_filters":     true,
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider": testConfig.Provider,
 				"model":    testConfig.ChatModel,
 			},
@@ -387,7 +387,7 @@ func RunWebSearchToolWithDomainsTest(t *testing.T, client *bifrost.Bifrost, ctx 
 				Input:    responsesMessages,
 				Params: &schemas.ResponsesParameters{
 					Tools:           []schemas.ResponsesTool{*webSearchTool},
-					MaxOutputTokens: bifrost.Ptr(1200),
+					MaxOutputTokens: new(1200),
 				},
 				Fallbacks: testConfig.Fallbacks,
 			}
@@ -454,7 +454,6 @@ func RunWebSearchToolContextSizesTest(t *testing.T, client *bifrost.Bifrost, ctx
 		contextSizes := []string{"low", "medium", "high"}
 
 		for _, size := range contextSizes {
-			size := size // Capture loop variable
 			t.Run("ContextSize_"+size, func(t *testing.T) {
 				responsesMessages := []schemas.ResponsesMessage{
 					CreateBasicResponsesMessage("What is quantum computing? Use web search."),
@@ -470,11 +469,11 @@ func RunWebSearchToolContextSizesTest(t *testing.T, client *bifrost.Bifrost, ctx
 				retryConfig := WebSearchRetryConfig()
 				retryContext := TestRetryContext{
 					ScenarioName: "WebSearchToolContextSize_" + size,
-					ExpectedBehavior: map[string]interface{}{
+					ExpectedBehavior: map[string]any{
 						"expected_tool_type": "web_search",
 						"context_size":       size,
 					},
-					TestMetadata: map[string]interface{}{
+					TestMetadata: map[string]any{
 						"provider":     testConfig.Provider,
 						"model":        testConfig.ChatModel,
 						"context_size": size,
@@ -491,7 +490,7 @@ func RunWebSearchToolContextSizesTest(t *testing.T, client *bifrost.Bifrost, ctx
 						Input:    responsesMessages,
 						Params: &schemas.ResponsesParameters{
 							Tools:           []schemas.ResponsesTool{*webSearchTool},
-							MaxOutputTokens: bifrost.Ptr(1500),
+							MaxOutputTokens: new(1500),
 						},
 						Fallbacks: testConfig.Fallbacks,
 					}
@@ -565,11 +564,11 @@ func RunWebSearchToolMultiTurnTest(t *testing.T, client *bifrost.Bifrost, ctx co
 		retryConfig := WebSearchRetryConfig()
 		retryContext1 := TestRetryContext{
 			ScenarioName: "WebSearchToolMultiTurn_Turn1",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"expected_tool_type": "web_search",
 				"turn":               1,
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider": testConfig.Provider,
 				"model":    testConfig.ChatModel,
 			},
@@ -585,7 +584,7 @@ func RunWebSearchToolMultiTurnTest(t *testing.T, client *bifrost.Bifrost, ctx co
 				Input:    firstMessages,
 				Params: &schemas.ResponsesParameters{
 					Tools:           []schemas.ResponsesTool{*webSearchTool},
-					MaxOutputTokens: bifrost.Ptr(1500),
+					MaxOutputTokens: new(1500),
 				},
 				Fallbacks: testConfig.Fallbacks,
 			}
@@ -622,11 +621,11 @@ func RunWebSearchToolMultiTurnTest(t *testing.T, client *bifrost.Bifrost, ctx co
 
 		retryContext2 := TestRetryContext{
 			ScenarioName: "WebSearchToolMultiTurn_Turn2",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"expected_tool_type": "web_search",
 				"turn":               2,
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider": testConfig.Provider,
 				"model":    testConfig.ChatModel,
 			},
@@ -640,7 +639,7 @@ func RunWebSearchToolMultiTurnTest(t *testing.T, client *bifrost.Bifrost, ctx co
 				Input:    secondMessages,
 				Params: &schemas.ResponsesParameters{
 					Tools:           []schemas.ResponsesTool{*webSearchTool},
-					MaxOutputTokens: bifrost.Ptr(1500),
+					MaxOutputTokens: new(1500),
 				},
 				Fallbacks: testConfig.Fallbacks,
 			}
@@ -708,11 +707,11 @@ func RunWebSearchToolMaxUsesTest(t *testing.T, client *bifrost.Bifrost, ctx cont
 		retryConfig := WebSearchRetryConfig()
 		retryContext := TestRetryContext{
 			ScenarioName: "WebSearchToolMaxUses",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"expected_tool_type": "web_search",
 				"max_uses":           maxUses,
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider": testConfig.Provider,
 				"model":    testConfig.ChatModel,
 			},
@@ -728,7 +727,7 @@ func RunWebSearchToolMaxUsesTest(t *testing.T, client *bifrost.Bifrost, ctx cont
 				Input:    responsesMessages,
 				Params: &schemas.ResponsesParameters{
 					Tools:           []schemas.ResponsesTool{*webSearchTool},
-					MaxOutputTokens: bifrost.Ptr(2000),
+					MaxOutputTokens: new(2000),
 				},
 				Fallbacks: testConfig.Fallbacks,
 			}

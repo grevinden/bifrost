@@ -388,6 +388,17 @@ type ConfigMarshallerPlugin interface {
 	RedactConfig(config map[string]any) (map[string]any, error)
 }
 
+// ClientAwarePlugin is an optional interface for plugins that need access to the
+// main Bifrost client instance. The server calls SetBifrostClient once after
+// bifrost.Init() returns, passing the live *Bifrost pointer. Plugins that don't
+// implement this interface are unaffected.
+//
+// The client parameter is typed as any to avoid a circular import between schemas
+// and core. Implementations should type-assert to *core.Bifrost.
+type ClientAwarePlugin interface {
+	SetBifrostClient(client any)
+}
+
 // ObservabilityPlugin is an interface for plugins that receive completed traces
 // for forwarding to observability backends (e.g., OTEL collectors, Datadog, etc.)
 //

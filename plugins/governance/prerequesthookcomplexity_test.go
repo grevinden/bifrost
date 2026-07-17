@@ -7,9 +7,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/configstore"
-	configstoreTables "github.com/maximhq/bifrost/framework/configstore/tables"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/configstore"
+	configstoreTables "github.com/grevinden/bifrost/framework/configstore/tables"
 )
 
 func TestPreRequestHook_ComplexityAnalyzerFeedsCELVariable(t *testing.T) {
@@ -19,7 +19,7 @@ func TestPreRequestHook_ComplexityAnalyzerFeedsCELVariable(t *testing.T) {
 
 	plugin, err := Init(
 		context.Background(),
-		&Config{IsVkMandatory: boolPtr(false)},
+		&Config{IsVkMandatory: new(false)},
 		logger,
 		nil,
 		&configstore.GovernanceConfig{
@@ -31,7 +31,7 @@ func TestPreRequestHook_ComplexityAnalyzerFeedsCELVariable(t *testing.T) {
 					Targets: []configstoreTables.TableRoutingTarget{
 						{Provider: &provider, Model: &model, Weight: 1.0},
 					},
-					Enabled:  schemas.Ptr(true),
+					Enabled:  new(true),
 					Scope:    "global",
 					Priority: 0,
 				},
@@ -79,7 +79,7 @@ func TestPreRequestHook_ComplexitySkippedWhenNoRulesReferenceIt(t *testing.T) {
 
 	plugin, err := Init(
 		context.Background(),
-		&Config{IsVkMandatory: boolPtr(false)},
+		&Config{IsVkMandatory: new(false)},
 		logger,
 		nil,
 		&configstore.GovernanceConfig{
@@ -91,7 +91,7 @@ func TestPreRequestHook_ComplexitySkippedWhenNoRulesReferenceIt(t *testing.T) {
 					Targets: []configstoreTables.TableRoutingTarget{
 						{Provider: &provider, Model: &model, Weight: 1.0},
 					},
-					Enabled:  schemas.Ptr(true),
+					Enabled:  new(true),
 					Scope:    "global",
 					Priority: 0,
 				},

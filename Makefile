@@ -332,7 +332,7 @@ build: build-ui ## Build bifrost-http binary
 	@if [ -n "$(DYNAMIC)" ]; then \
 		$(ECHO) "$(YELLOW)Note: This will create a dynamically linked build.$(NC)"; \
 	else \
-		$(ECHO) "$(YELLOW)Note: This will create a statically linked build.$(NC)"; \
+		$(ECHO) "$(YELLOW)Note: This will create a dynamically linked build (default).$(NC)"; \
 	fi
 	@mkdir -p ./tmp
 	@TARGET_OS="$(GOOS)"; \
@@ -357,21 +357,21 @@ build: build-ui ## Build bifrost-http binary
 				-o ../../tmp/bifrost-http \
 				.; \
 		else \
-			$(ECHO) "$(CYAN)Building for $$TARGET_OS/$$TARGET_ARCH with static linking...$(NC)"; \
-			cd transports/bifrost-http && CGO_ENABLED=1 GOOS=$$TARGET_OS GOARCH=$$TARGET_ARCH $(if $(LOCAL),,GOWORK=off) go build \
-				-ldflags="-w -s -extldflags "-static" -X main.Version=v$(VERSION)" \
+			$(ECHO) "$(CYAN)Building for $$TARGET_OS/$$TARGET_ARCH with dynamic linking (default)...$(NC)"; \
+			cd transports/bifrost-http && CGO_ENABLED=1 GOOS=$$TARGET_OS GOARCH=$$TARGET_ARCH CGO_CFLAGS="-Wno-discarded-qualifiers" $(if $(LOCAL),,GOWORK=off) go build \
+				-ldflags="-w -s -X main.Version=v$(VERSION)" \
 				-a -trimpath \
-				-tags "sqlite_static" \
+				-tags "sqlite_dynamic" \
 				-o ../../tmp/bifrost-http \
 				.; \
 		fi; \
 		$(ECHO) "$(GREEN)Built: tmp/bifrost-http (version: v$(VERSION))$(NC)"; \
 	elif [ "$$TARGET_OS" = "$$HOST_OS" ] && [ "$$TARGET_ARCH" = "$$HOST_ARCH" ]; then \
 		$(ECHO) "$(CYAN)Building for $$TARGET_OS/$$TARGET_ARCH (native build with CGO)...$(NC)"; \
-		cd transports/bifrost-http && CGO_ENABLED=1 GOOS=$$TARGET_OS GOARCH=$$TARGET_ARCH $(if $(LOCAL),,GOWORK=off) go build \
+		cd transports/bifrost-http && CGO_ENABLED=1 GOOS=$$TARGET_OS GOARCH=$$TARGET_ARCH CGO_CFLAGS="-Wno-discarded-qualifiers" $(if $(LOCAL),,GOWORK=off) go build \
 			-ldflags="-w -s -X main.Version=v$(VERSION)" \
 			-a -trimpath \
-			-tags "sqlite_static" \
+			-tags "sqlite_dynamic" \
 			-o ../../tmp/bifrost-http \
 			.; \
 		$(ECHO) "$(GREEN)Built: tmp/bifrost-http (version: v$(VERSION))$(NC)"; \
@@ -390,8 +390,7 @@ build-cli: ## Build bifrost CLI binary
 _build-with-docker: # Internal target for Docker-based cross-compilation
 	@$(ECHO) "$(CYAN)Using Docker for cross-compilation...$(NC)"; \
 	if [ "$(TARGET_OS)" = "linux" ]; then \
-		if [ -n "$(DYNAMIC)" ]; then \
-			$(ECHO) "$(CYAN)Building for $(TARGET_OS)/$(TARGET_ARCH) in Docker container with dynamic linking...$(NC)"; \
+		$(ECHO) "$(CYAN)Building for $(TARGET_OS)/$(TARGET_ARCH) in Docker container...$(NC)"; \
 			docker run --rm \
 				--platform linux/$(TARGET_ARCH) \
 				-v "$(shell pwd):/workspace" \
@@ -401,28 +400,10 @@ _build-with-docker: # Internal target for Docker-based cross-compilation
 				-e GOARCH=$(TARGET_ARCH) \
 				 $(if $(LOCAL),,-e GOWORK=off) \
 				golang:1.26.4-alpine3.23@sha256:f23e8b227fb4493eabe03bede4d5a32d04092da71962f1fb79b5f7d1e6c2a17f \
-				sh -c "apk add --no-cache gcc musl-dev && \
+				sh -c "apk add --no-cache gcc && \
 				go build \
 					-ldflags='-w -s -X main.Version=v$(VERSION)' \
 					-a -trimpath \
-					-o ../../tmp/bifrost-http \
-					."; \
-		else \
-			$(ECHO) "$(CYAN)Building for $(TARGET_OS)/$(TARGET_ARCH) in Docker container...$(NC)"; \
-			docker run --rm \
-				--platform linux/$(TARGET_ARCH) \
-				-v "$(shell pwd):/workspace" \
-				-w /workspace/transports/bifrost-http \
-				-e CGO_ENABLED=1 \
-				-e GOOS=$(TARGET_OS) \
-				-e GOARCH=$(TARGET_ARCH) \
-				 $(if $(LOCAL),,-e GOWORK=off) \
-				golang:1.26.4-alpine3.23@sha256:f23e8b227fb4493eabe03bede4d5a32d04092da71962f1fb79b5f7d1e6c2a17f \
-				sh -c "apk add --no-cache gcc musl-dev && \
-				go build \
-					-ldflags='-w -s -extldflags "-static" -X main.Version=v$(VERSION)' \
-					-a -trimpath \
-					-tags sqlite_static \
 					-o ../../tmp/bifrost-http \
 					."; \
 		fi; \
@@ -497,9 +478,9 @@ helm-index: ## Repackage helm chart, regenerate index.yaml digest, then remove t
 	helm package bifrost && \
 	$(ECHO) "$(YELLOW)Regenerating index.yaml digest...$(NC)" && \
 	if [ -f index.yaml ]; then \
-		helm repo index . --url https://github.com/maximhq/bifrost/releases/download/helm-chart-v$$CHART_VERSION --merge index.yaml; \
+		helm repo index . --url https://github.com/grevinden/bifrost/releases/download/helm-chart-v$$CHART_VERSION --merge index.yaml; \
 	else \
-		helm repo index . --url https://github.com/maximhq/bifrost/releases/download/helm-chart-v$$CHART_VERSION; \
+		helm repo index . --url https://github.com/grevinden/bifrost/releases/download/helm-chart-v$$CHART_VERSION; \
 	fi && \
 	$(ECHO) "$(YELLOW)Removing bifrost-$$CHART_VERSION.tgz...$(NC)" && \
 	rm -f bifrost-$$CHART_VERSION.tgz && \
@@ -530,7 +511,7 @@ generate-html-reports: ## Convert existing XML reports to HTML
 test: install-gotestsum ## Run tests for bifrost-http
 	@$(ECHO) "$(GREEN)Running bifrost-http tests...$(NC)"
 	@mkdir -p $(TEST_REPORTS_DIR)
-	@cd transports/bifrost-http && GOWORK=off gotestsum \
+	@cd transports/bifrost-http && gotestsum \
 		--format=$(GOTESTSUM_FORMAT) \
 		--junitfile=../../$(TEST_REPORTS_DIR)/bifrost-http.xml \
 		-- -v ./...
@@ -1681,10 +1662,10 @@ setup-workspace: ## Set up Go workspace with all local modules for development
 	@$(ECHO) "$(GREEN)✓ Go workspace ready with all local modules$(NC)"
 	@$(ECHO) ""
 	@$(ECHO) "$(CYAN)Local modules in workspace:$(NC)"
-	@go list -m all | grep "github.com/maximhq/bifrost" | grep -v " v" | sed 's/^/  ✓ /'
+	@go list -m all | grep "github.com/grevinden/bifrost" | grep -v " v" | sed 's/^/  ✓ /'
 	@$(ECHO) ""
 	@$(ECHO) "$(CYAN)Remote modules (no local version):$(NC)"
-	@go list -m all | grep "github.com/maximhq/bifrost" | grep " v" | sed 's/^/  → /'
+	@go list -m all | grep "github.com/grevinden/bifrost" | grep " v" | sed 's/^/  → /'
 	@$(ECHO) ""
 	@$(ECHO) "$(YELLOW)Note: go.work files are not committed to version control$(NC)"
 

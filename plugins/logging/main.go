@@ -13,14 +13,14 @@ import (
 	"time"
 
 	"github.com/bytedance/sonic"
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/mcp"
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/configstore/tables"
-	"github.com/maximhq/bifrost/framework/logstore"
-	"github.com/maximhq/bifrost/framework/mcpcatalog"
-	"github.com/maximhq/bifrost/framework/modelcatalog"
-	"github.com/maximhq/bifrost/framework/streaming"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/mcp"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/configstore/tables"
+	"github.com/grevinden/bifrost/framework/logstore"
+	"github.com/grevinden/bifrost/framework/mcpcatalog"
+	"github.com/grevinden/bifrost/framework/modelcatalog"
+	"github.com/grevinden/bifrost/framework/streaming"
 )
 
 const (
@@ -213,9 +213,7 @@ func (p *LoggerPlugin) scheduleDeferredUsageUpdate(ctx *schemas.BifrostContext, 
 	if !ok || deferredChan == nil {
 		return
 	}
-	p.wg.Add(1)
-	go func() {
-		defer p.wg.Done()
+	p.wg.Go(func() {
 		// Large-response phase B closes this channel after trailing usage extraction completes.
 		deferredUsage, chanOpen := <-deferredChan
 		if !chanOpen || deferredUsage == nil {
@@ -231,7 +229,7 @@ func (p *LoggerPlugin) scheduleDeferredUsageUpdate(ctx *schemas.BifrostContext, 
 			p.logger.Warn("deferred usage update dropped for request %s: semaphore full", requestID)
 			return
 		}
-		usageUpdates := map[string]interface{}{
+		usageUpdates := map[string]any{
 			"prompt_tokens":     deferredUsage.PromptTokens,
 			"completion_tokens": deferredUsage.CompletionTokens,
 			"total_tokens":      deferredUsage.TotalTokens,
@@ -247,7 +245,7 @@ func (p *LoggerPlugin) scheduleDeferredUsageUpdate(ctx *schemas.BifrostContext, 
 		// then fail
 		var found bool
 		var findErr error
-		for i := 0; i < 3; i++ {
+		for i := range 3 {
 			found, findErr = p.store.IsLogEntryPresent(p.ctx, requestID)
 			if findErr != nil {
 				p.logger.Warn("failed to check if log entry is present for request %s: %v", requestID, findErr)
@@ -265,7 +263,7 @@ func (p *LoggerPlugin) scheduleDeferredUsageUpdate(ctx *schemas.BifrostContext, 
 		if updErr := p.store.Update(p.ctx, requestID, usageUpdates); updErr != nil {
 			p.logger.Warn("failed to update deferred usage for request %s: %v", requestID, updErr)
 		}
-	}()
+	})
 }
 
 // RecalculateCostResult represents summary stats from a cost backfill operation
@@ -547,7 +545,7 @@ func (p *LoggerPlugin) HTTPTransportStreamChunkHook(ctx *schemas.BifrostContext,
 // captureLoggingHeaders extracts configured logging headers and x-bf-lh-* prefixed headers
 // from the request context. Returns a new metadata map, or nil if no headers were captured.
 // System entries (e.g. isAsyncRequest) should be set AFTER calling this so they take precedence.
-func (p *LoggerPlugin) captureLoggingHeaders(ctx *schemas.BifrostContext) map[string]interface{} {
+func (p *LoggerPlugin) captureLoggingHeaders(ctx *schemas.BifrostContext) map[string]any {
 	allHeaders, _ := ctx.Value(schemas.BifrostContextKeyRequestHeaders).(map[string]string)
 	if allHeaders == nil {
 		return nil
@@ -791,7 +789,7 @@ func (p *LoggerPlugin) PreLLMHook(ctx *schemas.BifrostContext, req *schemas.Bifr
 	// System entries are set after so they take precedence over dynamic header values
 	if isAsync, ok := ctx.Value(schemas.BifrostIsAsyncRequest).(bool); ok && isAsync {
 		if initialData.Metadata == nil {
-			initialData.Metadata = make(map[string]interface{})
+			initialData.Metadata = make(map[string]any)
 		}
 		initialData.Metadata["isAsyncRequest"] = true
 	}
@@ -932,7 +930,7 @@ func (p *LoggerPlugin) PostLLMHook(ctx *schemas.BifrostContext, result *schemas.
 			entry.MetadataParsed = mergeRealtimeMetadata(p.captureLoggingHeaders(ctx), ctx)
 			if isAsync, ok := ctx.Value(schemas.BifrostIsAsyncRequest).(bool); ok && isAsync {
 				if entry.MetadataParsed == nil {
-					entry.MetadataParsed = make(map[string]interface{})
+					entry.MetadataParsed = make(map[string]any)
 				}
 				entry.MetadataParsed["isAsyncRequest"] = true
 			}
@@ -1319,10 +1317,7 @@ drainQueue:
 			p.logger.Warn("logging plugin cleanup deadline reached; dropping %d entries", len(batch))
 			return
 		}
-		chunkSize := p.writerConfig.MaxBatchSize
-		if chunkSize > len(batch) {
-			chunkSize = len(batch)
-		}
+		chunkSize := min(p.writerConfig.MaxBatchSize, len(batch))
 		p.safeProcessBatch(batch[:chunkSize])
 		batch = batch[chunkSize:]
 	}
@@ -1602,11 +1597,11 @@ func (p *LoggerPlugin) PostMCPHook(ctx *schemas.BifrostContext, resp *schemas.Bi
 	} else if resp != nil {
 		entry.Status = "success"
 		if p.contentLoggingEnabled(ctx) {
-			var result interface{}
+			var result any
 			if resp.ChatMessage != nil {
 				if resp.ChatMessage.Content != nil && resp.ChatMessage.Content.ContentStr != nil {
 					contentStr := *resp.ChatMessage.Content.ContentStr
-					var parsedContent interface{}
+					var parsedContent any
 					if err := sonic.Unmarshal([]byte(contentStr), &parsedContent); err == nil {
 						result = parsedContent
 					} else {

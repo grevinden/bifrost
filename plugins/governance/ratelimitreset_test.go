@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	configstoreTables "github.com/maximhq/bifrost/framework/configstore/tables"
+	configstoreTables "github.com/grevinden/bifrost/framework/configstore/tables"
 )
 
 const resetBenchmarkVirtualKeys = 5000
@@ -41,9 +41,9 @@ func TestRequestTimeRateLimitResetPerformance(t *testing.T) {
 	// timingBudgetAttempts runs, so a single noisy run cannot flake the test.
 	maxPerOp := scaleTimingBudget(200 * time.Microsecond)
 	var bestPerOp time.Duration
-	for attempt := 0; attempt < timingBudgetAttempts; attempt++ {
+	for range timingBudgetAttempts {
 		start := time.Now()
-		for i := 0; i < iterations; i++ {
+		for range iterations {
 			markRequestRateLimitExpired(store, rateLimitID)
 			if err := store.BumpRateLimitUsage(ctx, rateLimitID, 0, false, true); err != nil {
 				t.Fatal(err)
@@ -562,7 +562,7 @@ func TestBackgroundResetReferenceRefreshScales(t *testing.T) {
 	store := newStandaloneStoreForResetBenchmark()
 	const vkCount = 3000
 
-	for i := 0; i < vkCount; i++ {
+	for i := range vkCount {
 		rl := buildRateLimit(fmt.Sprintf("scale-rl-%06d", i), 1_000_000, 1_000_000)
 		rl.RequestCurrentUsage = 9
 		rl.RequestLastReset = time.Now().Add(-2 * time.Minute) // "1m" window: expired
@@ -582,9 +582,9 @@ func TestBackgroundResetReferenceRefreshScales(t *testing.T) {
 	// weakening the O(dueLimits x totalVKs) regression guard.
 	maxPerReset := scaleTimingBudget(500 * time.Microsecond)
 	var bestPerReset time.Duration
-	for attempt := 0; attempt < timingBudgetAttempts; attempt++ {
+	for attempt := range timingBudgetAttempts {
 		if attempt > 0 {
-			for i := 0; i < vkCount; i++ {
+			for i := range vkCount {
 				markRequestRateLimitExpired(store, fmt.Sprintf("scale-rl-%06d", i))
 			}
 		}
@@ -660,7 +660,7 @@ func TestBudgetResetAccuracyAt100kKeysAllDue(t *testing.T) {
 
 	seedNow := time.Now()
 	staleResets := make([]time.Time, keyCount)
-	for i := 0; i < keyCount; i++ {
+	for i := range keyCount {
 		duration := durations[i%3]
 		stale := seedNow.Add(staleOffsets[duration])
 		staleResets[i] = stale
@@ -672,9 +672,9 @@ func TestBudgetResetAccuracyAt100kKeysAllDue(t *testing.T) {
 	sweepBudget := scaleTimingBudget(10 * time.Second)
 	var bestElapsed time.Duration
 	var beforeSweep, afterSweep time.Time
-	for attempt := 0; attempt < timingBudgetAttempts; attempt++ {
+	for attempt := range timingBudgetAttempts {
 		if attempt > 0 {
-			for i := 0; i < keyCount; i++ {
+			for i := range keyCount {
 				id := fmt.Sprintf("acc-budget-%06d", i)
 				raw, ok := store.budgets.Load(id)
 				if !ok || raw == nil {
@@ -701,7 +701,7 @@ func TestBudgetResetAccuracyAt100kKeysAllDue(t *testing.T) {
 			break
 		}
 	}
-	for i := 0; i < keyCount; i++ {
+	for i := range keyCount {
 		duration := durations[i%3]
 		budget := store.LoadBudget(ctx, fmt.Sprintf("acc-budget-%06d", i))
 		if budget == nil {
@@ -750,7 +750,7 @@ func TestBudgetResetAccuracyAt100kKeysSparse(t *testing.T) {
 	staleWeek := seedNow.Add(-8 * 24 * time.Hour)
 	freshResets := make([]time.Time, keyCount)
 	dueCount := 0
-	for i := 0; i < keyCount; i++ {
+	for i := range keyCount {
 		if i%10 == 7 { // sparse ownership: every 10th key has no budget
 			vk := buildVirtualKey(
 				fmt.Sprintf("acc-vk-%06d", i),
@@ -776,7 +776,7 @@ func TestBudgetResetAccuracyAt100kKeysSparse(t *testing.T) {
 	// set so the sweep does the same work again, filtering host noise.
 	sweepBudget := scaleTimingBudget(5 * time.Second)
 	var bestElapsed time.Duration
-	for attempt := 0; attempt < timingBudgetAttempts; attempt++ {
+	for attempt := range timingBudgetAttempts {
 		if attempt > 0 {
 			for i := 0; i < keyCount; i += 100 {
 				id := fmt.Sprintf("acc-budget-%06d", i)
@@ -804,7 +804,7 @@ func TestBudgetResetAccuracyAt100kKeysSparse(t *testing.T) {
 			break
 		}
 	}
-	for i := 0; i < keyCount; i++ {
+	for i := range keyCount {
 		if i%10 == 7 {
 			continue
 		}
@@ -849,7 +849,7 @@ func seedResetBenchmarkVirtualKeys(ctx context.Context, store *LocalGovernanceSt
 	rateLimit := buildRateLimit(rateLimitID, 1_000_000_000, 1_000_000_000)
 	store.rateLimits.Store(rateLimitID, rateLimit)
 
-	for i := 0; i < virtualKeys; i++ {
+	for i := range virtualKeys {
 		vk := buildVirtualKeyWithRateLimit(
 			fmt.Sprintf("reset-vk-%05d", i),
 			fmt.Sprintf("sk-bf-reset-%05d", i),

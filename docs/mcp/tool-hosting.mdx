@@ -29,7 +29,7 @@ Bifrost automatically creates an internal MCP server (`bifrostInternal`) when yo
 Create a schema that describes your tool's parameters:
 
 ```go
-import "github.com/maximhq/bifrost/core/schemas"
+import "github.com/grevinden/bifrost/core/schemas"
 
 // Define the tool schema
 calculatorSchema := schemas.ChatTool{
@@ -104,8 +104,8 @@ Register your tool with Bifrost:
 ```go
 import (
     "context"
-    bifrost "github.com/maximhq/bifrost/core"
-    "github.com/maximhq/bifrost/core/schemas"
+    bifrost "github.com/grevinden/bifrost/core"
+    "github.com/grevinden/bifrost/core/schemas"
 )
 
 func main() {
@@ -148,8 +148,8 @@ import (
     "fmt"
     "time"
 
-    bifrost "github.com/maximhq/bifrost/core"
-    "github.com/maximhq/bifrost/core/schemas"
+    bifrost "github.com/grevinden/bifrost/core"
+    "github.com/grevinden/bifrost/core/schemas"
 )
 
 func main() {

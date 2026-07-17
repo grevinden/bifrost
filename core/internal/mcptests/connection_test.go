@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -189,11 +189,11 @@ func TestInProcessConnection(t *testing.T) {
 		Type: schemas.ChatToolTypeFunction,
 		Function: &schemas.ChatToolFunction{
 			Name:        "test_inprocess_tool",
-			Description: schemas.Ptr("A test tool for in-process execution"),
+			Description: new("A test tool for in-process execution"),
 			Parameters: &schemas.ToolFunctionParameters{
 				Type: "object",
 				Properties: schemas.NewOrderedMapFromPairs(
-					schemas.KV("message", map[string]interface{}{
+					schemas.KV("message", map[string]any{
 						"type":        "string",
 						"description": "The message to process",
 					}),
@@ -206,7 +206,7 @@ func TestInProcessConnection(t *testing.T) {
 		"test_inprocess_tool",
 		"A test tool for in-process execution",
 		func(args any) (string, error) {
-			argsMap, ok := args.(map[string]interface{})
+			argsMap, ok := args.(map[string]any)
 			if !ok {
 				return "", assert.AnError
 			}
@@ -214,7 +214,7 @@ func TestInProcessConnection(t *testing.T) {
 			if !ok {
 				return "", assert.AnError
 			}
-			result := map[string]interface{}{
+			result := map[string]any{
 				"result": "processed: " + message,
 			}
 			resultJSON, _ := json.Marshal(result)
@@ -241,11 +241,11 @@ func TestInProcessToolExecution(t *testing.T) {
 		Type: schemas.ChatToolTypeFunction,
 		Function: &schemas.ChatToolFunction{
 			Name:        "echo_inprocess",
-			Description: schemas.Ptr("Echoes the input"),
+			Description: new("Echoes the input"),
 			Parameters: &schemas.ToolFunctionParameters{
 				Type: "object",
 				Properties: schemas.NewOrderedMapFromPairs(
-					schemas.KV("text", map[string]interface{}{
+					schemas.KV("text", map[string]any{
 						"type": "string",
 					}),
 				),
@@ -256,7 +256,7 @@ func TestInProcessToolExecution(t *testing.T) {
 		"echo_inprocess",
 		"Echoes the input",
 		func(args any) (string, error) {
-			argsMap, ok := args.(map[string]interface{})
+			argsMap, ok := args.(map[string]any)
 			if !ok {
 				return "", assert.AnError
 			}
@@ -274,10 +274,10 @@ func TestInProcessToolExecution(t *testing.T) {
 	ctx := createTestContext()
 	// Create a tool call for echo_inprocess (matching the registered tool name with prefix)
 	toolCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-1"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-1"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("bifrostInternal-echo_inprocess"),
+			Name:      new("bifrostInternal-echo_inprocess"),
 			Arguments: `{"text":"test message"}`,
 		},
 	}

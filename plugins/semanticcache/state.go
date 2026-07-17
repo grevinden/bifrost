@@ -26,7 +26,7 @@ type cacheState struct {
 	// FilteredInput caches getInputForCaching(req) so attachment extraction,
 	// embedding text extraction, and history-threshold checks reuse the same
 	// filtered slice instead of re-filtering on each call.
-	FilteredInput interface{}
+	FilteredInput any
 
 	// ShortCircuited is set when PreLLMHook served the response from cache
 	// (returned a non-nil LLMPluginShortCircuit). PostLLMHook uses this to
@@ -94,7 +94,7 @@ func (p *Plugin) runCacheStateCleanupLoop() {
 func (p *Plugin) cleanupOldCacheStates() {
 	cutoff := time.Now().Add(-cacheStateMaxAge)
 	var toDelete []string
-	p.cacheStates.Range(func(key, value interface{}) bool {
+	p.cacheStates.Range(func(key, value any) bool {
 		state := value.(*cacheState)
 		if state.CreatedAt.Before(cutoff) {
 			toDelete = append(toDelete, key.(string))

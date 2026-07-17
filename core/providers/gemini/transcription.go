@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/maximhq/bifrost/core/providers/utils"
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/providers/utils"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // ToBifrostTranscriptionRequest converts a GeminiGenerationRequest to a BifrostTranscriptionRequest
@@ -51,7 +51,7 @@ func (request *GeminiGenerationRequest) ToBifrostTranscriptionRequest(ctx *schem
 					bifrostReq.Params = &schemas.TranscriptionParameters{}
 				}
 				if bifrostReq.Params.ExtraParams == nil {
-					bifrostReq.Params.ExtraParams = make(map[string]interface{})
+					bifrostReq.Params.ExtraParams = make(map[string]any)
 				}
 				bifrostReq.Params.ExtraParams["file_uri"] = part.FileData.FileURI
 				if audioMimeType == "" {
@@ -79,7 +79,7 @@ func (request *GeminiGenerationRequest) ToBifrostTranscriptionRequest(ctx *schem
 	// Handle safety settings from request
 	if len(request.SafetySettings) > 0 {
 		if bifrostReq.Params.ExtraParams == nil {
-			bifrostReq.Params.ExtraParams = make(map[string]interface{})
+			bifrostReq.Params.ExtraParams = make(map[string]any)
 		}
 		bifrostReq.Params.ExtraParams["safety_settings"] = request.SafetySettings
 	}
@@ -87,7 +87,7 @@ func (request *GeminiGenerationRequest) ToBifrostTranscriptionRequest(ctx *schem
 	// Handle cached content
 	if request.CachedContent != "" {
 		if bifrostReq.Params.ExtraParams == nil {
-			bifrostReq.Params.ExtraParams = make(map[string]interface{})
+			bifrostReq.Params.ExtraParams = make(map[string]any)
 		}
 		bifrostReq.Params.ExtraParams["cached_content"] = request.CachedContent
 	}
@@ -95,7 +95,7 @@ func (request *GeminiGenerationRequest) ToBifrostTranscriptionRequest(ctx *schem
 	// Handle labels
 	if len(request.Labels) > 0 {
 		if bifrostReq.Params.ExtraParams == nil {
-			bifrostReq.Params.ExtraParams = make(map[string]interface{})
+			bifrostReq.Params.ExtraParams = make(map[string]any)
 		}
 		bifrostReq.Params.ExtraParams["labels"] = request.Labels
 	}
@@ -184,18 +184,18 @@ func (response *GenerateContentResponse) ToBifrostTranscriptionResponse() *schem
 	if len(response.Candidates) > 0 {
 		candidate := response.Candidates[0]
 		if candidate.Content != nil && len(candidate.Content.Parts) > 0 {
-			var textContent string
+			var textContent strings.Builder
 
 			// Extract text content from all parts
 			for _, part := range candidate.Content.Parts {
 				if part.Text != "" {
-					textContent += part.Text
+					textContent.WriteString(part.Text)
 				}
 			}
 
-			if textContent != "" {
-				bifrostResp.Text = textContent
-				bifrostResp.Task = schemas.Ptr("transcribe")
+			if textContent.String() != "" {
+				bifrostResp.Text = textContent.String()
+				bifrostResp.Task = new("transcribe")
 
 				// Set usage information with modality details
 				bifrostResp.Usage = convertGeminiUsageMetadataToTranscriptionUsage(response.UsageMetadata)

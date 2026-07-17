@@ -85,7 +85,7 @@ func compressZstd(data []byte) []byte {
 
 func TestAcquireReleaseGzipReader(t *testing.T) {
 	compressed := compressGzip(testPayload)
-	for i := 0; i < poolTestIterations; i++ {
+	for i := range poolTestIterations {
 		gz, err := AcquireGzipReader(bytes.NewReader(compressed))
 		if err != nil {
 			t.Fatalf("iteration %d: AcquireGzipReader error: %v", i, err)
@@ -103,7 +103,7 @@ func TestAcquireReleaseGzipReader(t *testing.T) {
 
 func TestAcquireReleaseFlateReader(t *testing.T) {
 	compressed := compressFlate(testPayload)
-	for i := 0; i < poolTestIterations; i++ {
+	for i := range poolTestIterations {
 		fr, err := AcquireFlateReader(bytes.NewReader(compressed))
 		if err != nil {
 			t.Fatalf("iteration %d: AcquireFlateReader error: %v", i, err)
@@ -121,7 +121,7 @@ func TestAcquireReleaseFlateReader(t *testing.T) {
 
 func TestAcquireReleaseBrotliReader(t *testing.T) {
 	compressed := compressBrotli(testPayload)
-	for i := 0; i < poolTestIterations; i++ {
+	for i := range poolTestIterations {
 		br := AcquireBrotliReader(bytes.NewReader(compressed))
 		got, err := io.ReadAll(br)
 		if err != nil {
@@ -136,7 +136,7 @@ func TestAcquireReleaseBrotliReader(t *testing.T) {
 
 func TestAcquireReleaseZstdDecoder(t *testing.T) {
 	compressed := compressZstd(testPayload)
-	for i := 0; i < poolTestIterations; i++ {
+	for i := range poolTestIterations {
 		dec, err := AcquireZstdDecoder(bytes.NewReader(compressed))
 		if err != nil {
 			t.Fatalf("iteration %d: AcquireZstdDecoder error: %v", i, err)
@@ -373,7 +373,7 @@ func TestPool_RecoveryAndReuse(t *testing.T) {
 	// a fresh instance is created and released back, making the pool healthy.
 	t.Run("gzip", func(t *testing.T) {
 		compressed := compressGzip(testPayload)
-		for i := 0; i < 3; i++ {
+		for i := range 3 {
 			gz, err := AcquireGzipReader(bytes.NewReader(compressed))
 			if err != nil {
 				t.Fatalf("iteration %d: %v", i, err)
@@ -388,7 +388,7 @@ func TestPool_RecoveryAndReuse(t *testing.T) {
 
 	t.Run("deflate", func(t *testing.T) {
 		compressed := compressFlate(testPayload)
-		for i := 0; i < 3; i++ {
+		for i := range 3 {
 			fr, err := AcquireFlateReader(bytes.NewReader(compressed))
 			if err != nil {
 				t.Fatalf("iteration %d: %v", i, err)
@@ -403,7 +403,7 @@ func TestPool_RecoveryAndReuse(t *testing.T) {
 
 	t.Run("brotli", func(t *testing.T) {
 		compressed := compressBrotli(testPayload)
-		for i := 0; i < 3; i++ {
+		for i := range 3 {
 			br := AcquireBrotliReader(bytes.NewReader(compressed))
 			got, err := io.ReadAll(br)
 			if err != nil {
@@ -418,7 +418,7 @@ func TestPool_RecoveryAndReuse(t *testing.T) {
 
 	t.Run("zstd", func(t *testing.T) {
 		compressed := compressZstd(testPayload)
-		for i := 0; i < 3; i++ {
+		for i := range 3 {
 			dec, err := AcquireZstdDecoder(bytes.NewReader(compressed))
 			if err != nil {
 				t.Fatalf("iteration %d: %v", i, err)

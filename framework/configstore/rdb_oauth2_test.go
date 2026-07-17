@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/configstore/tables"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/configstore/tables"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -184,7 +184,7 @@ func TestConsentOAuth2AuthorizeRequest_AtomicPendingTransition(t *testing.T) {
 
 	req := &tables.TableOAuth2AuthorizeRequest{
 		ID:        "req-1",
-		CodeHash:  strPtr("code-hash-1"),
+		CodeHash:  new("code-hash-1"),
 		BfMode:    "vk",
 		BfSub:     "vk-1",
 		UpdatedAt: time.Now(),
@@ -202,7 +202,7 @@ func TestConsentOAuth2AuthorizeRequest_AtomicPendingTransition(t *testing.T) {
 	// A second consent on the now-consented row matches zero rows: ErrNotFound,
 	// and the originally minted code hash is left untouched.
 	err = s.ConsentOAuth2AuthorizeRequest(ctx, &tables.TableOAuth2AuthorizeRequest{
-		ID: "req-1", CodeHash: strPtr("code-hash-2"), UpdatedAt: time.Now(),
+		ID: "req-1", CodeHash: new("code-hash-2"), UpdatedAt: time.Now(),
 	})
 	assert.ErrorIs(t, err, ErrNotFound)
 
@@ -214,7 +214,7 @@ func TestConsentOAuth2AuthorizeRequest_AtomicPendingTransition(t *testing.T) {
 func TestConsumeOAuth2AuthorizeRequest_SingleUse(t *testing.T) {
 	s := setupOAuth2TestStore(t)
 	ctx := context.Background()
-	seedAuthorizeRequest(t, s, "req-1", tables.OAuth2AuthorizeRequestStatusConsented, strPtr("ch"), time.Now().Add(time.Minute))
+	seedAuthorizeRequest(t, s, "req-1", tables.OAuth2AuthorizeRequestStatusConsented, new("ch"), time.Now().Add(time.Minute))
 
 	rt := makeRefreshToken("rt-1", "req-1", "client-1", "hash-1")
 	require.NoError(t, s.ConsumeOAuth2AuthorizeRequest(ctx, "req-1", rt))
@@ -238,7 +238,7 @@ func TestConsumeOAuth2AuthorizeRequest_SingleUse(t *testing.T) {
 func TestConsumeOAuth2AuthorizeRequest_ExpiredCodeRejected(t *testing.T) {
 	s := setupOAuth2TestStore(t)
 	ctx := context.Background()
-	seedAuthorizeRequest(t, s, "req-1", tables.OAuth2AuthorizeRequestStatusConsented, strPtr("ch"), time.Now().Add(-time.Minute))
+	seedAuthorizeRequest(t, s, "req-1", tables.OAuth2AuthorizeRequestStatusConsented, new("ch"), time.Now().Add(-time.Minute))
 
 	rt := makeRefreshToken("rt-1", "req-1", "client-1", "hash-1")
 	err := s.ConsumeOAuth2AuthorizeRequest(ctx, "req-1", rt)
@@ -383,8 +383,8 @@ func TestSweepExpiredOAuth2AuthorizeRequests(t *testing.T) {
 	future := time.Now().Add(time.Minute)
 
 	seedAuthorizeRequest(t, s, "pending-expired", tables.OAuth2AuthorizeRequestStatusPending, nil, past)
-	seedAuthorizeRequest(t, s, "consented-expired", tables.OAuth2AuthorizeRequestStatusConsented, strPtr("ch"), past)
-	seedAuthorizeRequest(t, s, "issued-expired", tables.OAuth2AuthorizeRequestStatusCodeIssued, strPtr("ch2"), past)
+	seedAuthorizeRequest(t, s, "consented-expired", tables.OAuth2AuthorizeRequestStatusConsented, new("ch"), past)
+	seedAuthorizeRequest(t, s, "issued-expired", tables.OAuth2AuthorizeRequestStatusCodeIssued, new("ch2"), past)
 	seedAuthorizeRequest(t, s, "pending-fresh", tables.OAuth2AuthorizeRequestStatusPending, nil, future)
 
 	require.NoError(t, s.SweepExpiredOAuth2AuthorizeRequests(ctx))

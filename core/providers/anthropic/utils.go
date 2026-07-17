@@ -13,8 +13,8 @@ import (
 	"github.com/tidwall/sjson"
 	"github.com/valyala/fasthttp"
 
-	providerUtils "github.com/maximhq/bifrost/core/providers/utils"
-	"github.com/maximhq/bifrost/core/schemas"
+	providerUtils "github.com/grevinden/bifrost/core/providers/utils"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // anthropicToolTypePrefixToFeature maps Anthropic server-tool type prefixes

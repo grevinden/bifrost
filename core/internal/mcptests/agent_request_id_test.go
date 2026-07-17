@@ -6,9 +6,9 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/maximhq/bifrost/core/mcp"
-	"github.com/maximhq/bifrost/core/mcp/codemode/starlark"
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/mcp"
+	"github.com/grevinden/bifrost/core/mcp/codemode/starlark"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -249,7 +249,7 @@ func TestAgent_RequestID_PreservationAcrossDepth(t *testing.T) {
 	assert.Len(t, generatedIDs, 5, "Should generate 5 request IDs for 5 iterations")
 
 	// Verify ID sequence
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		expectedID := fmt.Sprintf("%s-depth-%d", originalRequestID, i+1)
 		assert.Equal(t, expectedID, generatedIDs[i], "Request ID %d should match pattern", i+1)
 	}

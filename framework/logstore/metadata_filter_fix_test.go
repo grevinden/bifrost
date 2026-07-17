@@ -130,7 +130,7 @@ func runPaginationTotalCountSuite(t *testing.T, store *RDBLogStore) {
 	const total = 5
 	const pageLimit = 2
 
-	for i := 0; i < total; i++ {
+	for i := range total {
 		err := store.Create(ctx, &Log{
 			ID:        fmt.Sprintf("%s-log-%d", t.Name(), i),
 			Timestamp: now.Add(-time.Duration(i) * time.Second),

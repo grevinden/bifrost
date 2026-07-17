@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/vectorstore"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/vectorstore"
 )
 
 // TestCacheTypeDirectOnly tests that CacheTypeKey set to "direct" only performs direct hash matching
@@ -352,7 +352,7 @@ func (s *directFastPathStore) GetNearest(ctx context.Context, namespace string, 
 
 func (s *directFastPathStore) RequiresVectors() bool { return false }
 
-func (s *directFastPathStore) Add(ctx context.Context, namespace string, id string, embedding []float32, metadata map[string]interface{}) error {
+func (s *directFastPathStore) Add(ctx context.Context, namespace string, id string, embedding []float32, metadata map[string]any) error {
 	s.addIDs = append(s.addIDs, id)
 	s.chunks[id] = vectorstore.SearchResult{
 		ID:         id,
@@ -381,7 +381,7 @@ func newCrossProviderChatRequest(provider schemas.ModelProvider, model string, r
 				{
 					Role: schemas.ChatMessageRoleUser,
 					Content: &schemas.ChatMessageContent{
-						ContentStr: bifrost.Ptr(prompt),
+						ContentStr: new(prompt),
 					},
 				},
 			},
@@ -393,8 +393,8 @@ func TestDirectCacheHitPreservesCachedProviderMetadataAcrossProviders(t *testing
 	logger := bifrost.NewDefaultLogger(schemas.LogLevelDebug)
 	store := newDirectFastPathStore()
 	config := getDefaultTestConfig()
-	config.CacheByProvider = bifrost.Ptr(false)
-	config.CacheByModel = bifrost.Ptr(false)
+	config.CacheByProvider = new(false)
+	config.CacheByModel = new(false)
 	config.ConversationHistoryThreshold = DefaultConversationHistoryThreshold
 	plugin := &Plugin{
 		store:  store,
@@ -425,7 +425,7 @@ func TestDirectCacheHitPreservesCachedProviderMetadataAcrossProviders(t *testing
 						Message: &schemas.ChatMessage{
 							Role: schemas.ChatMessageRoleAssistant,
 							Content: &schemas.ChatMessageContent{
-								ContentStr: bifrost.Ptr("Go schedules lightweight goroutines in user space onto a smaller pool of OS threads."),
+								ContentStr: new("Go schedules lightweight goroutines in user space onto a smaller pool of OS threads."),
 							},
 						},
 					},
@@ -487,8 +487,8 @@ func TestStreamingDirectCacheHitPreservesCachedProviderMetadataAcrossProviders(t
 	logger := bifrost.NewDefaultLogger(schemas.LogLevelDebug)
 	store := newDirectFastPathStore()
 	config := getDefaultTestConfig()
-	config.CacheByProvider = bifrost.Ptr(false)
-	config.CacheByModel = bifrost.Ptr(false)
+	config.CacheByProvider = new(false)
+	config.CacheByModel = new(false)
 	config.ConversationHistoryThreshold = DefaultConversationHistoryThreshold
 	plugin := &Plugin{
 		store:  store,
@@ -517,7 +517,7 @@ func TestStreamingDirectCacheHitPreservesCachedProviderMetadataAcrossProviders(t
 		streamEnd    bool
 	}{
 		{content: "Go schedules lightweight goroutines", chunkIndex: 0, finishReason: nil, streamEnd: false},
-		{content: " onto a smaller pool of OS threads.", chunkIndex: 1, finishReason: bifrost.Ptr("stop"), streamEnd: true},
+		{content: " onto a smaller pool of OS threads.", chunkIndex: 1, finishReason: new("stop"), streamEnd: true},
 	}
 
 	for _, chunk := range chunks {
@@ -531,7 +531,7 @@ func TestStreamingDirectCacheHitPreservesCachedProviderMetadataAcrossProviders(t
 						FinishReason: chunk.finishReason,
 						ChatStreamResponseChoice: &schemas.ChatStreamResponseChoice{
 							Delta: &schemas.ChatStreamResponseChoiceDelta{
-								Content: bifrost.Ptr(chunk.content),
+								Content: new(chunk.content),
 							},
 						},
 					},
@@ -674,7 +674,7 @@ func TestCacheTypeDirectUsesChunkLookup(t *testing.T) {
 
 	store.chunks[directID] = vectorstore.SearchResult{
 		ID: directID,
-		Properties: map[string]interface{}{
+		Properties: map[string]any{
 			"response":   string(responseJSON),
 			"expires_at": time.Now().Add(time.Minute).Unix(),
 		},
@@ -903,7 +903,7 @@ func TestGetOrCreateStreamAccumulatorUsesSingleAccumulatorPerRequest(t *testing.
 	requestID := "stream-request"
 	storageID := "stream-storage"
 	embedding := []float32{1, 2, 3}
-	metadata := map[string]interface{}{"cache_key": "stream-cache"}
+	metadata := map[string]any{"cache_key": "stream-cache"}
 	ttl := time.Minute
 
 	const workers = 8

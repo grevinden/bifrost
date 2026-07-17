@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // authTestLogger is a minimal no-op logger for provider construction in tests.

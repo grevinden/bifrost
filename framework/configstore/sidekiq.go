@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/maximhq/bifrost/framework/configstore/tables"
+	"github.com/grevinden/bifrost/framework/configstore/tables"
 	"gorm.io/gorm"
 )
 

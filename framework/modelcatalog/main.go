@@ -17,12 +17,12 @@ import (
 	"sync"
 	"time"
 
-	providerUtils "github.com/maximhq/bifrost/core/providers/utils"
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/configstore"
-	"github.com/maximhq/bifrost/framework/modelcatalog/datasheet"
-	"github.com/maximhq/bifrost/framework/modelcatalog/keyconfig"
-	"github.com/maximhq/bifrost/framework/modelcatalog/live"
+	providerUtils "github.com/grevinden/bifrost/core/providers/utils"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/configstore"
+	"github.com/grevinden/bifrost/framework/modelcatalog/datasheet"
+	"github.com/grevinden/bifrost/framework/modelcatalog/keyconfig"
+	"github.com/grevinden/bifrost/framework/modelcatalog/live"
 )
 
 type ModelCatalog struct {
@@ -144,9 +144,7 @@ func Init(ctx context.Context, config *Config, configStore configstore.ConfigSto
 			}
 			if mc.hasPricingData() {
 				logger.Info("existing pricing data found in database, syncing from URL in background")
-				mc.wg.Add(1)
-				go func() {
-					defer mc.wg.Done()
+				mc.wg.Go(func() {
 					if err := mc.withDistributedLock(mc.syncCtx, "model_catalog_pricing_startup_sync", 10, func() error {
 						return mc.runPricingSync(mc.syncCtx)
 					}); err != nil {
@@ -154,7 +152,7 @@ func Init(ctx context.Context, config *Config, configStore configstore.ConfigSto
 					} else {
 						logger.Info("background startup pricing sync completed successfully")
 					}
-				}()
+				})
 			} else {
 				if err := mc.withDistributedLock(ctx, "model_catalog_pricing_startup_sync", 10, func() error {
 					return mc.runPricingSync(ctx)
@@ -172,9 +170,7 @@ func Init(ctx context.Context, config *Config, configStore configstore.ConfigSto
 			}
 			if n > 0 {
 				logger.Info("existing model parameters found in database (%d records), syncing from URL in background", n)
-				mc.wg.Add(1)
-				go func() {
-					defer mc.wg.Done()
+				mc.wg.Go(func() {
 					if err := mc.withDistributedLock(mc.syncCtx, "model_catalog_params_startup_sync", 10, func() error {
 						return mc.runParamsSync(mc.syncCtx)
 					}); err != nil {
@@ -182,7 +178,7 @@ func Init(ctx context.Context, config *Config, configStore configstore.ConfigSto
 					} else {
 						logger.Info("background startup model parameters sync completed successfully")
 					}
-				}()
+				})
 			} else {
 				if err := mc.withDistributedLock(ctx, "model_catalog_params_startup_sync", 10, func() error {
 					return mc.runParamsSync(ctx)
@@ -209,9 +205,7 @@ func Init(ctx context.Context, config *Config, configStore configstore.ConfigSto
 		}
 		if hasMCPLibraryData {
 			logger.Info("existing MCP library data found in database, syncing from URL in background")
-			mc.wg.Add(1)
-			go func() {
-				defer mc.wg.Done()
+			mc.wg.Go(func() {
 				if err := mc.withDistributedLock(mc.syncCtx, "model_catalog_mcp_library_startup_sync", 10, func() error {
 					return mc.syncMCPLibrary(mc.syncCtx)
 				}); err != nil {
@@ -221,7 +215,7 @@ func Init(ctx context.Context, config *Config, configStore configstore.ConfigSto
 					mc.lastMCPLibrarySyncedAt = time.Now()
 					mc.syncMu.Unlock()
 				}
-			}()
+			})
 		} else {
 			// Empty DB: attempt a blocking sync so the library page is populated
 			// immediately after boot. Unlike pricing, a failure here is non-fatal
@@ -444,9 +438,7 @@ func (mc *ModelCatalog) syncTick(ctx context.Context) {
 	// independent cadences don't block each other.
 	var outerWg sync.WaitGroup
 	if pricingDue {
-		outerWg.Add(1)
-		go func() {
-			defer outerWg.Done()
+		outerWg.Go(func() {
 			if err := mc.withDistributedLock(ctx, "model_catalog_pricing_sync", 10, func() error {
 				var wg sync.WaitGroup
 				var pricingErr, paramsErr error
@@ -479,12 +471,10 @@ func (mc *ModelCatalog) syncTick(ctx context.Context) {
 			}); err != nil {
 				mc.logger.Error("failed to run pricing sync: %v", err)
 			}
-		}()
+		})
 	}
 	if mcpLibraryDue {
-		outerWg.Add(1)
-		go func() {
-			defer outerWg.Done()
+		outerWg.Go(func() {
 			if err := mc.withDistributedLock(ctx, "model_catalog_mcp_library_sync", 10, func() error {
 				if err := mc.syncMCPLibrary(ctx); err != nil {
 					mc.logger.Error("background MCP library sync failed: %v", err)
@@ -497,7 +487,7 @@ func (mc *ModelCatalog) syncTick(ctx context.Context) {
 			}); err != nil {
 				mc.logger.Error("failed to run MCP library sync: %v", err)
 			}
-		}()
+		})
 	}
 	outerWg.Wait()
 	mc.logger.Debug("model catalog background sync completed")

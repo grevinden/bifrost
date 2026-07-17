@@ -10,10 +10,10 @@ import (
 	"testing"
 	"time"
 
-	schemas "github.com/maximhq/bifrost/core/schemas"
+	schemas "github.com/grevinden/bifrost/core/schemas"
 )
 
-// Regression tests for https://github.com/maximhq/bifrost/issues/4788.
+// Regression tests for https://github.com/grevinden/bifrost/issues/4788.
 //
 // When a streaming attempt fails through an error embedded in an HTTP 200 SSE
 // stream (e.g. rate limits sent as SSE events), the provider goroutine exits
@@ -127,7 +127,7 @@ func TestStreamFallbackAfterFirstChunkError(t *testing.T) {
 		Provider: schemas.OpenAI,
 		Model:    "gpt-4o-mini",
 		Input: []schemas.ChatMessage{
-			{Role: schemas.ChatMessageRoleUser, Content: &schemas.ChatMessageContent{ContentStr: schemas.Ptr("hi")}},
+			{Role: schemas.ChatMessageRoleUser, Content: &schemas.ChatMessageContent{ContentStr: new("hi")}},
 		},
 		Fallbacks: []schemas.Fallback{{Provider: schemas.Anthropic, Model: "claude-3-5-haiku-20241022"}},
 	})
@@ -175,7 +175,7 @@ func TestStreamRetryAfterFirstChunkError(t *testing.T) {
 		Provider: schemas.OpenAI,
 		Model:    "gpt-4o-mini",
 		Input: []schemas.ChatMessage{
-			{Role: schemas.ChatMessageRoleUser, Content: &schemas.ChatMessageContent{ContentStr: schemas.Ptr("hi")}},
+			{Role: schemas.ChatMessageRoleUser, Content: &schemas.ChatMessageContent{ContentStr: new("hi")}},
 		},
 	})
 	if bifrostErr != nil {

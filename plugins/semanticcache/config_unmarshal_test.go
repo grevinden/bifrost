@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	bifrost "github.com/maximhq/bifrost/core"
+	bifrost "github.com/grevinden/bifrost/core"
 )
 
 func TestUnmarshalJSON_DefaultCacheKey(t *testing.T) {
@@ -141,16 +141,16 @@ func TestUnmarshalJSON_BoolPointerFields(t *testing.T) {
 		{
 			name:               "all set to true",
 			json:               `{"dimension": 1536, "cache_by_model": true, "cache_by_provider": true, "exclude_system_prompt": true}`,
-			expectCacheByModel: bifrost.Ptr(true),
-			expectCacheByProv:  bifrost.Ptr(true),
-			expectExcludeSys:   bifrost.Ptr(true),
+			expectCacheByModel: new(true),
+			expectCacheByProv:  new(true),
+			expectExcludeSys:   new(true),
 		},
 		{
 			name:               "all set to false",
 			json:               `{"dimension": 1536, "cache_by_model": false, "cache_by_provider": false, "exclude_system_prompt": false}`,
-			expectCacheByModel: bifrost.Ptr(false),
-			expectCacheByProv:  bifrost.Ptr(false),
-			expectExcludeSys:   bifrost.Ptr(false),
+			expectCacheByModel: new(false),
+			expectCacheByProv:  new(false),
+			expectExcludeSys:   new(false),
 		},
 		{
 			name:               "all omitted",

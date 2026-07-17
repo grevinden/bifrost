@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // RunEagerInputStreamingTest tests that setting eager_input_streaming: true on
@@ -51,7 +51,7 @@ func RunEagerInputStreamingTest(t *testing.T, client *bifrost.Bifrost, ctx conte
 			Model:    testConfig.ChatModel,
 			Input:    chatMessages,
 			Params: &schemas.ChatParameters{
-				MaxCompletionTokens: bifrost.Ptr(300),
+				MaxCompletionTokens: new(300),
 				Tools:               []schemas.ChatTool{*chatTool},
 			},
 			Fallbacks: testConfig.Fallbacks,
@@ -60,12 +60,12 @@ func RunEagerInputStreamingTest(t *testing.T, client *bifrost.Bifrost, ctx conte
 		retryConfig := StreamingRetryConfig()
 		retryContext := TestRetryContext{
 			ScenarioName: "EagerInputStreaming",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"should_stream_content":  true,
 				"should_have_tool_calls": true,
 				"tool_name":              "get_weather",
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider":              testConfig.Provider,
 				"model":                 testConfig.ChatModel,
 				"eager_input_streaming": true,

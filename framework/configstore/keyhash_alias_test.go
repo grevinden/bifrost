@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/bytedance/sonic"
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -26,7 +26,7 @@ func TestGenerateKeyHash_LegacyAliasesPreserveByteShape(t *testing.T) {
 		Name:    "openai-key",
 		Value:   *schemas.NewSecretVar("sk-test"),
 		Weight:  1.0,
-		Aliases: schemas.KeyAliases{"best-model": {ModelID: "gpt-4o-deployment"}},
+		Aliases: schemas.KeyAliases{"best-model": schemas.AliasConfig{ModelID: "gpt-4o-deployment"}},
 	}
 
 	gotMarshal, err := sonic.Marshal(key.Aliases)
@@ -54,13 +54,13 @@ func TestGenerateKeyHash_RichAliasesProduceDifferentHash(t *testing.T) {
 		Name:    "k",
 		Value:   *schemas.NewSecretVar("sk"),
 		Weight:  1.0,
-		Aliases: schemas.KeyAliases{"x": {ModelID: "y"}},
+		Aliases: schemas.KeyAliases{"x": schemas.AliasConfig{ModelID: "y"}},
 	}
 	rich := schemas.Key{
 		Name:   "k",
 		Value:  *schemas.NewSecretVar("sk"),
 		Weight: 1.0,
-		Aliases: schemas.KeyAliases{"x": {
+		Aliases: schemas.KeyAliases{"x": schemas.AliasConfig{
 			ModelID:     "y",
 			ModelName:   &canonical,
 			ModelFamily: &family,

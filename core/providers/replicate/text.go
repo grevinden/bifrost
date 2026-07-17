@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	schemas "github.com/maximhq/bifrost/core/schemas"
+	schemas "github.com/grevinden/bifrost/core/schemas"
 )
 
 func ToReplicateTextRequest(bifrostReq *schemas.BifrostTextCompletionRequest) (*ReplicatePredictionRequest, error) {
@@ -114,11 +114,11 @@ func (response *ReplicatePredictionResponse) ToBifrostTextCompletionResponse() *
 	var finishReason *string
 	switch response.Status {
 	case ReplicatePredictionStatusSucceeded:
-		finishReason = schemas.Ptr("stop")
+		finishReason = new("stop")
 	case ReplicatePredictionStatusFailed:
-		finishReason = schemas.Ptr("error")
+		finishReason = new("error")
 	case ReplicatePredictionStatusCanceled:
-		finishReason = schemas.Ptr("stop")
+		finishReason = new("stop")
 	}
 
 	// Create choice with text completion response choice

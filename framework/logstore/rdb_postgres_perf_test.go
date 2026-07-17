@@ -203,7 +203,7 @@ func TestSearchLogs_LimitClamping(t *testing.T) {
 	ctx := context.Background()
 	now := time.Now().UTC()
 
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		insertPerfLog(t, db, logOpts{Timestamp: now})
 	}
 	refreshTestMatViews(t, db)
@@ -234,7 +234,7 @@ func TestSearchMCPToolLogs_LimitClamping(t *testing.T) {
 	ctx := context.Background()
 	now := time.Now().UTC()
 
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		insertPerfMCPLog(t, db, mcpLogOpts{
 			ToolName: "search", ServerLabel: "s1", Timestamp: now,
 			VirtualKeyID: "vk-1", VirtualKeyName: "key-1",
@@ -256,7 +256,7 @@ func TestGetModelRankings_HasLimit(t *testing.T) {
 	now := time.Now().UTC()
 	start := now.Add(-1 * time.Hour)
 
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		insertPerfLog(t, db, logOpts{
 			Model: fmt.Sprintf("model-%d", i), Timestamp: now,
 		})
@@ -274,7 +274,7 @@ func TestDeleteExpiredAsyncJobs_BatchDeletes(t *testing.T) {
 	ctx := context.Background()
 	past := time.Now().UTC().Add(-1 * time.Hour)
 
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		err := db.Exec(`
 			INSERT INTO async_jobs (id, status, request_type, virtual_key_id, expires_at, created_at)
 			VALUES (?, 'completed', 'chat_completion', 'vk-1', ?, ?)

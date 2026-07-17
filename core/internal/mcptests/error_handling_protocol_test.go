@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -85,7 +85,7 @@ func TestErrorHandling_InProcess_ToolReturnsError_ResponsesFormat(t *testing.T) 
 
 	// Test 2: Tool returns error in Responses format
 	errorMessage := "Responses API error test"
-	args := map[string]interface{}{
+	args := map[string]any{
 		"error_message": errorMessage,
 	}
 
@@ -176,10 +176,10 @@ func TestErrorHandling_InProcess_InvalidArguments(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			toolCall := schemas.ChatAssistantMessageToolCall{
-				ID:   schemas.Ptr(fmt.Sprintf("call-%s", tc.name)),
-				Type: schemas.Ptr("function"),
+				ID:   new(fmt.Sprintf("call-%s", tc.name)),
+				Type: new("function"),
 				Function: schemas.ChatAssistantMessageToolCallFunction{
-					Name:      schemas.Ptr("bifrostInternal-calculator"),
+					Name:      new("bifrostInternal-calculator"),
 					Arguments: tc.arguments,
 				},
 			}
@@ -251,10 +251,10 @@ func TestErrorHandling_InProcess_NullAndUndefinedArguments(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			toolCall := schemas.ChatAssistantMessageToolCall{
-				ID:   schemas.Ptr(fmt.Sprintf("call-%s", tc.name)),
-				Type: schemas.Ptr("function"),
+				ID:   new(fmt.Sprintf("call-%s", tc.name)),
+				Type: new("function"),
 				Function: schemas.ChatAssistantMessageToolCallFunction{
-					Name:      schemas.Ptr("bifrostInternal-echo"),
+					Name:      new("bifrostInternal-echo"),
 					Arguments: tc.arguments,
 				},
 			}
@@ -315,16 +315,16 @@ func TestErrorHandling_STDIO_MCPErrorResponse(t *testing.T) {
 
 	for _, errorType := range errorTypes {
 		t.Run(errorType, func(t *testing.T) {
-			args := map[string]interface{}{
+			args := map[string]any{
 				"error_type": errorType,
 			}
 			argsJSON, _ := json.Marshal(args)
 
 			toolCall := schemas.ChatAssistantMessageToolCall{
-				ID:   schemas.Ptr(fmt.Sprintf("call-error-%s", errorType)),
-				Type: schemas.Ptr("function"),
+				ID:   new(fmt.Sprintf("call-error-%s", errorType)),
+				Type: new("function"),
 				Function: schemas.ChatAssistantMessageToolCallFunction{
-					Name:      schemas.Ptr("ErrorTestServer-return_error"),
+					Name:      new("ErrorTestServer-return_error"),
 					Arguments: string(argsJSON),
 				},
 			}
@@ -383,16 +383,16 @@ func TestErrorHandling_STDIO_TimeoutScenario(t *testing.T) {
 	time.Sleep(500 * time.Millisecond)
 
 	// Test: Tool that takes longer than timeout
-	args := map[string]interface{}{
+	args := map[string]any{
 		"seconds": 5.0, // Takes 5 seconds, timeout is 2 seconds
 	}
 	argsJSON, _ := json.Marshal(args)
 
 	toolCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-timeout-test"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-timeout-test"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("ErrorTestServer-timeout_after"),
+			Name:      new("ErrorTestServer-timeout_after"),
 			Arguments: string(argsJSON),
 		},
 	}
@@ -439,10 +439,10 @@ func TestErrorHandling_STDIO_MalformedJSON(t *testing.T) {
 	// Note: The MCP protocol wraps the response, so the malformed JSON is in the content
 	// The MCP layer should handle this gracefully
 	toolCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-malformed-json"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-malformed-json"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("ErrorTestServer-return_malformed_json"),
+			Name:      new("ErrorTestServer-return_malformed_json"),
 			Arguments: "{}",
 		},
 	}
@@ -512,16 +512,16 @@ func TestErrorHandling_STDIO_IntermittentFailures(t *testing.T) {
 			errorCount := 0
 
 			for i := 0; i < tc.runs; i++ {
-				args := map[string]interface{}{
+				args := map[string]any{
 					"fail_rate": tc.failRate,
 				}
 				argsJSON, _ := json.Marshal(args)
 
 				toolCall := schemas.ChatAssistantMessageToolCall{
-					ID:   schemas.Ptr(fmt.Sprintf("call-intermittent-%d", i)),
-					Type: schemas.Ptr("function"),
+					ID:   new(fmt.Sprintf("call-intermittent-%d", i)),
+					Type: new("function"),
 					Function: schemas.ChatAssistantMessageToolCallFunction{
-						Name:      schemas.Ptr("ErrorTestServer-intermittent_fail"),
+						Name:      new("ErrorTestServer-intermittent_fail"),
 						Arguments: string(argsJSON),
 					},
 				}
@@ -621,7 +621,7 @@ func TestErrorHandling_MultipleConsecutiveErrors(t *testing.T) {
 	// Verify each error is handled independently
 	numErrors := 5
 	successfulExecutions := 0
-	for i := 0; i < numErrors; i++ {
+	for i := range numErrors {
 		errorMessage := fmt.Sprintf("Error number %d", i+1)
 		toolCall := createThrowErrorToolCall(fmt.Sprintf("call-%d", i), errorMessage)
 
@@ -692,16 +692,16 @@ func TestErrorHandling_ErrorWithSpecialCharacters(t *testing.T) {
 // =============================================================================
 
 func createThrowErrorToolCall(id, errorMessage string) schemas.ChatAssistantMessageToolCall {
-	args := map[string]interface{}{
+	args := map[string]any{
 		"error_message": errorMessage,
 	}
 	argsJSON, _ := json.Marshal(args)
 
 	return schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr(id),
-		Type: schemas.Ptr("function"),
+		ID:   new(id),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("bifrostInternal-throw_error"),
+			Name:      new("bifrostInternal-throw_error"),
 			Arguments: string(argsJSON),
 		},
 	}

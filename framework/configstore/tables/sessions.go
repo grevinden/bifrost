@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/maximhq/bifrost/framework/encrypt"
+	"github.com/grevinden/bifrost/framework/encrypt"
 	"gorm.io/gorm"
 )
 
@@ -12,7 +12,7 @@ import (
 type SessionsTable struct {
 	ID               int       `gorm:"primaryKey;autoIncrement" json:"id"`
 	Token            string    `gorm:"type:text;not null;uniqueIndex" json:"token"`
-	ExpiresAt        time.Time `gorm:"index;not null" json:"expires_at,omitempty"`
+	ExpiresAt        time.Time `gorm:"index;not null" json:"expires_at"`
 	CreatedAt        time.Time `gorm:"index;not null" json:"created_at"`
 	UpdatedAt        time.Time `gorm:"index;not null" json:"updated_at"`
 	EncryptionStatus string    `gorm:"type:varchar(20);default:'plain_text'" json:"-"`

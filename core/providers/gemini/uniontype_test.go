@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"testing"
 
-	providerUtils "github.com/maximhq/bifrost/core/providers/utils"
-	schemas "github.com/maximhq/bifrost/core/schemas"
+	providerUtils "github.com/grevinden/bifrost/core/providers/utils"
+	schemas "github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -34,21 +34,21 @@ func TestConvertPropertyToSchema_UnionType(t *testing.T) {
 			name:         "integer null — becomes Type+Nullable",
 			propJSON:     `{"type": ["integer", "null"], "description": "Timeout in seconds"}`,
 			wantType:     Type("integer"),
-			wantNullable: boolPtr(true),
+			wantNullable: new(true),
 		},
 		{
 			// Case B — ["string","null"]: same as above for string
 			name:         "string null — becomes Type+Nullable",
 			propJSON:     `{"type": ["string", "null"]}`,
 			wantType:     Type("string"),
-			wantNullable: boolPtr(true),
+			wantNullable: new(true),
 		},
 		{
 			// Case B — null-first ordering must not matter
 			name:         "null first order should not matter",
 			propJSON:     `{"type": ["null", "string"]}`,
 			wantType:     Type("string"),
-			wantNullable: boolPtr(true),
+			wantNullable: new(true),
 		},
 		{
 			// Case C — ["integer","string"]: multiple non-null types → anyOf, no Nullable
@@ -84,7 +84,7 @@ func TestConvertPropertyToSchema_UnionType(t *testing.T) {
 			name:         "duplicate types are deduplicated",
 			propJSON:     `{"type": ["integer", "integer", "null"]}`,
 			wantType:     Type("integer"),
-			wantNullable: boolPtr(true),
+			wantNullable: new(true),
 			wantAnyOfLen: 0, // single non-null after dedup → Type+Nullable, not anyOf
 		},
 		{
@@ -98,7 +98,7 @@ func TestConvertPropertyToSchema_UnionType(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			var rawProp interface{}
+			var rawProp any
 			require.NoError(t, json.Unmarshal([]byte(tc.propJSON), &rawProp))
 
 			schema := convertPropertyToSchema(rawProp)
@@ -160,28 +160,29 @@ func TestConvertBifrostToolsToGemini_UnionTypeProperty(t *testing.T) {
 	raw, err := json.Marshal(fd.ParametersJSONSchema)
 	require.NoError(t, err)
 
-	var paramsSchema map[string]interface{}
+	var paramsSchema map[string]any
 	require.NoError(t, json.Unmarshal(raw, &paramsSchema))
 
-	properties, ok := paramsSchema["properties"].(map[string]interface{})
+	properties, ok := paramsSchema["properties"].(map[string]any)
 	require.True(t, ok, "parameters must have properties")
 
-	timeoutProp, ok := properties["timeout_secs"].(map[string]interface{})
+	timeoutProp, ok := properties["timeout_secs"].(map[string]any)
 	require.True(t, ok, "timeout_secs property must be present")
 
-	timeoutType, ok := timeoutProp["type"].([]interface{})
+	timeoutType, ok := timeoutProp["type"].([]any)
 	require.True(t, ok, "timeout_secs type must be a JSON Schema union array")
 	assert.Equal(t, "integer", timeoutType[0])
 	assert.Equal(t, "null", timeoutType[1])
 	assert.Equal(t, "Timeout in seconds", timeoutProp["description"])
 
-	commandProp, ok := properties["command"].(map[string]interface{})
+	commandProp, ok := properties["command"].(map[string]any)
 	require.True(t, ok)
 	assert.Equal(t, "string", commandProp["type"])
 	assert.Equal(t, "Command to run", commandProp["description"])
 }
 
-func boolPtr(b bool) *bool { return &b }
+//go:fix inline
+func boolPtr(b bool) *bool { return new(b) }
 
 func TestConvertFunctionParametersToSchema_AnyOfNullable(t *testing.T) {
 	params := schemas.ToolFunctionParameters{
@@ -189,7 +190,7 @@ func TestConvertFunctionParametersToSchema_AnyOfNullable(t *testing.T) {
 			*schemas.NewOrderedMapFromPairs(schemas.KV("type", "integer")),
 			*schemas.NewOrderedMapFromPairs(schemas.KV("type", "string")),
 		},
-		Nullable: boolPtr(true),
+		Nullable: new(true),
 	}
 
 	schema := convertFunctionParametersToSchema(params)
@@ -211,13 +212,13 @@ func TestConvertFunctionParametersToSchema_AnyOfNullable(t *testing.T) {
 func TestExtractUnionTypes(t *testing.T) {
 	tests := []struct {
 		name        string
-		input       interface{}
+		input       any
 		wantNonNull []string
 		wantHasNull bool
 	}{
 		{
 			name:        "[]interface{} integer+null",
-			input:       []interface{}{"integer", "null"},
+			input:       []any{"integer", "null"},
 			wantNonNull: []string{"integer"},
 			wantHasNull: true,
 		},
@@ -235,7 +236,7 @@ func TestExtractUnionTypes(t *testing.T) {
 		},
 		{
 			name:        "[]interface{} all-invalid non-string elements",
-			input:       []interface{}{float64(1), float64(2)},
+			input:       []any{float64(1), float64(2)},
 			wantNonNull: nil,
 			wantHasNull: false,
 		},
@@ -247,7 +248,7 @@ func TestExtractUnionTypes(t *testing.T) {
 		},
 		{
 			name:        "[]interface{} multi-type without null",
-			input:       []interface{}{"integer", "string"},
+			input:       []any{"integer", "string"},
 			wantNonNull: []string{"integer", "string"},
 			wantHasNull: false,
 		},
@@ -266,7 +267,7 @@ func TestExtractUnionTypes(t *testing.T) {
 // is also handled correctly.
 func TestConvertPropertyToSchema_StringSlice(t *testing.T) {
 	// Build the prop map directly as a Go caller would.
-	prop := map[string]interface{}{
+	prop := map[string]any{
 		"type":        []string{"integer", "null"},
 		"description": "direct Go caller path",
 	}

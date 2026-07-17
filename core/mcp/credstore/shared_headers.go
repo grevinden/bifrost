@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // sharedHeadersResolver handles MCPAuthTypeHeaders — the admin-configured

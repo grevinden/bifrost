@@ -10,8 +10,8 @@ import (
 	"time"
 
 	ws "github.com/fasthttp/websocket"
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // RunRealtimeTest dials the provider's native Realtime WebSocket endpoint,
@@ -92,7 +92,7 @@ func runOpenAIRealtimeTest(t *testing.T, conn *ws.Conn, testConfig Comprehensive
 	eventCount := 0
 	conn.SetReadDeadline(time.Now().Add(30 * time.Second))
 
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		_, msg, err := conn.ReadMessage()
 		if err != nil {
 			t.Fatalf("error reading initial events: %v", err)
@@ -111,9 +111,9 @@ func runOpenAIRealtimeTest(t *testing.T, conn *ws.Conn, testConfig Comprehensive
 		t.Fatal("did not receive session.created event")
 	}
 
-	sessionUpdate := map[string]interface{}{
+	sessionUpdate := map[string]any{
 		"type": "session.update",
-		"session": map[string]interface{}{
+		"session": map[string]any{
 			"modalities":  []string{"text"},
 			"temperature": 0.7,
 		},
@@ -135,12 +135,12 @@ func runOpenAIRealtimeTest(t *testing.T, conn *ws.Conn, testConfig Comprehensive
 		}
 	}
 
-	itemCreate := map[string]interface{}{
+	itemCreate := map[string]any{
 		"type": "conversation.item.create",
-		"item": map[string]interface{}{
+		"item": map[string]any{
 			"type": "message",
 			"role": "user",
-			"content": []map[string]interface{}{
+			"content": []map[string]any{
 				{
 					"type": "input_text",
 					"text": "Say hello in exactly two words.",
@@ -150,7 +150,7 @@ func runOpenAIRealtimeTest(t *testing.T, conn *ws.Conn, testConfig Comprehensive
 	}
 	writeJSON(t, conn, itemCreate)
 
-	responseCreate := map[string]interface{}{
+	responseCreate := map[string]any{
 		"type": "response.create",
 	}
 	writeJSON(t, conn, responseCreate)
@@ -203,7 +203,7 @@ func runElevenLabsRealtimeTest(t *testing.T, conn *ws.Conn, testConfig Comprehen
 	eventCount := 0
 	conn.SetReadDeadline(time.Now().Add(30 * time.Second))
 
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		_, msg, err := conn.ReadMessage()
 		if err != nil {
 			t.Fatalf("error reading initial events: %v", err)
@@ -213,7 +213,7 @@ func runElevenLabsRealtimeTest(t *testing.T, conn *ws.Conn, testConfig Comprehen
 		t.Logf("init event #%d: %s", eventCount, eventType)
 
 		if eventType == "ping" {
-			pong := map[string]interface{}{"type": "pong"}
+			pong := map[string]any{"type": "pong"}
 			writeJSON(t, conn, pong)
 		}
 
@@ -229,7 +229,7 @@ func runElevenLabsRealtimeTest(t *testing.T, conn *ws.Conn, testConfig Comprehen
 
 	var gotAgentResponse bool
 	conn.SetReadDeadline(time.Now().Add(30 * time.Second))
-	for i := 0; i < 50; i++ {
+	for range 50 {
 		_, msg, err := conn.ReadMessage()
 		if err != nil {
 			break
@@ -239,7 +239,7 @@ func runElevenLabsRealtimeTest(t *testing.T, conn *ws.Conn, testConfig Comprehen
 		t.Logf("event #%d: %s", eventCount, eventType)
 
 		if eventType == "ping" {
-			pong := map[string]interface{}{"type": "pong"}
+			pong := map[string]any{"type": "pong"}
 			writeJSON(t, conn, pong)
 		}
 
@@ -272,7 +272,7 @@ func extractEventType(msg []byte) string {
 	return "unknown"
 }
 
-func writeJSON(t *testing.T, conn *ws.Conn, v interface{}) {
+func writeJSON(t *testing.T, conn *ws.Conn, v any) {
 	t.Helper()
 	data, err := json.Marshal(v)
 	if err != nil {

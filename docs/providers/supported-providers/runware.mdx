@@ -41,7 +41,7 @@ Runware exposes a single synchronous endpoint (`https://api.runware.ai/v1`) that
 
 **Extra Params**: pass a `seedImage` (a Runware image UUID, public URL, or base64/data-URI) to run **image-to-image**. Any other provider-native fields flow through `extra_params`.
 
-**Response**: [`BifrostImageGenerationResponse`](https://github.com/maximhq/bifrost/blob/main/core/schemas/images.go) with `data[].url` or `data[].b64_json`.
+**Response**: [`BifrostImageGenerationResponse`](https://github.com/grevinden/bifrost/blob/main/core/schemas/images.go) with `data[].url` or `data[].b64_json`.
 
 ### Example
 
@@ -126,7 +126,7 @@ Video tasks are submitted with `deliveryMethod: async` and return a queued job. 
 
 **Extra Params**: provider-native fields flow through `extra_params`.
 
-**Response**: [`BifrostVideoGenerationResponse`](https://github.com/maximhq/bifrost/blob/main/core/schemas/videos.go) with `id`, `status`, `videos[]`.
+**Response**: [`BifrostVideoGenerationResponse`](https://github.com/grevinden/bifrost/blob/main/core/schemas/videos.go) with `id`, `status`, `videos[]`.
 
 **Generation Modes** (auto-detected): **text-to-video** (`prompt` only) · **image-to-video** (`prompt` + `input_reference`).
 
@@ -206,4 +206,4 @@ case schemas.Runware:
 
 - [Runware API Documentation](https://docs.runware.ai/)
 - [Runware Model Explorer](https://my.runware.ai/models)
-- [Bifrost Runware Provider Source](https://github.com/maximhq/bifrost/tree/main/core/providers/runware)
+- [Bifrost Runware Provider Source](https://github.com/grevinden/bifrost/tree/main/core/providers/runware)

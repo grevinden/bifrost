@@ -3,7 +3,7 @@ package vllm
 import (
 	"testing"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -29,7 +29,7 @@ func TestRerankToVLLMRerankRequest(t *testing.T) {
 			TopN:            &topN,
 			MaxTokensPerDoc: &maxTokens,
 			Priority:        &priority,
-			ExtraParams: map[string]interface{}{
+			ExtraParams: map[string]any{
 				"user": "test-user",
 			},
 		},
@@ -55,16 +55,16 @@ func TestRerankToBifrostRerankResponse(t *testing.T) {
 		{Text: "doc-2"},
 	}
 
-	response, err := ToBifrostRerankResponse(map[string]interface{}{
+	response, err := ToBifrostRerankResponse(map[string]any{
 		"id":    "rerank-id",
 		"model": "BAAI/bge-reranker-v2-m3",
-		"usage": map[string]interface{}{
+		"usage": map[string]any{
 			"prompt_tokens": 10,
 			"total_tokens":  10,
 		},
-		"results": []interface{}{
-			map[string]interface{}{"index": 1, "relevance_score": 0.1},
-			map[string]interface{}{"index": 0, "relevance_score": 0.9},
+		"results": []any{
+			map[string]any{"index": 1, "relevance_score": 0.1},
+			map[string]any{"index": 0, "relevance_score": 0.9},
 		},
 	}, documents, true)
 
@@ -90,10 +90,10 @@ func TestRerankToBifrostRerankResponseDuplicateIndices(t *testing.T) {
 		{Text: "doc-1"},
 	}
 
-	_, err := ToBifrostRerankResponse(map[string]interface{}{
-		"results": []interface{}{
-			map[string]interface{}{"index": 0, "relevance_score": 0.9},
-			map[string]interface{}{"index": 0, "relevance_score": 0.8},
+	_, err := ToBifrostRerankResponse(map[string]any{
+		"results": []any{
+			map[string]any{"index": 0, "relevance_score": 0.9},
+			map[string]any{"index": 0, "relevance_score": 0.8},
 		},
 	}, documents, true)
 
@@ -106,9 +106,9 @@ func TestRerankToBifrostRerankResponseOutOfRangeIndex(t *testing.T) {
 		{Text: "doc-0"},
 	}
 
-	_, err := ToBifrostRerankResponse(map[string]interface{}{
-		"results": []interface{}{
-			map[string]interface{}{"index": 1, "relevance_score": 0.9},
+	_, err := ToBifrostRerankResponse(map[string]any{
+		"results": []any{
+			map[string]any{"index": 1, "relevance_score": 0.9},
 		},
 	}, documents, true)
 
@@ -121,8 +121,8 @@ func TestRerankToBifrostRerankResponseEmptyResults(t *testing.T) {
 		{Text: "doc-0"},
 	}
 
-	response, err := ToBifrostRerankResponse(map[string]interface{}{
-		"results": []interface{}{},
+	response, err := ToBifrostRerankResponse(map[string]any{
+		"results": []any{},
 	}, documents, false)
 
 	require.NoError(t, err)
@@ -135,9 +135,9 @@ func TestRerankToBifrostRerankResponseZeroRelevanceScoreDoesNotFallback(t *testi
 		{Text: "doc-0"},
 	}
 
-	response, err := ToBifrostRerankResponse(map[string]interface{}{
-		"results": []interface{}{
-			map[string]interface{}{"index": 0, "relevance_score": 0.0, "score": 0.99},
+	response, err := ToBifrostRerankResponse(map[string]any{
+		"results": []any{
+			map[string]any{"index": 0, "relevance_score": 0.0, "score": 0.99},
 		},
 	}, documents, false)
 
@@ -148,7 +148,7 @@ func TestRerankToBifrostRerankResponseZeroRelevanceScoreDoesNotFallback(t *testi
 }
 
 func TestRerankParseVLLMUsageZeroUsage(t *testing.T) {
-	usage, ok := parseVLLMUsage(map[string]interface{}{})
+	usage, ok := parseVLLMUsage(map[string]any{})
 	assert.False(t, ok)
 	assert.Nil(t, usage)
 }

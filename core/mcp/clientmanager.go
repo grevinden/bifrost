@@ -13,12 +13,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/grevinden/bifrost/core/mcp/utils"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/mark3labs/mcp-go/client"
 	"github.com/mark3labs/mcp-go/client/transport"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
-	"github.com/maximhq/bifrost/core/mcp/utils"
-	"github.com/maximhq/bifrost/core/schemas"
 )
 
 // AcquireClientConn returns a live upstream MCP client connection for the
@@ -314,9 +314,7 @@ func (m *MCPManager) AddClient(requestCtx context.Context, config *schemas.MCPCl
 		}
 		// Persisted tools for per-user auth types survive restarts in ExecutionConfig.
 		if m.credStore.RequiresPerCallConnection(config) && len(config.DiscoveredTools) > 0 {
-			for toolName, tool := range config.DiscoveredTools {
-				clientState.ToolMap[toolName] = tool
-			}
+			maps.Copy(clientState.ToolMap, config.DiscoveredTools)
 			clientState.ToolNameMapping = config.DiscoveredToolNameMapping
 			if config.ConnectionString != nil {
 				url := config.ConnectionString.GetValue()
@@ -359,9 +357,7 @@ func (m *MCPManager) AddClient(requestCtx context.Context, config *schemas.MCPCl
 			// OAuth and per-user headers — since both populate DiscoveredTools at
 			// admin-test time and never hold a persistent client.Conn.
 			if len(config.DiscoveredTools) > 0 {
-				for toolName, tool := range config.DiscoveredTools {
-					client.ToolMap[toolName] = tool
-				}
+				maps.Copy(client.ToolMap, config.DiscoveredTools)
 				client.ToolNameMapping = config.DiscoveredToolNameMapping
 				client.State = schemas.MCPConnectionStateConnected
 				m.logger.Debug("%s Per-user (%s) MCP client '%s' restored with %d tools", MCPLogPrefix, config.AuthType, config.Name, len(config.DiscoveredTools))
@@ -601,9 +597,7 @@ func (m *MCPManager) VerifyHeadersConnection(ctx context.Context, config *schema
 		// still reference.
 		finalHeaders := make(map[string]string, len(preReq.Headers)+len(userHeaders))
 		maps.Copy(finalHeaders, preReq.Headers)
-		for k, v := range userHeaders {
-			finalHeaders[k] = v
-		}
+		maps.Copy(finalHeaders, userHeaders)
 
 		headersVerifyOpts := []transport.StreamableHTTPCOption{transport.WithHTTPHeaders(finalHeaders)}
 		headersVerifyTLSClient, tlsErr := m.buildTLSHTTPClient(config.TLSConfig)
@@ -691,9 +685,7 @@ func (m *MCPManager) SetClientTools(clientID string, tools map[string]schemas.Ch
 	defer m.mu.Unlock()
 
 	if client, exists := m.clientMap[clientID]; exists {
-		for toolName, tool := range tools {
-			client.ToolMap[toolName] = tool
-		}
+		maps.Copy(client.ToolMap, tools)
 		client.ToolNameMapping = toolNameMapping
 		client.State = schemas.MCPConnectionStateConnected
 		m.logger.Debug("%s Set %d tools on client '%s'", MCPLogPrefix, len(tools), client.Name)
@@ -1543,9 +1535,7 @@ func (m *MCPManager) connectToMCPClient(requestCtx context.Context, config *sche
 		}
 
 		// Store discovered tools
-		for toolName, tool := range tools {
-			client.ToolMap[toolName] = tool
-		}
+		maps.Copy(client.ToolMap, tools)
 
 		// Store tool name mapping for execution (sanitized_name -> original_mcp_name)
 		client.ToolNameMapping = toolNameMapping

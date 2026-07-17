@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/objectstore"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/objectstore"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
@@ -155,7 +155,7 @@ func TestChApplyUpdateMapSkipsDedupKeys(t *testing.T) {
 	row := *chTestLog("log-1", ts)
 	dest := reflect.ValueOf(&row).Elem()
 
-	err = chApplyUpdateMap(ctx, st, dest, map[string]interface{}{
+	err = chApplyUpdateMap(ctx, st, dest, map[string]any{
 		"status":    "success",
 		"id":        "hijacked",
 		"timestamp": ts.Add(time.Hour),
@@ -239,7 +239,7 @@ func TestClickHouseCreateIfNotExistsKeepsExistingRow(t *testing.T) {
 	ts := time.Now().UTC().Truncate(time.Millisecond)
 
 	require.NoError(t, store.CreateIfNotExists(ctx, chTestLog("ch-keep-1", ts)))
-	require.NoError(t, store.Update(ctx, "ch-keep-1", map[string]interface{}{
+	require.NoError(t, store.Update(ctx, "ch-keep-1", map[string]any{
 		"status":     "success",
 		"has_object": true,
 	}))
@@ -267,7 +267,7 @@ func TestClickHouseCreateIfNotExistsKeepsExistingRow(t *testing.T) {
 
 	// MCP variant.
 	require.NoError(t, store.BatchCreateMCPToolLogsIfNotExists(ctx, []*MCPToolLog{chTestMCPToolLog("ch-keep-mcp-1", ts)}))
-	require.NoError(t, store.UpdateMCPToolLog(ctx, "ch-keep-mcp-1", map[string]interface{}{"status": "success", "has_object": true}))
+	require.NoError(t, store.UpdateMCPToolLog(ctx, "ch-keep-mcp-1", map[string]any{"status": "success", "has_object": true}))
 	require.NoError(t, store.BatchCreateMCPToolLogsIfNotExists(ctx, []*MCPToolLog{chTestMCPToolLog("ch-keep-mcp-1", ts)}))
 	foundMCP, err := store.FindMCPToolLog(ctx, "ch-keep-mcp-1")
 	require.NoError(t, err)
@@ -300,7 +300,7 @@ func TestClickHouseUpdateWithMap(t *testing.T) {
 	ts := time.Now().UTC().Truncate(time.Millisecond)
 
 	require.NoError(t, store.CreateIfNotExists(ctx, chTestLog("ch-upd-map", ts)))
-	require.NoError(t, store.Update(ctx, "ch-upd-map", map[string]interface{}{
+	require.NoError(t, store.Update(ctx, "ch-upd-map", map[string]any{
 		"status": "success",
 		"cost":   1.25,
 	}))
@@ -315,7 +315,7 @@ func TestClickHouseUpdateWithMap(t *testing.T) {
 	assert.Equal(t, "gpt-4o", found.Model)
 	assert.Equal(t, int64(1), chCountRows(t, store.db, "logs", "ch-upd-map"))
 
-	assert.ErrorIs(t, store.Update(ctx, "missing-id", map[string]interface{}{"status": "success"}), ErrNotFound)
+	assert.ErrorIs(t, store.Update(ctx, "missing-id", map[string]any{"status": "success"}), ErrNotFound)
 }
 
 func TestClickHouseUpdateWithStruct(t *testing.T) {
@@ -345,7 +345,7 @@ func TestClickHouseUpdateCannotRewriteDedupKey(t *testing.T) {
 
 	// An update that tries to move the dedup key must not fork a second
 	// logical row (the table ORDER BY is (timestamp, id)).
-	require.NoError(t, store.Update(ctx, "ch-upd-key", map[string]interface{}{
+	require.NoError(t, store.Update(ctx, "ch-upd-key", map[string]any{
 		"timestamp": ts.Add(time.Hour),
 		"id":        "ch-upd-key-forged",
 		"status":    "success",
@@ -367,7 +367,7 @@ func TestClickHouseConcurrentUpdatesPreserveBothPatches(t *testing.T) {
 	// The object-offload path (has_object) racing the completion path
 	// (status/cost) is the exact lost-update scenario the per-id RMW locks
 	// exist for; without them one patch silently vanishes.
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		id := fmt.Sprintf("ch-race-%d", i)
 		ts := time.Now().UTC().Truncate(time.Millisecond)
 		require.NoError(t, store.CreateIfNotExists(ctx, chTestLog(id, ts)))
@@ -377,11 +377,11 @@ func TestClickHouseConcurrentUpdatesPreserveBothPatches(t *testing.T) {
 		wg.Add(2)
 		go func() {
 			defer wg.Done()
-			errs[0] = store.Update(ctx, id, map[string]interface{}{"status": "success", "cost": 0.5})
+			errs[0] = store.Update(ctx, id, map[string]any{"status": "success", "cost": 0.5})
 		}()
 		go func() {
 			defer wg.Done()
-			errs[1] = store.Update(ctx, id, map[string]interface{}{"has_object": true})
+			errs[1] = store.Update(ctx, id, map[string]any{"has_object": true})
 		}()
 		wg.Wait()
 		require.NoError(t, errs[0])
@@ -400,7 +400,7 @@ func TestClickHouseBulkUpdateCost(t *testing.T) {
 	ts := time.Now().UTC().Truncate(time.Millisecond)
 
 	updates := map[string]float64{}
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		id := fmt.Sprintf("ch-cost-%d", i)
 		require.NoError(t, store.CreateIfNotExists(ctx, chTestLog(id, ts.Add(time.Duration(i)*time.Millisecond))))
 		updates[id] = float64(i) * 0.1
@@ -411,7 +411,7 @@ func TestClickHouseBulkUpdateCost(t *testing.T) {
 	require.NoError(t, store.BulkUpdateCost(ctx, updates))
 	require.NoError(t, store.BulkUpdateCost(ctx, nil)) // no-op
 
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		id := fmt.Sprintf("ch-cost-%d", i)
 		found, err := store.FindByID(ctx, id)
 		require.NoError(t, err)
@@ -426,7 +426,7 @@ func TestClickHouseSearchAndStats(t *testing.T) {
 	ctx := context.Background()
 	ts := time.Now().UTC().Truncate(time.Millisecond)
 
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		entry := chTestLog(fmt.Sprintf("ch-search-%d", i), ts.Add(time.Duration(i)*time.Second))
 		entry.Status = "success"
 		if i == 2 {
@@ -518,7 +518,7 @@ func TestClickHouseMCPToolLogs(t *testing.T) {
 
 	// Map update.
 	latency := 42.0
-	require.NoError(t, store.UpdateMCPToolLog(ctx, "ch-mcp-1", map[string]interface{}{
+	require.NoError(t, store.UpdateMCPToolLog(ctx, "ch-mcp-1", map[string]any{
 		"status":  "success",
 		"latency": latency,
 	}))
@@ -538,7 +538,7 @@ func TestClickHouseMCPToolLogs(t *testing.T) {
 	assert.Equal(t, ts.Add(time.Millisecond).UnixMilli(), found.Timestamp.UnixMilli())
 	assert.Equal(t, int64(1), chCountRows(t, store.db, "mcp_tool_logs", "ch-mcp-2"))
 
-	assert.ErrorIs(t, store.UpdateMCPToolLog(ctx, "missing-id", map[string]interface{}{"status": "success"}), ErrNotFound)
+	assert.ErrorIs(t, store.UpdateMCPToolLog(ctx, "missing-id", map[string]any{"status": "success"}), ErrNotFound)
 
 	hasLogs, err := store.HasMCPToolLogs(ctx)
 	require.NoError(t, err)
@@ -579,7 +579,7 @@ func TestClickHouseHybridHasObjectSurvivesDuplicateCreate(t *testing.T) {
 	})
 
 	// Completion update from the logging plugin's write path.
-	require.NoError(t, hybrid.Update(ctx, "ch-hybrid-1", map[string]interface{}{"status": "success"}))
+	require.NoError(t, hybrid.Update(ctx, "ch-hybrid-1", map[string]any{"status": "success"}))
 
 	// Duplicate create retry must not resurrect the stale processing row.
 	require.NoError(t, hybrid.CreateIfNotExists(ctx, mkEntry()))
@@ -649,7 +649,7 @@ func TestClickHouseAsyncJobs(t *testing.T) {
 	assert.Equal(t, schemas.AsyncJobStatusProcessing, found.Status)
 
 	completedAt := now.Add(time.Second)
-	require.NoError(t, store.UpdateAsyncJob(ctx, "ch-job-1", map[string]interface{}{
+	require.NoError(t, store.UpdateAsyncJob(ctx, "ch-job-1", map[string]any{
 		"status":       string(schemas.AsyncJobStatusCompleted),
 		"response":     `{"ok":true}`,
 		"completed_at": completedAt,
@@ -698,7 +698,7 @@ func TestClickHouseHistograms(t *testing.T) {
 	ctx := context.Background()
 	ts := time.Now().UTC().Truncate(time.Millisecond)
 
-	for i := 0; i < 4; i++ {
+	for i := range 4 {
 		entry := chTestLog(fmt.Sprintf("ch-hist-%d", i), ts.Add(time.Duration(i)*time.Second))
 		entry.Status = "success"
 		cost := 0.25

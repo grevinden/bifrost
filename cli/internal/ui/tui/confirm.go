@@ -212,10 +212,7 @@ func (m confirmModel) homeStyleView(yes, no string) string {
 	popup := box.Render(content.String())
 	block := centerBlock(accent.Render("Bifrost CLI")+"\n"+hint.Render("Home")+"\n\n"+popup, w)
 	lines := strings.Count(block, "\n") + 1
-	topPad := (h - lines) / 2
-	if topPad < 0 {
-		topPad = 0
-	}
+	topPad := max((h-lines)/2, 0)
 
 	var out strings.Builder
 	out.WriteString(strings.Repeat("\n", topPad))

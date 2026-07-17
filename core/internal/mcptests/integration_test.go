@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -105,7 +105,7 @@ func TestIntegration_FullResponsesWorkflow(t *testing.T) {
 	ctx := createTestContext()
 
 	// Execute echo tool (Responses format)
-	echoToolCall := GetSampleResponsesToolCallMessage("call-1", "bifrostInternal-echo", map[string]interface{}{
+	echoToolCall := GetSampleResponsesToolCallMessage("call-1", "bifrostInternal-echo", map[string]any{
 		"message": "responses integration test",
 	})
 	if echoToolCall.ResponsesToolMessage == nil {
@@ -117,7 +117,7 @@ func TestIntegration_FullResponsesWorkflow(t *testing.T) {
 	assert.Equal(t, schemas.ResponsesMessageTypeFunctionCallOutput, *echoResult.Type)
 
 	// Execute calculator tool (Responses format)
-	calcToolCall := GetSampleResponsesToolCallMessage("call-2", "bifrostInternal-calculator", map[string]interface{}{
+	calcToolCall := GetSampleResponsesToolCallMessage("call-2", "bifrostInternal-calculator", map[string]any{
 		"operation": "multiply",
 		"x":         float64(5),
 		"y":         float64(7),
@@ -374,8 +374,8 @@ func TestIntegration_ReconnectDuringExecution(t *testing.T) {
 
 	// Execute a tool to verify client works
 	toolCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("before-reconnect"),
-		Type: schemas.Ptr("function"),
+		ID:   new("before-reconnect"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
 			Name:      &firstToolName,
 			Arguments: `{}`,
@@ -487,10 +487,10 @@ func TestIntegration_ErrorRecovery(t *testing.T) {
 
 	// Execute tool that throws error
 	errorCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-2"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-2"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("throw_error"),
+			Name:      new("throw_error"),
 			Arguments: `{"error_message":"intentional test error"}`,
 		},
 	}
@@ -548,10 +548,10 @@ func TestIntegration_PartialFailure(t *testing.T) {
 
 	// Tool 2: Error (should fail)
 	errorCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-2"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-2"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("throw_error"),
+			Name:      new("throw_error"),
 			Arguments: `{"error_message":"partial failure test"}`,
 		},
 	}
@@ -608,7 +608,7 @@ func TestIntegration_HighLoadScenario(t *testing.T) {
 
 	start := time.Now()
 
-	for i := 0; i < concurrency; i++ {
+	for i := range concurrency {
 		go func(id int) {
 			toolType := id % 3
 
@@ -641,7 +641,7 @@ func TestIntegration_HighLoadScenario(t *testing.T) {
 	}
 
 	// Wait for all to complete
-	for i := 0; i < concurrency; i++ {
+	for range concurrency {
 		<-done
 	}
 	elapsed := time.Since(start)

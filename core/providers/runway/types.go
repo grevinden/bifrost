@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/bytedance/sonic"
-	providerUtils "github.com/maximhq/bifrost/core/providers/utils"
+	providerUtils "github.com/grevinden/bifrost/core/providers/utils"
 )
 
 type Reference struct {
@@ -71,21 +71,21 @@ func (pi *PromptImage) UnmarshalJSON(data []byte) error {
 }
 
 type RunwayVideoGenerationRequest struct {
-	Model             string                 `json:"model"`
-	PromptText        *string                `json:"promptText,omitempty"`
-	PromptImage       *PromptImage           `json:"promptImage,omitempty"`
-	VideoURI          *string                `json:"videoUri,omitempty"`
-	References        []Reference            `json:"references,omitempty"`      // for video to video generation
-	ReferenceImages   []ReferenceImage       `json:"referenceImages,omitempty"` // for text to video generation
-	Seed              *int                   `json:"seed,omitempty"`
-	Ratio             *string                `json:"ratio,omitempty"`
-	Duration          *int                   `json:"duration,omitempty"`
-	Audio             *bool                  `json:"audio,omitempty"` // for veo models
-	ContentModeration *ContentModeration     `json:"contentModeration,omitempty"`
-	ExtraParams       map[string]interface{} `json:"-"`
+	Model             string             `json:"model"`
+	PromptText        *string            `json:"promptText,omitempty"`
+	PromptImage       *PromptImage       `json:"promptImage,omitempty"`
+	VideoURI          *string            `json:"videoUri,omitempty"`
+	References        []Reference        `json:"references,omitempty"`      // for video to video generation
+	ReferenceImages   []ReferenceImage   `json:"referenceImages,omitempty"` // for text to video generation
+	Seed              *int               `json:"seed,omitempty"`
+	Ratio             *string            `json:"ratio,omitempty"`
+	Duration          *int               `json:"duration,omitempty"`
+	Audio             *bool              `json:"audio,omitempty"` // for veo models
+	ContentModeration *ContentModeration `json:"contentModeration,omitempty"`
+	ExtraParams       map[string]any     `json:"-"`
 }
 
-func (r *RunwayVideoGenerationRequest) GetExtraParams() map[string]interface{} {
+func (r *RunwayVideoGenerationRequest) GetExtraParams() map[string]any {
 	return r.ExtraParams
 }
 
@@ -94,19 +94,19 @@ type ContentModeration struct {
 }
 
 type RunwayImageGenerationRequest struct {
-	Model             string                 `json:"model"`
-	PromptText        string                 `json:"promptText"`
-	Ratio             string                 `json:"ratio"`
-	Seed              *int                   `json:"seed,omitempty"`
-	ReferenceImages   []ReferenceImage       `json:"referenceImages,omitempty"`
-	Quality           *string                `json:"quality,omitempty"`     // gpt_image_2: "low", "medium", "high", "auto"
-	Background        *string                `json:"background,omitempty"`  // gpt_image_2: "opaque", "auto"
-	OutputCount       *int                   `json:"outputCount,omitempty"` // gpt_image_2 (1-10), gemini (1 or 4)
-	ContentModeration *ContentModeration     `json:"contentModeration,omitempty"`
-	ExtraParams       map[string]interface{} `json:"-"`
+	Model             string             `json:"model"`
+	PromptText        string             `json:"promptText"`
+	Ratio             string             `json:"ratio"`
+	Seed              *int               `json:"seed,omitempty"`
+	ReferenceImages   []ReferenceImage   `json:"referenceImages,omitempty"`
+	Quality           *string            `json:"quality,omitempty"`     // gpt_image_2: "low", "medium", "high", "auto"
+	Background        *string            `json:"background,omitempty"`  // gpt_image_2: "opaque", "auto"
+	OutputCount       *int               `json:"outputCount,omitempty"` // gpt_image_2 (1-10), gemini (1 or 4)
+	ContentModeration *ContentModeration `json:"contentModeration,omitempty"`
+	ExtraParams       map[string]any     `json:"-"`
 }
 
-func (r *RunwayImageGenerationRequest) GetExtraParams() map[string]interface{} {
+func (r *RunwayImageGenerationRequest) GetExtraParams() map[string]any {
 	return r.ExtraParams
 }
 

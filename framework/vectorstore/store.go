@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 type VectorStoreType string
@@ -22,7 +22,7 @@ const (
 type Query struct {
 	Field    string
 	Operator QueryOperator
-	Value    interface{}
+	Value    any
 }
 
 type QueryOperator string
@@ -45,7 +45,7 @@ const (
 type SearchResult struct {
 	ID         string
 	Score      *float64
-	Properties map[string]interface{}
+	Properties map[string]any
 }
 
 // DeleteResult represents the result of a delete operation.
@@ -99,7 +99,7 @@ type VectorStore interface {
 	// more flexible stores like Weaviate and Redis can store metadata-only entries.
 	RequiresVectors() bool
 	// Add stores a new vector in the vector store.
-	Add(ctx context.Context, namespace string, id string, embedding []float32, metadata map[string]interface{}) error
+	Add(ctx context.Context, namespace string, id string, embedding []float32, metadata map[string]any) error
 	// Delete removes a vector from the vector store.
 	Delete(ctx context.Context, namespace string, id string) error
 	// DeleteAll deletes all vectors from the vector store.

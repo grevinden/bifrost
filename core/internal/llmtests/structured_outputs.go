@@ -9,30 +9,30 @@ import (
 	"testing"
 	"time"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // Test schema with nullable enum and multi-type fields (the problematic cases that were fixed)
-var structuredOutputSchema = map[string]interface{}{
+var structuredOutputSchema = map[string]any{
 	"type": "object",
-	"properties": map[string]interface{}{
-		"action": map[string]interface{}{
+	"properties": map[string]any{
+		"action": map[string]any{
 			"type":        "string",
 			"enum":        []string{"continue", "transition"},
 			"description": "The action to take",
 		},
-		"target_node_id": map[string]interface{}{
-			"type":        []interface{}{"string", "null"},
+		"target_node_id": map[string]any{
+			"type":        []any{"string", "null"},
 			"description": "The ID of the node to transition to. Required when action is 'transition', null/empty when action is 'continue'",
 			"enum":        []string{"NODE-0", "NODE-1", "NODE-2", ""},
 		},
-		"priority": map[string]interface{}{
-			"type":        []interface{}{"string", "integer"},
+		"priority": map[string]any{
+			"type":        []any{"string", "integer"},
 			"description": "Priority level - can be a number (1-10) or a string label (low/medium/high)",
-			"enum":        []interface{}{"low", "medium", "high", 1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
+			"enum":        []any{"low", "medium", "high", 1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
 		},
-		"reason": map[string]interface{}{
+		"reason": map[string]any{
 			"type":        "string",
 			"description": "Explanation for the decision",
 		},
@@ -81,11 +81,11 @@ func testStructuredOutputChatWithValue(t *testing.T, client *bifrost.Bifrost, ct
 	retryConfig := GetTestRetryConfigForScenario("StructuredOutputChat", testConfig)
 	retryContext := TestRetryContext{
 		ScenarioName: "StructuredOutputChat",
-		ExpectedBehavior: map[string]interface{}{
+		ExpectedBehavior: map[string]any{
 			"should_return_valid_json": true,
 			"should_match_schema":      true,
 		},
-		TestMetadata: map[string]interface{}{
+		TestMetadata: map[string]any{
 			"provider": testConfig.Provider,
 			"model":    testConfig.ChatModel,
 		},
@@ -115,11 +115,11 @@ func testStructuredOutputChatWithValue(t *testing.T, client *bifrost.Bifrost, ct
 			Model:    testConfig.ChatModel,
 			Input:    chatMessages,
 			Params: &schemas.ChatParameters{
-				MaxCompletionTokens: bifrost.Ptr(5000),
-				ResponseFormat: func() *interface{} {
-					var format interface{} = map[string]interface{}{
+				MaxCompletionTokens: new(5000),
+				ResponseFormat: func() *any {
+					var format any = map[string]any{
 						"type": "json_schema",
-						"json_schema": map[string]interface{}{
+						"json_schema": map[string]any{
 							"name":   "decision_schema",
 							"strict": true,
 							"schema": structuredOutputSchema,
@@ -133,7 +133,7 @@ func testStructuredOutputChatWithValue(t *testing.T, client *bifrost.Bifrost, ct
 		return client.ChatCompletionRequest(reqCtx, chatReq)
 	}
 
-	expectations := GetExpectationsForScenario("StructuredOutputChat", testConfig, map[string]interface{}{})
+	expectations := GetExpectationsForScenario("StructuredOutputChat", testConfig, map[string]any{})
 	expectations = ModifyExpectationsForProvider(expectations, testConfig.Provider)
 
 	chatResponse, chatError := WithChatTestRetry(t, chatRetryConfig, retryContext, expectations, "StructuredOutputChat", chatOperation)
@@ -166,7 +166,7 @@ func testStructuredOutputChatWithValue(t *testing.T, client *bifrost.Bifrost, ct
 		}
 
 		// Parse and validate the JSON
-		var result map[string]interface{}
+		var result map[string]any
 		if err := json.Unmarshal([]byte(content), &result); err != nil {
 			t.Fatalf("❌ Failed to parse structured output as JSON: %v", err)
 		}
@@ -248,11 +248,11 @@ func RunStructuredOutputChatStreamTest(t *testing.T, client *bifrost.Bifrost, ct
 			Model:    testConfig.ChatModel,
 			Input:    chatMessages,
 			Params: &schemas.ChatParameters{
-				MaxCompletionTokens: bifrost.Ptr(5000),
-				ResponseFormat: func() *interface{} {
-					var format interface{} = map[string]interface{}{
+				MaxCompletionTokens: new(5000),
+				ResponseFormat: func() *any {
+					var format any = map[string]any{
 						"type": "json_schema",
-						"json_schema": map[string]interface{}{
+						"json_schema": map[string]any{
 							"name":   "decision_schema",
 							"strict": true,
 							"schema": structuredOutputSchema,
@@ -267,11 +267,11 @@ func RunStructuredOutputChatStreamTest(t *testing.T, client *bifrost.Bifrost, ct
 		retryConfig := StreamingRetryConfig()
 		retryContext := TestRetryContext{
 			ScenarioName: "StructuredOutputChatStream",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"should_stream_json":  true,
 				"should_match_schema": true,
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider": testConfig.Provider,
 				"model":    testConfig.ChatModel,
 			},
@@ -351,7 +351,7 @@ func RunStructuredOutputChatStreamTest(t *testing.T, client *bifrost.Bifrost, ct
 		}
 
 		// Validate the assembled content is valid JSON matching our schema
-		var result map[string]interface{}
+		var result map[string]any
 		if err := json.Unmarshal([]byte(finalContent), &result); err != nil {
 			t.Fatalf("❌ Failed to parse assembled structured output as JSON: %v", err)
 		}
@@ -420,11 +420,11 @@ func RunStructuredOutputResponsesTest(t *testing.T, client *bifrost.Bifrost, ctx
 		retryConfig := GetTestRetryConfigForScenario("StructuredOutputResponses", testConfig)
 		retryContext := TestRetryContext{
 			ScenarioName: "StructuredOutputResponses",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"should_return_valid_json": true,
 				"should_match_schema":      true,
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider": testConfig.Provider,
 				"model":    testConfig.ChatModel,
 			},
@@ -441,18 +441,18 @@ func RunStructuredOutputResponsesTest(t *testing.T, client *bifrost.Bifrost, ctx
 
 		responsesOperation := func() (*schemas.BifrostResponsesResponse, *schemas.BifrostError) {
 			typeStr := "object"
-			props := structuredOutputSchema["properties"].(map[string]interface{})
+			props := structuredOutputSchema["properties"].(map[string]any)
 			additionalProps := structuredOutputSchema["additionalProperties"].(bool)
 			responsesReq := &schemas.BifrostResponsesRequest{
 				Provider: testConfig.Provider,
 				Model:    testConfig.ChatModel,
 				Input:    responsesMessages,
 				Params: &schemas.ResponsesParameters{
-					MaxOutputTokens: bifrost.Ptr(5000),
+					MaxOutputTokens: new(5000),
 					Text: &schemas.ResponsesTextConfig{
 						Format: &schemas.ResponsesTextConfigFormat{
 							Type: "json_schema",
-							Name: bifrost.Ptr("decision_schema"),
+							Name: new("decision_schema"),
 							JSONSchema: &schemas.ResponsesTextConfigFormatJSONSchema{
 								Type:       &typeStr,
 								Properties: &props,
@@ -469,7 +469,7 @@ func RunStructuredOutputResponsesTest(t *testing.T, client *bifrost.Bifrost, ctx
 			return client.ResponsesRequest(reqCtx, responsesReq)
 		}
 
-		expectations := GetExpectationsForScenario("StructuredOutputResponses", testConfig, map[string]interface{}{})
+		expectations := GetExpectationsForScenario("StructuredOutputResponses", testConfig, map[string]any{})
 		expectations = ModifyExpectationsForProvider(expectations, testConfig.Provider)
 
 		responsesResponse, responsesError := WithResponsesTestRetry(t, responsesRetryConfig, retryContext, expectations, "StructuredOutputResponses", responsesOperation)
@@ -499,7 +499,7 @@ func RunStructuredOutputResponsesTest(t *testing.T, client *bifrost.Bifrost, ctx
 			}
 
 			// Parse and validate the JSON
-			var result map[string]interface{}
+			var result map[string]any
 			if err := json.Unmarshal([]byte(content), &result); err != nil {
 				t.Fatalf("❌ Failed to parse structured output as JSON: %v", err)
 			}
@@ -557,7 +557,7 @@ func RunStructuredOutputResponsesStreamTest(t *testing.T, client *bifrost.Bifros
 			{
 				Role: schemas.Ptr(schemas.ResponsesInputMessageRoleUser),
 				Content: &schemas.ResponsesMessageContent{
-					ContentStr: schemas.Ptr("You are a workflow manager. User says: 'Continue current task'. Analyze this and return: action='continue', target_node_id=null (must be null), priority=7 (as integer). Provide reasoning."),
+					ContentStr: new("You are a workflow manager. User says: 'Continue current task'. Analyze this and return: action='continue', target_node_id=null (must be null), priority=7 (as integer). Provide reasoning."),
 				},
 			},
 		}
@@ -572,18 +572,18 @@ func RunStructuredOutputResponsesStreamTest(t *testing.T, client *bifrost.Bifros
 		}
 
 		typeStr := "object"
-		props := structuredOutputSchema["properties"].(map[string]interface{})
+		props := structuredOutputSchema["properties"].(map[string]any)
 		additionalProps := structuredOutputSchema["additionalProperties"].(bool)
 		request := &schemas.BifrostResponsesRequest{
 			Provider: testConfig.Provider,
 			Model:    testConfig.ChatModel,
 			Input:    responsesMessages,
 			Params: &schemas.ResponsesParameters{
-				MaxOutputTokens: bifrost.Ptr(5000),
+				MaxOutputTokens: new(5000),
 				Text: &schemas.ResponsesTextConfig{
 					Format: &schemas.ResponsesTextConfigFormat{
 						Type: "json_schema",
-						Name: bifrost.Ptr("decision_schema"),
+						Name: new("decision_schema"),
 						JSONSchema: &schemas.ResponsesTextConfigFormatJSONSchema{
 							Type:       &typeStr,
 							Properties: &props,
@@ -601,11 +601,11 @@ func RunStructuredOutputResponsesStreamTest(t *testing.T, client *bifrost.Bifros
 		retryConfig := StreamingRetryConfig()
 		retryContext := TestRetryContext{
 			ScenarioName: "StructuredOutputResponsesStream",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"should_stream_json":  true,
 				"should_match_schema": true,
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider": testConfig.Provider,
 				"model":    testConfig.ChatModel,
 			},
@@ -738,7 +738,7 @@ func RunStructuredOutputResponsesStreamTest(t *testing.T, client *bifrost.Bifros
 				}
 
 				// Validate the assembled content is valid JSON matching our schema
-				var result map[string]interface{}
+				var result map[string]any
 				if err := json.Unmarshal([]byte(finalContent), &result); err != nil {
 					return ResponsesStreamValidationResult{
 						Passed: false,

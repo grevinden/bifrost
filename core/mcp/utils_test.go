@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/maximhq/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -19,7 +19,7 @@ func TestConvertMCPToolToBifrostSchema_EmptyParameters(t *testing.T) {
 		Description: "A test tool with no parameters",
 		InputSchema: mcp.ToolInputSchema{
 			Type:       "object",
-			Properties: map[string]interface{}{}, // Empty properties
+			Properties: map[string]any{}, // Empty properties
 			Required:   []string{},
 		},
 	}
@@ -64,13 +64,13 @@ func TestConvertMCPToolToBifrostSchema_WithAnnotations(t *testing.T) {
 		Description: "Reads a resource",
 		InputSchema: mcp.ToolInputSchema{
 			Type:       "object",
-			Properties: map[string]interface{}{},
+			Properties: map[string]any{},
 		},
 		Annotations: mcp.ToolAnnotation{
 			Title:           "Resource Reader",
 			ReadOnlyHint:    &readOnly,
 			DestructiveHint: &destructive,
-			IdempotentHint:  schemas.Ptr(true),
+			IdempotentHint:  new(true),
 		},
 	}
 
@@ -104,7 +104,7 @@ func TestConvertMCPToolToBifrostSchema_NilAnnotationsWhenAllZero(t *testing.T) {
 		Description: "A tool with no annotation hints",
 		InputSchema: mcp.ToolInputSchema{
 			Type:       "object",
-			Properties: map[string]interface{}{},
+			Properties: map[string]any{},
 		},
 		Annotations: mcp.ToolAnnotation{}, // All zero values — Title empty, all hints nil
 	}
@@ -123,12 +123,12 @@ func TestConvertMCPToolToBifrostSchema_WithParameters(t *testing.T) {
 		Description: "A test tool with parameters",
 		InputSchema: mcp.ToolInputSchema{
 			Type: "object",
-			Properties: map[string]interface{}{
-				"param1": map[string]interface{}{
+			Properties: map[string]any{
+				"param1": map[string]any{
 					"type":        "string",
 					"description": "A string parameter",
 				},
-				"param2": map[string]interface{}{
+				"param2": map[string]any{
 					"type":        "number",
 					"description": "A number parameter",
 				},
@@ -181,17 +181,17 @@ func TestConvertMCPToolToBifrostSchema_PreservesDefs(t *testing.T) {
 		Description: "Suggests time periods",
 		InputSchema: mcp.ToolInputSchema{
 			Type: "object",
-			Properties: map[string]interface{}{
-				"preferences": map[string]interface{}{
+			Properties: map[string]any{
+				"preferences": map[string]any{
 					"$ref": "#/$defs/Preferences",
 				},
 			},
 			Required: []string{"preferences"},
-			Defs: map[string]interface{}{
-				"Preferences": map[string]interface{}{
+			Defs: map[string]any{
+				"Preferences": map[string]any{
 					"type": "object",
-					"properties": map[string]interface{}{
-						"startHour": map[string]interface{}{"type": "string"},
+					"properties": map[string]any{
+						"startHour": map[string]any{"type": "string"},
 					},
 				},
 			},

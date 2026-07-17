@@ -5,19 +5,19 @@ import (
 	"os"
 	"testing"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // OpusReasoningTestConfig holds configuration for Opus-specific reasoning tests
 type OpusReasoningTestConfig struct {
-	Provider   schemas.ModelProvider
+	Provider    schemas.ModelProvider
 	Opus45Model string // Opus 4.5 model identifier
 	Opus46Model string // Opus 4.6 model identifier
-	Fallbacks  []schemas.Fallback
-	SkipOpus45 bool   // Skip Opus 4.5 tests
-	SkipOpus46 bool   // Skip Opus 4.6 tests
-	SkipReason string // Reason for skipping
+	Fallbacks   []schemas.Fallback
+	SkipOpus45  bool   // Skip Opus 4.5 tests
+	SkipOpus46  bool   // Skip Opus 4.6 tests
+	SkipReason  string // Reason for skipping
 }
 
 // GetOpusReasoningTestConfigs returns test configurations for Opus reasoning across providers
@@ -95,9 +95,9 @@ func RunOpus45ReasoningTest(t *testing.T, client *bifrost.Bifrost, ctx context.C
 				Model:    config.Opus45Model,
 				Input:    responsesMessages,
 				Params: &schemas.ResponsesParameters{
-					MaxOutputTokens: bifrost.Ptr(4000),
+					MaxOutputTokens: new(4000),
 					Reasoning: &schemas.ResponsesParametersReasoning{
-						Effort: bifrost.Ptr("high"),
+						Effort: new("high"),
 					},
 					Include: []string{"reasoning.encrypted_content"},
 				},
@@ -108,14 +108,14 @@ func RunOpus45ReasoningTest(t *testing.T, client *bifrost.Bifrost, ctx context.C
 			retryConfig := GetTestRetryConfigForScenario("Reasoning", testConfig)
 			retryContext := TestRetryContext{
 				ScenarioName: "Opus45_Reasoning_Responses",
-				ExpectedBehavior: map[string]interface{}{
+				ExpectedBehavior: map[string]any{
 					"should_show_reasoning": true,
 					"mathematical_problem":  true,
 					"step_by_step":          true,
 					"model_version":         "opus-4.5",
 					"thinking_mode":         "budget_tokens",
 				},
-				TestMetadata: map[string]interface{}{
+				TestMetadata: map[string]any{
 					"provider":          config.Provider,
 					"model":             config.Opus45Model,
 					"problem_type":      "mathematical",
@@ -133,7 +133,7 @@ func RunOpus45ReasoningTest(t *testing.T, client *bifrost.Bifrost, ctx context.C
 			}
 
 			// Enhanced validation for reasoning scenarios
-			expectations := GetExpectationsForScenario("Reasoning", testConfig, map[string]interface{}{
+			expectations := GetExpectationsForScenario("Reasoning", testConfig, map[string]any{
 				"requires_reasoning": true,
 			})
 			expectations = ModifyExpectationsForProvider(expectations, config.Provider)
@@ -181,10 +181,10 @@ func RunOpus45ReasoningTest(t *testing.T, client *bifrost.Bifrost, ctx context.C
 				Model:    config.Opus45Model,
 				Input:    chatMessages,
 				Params: &schemas.ChatParameters{
-					MaxCompletionTokens: bifrost.Ptr(4000),
+					MaxCompletionTokens: new(4000),
 					Reasoning: &schemas.ChatReasoning{
-						Effort:    bifrost.Ptr("high"),
-						MaxTokens: bifrost.Ptr(2000), // Budget tokens for Opus 4.5
+						Effort:    new("high"),
+						MaxTokens: new(2000), // Budget tokens for Opus 4.5
 					},
 				},
 				Fallbacks: config.Fallbacks,
@@ -194,14 +194,14 @@ func RunOpus45ReasoningTest(t *testing.T, client *bifrost.Bifrost, ctx context.C
 			retryConfig := GetTestRetryConfigForScenario("Reasoning", testConfig)
 			retryContext := TestRetryContext{
 				ScenarioName: "Opus45_Reasoning_Chat",
-				ExpectedBehavior: map[string]interface{}{
+				ExpectedBehavior: map[string]any{
 					"should_show_reasoning": true,
 					"mathematical_problem":  true,
 					"step_by_step":          true,
 					"model_version":         "opus-4.5",
 					"thinking_mode":         "budget_tokens",
 				},
-				TestMetadata: map[string]interface{}{
+				TestMetadata: map[string]any{
 					"provider":          config.Provider,
 					"model":             config.Opus45Model,
 					"problem_type":      "mathematical",
@@ -219,7 +219,7 @@ func RunOpus45ReasoningTest(t *testing.T, client *bifrost.Bifrost, ctx context.C
 			}
 
 			// Enhanced validation for reasoning scenarios
-			expectations := GetExpectationsForScenario("Reasoning", testConfig, map[string]interface{}{
+			expectations := GetExpectationsForScenario("Reasoning", testConfig, map[string]any{
 				"requires_reasoning": true,
 			})
 			expectations = ModifyExpectationsForProvider(expectations, config.Provider)
@@ -288,7 +288,6 @@ func RunOpus46ReasoningTest(t *testing.T, client *bifrost.Bifrost, ctx context.C
 		effortLevels := []string{"low", "medium", "high"}
 
 		for _, effort := range effortLevels {
-			effort := effort // capture range variable
 			t.Run("ResponsesAPI_Effort_"+effort, func(t *testing.T) {
 				if os.Getenv("SKIP_PARALLEL_TESTS") != "true" {
 					t.Parallel()
@@ -303,9 +302,9 @@ func RunOpus46ReasoningTest(t *testing.T, client *bifrost.Bifrost, ctx context.C
 					Model:    config.Opus46Model,
 					Input:    responsesMessages,
 					Params: &schemas.ResponsesParameters{
-						MaxOutputTokens: bifrost.Ptr(4000),
+						MaxOutputTokens: new(4000),
 						Reasoning: &schemas.ResponsesParametersReasoning{
-							Effort: bifrost.Ptr(effort), // Adaptive thinking uses effort parameter
+							Effort: new(effort), // Adaptive thinking uses effort parameter
 						},
 						Include: []string{"reasoning.encrypted_content"},
 					},
@@ -316,7 +315,7 @@ func RunOpus46ReasoningTest(t *testing.T, client *bifrost.Bifrost, ctx context.C
 				retryConfig := GetTestRetryConfigForScenario("Reasoning", testConfig)
 				retryContext := TestRetryContext{
 					ScenarioName: "Opus46_Reasoning_Responses_" + effort,
-					ExpectedBehavior: map[string]interface{}{
+					ExpectedBehavior: map[string]any{
 						"should_show_reasoning": true,
 						"logic_puzzle":          true,
 						"step_by_step":          true,
@@ -324,7 +323,7 @@ func RunOpus46ReasoningTest(t *testing.T, client *bifrost.Bifrost, ctx context.C
 						"thinking_mode":         "adaptive",
 						"effort_level":          effort,
 					},
-					TestMetadata: map[string]interface{}{
+					TestMetadata: map[string]any{
 						"provider":          config.Provider,
 						"model":             config.Opus46Model,
 						"problem_type":      "logic_puzzle",
@@ -343,7 +342,7 @@ func RunOpus46ReasoningTest(t *testing.T, client *bifrost.Bifrost, ctx context.C
 				}
 
 				// Enhanced validation for reasoning scenarios
-				expectations := GetExpectationsForScenario("Reasoning", testConfig, map[string]interface{}{
+				expectations := GetExpectationsForScenario("Reasoning", testConfig, map[string]any{
 					"requires_reasoning": true,
 				})
 				expectations = ModifyExpectationsForProvider(expectations, config.Provider)
@@ -392,9 +391,9 @@ func RunOpus46ReasoningTest(t *testing.T, client *bifrost.Bifrost, ctx context.C
 				Model:    config.Opus46Model,
 				Input:    chatMessages,
 				Params: &schemas.ChatParameters{
-					MaxCompletionTokens: bifrost.Ptr(4000),
+					MaxCompletionTokens: new(4000),
 					Reasoning: &schemas.ChatReasoning{
-						Effort: bifrost.Ptr("high"), // Opus 4.6 uses adaptive thinking with effort
+						Effort: new("high"), // Opus 4.6 uses adaptive thinking with effort
 						// Note: MaxTokens (budget_tokens) is NOT used for Opus 4.6
 					},
 				},
@@ -405,14 +404,14 @@ func RunOpus46ReasoningTest(t *testing.T, client *bifrost.Bifrost, ctx context.C
 			retryConfig := GetTestRetryConfigForScenario("Reasoning", testConfig)
 			retryContext := TestRetryContext{
 				ScenarioName: "Opus46_Reasoning_Chat",
-				ExpectedBehavior: map[string]interface{}{
+				ExpectedBehavior: map[string]any{
 					"should_show_reasoning": true,
 					"logic_puzzle":          true,
 					"step_by_step":          true,
 					"model_version":         "opus-4.6",
 					"thinking_mode":         "adaptive",
 				},
-				TestMetadata: map[string]interface{}{
+				TestMetadata: map[string]any{
 					"provider":          config.Provider,
 					"model":             config.Opus46Model,
 					"problem_type":      "logic_puzzle",
@@ -430,7 +429,7 @@ func RunOpus46ReasoningTest(t *testing.T, client *bifrost.Bifrost, ctx context.C
 			}
 
 			// Enhanced validation for reasoning scenarios
-			expectations := GetExpectationsForScenario("Reasoning", testConfig, map[string]interface{}{
+			expectations := GetExpectationsForScenario("Reasoning", testConfig, map[string]any{
 				"requires_reasoning": true,
 			})
 			expectations = ModifyExpectationsForProvider(expectations, config.Provider)
@@ -502,9 +501,9 @@ func RunOpus46MultiTurnReasoningTest(t *testing.T, client *bifrost.Bifrost, ctx 
 			Model:    config.Opus46Model,
 			Input:    chatMessages,
 			Params: &schemas.ChatParameters{
-				MaxCompletionTokens: bifrost.Ptr(4000),
+				MaxCompletionTokens: new(4000),
 				Reasoning: &schemas.ChatReasoning{
-					Effort: bifrost.Ptr("low"),
+					Effort: new("low"),
 				},
 			},
 			Fallbacks: config.Fallbacks,
@@ -513,12 +512,12 @@ func RunOpus46MultiTurnReasoningTest(t *testing.T, client *bifrost.Bifrost, ctx 
 		retryConfig := GetTestRetryConfigForScenario("Reasoning", testConfig)
 		retryContext := TestRetryContext{
 			ScenarioName: "Opus46_MultiTurn_Step1",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"should_show_reasoning": true,
 				"model_version":         "opus-4.6",
 				"thinking_mode":         "adaptive",
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider": config.Provider,
 				"model":    config.Opus46Model,
 				"step":     "initial",
@@ -532,7 +531,7 @@ func RunOpus46MultiTurnReasoningTest(t *testing.T, client *bifrost.Bifrost, ctx 
 			OnRetry:     retryConfig.OnRetry,
 			OnFinalFail: retryConfig.OnFinalFail,
 		}
-		expectations := GetExpectationsForScenario("Reasoning", testConfig, map[string]interface{}{
+		expectations := GetExpectationsForScenario("Reasoning", testConfig, map[string]any{
 			"requires_reasoning": true,
 		})
 		expectations = ModifyExpectationsForProvider(expectations, config.Provider)
@@ -585,9 +584,9 @@ func RunOpus46MultiTurnReasoningTest(t *testing.T, client *bifrost.Bifrost, ctx 
 			Model:    config.Opus46Model,
 			Input:    multiTurnMessages,
 			Params: &schemas.ChatParameters{
-				MaxCompletionTokens: bifrost.Ptr(4000),
+				MaxCompletionTokens: new(4000),
 				Reasoning: &schemas.ChatReasoning{
-					Effort: bifrost.Ptr("low"),
+					Effort: new("low"),
 				},
 			},
 			Fallbacks: config.Fallbacks,
@@ -595,12 +594,12 @@ func RunOpus46MultiTurnReasoningTest(t *testing.T, client *bifrost.Bifrost, ctx 
 
 		retryContext2 := TestRetryContext{
 			ScenarioName: "Opus46_MultiTurn_Step2",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"multi_turn":    true,
 				"model_version": "opus-4.6",
 				"thinking_mode": "adaptive",
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider": config.Provider,
 				"model":    config.Opus46Model,
 				"step":     "follow_up",

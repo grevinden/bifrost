@@ -8,11 +8,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/logstore"
-	"github.com/maximhq/bifrost/framework/modelcatalog"
-	"github.com/maximhq/bifrost/framework/modelcatalog/datasheet"
-	"github.com/maximhq/bifrost/framework/streaming"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/logstore"
+	"github.com/grevinden/bifrost/framework/modelcatalog"
+	"github.com/grevinden/bifrost/framework/modelcatalog/datasheet"
+	"github.com/grevinden/bifrost/framework/streaming"
 )
 
 type testLogger struct{}
@@ -794,7 +794,7 @@ func TestMCPHooksDeferDBWriteUntilPostHookBatch(t *testing.T) {
 	if logEntry.ArgumentsParsed == nil {
 		t.Fatalf("expected arguments to be persisted")
 	}
-	resultMap, ok := logEntry.ResultParsed.(map[string]interface{})
+	resultMap, ok := logEntry.ResultParsed.(map[string]any)
 	if !ok || resultMap["answer"] != "done" {
 		t.Fatalf("expected parsed result to be persisted, got %#v", logEntry.ResultParsed)
 	}
@@ -867,7 +867,7 @@ func TestCleanupStalePendingMCPLogsPersistsErrorFallback(t *testing.T) {
 		ServerLabel: "docs",
 		Status:      "processing",
 		CreatedAt:   staleCreatedAt,
-		ArgumentsParsed: map[string]interface{}{
+		ArgumentsParsed: map[string]any{
 			"query": "stale input",
 		},
 	})
@@ -1225,7 +1225,7 @@ func TestStoreOrEnqueueRetryPreservesAllEntries(t *testing.T) {
 	}
 
 	// Verify plugin logs were attached to each entry
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		qe := <-plugin.writeQueue
 		if qe.log.PluginLogs == "" {
 			t.Fatalf("entry %d: expected PluginLogs to be set", i)
@@ -1526,16 +1526,16 @@ func TestApplyRealtimeOutputToEntryMergesRawTranscriptIntoStructuredRealtimeHist
 			{
 				Role: schemas.ChatMessageRoleUser,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr("Can you help with my ticket?"),
+					ContentStr: new("Can you help with my ticket?"),
 				},
 			},
 			{
 				Role: schemas.ChatMessageRoleTool,
 				Content: &schemas.ChatMessageContent{
-					ContentStr: schemas.Ptr(`{"status":"open"}`),
+					ContentStr: new(`{"status":"open"}`),
 				},
 				ChatToolMessage: &schemas.ChatToolMessage{
-					ToolCallID: schemas.Ptr("call_789"),
+					ToolCallID: new("call_789"),
 				},
 			},
 		},

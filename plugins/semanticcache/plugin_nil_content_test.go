@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // TestExtractTextForEmbedding_NilContent verifies that extractTextForEmbedding
@@ -30,7 +30,7 @@ func TestExtractTextForEmbedding_NilContent(t *testing.T) {
 						{
 							Role: schemas.ChatMessageRoleUser,
 							Content: &schemas.ChatMessageContent{
-								ContentStr: bifrost.Ptr("Call the get_weather function"),
+								ContentStr: new("Call the get_weather function"),
 							},
 						},
 						{
@@ -39,10 +39,10 @@ func TestExtractTextForEmbedding_NilContent(t *testing.T) {
 							ChatAssistantMessage: &schemas.ChatAssistantMessage{
 								ToolCalls: []schemas.ChatAssistantMessageToolCall{
 									{
-										ID:   bifrost.Ptr("call_123"),
-										Type: bifrost.Ptr("function"),
+										ID:   new("call_123"),
+										Type: new("function"),
 										Function: schemas.ChatAssistantMessageToolCallFunction{
-											Name:      bifrost.Ptr("get_weather"),
+											Name:      new("get_weather"),
 											Arguments: `{"location": "San Francisco"}`,
 										},
 									},
@@ -51,8 +51,8 @@ func TestExtractTextForEmbedding_NilContent(t *testing.T) {
 						},
 					},
 					Params: &schemas.ChatParameters{
-						Temperature:         bifrost.Ptr(0.7),
-						MaxCompletionTokens: bifrost.Ptr(100),
+						Temperature:         new(0.7),
+						MaxCompletionTokens: new(100),
 					},
 				},
 			},
@@ -71,8 +71,8 @@ func TestExtractTextForEmbedding_NilContent(t *testing.T) {
 						},
 					},
 					Params: &schemas.ChatParameters{
-						Temperature:         bifrost.Ptr(0.7),
-						MaxCompletionTokens: bifrost.Ptr(100),
+						Temperature:         new(0.7),
+						MaxCompletionTokens: new(100),
 					},
 				},
 			},
@@ -201,7 +201,7 @@ func TestPreLLMHookSkipsUnsupportedCountTokensRequest(t *testing.T) {
 				{
 					Role: bifrost.Ptr(schemas.ResponsesInputMessageRoleUser),
 					Content: &schemas.ResponsesMessageContent{
-						ContentStr: bifrost.Ptr("How many tokens is this message?"),
+						ContentStr: new("How many tokens is this message?"),
 					},
 				},
 			},
@@ -244,7 +244,7 @@ func TestGetNormalizedInputForCaching_NilContent(t *testing.T) {
 				{
 					Role: schemas.ChatMessageRoleUser,
 					Content: &schemas.ChatMessageContent{
-						ContentStr: bifrost.Ptr("Call the get_weather function"),
+						ContentStr: new("Call the get_weather function"),
 					},
 				},
 				{
@@ -253,10 +253,10 @@ func TestGetNormalizedInputForCaching_NilContent(t *testing.T) {
 					ChatAssistantMessage: &schemas.ChatAssistantMessage{
 						ToolCalls: []schemas.ChatAssistantMessageToolCall{
 							{
-								ID:   bifrost.Ptr("call_123"),
-								Type: bifrost.Ptr("function"),
+								ID:   new("call_123"),
+								Type: new("function"),
 								Function: schemas.ChatAssistantMessageToolCallFunction{
-									Name:      bifrost.Ptr("get_weather"),
+									Name:      new("get_weather"),
 									Arguments: `{"location": "San Francisco"}`,
 								},
 							},
@@ -265,8 +265,8 @@ func TestGetNormalizedInputForCaching_NilContent(t *testing.T) {
 				},
 			},
 			Params: &schemas.ChatParameters{
-				Temperature:         bifrost.Ptr(0.7),
-				MaxCompletionTokens: bifrost.Ptr(100),
+				Temperature:         new(0.7),
+				MaxCompletionTokens: new(100),
 			},
 		},
 	}
@@ -295,7 +295,7 @@ func createResponsesRequestWithNilContent() *schemas.BifrostResponsesRequest {
 			{
 				Role: bifrost.Ptr(schemas.ResponsesInputMessageRoleUser),
 				Content: &schemas.ResponsesMessageContent{
-					ContentStr: bifrost.Ptr("Hello"),
+					ContentStr: new("Hello"),
 				},
 			},
 			{
@@ -304,8 +304,8 @@ func createResponsesRequestWithNilContent() *schemas.BifrostResponsesRequest {
 			},
 		},
 		Params: &schemas.ResponsesParameters{
-			Temperature:     bifrost.Ptr(0.7),
-			MaxOutputTokens: bifrost.Ptr(100),
+			Temperature:     new(0.7),
+			MaxOutputTokens: new(100),
 		},
 	}
 }

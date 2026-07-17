@@ -58,6 +58,8 @@ settings.local.json
 .cursor/
 .claude/*
 !.claude/skills/
+.qwen/*
+!.qwen/settings.json
 
 # Python specific
 **/__pycache__/**
@@ -255,3 +257,6 @@ ui/app/routeTree.gen.ts
 bifrost-migration-cli
 
 tests/e2e/clis/reports
+
+
+transports/bifrost-http/ui_embedded/out/

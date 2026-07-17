@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"strings"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
-	configstoreTables "github.com/maximhq/bifrost/framework/configstore/tables"
+	_ "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
+	configstoreTables "github.com/grevinden/bifrost/framework/configstore/tables"
 	"github.com/valyala/fasthttp"
 )
 
@@ -21,28 +21,28 @@ import (
 func ParseVirtualKeyFromFastHTTPRequest(req *fasthttp.RequestCtx) *string {
 	vkHeader := string(req.Request.Header.Peek("x-bf-vk"))
 	if vkHeader != "" && strings.HasPrefix(strings.ToLower(vkHeader), VirtualKeyPrefix) {
-		return bifrost.Ptr(vkHeader)
+		return new(vkHeader)
 	}
 	authHeader := string(req.Request.Header.Peek("Authorization"))
 	if authHeader != "" {
 		if strings.HasPrefix(strings.ToLower(authHeader), "bearer ") {
 			authHeaderValue := strings.TrimSpace(authHeader[7:]) // Remove "Bearer " prefix
 			if authHeaderValue != "" && strings.HasPrefix(strings.ToLower(authHeaderValue), VirtualKeyPrefix) {
-				return bifrost.Ptr(authHeaderValue)
+				return new(authHeaderValue)
 			}
 		}
 	}
 	xAPIKey := string(req.Request.Header.Peek("x-api-key"))
 	if xAPIKey != "" && strings.HasPrefix(strings.ToLower(xAPIKey), VirtualKeyPrefix) {
-		return bifrost.Ptr(xAPIKey)
+		return new(xAPIKey)
 	}
 	xGoogleAPIKey := string(req.Request.Header.Peek("x-goog-api-key"))
 	if xGoogleAPIKey != "" && strings.HasPrefix(strings.ToLower(xGoogleAPIKey), VirtualKeyPrefix) {
-		return bifrost.Ptr(xGoogleAPIKey)
+		return new(xGoogleAPIKey)
 	}
 	azureAPIKey := string(req.Request.Header.Peek("api-key"))
 	if azureAPIKey != "" && strings.HasPrefix(strings.ToLower(azureAPIKey), VirtualKeyPrefix) {
-		return bifrost.Ptr(azureAPIKey)
+		return new(azureAPIKey)
 	}
 	return nil
 }
@@ -183,8 +183,8 @@ func (p *GovernancePlugin) validateRequiredHeaders(ctx *schemas.BifrostContext) 
 	}
 	if len(missing) > 0 {
 		return &schemas.BifrostError{
-			Type:       bifrost.Ptr("missing_required_headers"),
-			StatusCode: bifrost.Ptr(400),
+			Type:       new("missing_required_headers"),
+			StatusCode: new(400),
 			Error: &schemas.ErrorField{
 				Message: fmt.Sprintf("missing required headers: %s", strings.Join(missing, ", ")),
 			},

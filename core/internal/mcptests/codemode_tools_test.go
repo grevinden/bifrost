@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -39,15 +39,15 @@ func TestCodeMode_NoToolsAvailable(t *testing.T) {
     return "Error: httpserver not defined or echo not available"
 result = main()`
 
-	argsJSON, _ := json.Marshal(map[string]interface{}{
+	argsJSON, _ := json.Marshal(map[string]any{
 		"code": code,
 	})
 
 	toolCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-no-tools"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-no-tools"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("executeToolCode"),
+			Name:      new("executeToolCode"),
 			Arguments: string(argsJSON),
 		},
 	}
@@ -90,15 +90,15 @@ func TestCodeMode_SomeToolsAvailable(t *testing.T) {
 	code := `r = TestCodeModeServer.youtube_search_you_tube(query="golang")
 result = type(r)`
 
-	argsJSON, _ := json.Marshal(map[string]interface{}{
+	argsJSON, _ := json.Marshal(map[string]any{
 		"code": code,
 	})
 
 	toolCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-some-tools"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-some-tools"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("executeToolCode"),
+			Name:      new("executeToolCode"),
 			Arguments: string(argsJSON),
 		},
 	}
@@ -151,15 +151,15 @@ result = {
     "success": True
 }`
 
-	argsJSON, _ := json.Marshal(map[string]interface{}{
+	argsJSON, _ := json.Marshal(map[string]any{
 		"code": code,
 	})
 
 	toolCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-mcp-tool"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-mcp-tool"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("executeToolCode"),
+			Name:      new("executeToolCode"),
 			Arguments: string(argsJSON),
 		},
 	}
@@ -173,7 +173,7 @@ result = {
 
 	// Verify tool was called and result returned
 	assert.NotNil(t, returnValue)
-	resultObj, ok := returnValue.(map[string]interface{})
+	resultObj, ok := returnValue.(map[string]any)
 	require.True(t, ok)
 	assert.True(t, resultObj["success"].(bool))
 	assert.Contains(t, fmt.Sprintf("%v", resultObj["echo"]), "Testing MCP call")
@@ -209,15 +209,15 @@ result = {
     "sse": result2
 }`
 
-	argsJSON, _ := json.Marshal(map[string]interface{}{
+	argsJSON, _ := json.Marshal(map[string]any{
 		"code": code,
 	})
 
 	toolCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-multi-servers"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-multi-servers"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("executeToolCode"),
+			Name:      new("executeToolCode"),
 			Arguments: string(argsJSON),
 		},
 	}
@@ -230,7 +230,7 @@ result = {
 	require.False(t, hasError, "should not have execution error: %s", errorMsg)
 
 	// Verify both calls worked
-	resultObj, ok := returnValue.(map[string]interface{})
+	resultObj, ok := returnValue.(map[string]any)
 	require.True(t, ok)
 	assert.Contains(t, fmt.Sprintf("%v", resultObj["http"]), "from HTTP")
 	assert.Contains(t, fmt.Sprintf("%v", resultObj["sse"]), "from SSE")
@@ -266,15 +266,15 @@ def main():
         return {"error": "codemode2 not accessible", "expected": "Code mode tools not accessible"}
 result = main()`
 
-	argsJSON, _ := json.Marshal(map[string]interface{}{
+	argsJSON, _ := json.Marshal(map[string]any{
 		"code": code,
 	})
 
 	toolCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-codemode"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-codemode"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("executeToolCode"),
+			Name:      new("executeToolCode"),
 			Arguments: string(argsJSON),
 		},
 	}
@@ -333,15 +333,15 @@ result = {
     "step3": calc
 }`
 
-	argsJSON, _ := json.Marshal(map[string]interface{}{
+	argsJSON, _ := json.Marshal(map[string]any{
 		"code": code,
 	})
 
 	toolCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-nested"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-nested"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("executeToolCode"),
+			Name:      new("executeToolCode"),
 			Arguments: string(argsJSON),
 		},
 	}
@@ -354,7 +354,7 @@ result = {
 	require.False(t, hasError, "should not have execution error: %s", errorMsg)
 
 	// Verify nested execution worked correctly
-	resultObj, ok := returnValue.(map[string]interface{})
+	resultObj, ok := returnValue.(map[string]any)
 	require.True(t, ok)
 	assert.Contains(t, fmt.Sprintf("%v", resultObj["step1"]), "step 1")
 	assert.Contains(t, fmt.Sprintf("%v", resultObj["step2"]), "Processed")
@@ -397,15 +397,15 @@ func TestCodeMode_ToolNotInExecuteList(t *testing.T) {
         return {"success": False, "error": "echo not available"}
 result = main()`
 
-	argsJSON, _ := json.Marshal(map[string]interface{}{
+	argsJSON, _ := json.Marshal(map[string]any{
 		"code": code,
 	})
 
 	toolCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-filtered"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-filtered"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("executeToolCode"),
+			Name:      new("executeToolCode"),
 			Arguments: string(argsJSON),
 		},
 	}
@@ -418,7 +418,7 @@ result = main()`
 	require.False(t, hasError, "should not have execution error: %s", errorMsg)
 
 	// Should fail with appropriate error
-	resultObj, ok := returnValue.(map[string]interface{})
+	resultObj, ok := returnValue.(map[string]any)
 	require.True(t, ok)
 	assert.False(t, resultObj["success"].(bool))
 	assert.NotEmpty(t, resultObj["error"])
@@ -452,15 +452,15 @@ func TestCodeMode_NonAllowedToolExecution(t *testing.T) {
 	// This should cause a runtime error: "undefined: bifrostInternal"
 	code := `result = bifrostInternal.echo(message="should fail")`
 
-	argsJSON, _ := json.Marshal(map[string]interface{}{
+	argsJSON, _ := json.Marshal(map[string]any{
 		"code": code,
 	})
 
 	toolCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-denied"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-denied"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("executeToolCode"),
+			Name:      new("executeToolCode"),
 			Arguments: string(argsJSON),
 		},
 	}
@@ -507,15 +507,15 @@ func TestCodeMode_ToolExecutionTimeout(t *testing.T) {
 else:
     result = {"success": False, "error": "echo not available"}`
 
-	argsJSON, _ := json.Marshal(map[string]interface{}{
+	argsJSON, _ := json.Marshal(map[string]any{
 		"code": code,
 	})
 
 	toolCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-timeout-tool"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-timeout-tool"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("executeToolCode"),
+			Name:      new("executeToolCode"),
 			Arguments: string(argsJSON),
 		},
 	}
@@ -566,15 +566,15 @@ func TestCodeMode_ToolCallWithAwait(t *testing.T) {
 	// Execute: result = server.tool(args)
 	code := `result = bifrostInternal.calculator(operation="multiply", x=6, y=7)`
 
-	argsJSON, _ := json.Marshal(map[string]interface{}{
+	argsJSON, _ := json.Marshal(map[string]any{
 		"code": code,
 	})
 
 	toolCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-await"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-await"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("executeToolCode"),
+			Name:      new("executeToolCode"),
 			Arguments: string(argsJSON),
 		},
 	}
@@ -615,15 +615,15 @@ func TestCodeMode_ToolCallWithoutAwait(t *testing.T) {
 	// Execute: result = server.tool(args) - Starlark is synchronous
 	code := `result = bifrostInternal.echo(message="promise test")`
 
-	argsJSON, _ := json.Marshal(map[string]interface{}{
+	argsJSON, _ := json.Marshal(map[string]any{
 		"code": code,
 	})
 
 	toolCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-promise"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-promise"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("executeToolCode"),
+			Name:      new("executeToolCode"),
 			Arguments: string(argsJSON),
 		},
 	}
@@ -669,15 +669,15 @@ results.append(bifrostInternal.echo(message="third"))
 
 result = results`
 
-	argsJSON, _ := json.Marshal(map[string]interface{}{
+	argsJSON, _ := json.Marshal(map[string]any{
 		"code": code,
 	})
 
 	toolCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-sequential"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-sequential"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("executeToolCode"),
+			Name:      new("executeToolCode"),
 			Arguments: string(argsJSON),
 		},
 	}
@@ -690,7 +690,7 @@ result = results`
 	require.False(t, hasError, "should not have execution error: %s", errorMsg)
 
 	// Verify all execute in order
-	results, ok := returnValue.([]interface{})
+	results, ok := returnValue.([]any)
 	require.True(t, ok)
 	assert.Len(t, results, 3)
 	assert.Contains(t, fmt.Sprintf("%v", results[0]), "first")
@@ -731,15 +731,15 @@ result = {
     "calc": r3
 }`
 
-	argsJSON, _ := json.Marshal(map[string]interface{}{
+	argsJSON, _ := json.Marshal(map[string]any{
 		"code": code,
 	})
 
 	toolCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-parallel"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-parallel"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("executeToolCode"),
+			Name:      new("executeToolCode"),
 			Arguments: string(argsJSON),
 		},
 	}
@@ -752,7 +752,7 @@ result = {
 	require.False(t, hasError, "should not have execution error: %s", errorMsg)
 
 	// Verify sequential execution works
-	resultObj, ok := returnValue.(map[string]interface{})
+	resultObj, ok := returnValue.(map[string]any)
 	require.True(t, ok)
 	assert.Contains(t, fmt.Sprintf("%v", resultObj["echo1"]), "parallel1")
 	assert.Contains(t, fmt.Sprintf("%v", resultObj["echo2"]), "parallel2")
@@ -794,15 +794,15 @@ func TestCodeMode_ToolReturnsError(t *testing.T) {
         return {"success": True, "result": r}
 result = main()`
 
-	argsJSON, _ := json.Marshal(map[string]interface{}{
+	argsJSON, _ := json.Marshal(map[string]any{
 		"code": code,
 	})
 
 	toolCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-error-tool"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-error-tool"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("executeToolCode"),
+			Name:      new("executeToolCode"),
 			Arguments: string(argsJSON),
 		},
 	}
@@ -845,15 +845,15 @@ func TestCodeMode_ToolNotFound(t *testing.T) {
 	// This should cause a runtime error: "undefined: bifrostInternal"
 	code := `result = bifrostInternal.nonexistent_tool(param="value")`
 
-	argsJSON, _ := json.Marshal(map[string]interface{}{
+	argsJSON, _ := json.Marshal(map[string]any{
 		"code": code,
 	})
 
 	toolCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-not-found"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-not-found"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("executeToolCode"),
+			Name:      new("executeToolCode"),
 			Arguments: string(argsJSON),
 		},
 	}
@@ -900,15 +900,15 @@ func TestCodeMode_ChatFormat(t *testing.T) {
 	code := `r = bifrostInternal.calculator(operation="divide", x=100, y=4)
 result = {"result": r, "format": "chat"}`
 
-	argsJSON, _ := json.Marshal(map[string]interface{}{
+	argsJSON, _ := json.Marshal(map[string]any{
 		"code": code,
 	})
 
 	toolCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-chat-format"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-chat-format"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("executeToolCode"),
+			Name:      new("executeToolCode"),
 			Arguments: string(argsJSON),
 		},
 	}
@@ -920,7 +920,7 @@ result = {"result": r, "format": "chat"}`
 	returnValue, hasError, errorMsg := ParseCodeModeResponse(t, *result.Content.ContentStr)
 	require.False(t, hasError, "should not have execution error: %s", errorMsg)
 
-	resultObj, ok := returnValue.(map[string]interface{})
+	resultObj, ok := returnValue.(map[string]any)
 	require.True(t, ok)
 	assert.Equal(t, "chat", resultObj["format"])
 	assert.Contains(t, fmt.Sprintf("%v", resultObj["result"]), "25")
@@ -949,14 +949,14 @@ func TestCodeMode_ResponsesFormat(t *testing.T) {
 	code := `r = TestCodeModeServer.calculator(operation="subtract", x=50, y=8)
 result = {"result": r, "format": "responses"}`
 
-	argsJSON, _ := json.Marshal(map[string]interface{}{
+	argsJSON, _ := json.Marshal(map[string]any{
 		"code": code,
 	})
 
 	responsesTool := schemas.ResponsesToolMessage{
-		CallID:    schemas.Ptr("call-responses-format"),
-		Name:      schemas.Ptr("executeToolCode"),
-		Arguments: schemas.Ptr(string(argsJSON)),
+		CallID:    new("call-responses-format"),
+		Name:      new("executeToolCode"),
+		Arguments: new(string(argsJSON)),
 	}
 
 	result, bifrostErr := bifrost.ExecuteResponsesMCPTool(ctx, &responsesTool)
@@ -967,7 +967,7 @@ result = {"result": r, "format": "responses"}`
 		returnValue, hasError, errorMsg := ParseCodeModeResponse(t, *result.Content.ContentStr)
 		require.False(t, hasError, "should not have execution error: %s", errorMsg)
 
-		resultObj, ok := returnValue.(map[string]interface{})
+		resultObj, ok := returnValue.(map[string]any)
 		require.True(t, ok)
 		assert.Equal(t, "responses", resultObj["format"])
 		assert.Contains(t, fmt.Sprintf("%v", resultObj["result"]), "42")

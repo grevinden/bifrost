@@ -172,5 +172,5 @@ The [`schema.json`](./schema.json) file contains a [JSON Schema draft-07](https:
 
 ## Questions?
 
-- Open an [issue](https://github.com/maximhq/bifrost/issues/new) for questions or problems.
+- Open an [issue](https://github.com/grevinden/bifrost/issues/new) for questions or problems.
 - See the [Bifrost docs](https://docs.getbifrost.ai) for general platform documentation.

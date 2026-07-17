@@ -13,9 +13,9 @@ import (
 	"time"
 
 	"github.com/bytedance/sonic"
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/configstore/tables"
+	_ "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/configstore/tables"
 )
 
 type EnvKeyType string
@@ -507,7 +507,7 @@ func (p *ProviderConfig) Redacted() *ProviderConfig {
 		if key.UseForBatchAPI != nil {
 			redactedConfig.Keys[i].UseForBatchAPI = key.UseForBatchAPI
 		} else {
-			redactedConfig.Keys[i].UseForBatchAPI = bifrost.Ptr(false)
+			redactedConfig.Keys[i].UseForBatchAPI = new(false)
 		}
 
 		// Add model discovery status and error

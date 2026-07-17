@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	schemas "github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/modelcatalog"
+	bifrost "github.com/grevinden/bifrost/core"
+	schemas "github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/modelcatalog"
 )
 
 // buildCompleteImageFromImageStreamChunks builds a complete image generation response from accumulated chunks
@@ -223,7 +223,7 @@ func (a *Accumulator) processImageStreamingResponse(ctx *schemas.BifrostContext,
 	chunk.Timestamp = time.Now()
 	chunk.ErrorDetails = bifrostErr
 	if bifrostErr != nil {
-		chunk.FinishReason = bifrost.Ptr("error")
+		chunk.FinishReason = new("error")
 	} else if result != nil && result.ImageGenerationStreamResponse != nil {
 		// Create a deep copy of the delta to avoid pointing to stack memory
 		var partialImageIndex *int
@@ -265,7 +265,7 @@ func (a *Accumulator) processImageStreamingResponse(ctx *schemas.BifrostContext,
 
 		// Extract raw response if available
 		if result.ImageGenerationStreamResponse.ExtraFields.RawResponse != nil {
-			chunk.RawResponse = bifrost.Ptr(fmt.Sprintf("%v", result.ImageGenerationStreamResponse.ExtraFields.RawResponse))
+			chunk.RawResponse = new(fmt.Sprintf("%v", result.ImageGenerationStreamResponse.ExtraFields.RawResponse))
 		}
 
 		// Extract usage if available
@@ -276,10 +276,10 @@ func (a *Accumulator) processImageStreamingResponse(ctx *schemas.BifrostContext,
 		if isFinalChunk {
 			if a.pricingManager != nil {
 				cost := a.pricingManager.CalculateCost(result, modelcatalog.PricingLookupScopesFromContext(ctx, string(result.GetExtraFields().Provider)))
-				chunk.Cost = bifrost.Ptr(cost)
+				chunk.Cost = new(cost)
 			}
 			chunk.SemanticCacheDebug = result.GetExtraFields().CacheDebug
-			chunk.FinishReason = bifrost.Ptr("completed")
+			chunk.FinishReason = new("completed")
 		}
 	}
 
@@ -306,7 +306,7 @@ func (a *Accumulator) processImageStreamingResponse(ctx *schemas.BifrostContext,
 				a.logger.Error(fmt.Sprintf("failed to process accumulated chunks for request %s: %v", requestID, processErr))
 				return nil, processErr
 			}
-			var rawRequest interface{}
+			var rawRequest any
 			if result != nil && result.ImageGenerationStreamResponse != nil && result.ImageGenerationStreamResponse.ExtraFields.RawRequest != nil {
 				rawRequest = result.ImageGenerationStreamResponse.ExtraFields.RawRequest
 			}

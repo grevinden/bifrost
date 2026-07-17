@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -61,7 +61,7 @@ func TestDirectToolExecution_ResponsesFormat(t *testing.T) {
 
 	// Execute echo tool in Responses format
 	ctx := createTestContext()
-	args := map[string]interface{}{"message": "Hello, Responses!"}
+	args := map[string]any{"message": "Hello, Responses!"}
 	toolCall := CreateResponsesToolCallForExecution("call-1", "echo", args)
 
 	result, bifrostErr := bifrost.ExecuteResponsesMCPTool(ctx, &toolCall)
@@ -136,10 +136,10 @@ func TestToolExecutionInvalidArguments(t *testing.T) {
 
 	t.Run("invalid_json", func(t *testing.T) {
 		toolCall := schemas.ChatAssistantMessageToolCall{
-			ID:   schemas.Ptr("call-1"),
-			Type: schemas.Ptr("function"),
+			ID:   new("call-1"),
+			Type: new("function"),
 			Function: schemas.ChatAssistantMessageToolCallFunction{
-				Name:      schemas.Ptr("calculator"),
+				Name:      new("calculator"),
 				Arguments: "invalid json {{{",
 			},
 		}
@@ -153,17 +153,17 @@ func TestToolExecutionInvalidArguments(t *testing.T) {
 	})
 
 	t.Run("missing_required_arguments", func(t *testing.T) {
-		argsMap := map[string]interface{}{
+		argsMap := map[string]any{
 			"operation": "add",
 			// Missing x and y
 		}
 		argsJSON, _ := json.Marshal(argsMap)
 
 		toolCall := schemas.ChatAssistantMessageToolCall{
-			ID:   schemas.Ptr("call-2"),
-			Type: schemas.Ptr("function"),
+			ID:   new("call-2"),
+			Type: new("function"),
 			Function: schemas.ChatAssistantMessageToolCallFunction{
-				Name:      schemas.Ptr("calculator"),
+				Name:      new("calculator"),
 				Arguments: string(argsJSON),
 			},
 		}
@@ -176,7 +176,7 @@ func TestToolExecutionInvalidArguments(t *testing.T) {
 	})
 
 	t.Run("wrong_argument_types", func(t *testing.T) {
-		argsMap := map[string]interface{}{
+		argsMap := map[string]any{
 			"operation": "add",
 			"x":         "not_a_number",
 			"y":         "also_not_a_number",
@@ -184,10 +184,10 @@ func TestToolExecutionInvalidArguments(t *testing.T) {
 		argsJSON, _ := json.Marshal(argsMap)
 
 		toolCall := schemas.ChatAssistantMessageToolCall{
-			ID:   schemas.Ptr("call-3"),
-			Type: schemas.Ptr("function"),
+			ID:   new("call-3"),
+			Type: new("function"),
 			Function: schemas.ChatAssistantMessageToolCallFunction{
-				Name:      schemas.Ptr("calculator"),
+				Name:      new("calculator"),
 				Arguments: string(argsJSON),
 			},
 		}
@@ -218,16 +218,16 @@ func TestToolExecutionTimeout(t *testing.T) {
 	defer cancel()
 
 	// Try to execute delay tool with long duration (5 seconds)
-	argsMap := map[string]interface{}{
+	argsMap := map[string]any{
 		"seconds": 5.0, // 5 seconds delay
 	}
 	argsJSON, _ := json.Marshal(argsMap)
 
 	toolCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-timeout"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-timeout"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("delay"),
+			Name:      new("delay"),
 			Arguments: string(argsJSON),
 		},
 	}
@@ -262,16 +262,16 @@ func TestToolExecutionReturnsError(t *testing.T) {
 
 	// Use error tool
 	errorMessage := "This is a test error"
-	argsMap := map[string]interface{}{
+	argsMap := map[string]any{
 		"error_message": errorMessage,
 	}
 	argsJSON, _ := json.Marshal(argsMap)
 
 	toolCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-error"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-error"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("bifrostInternal-throw_error"),
+			Name:      new("bifrostInternal-throw_error"),
 			Arguments: string(argsJSON),
 		},
 	}
@@ -309,17 +309,17 @@ func TestToolExecutionLargeResponse(t *testing.T) {
 	ctx := createTestContext()
 
 	// Create large message (10KB - reasonable size for testing)
-	largeMessage := ""
-	for i := 0; i < 10000; i++ {
-		largeMessage += "A"
+	var largeMessage strings.Builder
+	for range 10000 {
+		largeMessage.WriteString("A")
 	}
 
-	toolCall := GetSampleEchoToolCall("call-large", largeMessage)
+	toolCall := GetSampleEchoToolCall("call-large", largeMessage.String())
 	result, bifrostErr := bifrost.ExecuteChatMCPTool(ctx, &toolCall)
 
 	require.Nil(t, bifrostErr, "large response should not error")
 	assert.NotNil(t, result, "should have result")
-	t.Logf("✅ Large response handled successfully (%d bytes)", len(largeMessage))
+	t.Logf("✅ Large response handled successfully (%d bytes)", len(largeMessage.String()))
 }
 
 func TestToolExecutionEmptyResponse(t *testing.T) {
@@ -416,7 +416,7 @@ func TestToolExecutionParallel(t *testing.T) {
 	errors := make(chan error, 5)
 
 	start := time.Now()
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		wg.Add(1)
 		go func(id int) {
 			defer wg.Done()
@@ -493,7 +493,7 @@ func TestToolExecutionPreservesCallID(t *testing.T) {
 	}
 
 	// Test Responses format
-	args := map[string]interface{}{"message": "test"}
+	args := map[string]any{"message": "test"}
 	responsesToolCall := CreateResponsesToolCallForExecution(expectedCallID, "echo", args)
 	responsesResult, responsesErr := bifrost.ExecuteResponsesMCPTool(ctx, &responsesToolCall)
 
@@ -565,7 +565,7 @@ func TestToolExecutionMultipleClients(t *testing.T) {
 		Type: schemas.ChatToolTypeFunction,
 		Function: &schemas.ChatToolFunction{
 			Name:        "local_tool",
-			Description: schemas.Ptr("A local tool"),
+			Description: new("A local tool"),
 		},
 	}
 	err = manager.RegisterTool("local_tool", "A local tool", localToolHandler, localToolSchema)
@@ -583,12 +583,12 @@ func TestToolExecutionMultipleClients(t *testing.T) {
 	assert.NotNil(t, echoResult)
 
 	// Execute local tool
-	argsJSON, _ := json.Marshal(map[string]interface{}{})
+	argsJSON, _ := json.Marshal(map[string]any{})
 	inProcessToolCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-local"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-local"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("bifrostInternal-local_tool"),
+			Name:      new("bifrostInternal-local_tool"),
 			Arguments: string(argsJSON),
 		},
 	}
@@ -617,12 +617,12 @@ func TestToolExecutionToolNotFound(t *testing.T) {
 	ctx := createTestContext()
 
 	// Try to execute non-existent tool
-	argsJSON, _ := json.Marshal(map[string]interface{}{})
+	argsJSON, _ := json.Marshal(map[string]any{})
 	toolCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-notfound"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-notfound"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("nonexistent_tool_xyz"),
+			Name:      new("nonexistent_tool_xyz"),
 			Arguments: string(argsJSON),
 		},
 	}
@@ -687,8 +687,8 @@ func TestToolExecutionMalformedRequest(t *testing.T) {
 
 	t.Run("missing_function_name", func(t *testing.T) {
 		toolCall := schemas.ChatAssistantMessageToolCall{
-			ID:   schemas.Ptr("call-noname"),
-			Type: schemas.Ptr("function"),
+			ID:   new("call-noname"),
+			Type: new("function"),
 			Function: schemas.ChatAssistantMessageToolCallFunction{
 				Name:      nil, // Missing name
 				Arguments: "{}",
@@ -729,13 +729,13 @@ func TestToolExecutionContextCancellation(t *testing.T) {
 	ctx, cancel := createTestContextWithTimeout(10 * time.Second)
 
 	// Start long-running tool
-	argsMap := map[string]interface{}{"seconds": 5.0}
+	argsMap := map[string]any{"seconds": 5.0}
 	argsJSON, _ := json.Marshal(argsMap)
 	toolCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-cancel"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-cancel"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("delay"),
+			Name:      new("delay"),
 			Arguments: string(argsJSON),
 		},
 	}
@@ -772,13 +772,13 @@ func TestToolExecutionContextDeadline(t *testing.T) {
 	defer cancel()
 
 	// Tool that takes 5 seconds
-	argsMap := map[string]interface{}{"seconds": 5.0}
+	argsMap := map[string]any{"seconds": 5.0}
 	argsJSON, _ := json.Marshal(argsMap)
 	toolCall := schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-deadline"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-deadline"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
-			Name:      schemas.Ptr("delay"),
+			Name:      new("delay"),
 			Arguments: string(argsJSON),
 		},
 	}
@@ -792,4 +792,3 @@ func TestToolExecutionContextDeadline(t *testing.T) {
 		t.Log("Deadline handled in result")
 	}
 }
-

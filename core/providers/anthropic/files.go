@@ -3,7 +3,7 @@ package anthropic
 import (
 	"time"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // ToAnthropicFileUploadResponse converts a Bifrost file upload response to Anthropic format.

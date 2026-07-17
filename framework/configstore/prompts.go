@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/maximhq/bifrost/framework/configstore/tables"
+	"github.com/grevinden/bifrost/framework/configstore/tables"
 	"gorm.io/gorm"
 )
 
@@ -326,7 +326,7 @@ func (s *RDBConfigStore) GetLatestPromptVersion(ctx context.Context, promptID st
 // Retries on unique constraint conflict (concurrent version_number allocation).
 func (s *RDBConfigStore) CreatePromptVersion(ctx context.Context, version *tables.TablePromptVersion) error {
 	const maxRetries = 3
-	for attempt := 0; attempt < maxRetries; attempt++ {
+	for range maxRetries {
 		err := s.DB().WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 			// Get the next version number
 			var maxVersionNumber int

@@ -7,11 +7,12 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"strings"
 	"testing"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // Shared test texts for TTS->SST round-trip validation
@@ -127,11 +128,11 @@ var WeatherToolFunction = &schemas.ChatToolFunction{
 	Parameters: &schemas.ToolFunctionParameters{
 		Type: "object",
 		Properties: schemas.NewOrderedMapFromPairs(
-			schemas.KV("location", map[string]interface{}{
+			schemas.KV("location", map[string]any{
 				"type":        "string",
 				"description": "The city and state, e.g. San Francisco, CA",
 			}),
-			schemas.KV("unit", map[string]interface{}{
+			schemas.KV("unit", map[string]any{
 				"type": "string",
 				"enum": []string{"celsius", "fahrenheit"},
 			}),
@@ -144,7 +145,7 @@ var CalculatorToolFunction = &schemas.ChatToolFunction{
 	Parameters: &schemas.ToolFunctionParameters{
 		Type: "object",
 		Properties: schemas.NewOrderedMapFromPairs(
-			schemas.KV("expression", map[string]interface{}{
+			schemas.KV("expression", map[string]any{
 				"type":        "string",
 				"description": "The mathematical expression to evaluate, e.g. '2 + 3' or '10 * 5'",
 			}),
@@ -157,7 +158,7 @@ var TimeToolFunction = &schemas.ChatToolFunction{
 	Parameters: &schemas.ToolFunctionParameters{
 		Type: "object",
 		Properties: schemas.NewOrderedMapFromPairs(
-			schemas.KV("timezone", map[string]interface{}{
+			schemas.KV("timezone", map[string]any{
 				"type":        "string",
 				"description": "The timezone identifier, e.g. 'America/New_York' or 'UTC'",
 			}),
@@ -203,7 +204,7 @@ func GetSampleChatTool(toolName SampleToolType) *schemas.ChatTool {
 		Type: "function",
 		Function: &schemas.ChatToolFunction{
 			Name:        toolDisplayName,
-			Description: bifrost.Ptr(description),
+			Description: new(description),
 			Parameters:  function.Parameters,
 		},
 	}
@@ -228,8 +229,8 @@ func GetSampleResponsesTool(toolName SampleToolType) *schemas.ResponsesTool {
 
 	return &schemas.ResponsesTool{
 		Type:        "function",
-		Name:        bifrost.Ptr(toolDisplayName),
-		Description: bifrost.Ptr(description),
+		Name:        new(toolDisplayName),
+		Description: new(description),
 		ResponsesToolFunction: &schemas.ResponsesToolFunction{
 			Parameters: function.Parameters,
 		},
@@ -313,7 +314,7 @@ func CreateBasicChatMessage(content string) schemas.ChatMessage {
 	return schemas.ChatMessage{
 		Role: schemas.ChatMessageRoleUser,
 		Content: &schemas.ChatMessageContent{
-			ContentStr: bifrost.Ptr(content),
+			ContentStr: new(content),
 		},
 	}
 }
@@ -323,7 +324,7 @@ func CreateBasicResponsesMessage(content string) schemas.ResponsesMessage {
 		Type: bifrost.Ptr(schemas.ResponsesMessageTypeMessage),
 		Role: bifrost.Ptr(schemas.ResponsesInputMessageRoleUser),
 		Content: &schemas.ResponsesMessageContent{
-			ContentStr: bifrost.Ptr(content),
+			ContentStr: new(content),
 		},
 	}
 }
@@ -333,7 +334,7 @@ func CreateImageChatMessage(text, imageURL string) schemas.ChatMessage {
 		Role: schemas.ChatMessageRoleUser,
 		Content: &schemas.ChatMessageContent{
 			ContentBlocks: []schemas.ChatContentBlock{
-				{Type: schemas.ChatContentBlockTypeText, Text: bifrost.Ptr(text)},
+				{Type: schemas.ChatContentBlockTypeText, Text: new(text)},
 				{Type: schemas.ChatContentBlockTypeImage, ImageURLStruct: &schemas.ChatInputImage{URL: imageURL}},
 			},
 		},
@@ -346,11 +347,11 @@ func CreateImageResponsesMessage(text, imageURL string) schemas.ResponsesMessage
 		Role: bifrost.Ptr(schemas.ResponsesInputMessageRoleUser),
 		Content: &schemas.ResponsesMessageContent{
 			ContentBlocks: []schemas.ResponsesMessageContentBlock{
-				{Type: schemas.ResponsesInputMessageContentBlockTypeText, Text: bifrost.Ptr(text)},
+				{Type: schemas.ResponsesInputMessageContentBlockTypeText, Text: new(text)},
 				{
 					Type: schemas.ResponsesInputMessageContentBlockTypeImage,
 					ResponsesInputMessageContentBlockImage: &schemas.ResponsesInputMessageContentBlockImage{
-						ImageURL: bifrost.Ptr(imageURL),
+						ImageURL: new(imageURL),
 					},
 				},
 			},
@@ -359,12 +360,12 @@ func CreateImageResponsesMessage(text, imageURL string) schemas.ResponsesMessage
 }
 
 func CreateAudioChatMessage(text, audioData string, audioFormat string) schemas.ChatMessage {
-	format := bifrost.Ptr(audioFormat)
+	format := new(audioFormat)
 	return schemas.ChatMessage{
 		Role: schemas.ChatMessageRoleUser,
 		Content: &schemas.ChatMessageContent{
 			ContentBlocks: []schemas.ChatContentBlock{
-				{Type: schemas.ChatContentBlockTypeText, Text: bifrost.Ptr(text)},
+				{Type: schemas.ChatContentBlockTypeText, Text: new(text)},
 				{
 					Type: schemas.ChatContentBlockTypeInputAudio,
 					InputAudio: &schemas.ChatInputAudio{
@@ -381,10 +382,10 @@ func CreateToolChatMessage(content string, toolCallID string) schemas.ChatMessag
 	return schemas.ChatMessage{
 		Role: schemas.ChatMessageRoleTool,
 		Content: &schemas.ChatMessageContent{
-			ContentStr: bifrost.Ptr(content),
+			ContentStr: new(content),
 		},
 		ChatToolMessage: &schemas.ChatToolMessage{
-			ToolCallID: bifrost.Ptr(toolCallID),
+			ToolCallID: new(toolCallID),
 		},
 	}
 }
@@ -394,10 +395,10 @@ func CreateToolResponsesMessage(content string, toolCallID string) schemas.Respo
 		Type: bifrost.Ptr(schemas.ResponsesMessageTypeFunctionCallOutput),
 		// Note: function_call_output messages don't have a role field per OpenAI API
 		ResponsesToolMessage: &schemas.ResponsesToolMessage{
-			CallID: bifrost.Ptr(toolCallID),
+			CallID: new(toolCallID),
 			// Set ResponsesFunctionToolCallOutput for OpenAI's native Responses API
 			Output: &schemas.ResponsesToolMessageOutputStruct{
-				ResponsesToolCallOutputStr: bifrost.Ptr(content),
+				ResponsesToolCallOutputStr: new(content),
 			},
 		},
 	}
@@ -676,10 +677,10 @@ func GenerateTTSAudioForTest(ctx context.Context, t *testing.T, client *bifrost.
 	retryConfig := DefaultSpeechRetryConfig()
 	retryContext := TestRetryContext{
 		ScenarioName: "GenerateTTSAudioForTest",
-		ExpectedBehavior: map[string]interface{}{
+		ExpectedBehavior: map[string]any{
 			"should_generate_audio": true,
 		},
-		TestMetadata: map[string]interface{}{
+		TestMetadata: map[string]any{
 			"provider": provider,
 			"model":    ttsModel,
 			"format":   format,
@@ -776,10 +777,8 @@ func ShouldRunParallel(t *testing.T, testConfig ComprehensiveTestConfig, scenari
 	}
 
 	// Check if this scenario is disabled for this provider
-	for _, disabled := range testConfig.DisableParallelFor {
-		if disabled == scenario {
-			return
-		}
+	if slices.Contains(testConfig.DisableParallelFor, scenario) {
+		return
 	}
 
 	// Allow parallel execution

@@ -86,7 +86,7 @@ func (s *ClickHouseLogStore) lockRMWBatch(table string, ids []string) func() {
 // chSchemaCache is a shared GORM schema parse cache reused across RMW calls.
 var chSchemaCache sync.Map
 
-func chParseSchema(db *gorm.DB, model interface{}) (*schema.Schema, error) {
+func chParseSchema(db *gorm.DB, model any) (*schema.Schema, error) {
 	return schema.Parse(model, &chSchemaCache, db.NamingStrategy)
 }
 
@@ -104,7 +104,7 @@ var chImmutableColumns = map[string]struct{}{
 // chApplyUpdateMap applies a column->value map onto a struct pointer using the
 // GORM schema field setters (which handle pointer / typed conversions).
 // Dedup key columns are skipped.
-func chApplyUpdateMap(ctx context.Context, st *schema.Schema, dest reflect.Value, updates map[string]interface{}) error {
+func chApplyUpdateMap(ctx context.Context, st *schema.Schema, dest reflect.Value, updates map[string]any) error {
 	for col, val := range updates {
 		if _, immutable := chImmutableColumns[col]; immutable {
 			continue
@@ -147,7 +147,7 @@ func chApplyStructUpdate(ctx context.Context, st *schema.Schema, dest, src refle
 // The omitted `ver` column defaults to now64(), so this insert supersedes the
 // prior version on the next ReplacingMergeTree merge (and immediately under
 // `final = 1` reads).
-func (s *ClickHouseLogStore) chReinsert(ctx context.Context, v interface{}) error {
+func (s *ClickHouseLogStore) chReinsert(ctx context.Context, v any) error {
 	return s.db.WithContext(ctx).Session(&gorm.Session{SkipHooks: true}).Create(v).Error
 }
 
@@ -313,7 +313,7 @@ func (s *ClickHouseLogStore) Update(ctx context.Context, id string, entry any) e
 	}
 	dest := reflect.ValueOf(&existing).Elem()
 	switch v := entry.(type) {
-	case map[string]interface{}:
+	case map[string]any:
 		if err := chApplyUpdateMap(ctx, st, dest, v); err != nil {
 			return err
 		}
@@ -352,10 +352,7 @@ func (s *ClickHouseLogStore) BulkUpdateCost(ctx context.Context, updates map[str
 		ids = append(ids, id)
 	}
 	for start := 0; start < len(ids); start += bulkUpdateCostChunkSize {
-		end := start + bulkUpdateCostChunkSize
-		if end > len(ids) {
-			end = len(ids)
-		}
+		end := min(start+bulkUpdateCostChunkSize, len(ids))
 		chunk := ids[start:end]
 		if err := func() error {
 			defer s.lockRMWBatch("logs", chunk)()
@@ -394,7 +391,7 @@ func (s *ClickHouseLogStore) UpdateMCPToolLog(ctx context.Context, id string, en
 	}
 	dest := reflect.ValueOf(&existing).Elem()
 	switch v := entry.(type) {
-	case map[string]interface{}:
+	case map[string]any:
 		if err := chApplyUpdateMap(ctx, st, dest, v); err != nil {
 			return err
 		}
@@ -501,7 +498,7 @@ func (s *ClickHouseLogStore) DeleteStaleAsyncJobs(ctx context.Context, staleSinc
 
 // UpdateAsyncJob applies a column->value map to an async job row via
 // read-modify-write.
-func (s *ClickHouseLogStore) UpdateAsyncJob(ctx context.Context, id string, updates map[string]interface{}) error {
+func (s *ClickHouseLogStore) UpdateAsyncJob(ctx context.Context, id string, updates map[string]any) error {
 	st, err := chParseSchema(s.db, &AsyncJob{})
 	if err != nil {
 		return err

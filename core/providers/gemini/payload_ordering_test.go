@@ -3,8 +3,8 @@ package gemini
 import (
 	"testing"
 
-	providerUtils "github.com/maximhq/bifrost/core/providers/utils"
-	schemas "github.com/maximhq/bifrost/core/schemas"
+	providerUtils "github.com/grevinden/bifrost/core/providers/utils"
+	schemas "github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -19,7 +19,7 @@ func TestPayloadOrdering_GeminiGenerationRequest(t *testing.T) {
 			},
 		},
 		GenerationConfig: GenerationConfig{
-			Temperature: schemas.Ptr(float64(0.7)),
+			Temperature: new(float64(0.7)),
 		},
 		Tools: []Tool{
 			{
@@ -48,7 +48,7 @@ func TestPayloadOrdering_GeminiGenerationRequest(t *testing.T) {
 	assert.Equal(t, golden, string(result), "payload field ordering changed — if intentional, update the golden string")
 
 	// Determinism: 100 iterations must produce identical bytes
-	for i := 0; i < 100; i++ {
+	for i := range 100 {
 		iter, err := providerUtils.MarshalSorted(req)
 		require.NoError(t, err)
 		assert.Equal(t, string(result), string(iter), "non-deterministic marshal output on iteration %d", i)

@@ -1,8 +1,8 @@
 package runware
 
 import (
-	providerUtils "github.com/maximhq/bifrost/core/providers/utils"
-	schemas "github.com/maximhq/bifrost/core/schemas"
+	providerUtils "github.com/grevinden/bifrost/core/providers/utils"
+	schemas "github.com/grevinden/bifrost/core/schemas"
 )
 
 // CachedContentCreate is unsupported on RunwareProvider. Only Gemini and Vertex AI

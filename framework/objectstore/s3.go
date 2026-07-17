@@ -15,7 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // S3ObjectStore implements ObjectStore using an S3-compatible backend.
@@ -190,10 +190,7 @@ func (s *S3ObjectStore) DeleteBatch(ctx context.Context, keys []string) error {
 
 	const maxBatchSize = 1000
 	for i := 0; i < len(keys); i += maxBatchSize {
-		end := i + maxBatchSize
-		if end > len(keys) {
-			end = len(keys)
-		}
+		end := min(i+maxBatchSize, len(keys))
 		batch := keys[i:end]
 
 		objects := make([]types.ObjectIdentifier, len(batch))

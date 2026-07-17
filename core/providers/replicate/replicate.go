@@ -16,8 +16,8 @@ import (
 	"time"
 
 	"github.com/bytedance/sonic"
-	providerUtils "github.com/maximhq/bifrost/core/providers/utils"
-	schemas "github.com/maximhq/bifrost/core/schemas"
+	providerUtils "github.com/grevinden/bifrost/core/providers/utils"
+	schemas "github.com/grevinden/bifrost/core/schemas"
 	"github.com/valyala/fasthttp"
 )
 
@@ -121,7 +121,7 @@ func createPrediction(
 	logger schemas.Logger,
 	sendBackRawRequest bool,
 	sendBackRawResponse bool,
-) (*ReplicatePredictionResponse, interface{}, time.Duration, map[string]string, *schemas.BifrostError) {
+) (*ReplicatePredictionResponse, any, time.Duration, map[string]string, *schemas.BifrostError) {
 	// Create request
 	req := fasthttp.AcquireRequest()
 	resp := fasthttp.AcquireResponse()
@@ -189,7 +189,7 @@ func getPrediction(
 	key schemas.Key,
 	logger schemas.Logger,
 	sendBackRawResponse bool,
-) (*ReplicatePredictionResponse, interface{}, map[string]string, *schemas.BifrostError) {
+) (*ReplicatePredictionResponse, any, map[string]string, *schemas.BifrostError) {
 	// Create request
 	req := fasthttp.AcquireRequest()
 	resp := fasthttp.AcquireResponse()
@@ -245,7 +245,7 @@ func pollPrediction(
 	timeoutSeconds int,
 	logger schemas.Logger,
 	sendBackRawResponse bool,
-) (*ReplicatePredictionResponse, interface{}, map[string]string, *schemas.BifrostError) {
+) (*ReplicatePredictionResponse, any, map[string]string, *schemas.BifrostError) {
 	// Create context with timeout
 	pollCtx, cancel := schemas.NewBifrostContextWithTimeout(ctx, time.Duration(timeoutSeconds)*time.Second)
 	defer cancel()
@@ -528,7 +528,7 @@ func (provider *ReplicateProvider) TextCompletionStream(ctx *schemas.BifrostCont
 			if err != nil {
 				return nil, err
 			}
-			replicateReq.Stream = schemas.Ptr(true)
+			replicateReq.Stream = new(true)
 			return replicateReq, nil
 		})
 	if bifrostErr != nil {
@@ -736,7 +736,7 @@ func (provider *ReplicateProvider) TextCompletionStream(ctx *schemas.BifrostCont
 				}
 
 				// Send final chunk with finish reason
-				finishReason := schemas.Ptr("stop")
+				finishReason := new("stop")
 				finalResponse := providerUtils.CreateBifrostTextCompletionChunkResponse(
 					messageID,
 					nil, // usage - not available in done event
@@ -868,7 +868,7 @@ func (provider *ReplicateProvider) ChatCompletionStream(ctx *schemas.BifrostCont
 			if err != nil {
 				return nil, err
 			}
-			replicateReq.Stream = schemas.Ptr(true)
+			replicateReq.Stream = new(true)
 			return replicateReq, nil
 		})
 	if bifrostErr != nil {
@@ -1379,7 +1379,7 @@ func (provider *ReplicateProvider) ResponsesStream(ctx *schemas.BifrostContext, 
 		contentIndex := 0
 
 		// Accumulate raw responses for debugging
-		var rawResponseChunks []interface{}
+		var rawResponseChunks []any
 		sendBackRawRequest := providerUtils.ShouldSendBackRawRequest(ctx, provider.sendBackRawRequest)
 		sendBackRawResponse := providerUtils.ShouldSendBackRawResponse(ctx, provider.sendBackRawResponse)
 
@@ -1433,7 +1433,7 @@ func (provider *ReplicateProvider) ResponsesStream(ctx *schemas.BifrostContext, 
 								Type:           schemas.ResponsesStreamResponseTypeCreated,
 								SequenceNumber: sequenceNumber,
 								Response: &schemas.BifrostResponsesResponse{
-									ID:        schemas.Ptr(messageID),
+									ID:        new(messageID),
 									Model:     request.Model,
 									CreatedAt: int(startTime.Unix()),
 								},
@@ -1458,7 +1458,7 @@ func (provider *ReplicateProvider) ResponsesStream(ctx *schemas.BifrostContext, 
 								Type:           schemas.ResponsesStreamResponseTypeInProgress,
 								SequenceNumber: sequenceNumber,
 								Response: &schemas.BifrostResponsesResponse{
-									ID:        schemas.Ptr(messageID),
+									ID:        new(messageID),
 									CreatedAt: int(startTime.Unix()),
 								},
 								ExtraFields: schemas.BifrostResponseExtraFields{
@@ -1480,9 +1480,9 @@ func (provider *ReplicateProvider) ResponsesStream(ctx *schemas.BifrostContext, 
 							itemAddedResp := &schemas.BifrostResponsesStreamResponse{
 								Type:           schemas.ResponsesStreamResponseTypeOutputItemAdded,
 								SequenceNumber: sequenceNumber,
-								OutputIndex:    schemas.Ptr(outputIndex),
+								OutputIndex:    new(outputIndex),
 								Item: &schemas.ResponsesMessage{
-									ID:     schemas.Ptr(itemID),
+									ID:     new(itemID),
 									Type:   &messageType,
 									Role:   &role,
 									Status: &status,
@@ -1507,9 +1507,9 @@ func (provider *ReplicateProvider) ResponsesStream(ctx *schemas.BifrostContext, 
 							partAddedResp := &schemas.BifrostResponsesStreamResponse{
 								Type:           schemas.ResponsesStreamResponseTypeContentPartAdded,
 								SequenceNumber: sequenceNumber,
-								OutputIndex:    schemas.Ptr(outputIndex),
-								ContentIndex:   schemas.Ptr(contentIndex),
-								ItemID:         schemas.Ptr(itemID),
+								OutputIndex:    new(outputIndex),
+								ContentIndex:   new(contentIndex),
+								ItemID:         new(itemID),
 								Part: &schemas.ResponsesMessageContentBlock{
 									Type: schemas.ResponsesOutputMessageContentTypeText,
 									Text: &emptyText,
@@ -1533,10 +1533,10 @@ func (provider *ReplicateProvider) ResponsesStream(ctx *schemas.BifrostContext, 
 						deltaResp := &schemas.BifrostResponsesStreamResponse{
 							Type:           schemas.ResponsesStreamResponseTypeOutputTextDelta,
 							SequenceNumber: sequenceNumber,
-							OutputIndex:    schemas.Ptr(outputIndex),
-							ContentIndex:   schemas.Ptr(contentIndex),
-							ItemID:         schemas.Ptr(itemID),
-							Delta:          schemas.Ptr(currentEvent.Data),
+							OutputIndex:    new(outputIndex),
+							ContentIndex:   new(contentIndex),
+							ItemID:         new(itemID),
+							Delta:          new(currentEvent.Data),
 							LogProbs:       []schemas.ResponsesOutputMessageContentTextLogProb{},
 							ExtraFields: schemas.BifrostResponseExtraFields{
 								ChunkIndex: sequenceNumber,
@@ -1560,9 +1560,9 @@ func (provider *ReplicateProvider) ResponsesStream(ctx *schemas.BifrostContext, 
 						textDoneResp := &schemas.BifrostResponsesStreamResponse{
 							Type:           schemas.ResponsesStreamResponseTypeOutputTextDone,
 							SequenceNumber: sequenceNumber,
-							OutputIndex:    schemas.Ptr(outputIndex),
-							ContentIndex:   schemas.Ptr(contentIndex),
-							ItemID:         schemas.Ptr(itemID),
+							OutputIndex:    new(outputIndex),
+							ContentIndex:   new(contentIndex),
+							ItemID:         new(itemID),
 							LogProbs:       []schemas.ResponsesOutputMessageContentTextLogProb{},
 							ExtraFields: schemas.BifrostResponseExtraFields{
 								ChunkIndex: sequenceNumber,
@@ -1577,9 +1577,9 @@ func (provider *ReplicateProvider) ResponsesStream(ctx *schemas.BifrostContext, 
 						partDoneResp := &schemas.BifrostResponsesStreamResponse{
 							Type:           schemas.ResponsesStreamResponseTypeContentPartDone,
 							SequenceNumber: sequenceNumber,
-							OutputIndex:    schemas.Ptr(outputIndex),
-							ContentIndex:   schemas.Ptr(contentIndex),
-							ItemID:         schemas.Ptr(itemID),
+							OutputIndex:    new(outputIndex),
+							ContentIndex:   new(contentIndex),
+							ItemID:         new(itemID),
 							Part: &schemas.ResponsesMessageContentBlock{
 								Type: schemas.ResponsesOutputMessageContentTypeText,
 								ResponsesOutputMessageContentText: &schemas.ResponsesOutputMessageContentText{
@@ -1603,9 +1603,9 @@ func (provider *ReplicateProvider) ResponsesStream(ctx *schemas.BifrostContext, 
 						itemDoneResp := &schemas.BifrostResponsesStreamResponse{
 							Type:           schemas.ResponsesStreamResponseTypeOutputItemDone,
 							SequenceNumber: sequenceNumber,
-							OutputIndex:    schemas.Ptr(outputIndex),
+							OutputIndex:    new(outputIndex),
 							Item: &schemas.ResponsesMessage{
-								ID:     schemas.Ptr(itemID),
+								ID:     new(itemID),
 								Type:   &messageType,
 								Role:   &role,
 								Status: &status,
@@ -1636,10 +1636,10 @@ func (provider *ReplicateProvider) ResponsesStream(ctx *schemas.BifrostContext, 
 						Type:           schemas.ResponsesStreamResponseTypeCompleted,
 						SequenceNumber: sequenceNumber,
 						Response: &schemas.BifrostResponsesResponse{
-							ID:          schemas.Ptr(messageID),
+							ID:          new(messageID),
 							Model:       request.Model,
 							CreatedAt:   int(startTime.Unix()),
-							CompletedAt: schemas.Ptr(int(time.Now().Unix())),
+							CompletedAt: new(int(time.Now().Unix())),
 						},
 						ExtraFields: schemas.BifrostResponseExtraFields{
 							Latency:    time.Since(startTime).Milliseconds(),
@@ -1838,7 +1838,7 @@ func (provider *ReplicateProvider) ImageGenerationStream(ctx *schemas.BifrostCon
 		request,
 		func() (providerUtils.RequestBodyWithExtraParams, error) {
 			replicateReq := ToReplicateImageGenerationInput(request)
-			replicateReq.Stream = schemas.Ptr(true)
+			replicateReq.Stream = new(true)
 			return replicateReq, nil
 		})
 	if bifrostErr != nil {
@@ -1947,7 +1947,7 @@ func (provider *ReplicateProvider) ImageGenerationStream(ctx *schemas.BifrostCon
 		var lastB64Data string
 		var lastOutputFormat string
 		// Accumulate all raw response chunks for complete stream history
-		var rawResponseChunks []interface{}
+		var rawResponseChunks []any
 
 		for {
 			select {
@@ -2244,7 +2244,7 @@ func (provider *ReplicateProvider) ImageEditStream(ctx *schemas.BifrostContext, 
 		request,
 		func() (providerUtils.RequestBodyWithExtraParams, error) {
 			replicateReq := ToReplicateImageEditInput(request)
-			replicateReq.Stream = schemas.Ptr(true)
+			replicateReq.Stream = new(true)
 			return replicateReq, nil
 		})
 	if bifrostErr != nil {
@@ -2354,7 +2354,7 @@ func (provider *ReplicateProvider) ImageEditStream(ctx *schemas.BifrostContext, 
 		var lastB64Data string
 		var lastOutputFormat string
 		// Accumulate all raw response chunks for complete stream history
-		var rawResponseChunks []interface{}
+		var rawResponseChunks []any
 
 		for {
 			select {
@@ -2844,7 +2844,7 @@ func (provider *ReplicateProvider) FileUpload(ctx *schemas.BifrostContext, key s
 
 	// Add metadata field if provided
 	if request.ExtraParams != nil {
-		if metadata, ok := request.ExtraParams["metadata"].(map[string]interface{}); ok {
+		if metadata, ok := request.ExtraParams["metadata"].(map[string]any); ok {
 			if len(metadata) > 0 {
 				metadataJSON, err := providerUtils.MarshalSorted(metadata)
 				if err != nil {
@@ -3208,7 +3208,7 @@ func (provider *ReplicateProvider) FileDelete(ctx *schemas.BifrostContext, keys 
 		}
 
 		// Try to parse response body if present
-		var deleteResp map[string]interface{}
+		var deleteResp map[string]any
 		rawRequest, rawResponse, bifrostErr := providerUtils.HandleProviderResponse(body, &deleteResp, nil, sendBackRawRequest, sendBackRawResponse)
 		if bifrostErr != nil {
 			fasthttp.ReleaseRequest(req)

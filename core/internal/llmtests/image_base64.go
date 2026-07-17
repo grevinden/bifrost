@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // RunImageBase64Test executes the image base64 test scenario using dual API testing framework
@@ -40,13 +40,13 @@ func RunImageBase64Test(t *testing.T, client *bifrost.Bifrost, ctx context.Conte
 		retryConfig := GetTestRetryConfigForScenario("ImageBase64", testConfig)
 		retryContext := TestRetryContext{
 			ScenarioName: "ImageBase64",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"should_process_base64":  true,
 				"should_describe_image":  true,
 				"should_identify_animal": "lion or animal",
 				"vision_processing":      true,
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider":          testConfig.Provider,
 				"model":             testConfig.VisionModel,
 				"image_type":        "base64",
@@ -72,7 +72,7 @@ func RunImageBase64Test(t *testing.T, client *bifrost.Bifrost, ctx context.Conte
 				Model:    testConfig.VisionModel,
 				Input:    chatMessages,
 				Params: &schemas.ChatParameters{
-					MaxCompletionTokens: bifrost.Ptr(500),
+					MaxCompletionTokens: new(500),
 				},
 				Fallbacks: testConfig.Fallbacks,
 			}
@@ -86,7 +86,7 @@ func RunImageBase64Test(t *testing.T, client *bifrost.Bifrost, ctx context.Conte
 				Model:    testConfig.VisionModel,
 				Input:    responsesMessages,
 				Params: &schemas.ResponsesParameters{
-					MaxOutputTokens: bifrost.Ptr(500),
+					MaxOutputTokens: new(500),
 				},
 				Fallbacks: testConfig.Fallbacks,
 			}

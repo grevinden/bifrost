@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math"
 	"regexp"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -14,9 +15,9 @@ import (
 	"time"
 
 	"github.com/bytedance/sonic"
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/configstore/tables"
-	"github.com/maximhq/bifrost/framework/queryscope"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/configstore/tables"
+	"github.com/grevinden/bifrost/framework/queryscope"
 	"golang.org/x/sync/errgroup"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -94,9 +95,9 @@ func (s *RDBLogStore) ScopedDB(ctx context.Context) *gorm.DB {
 // index) with array containment per id (partial jsonb_path_ops GIN index). The
 // `IS NOT NULL AND IS JSON ARRAY` guard matches the partial index predicate so
 // the planner uses the GIN. Returns the parenthesised SQL and its args.
-func multiValueDimensionFilterSQL(scalarCol, arrayCol string, ids []string) (string, []interface{}) {
+func multiValueDimensionFilterSQL(scalarCol, arrayCol string, ids []string) (string, []any) {
 	arrConds := make([]string, len(ids))
-	args := []interface{}{ids}
+	args := []any{ids}
 	for i, id := range ids {
 		arrConds[i] = arrayCol + "::jsonb @> ?::jsonb"
 		frag, _ := sonic.Marshal([]string{id})
@@ -230,7 +231,7 @@ func (s *RDBLogStore) applyFilters(baseQuery *gorm.DB, filters SearchFilters) *g
 				// Use array overlap operator which can leverage the GIN index on
 				// string_to_array(routing_engines_used, ',').
 				placeholders := make([]string, len(engines))
-				args := make([]interface{}, len(engines))
+				args := make([]any, len(engines))
 				for i, e := range engines {
 					placeholders[i] = "?"
 					args[i] = e
@@ -242,7 +243,7 @@ func (s *RDBLogStore) applyFilters(baseQuery *gorm.DB, filters SearchFilters) *g
 			default:
 				// SQLite and others: use delimiter-aware LIKE matching
 				var engineConditions []string
-				var engineArgs []interface{}
+				var engineArgs []any
 				var concatExpr string
 				if dialect == "sqlite" {
 					concatExpr = "',' || routing_engines_used || ','"
@@ -595,9 +596,9 @@ func serializeLogUpdateEntry(entry any) (any, error) {
 // buildBulkUpdateCostPostgresSQL builds a deterministic UPDATE ... FROM
 // (VALUES ...) statement and argument list for a chunk of PostgreSQL log cost
 // updates.
-func buildBulkUpdateCostPostgresSQL(ids []string, updates map[string]float64) (string, []interface{}) {
+func buildBulkUpdateCostPostgresSQL(ids []string, updates map[string]float64) (string, []any) {
 	var sqlBuilder strings.Builder
-	args := make([]interface{}, 0, len(ids)*2)
+	args := make([]any, 0, len(ids)*2)
 
 	sqlBuilder.WriteString("UPDATE logs SET cost = v.cost FROM (VALUES ")
 	for i, id := range ids {
@@ -829,10 +830,7 @@ func (s *RDBLogStore) GetSessionSummary(ctx context.Context, sessionID string) (
 	if startedAt != "" && latestAt != "" {
 		if startedTime, err := time.Parse(time.RFC3339Nano, startedAt); err == nil {
 			if latestTime, err := time.Parse(time.RFC3339Nano, latestAt); err == nil {
-				durationMs = latestTime.Sub(startedTime).Milliseconds()
-				if durationMs < 0 {
-					durationMs = 0
-				}
+				durationMs = max(latestTime.Sub(startedTime).Milliseconds(), 0)
 			}
 		}
 	}
@@ -1044,7 +1042,7 @@ func (s *RDBLogStore) GetStats(ctx context.Context, filters SearchFilters) (*Sea
 				SELECT DISTINCT parent_request_id
 				FROM logs
 				WHERE status = 'success' AND parent_request_id IS NOT NULL`
-			var innerArgs []interface{}
+			var innerArgs []any
 			if filters.StartTime != nil {
 				innerJoin += " AND timestamp >= ?"
 				innerArgs = append(innerArgs, *filters.StartTime)
@@ -1925,7 +1923,7 @@ func (s *RDBLogStore) GetModelRankings(ctx context.Context, filters SearchFilter
 		// when the previous period has more groups than the limit.
 		if len(currentResults) > 0 {
 			pairConditions := make([]string, len(currentResults))
-			pairArgs := make([]interface{}, 0, len(currentResults)*2)
+			pairArgs := make([]any, 0, len(currentResults)*2)
 			for i, r := range currentResults {
 				pairConditions[i] = "(model = ? AND provider = ?)"
 				pairArgs = append(pairArgs, r.Model, r.Provider)
@@ -2936,7 +2934,7 @@ func (s *RDBLogStore) GetDimensionCostHistogram(ctx context.Context, filters Sea
 		for ts := range grouped {
 			keys = append(keys, ts)
 		}
-		sort.Slice(keys, func(i, j int) bool { return keys[i] < keys[j] })
+		slices.Sort(keys)
 		buckets := make([]DimensionCostHistogramBucket, 0, len(keys))
 		for _, ts := range keys {
 			a := grouped[ts]
@@ -3050,7 +3048,7 @@ func (s *RDBLogStore) GetDimensionTokenHistogram(ctx context.Context, filters Se
 		for ts := range grouped {
 			keys = append(keys, ts)
 		}
-		sort.Slice(keys, func(i, j int) bool { return keys[i] < keys[j] })
+		slices.Sort(keys)
 		buckets := make([]DimensionTokenHistogramBucket, 0, len(keys))
 		for _, ts := range keys {
 			a := grouped[ts]
@@ -3152,7 +3150,7 @@ func (s *RDBLogStore) GetDimensionLatencyHistogram(ctx context.Context, filters 
 		for ts := range grouped {
 			keys = append(keys, ts)
 		}
-		sort.Slice(keys, func(i, j int) bool { return keys[i] < keys[j] })
+		slices.Sort(keys)
 		buckets := make([]DimensionLatencyHistogramBucket, 0, len(keys))
 		for _, ts := range keys {
 			a := grouped[ts]
@@ -3364,7 +3362,7 @@ func (s *RDBLogStore) GetDistinctRoutingEngines(ctx context.Context, limit int, 
 	// Each row may contain comma-separated values; deduplicate across all rows
 	uniqueEngines := make(map[string]struct{})
 	for _, raw := range rawValues {
-		for _, engine := range strings.Split(raw, ",") {
+		for engine := range strings.SplitSeq(raw, ",") {
 			engine = strings.TrimSpace(engine)
 			if engine != "" {
 				uniqueEngines[engine] = struct{}{}
@@ -3443,7 +3441,7 @@ func (s *RDBLogStore) GetDistinctMetadataKeys(ctx context.Context, limit int, qu
 	// Collect unique key-value pairs with bounded sizes
 	keyValues := make(map[string]map[string]struct{})
 	for _, raw := range metadataStrings {
-		var parsed map[string]interface{}
+		var parsed map[string]any
 		if err := sonic.UnmarshalString(raw, &parsed); err != nil {
 			continue
 		}
@@ -3556,7 +3554,7 @@ func (s *RDBLogStore) FindAllDistinct(ctx context.Context, query any, fields ...
 				return nil, fmt.Errorf("invalid distinct field: %s", f)
 			}
 		}
-		args := make([]interface{}, len(fields))
+		args := make([]any, len(fields))
 		for i, f := range fields {
 			args[i] = f
 		}
@@ -4157,7 +4155,7 @@ func (s *RDBLogStore) FindAsyncJobByID(ctx context.Context, id string) (*AsyncJo
 }
 
 // UpdateAsyncJob updates an async job record with the provided fields.
-func (s *RDBLogStore) UpdateAsyncJob(ctx context.Context, id string, updates map[string]interface{}) error {
+func (s *RDBLogStore) UpdateAsyncJob(ctx context.Context, id string, updates map[string]any) error {
 	return s.db.WithContext(ctx).Model(&AsyncJob{}).Where("id = ?", id).Updates(updates).Error
 }
 

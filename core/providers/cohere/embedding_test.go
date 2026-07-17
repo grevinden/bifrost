@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	providerUtils "github.com/maximhq/bifrost/core/providers/utils"
-	"github.com/maximhq/bifrost/core/schemas"
+	providerUtils "github.com/grevinden/bifrost/core/providers/utils"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -29,7 +29,7 @@ func TestToCohereEmbeddingRequest(t *testing.T) {
 			Input: &schemas.EmbeddingInput{Text: &text},
 			Params: &schemas.EmbeddingParameters{
 				Dimensions: &dimensions,
-				ExtraParams: map[string]interface{}{
+				ExtraParams: map[string]any{
 					"input_type":      "classification",
 					"embedding_types": []string{"float", "int8"},
 					"truncate":        truncate,
@@ -49,7 +49,7 @@ func TestToCohereEmbeddingRequest(t *testing.T) {
 		assert.Equal(t, &maxTokens, req.MaxTokens)
 		require.NotNil(t, req.Truncate)
 		assert.Equal(t, truncate, *req.Truncate)
-		assert.Equal(t, map[string]interface{}{"priority": "high"}, req.ExtraParams)
+		assert.Equal(t, map[string]any{"priority": "high"}, req.ExtraParams)
 	})
 
 	t.Run("multiple texts use default input type", func(t *testing.T) {

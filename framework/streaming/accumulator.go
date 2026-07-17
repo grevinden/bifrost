@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	schemas "github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/modelcatalog"
+	schemas "github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/modelcatalog"
 )
 
 // getAccumulatorID extracts the ID for accumulator lookup from context.
@@ -504,7 +504,7 @@ func (a *Accumulator) ProcessStreamingResponse(ctx *schemas.BifrostContext, resu
 
 // Cleanup cleans up the accumulator
 func (a *Accumulator) Cleanup() {
-	a.streamAccumulators.Range(func(key, value interface{}) bool {
+	a.streamAccumulators.Range(func(key, value any) bool {
 		accumulator := value.(*StreamAccumulator)
 		accumulator.mu.Lock()
 		a.cleanupStreamAccumulator(key.(string), true)
@@ -580,7 +580,7 @@ func (a *Accumulator) ForceCleanupStreamAccumulator(requestID string) {
 // cleanupOldAccumulators removes old accumulators
 func (a *Accumulator) cleanupOldAccumulators() {
 	count := 0
-	a.streamAccumulators.Range(func(key, value interface{}) bool {
+	a.streamAccumulators.Range(func(key, value any) bool {
 		accumulator := value.(*StreamAccumulator)
 		accumulator.mu.Lock()
 		defer accumulator.mu.Unlock()

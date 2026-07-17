@@ -122,7 +122,7 @@ func TestSSEStreamReaderConcurrent(t *testing.T) {
 
 	// Producer
 	go func() {
-		for i := 0; i < numEvents; i++ {
+		for range numEvents {
 			if !r.Send([]byte("data: event\n\n")) {
 				break
 			}
@@ -417,9 +417,9 @@ func TestSSEStreamReaderRawAndWrapperMixed(t *testing.T) {
 	}
 
 	go func() {
-		r.Send(bedrockBinary)                       // raw binary passthrough
-		r.Send(preformattedSSE)                     // pre-formatted SSE string
-		r.SendEvent("", []byte(`{"final":true}`))   // wrapper method
+		r.Send(bedrockBinary)                     // raw binary passthrough
+		r.Send(preformattedSSE)                   // pre-formatted SSE string
+		r.SendEvent("", []byte(`{"final":true}`)) // wrapper method
 		r.Done()
 	}()
 
@@ -543,7 +543,7 @@ func TestSSEStreamReaderMidStreamDisconnect(t *testing.T) {
 	producerDone := make(chan int) // reports how many events were sent
 	go func() {
 		sent := 0
-		for i := 0; i < 100; i++ {
+		for i := range 100 {
 			if !r.SendEvent("", []byte(fmt.Sprintf(`{"chunk":%d}`, i))) {
 				break
 			}
@@ -554,7 +554,7 @@ func TestSSEStreamReaderMidStreamDisconnect(t *testing.T) {
 
 	// Read a few events then simulate client disconnect
 	buf := make([]byte, 4096)
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		_, err := r.Read(buf)
 		if err != nil {
 			t.Fatalf("event %d: unexpected error: %v", i, err)
@@ -641,10 +641,10 @@ func TestSSEStreamReaderConcurrentSendEvent(t *testing.T) {
 	wg.Add(numProducers)
 
 	// Launch multiple producers
-	for p := 0; p < numProducers; p++ {
+	for p := range numProducers {
 		go func(id int) {
 			defer wg.Done()
-			for i := 0; i < eventsPerProducer; i++ {
+			for i := range eventsPerProducer {
 				if !r.SendEvent("", []byte(fmt.Sprintf(`{"p":%d,"i":%d}`, id, i))) {
 					return
 				}

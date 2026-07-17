@@ -5,7 +5,7 @@ import (
 	"math"
 	"testing"
 
-	"github.com/maximhq/bifrost/framework/logstore"
+	"github.com/grevinden/bifrost/framework/logstore"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -28,17 +28,17 @@ func TestStripUnserializablePayloadsNilAndClean(t *testing.T) {
 	stripUnserializablePayloads(nil)
 
 	// Clean values must be left untouched.
-	clean := map[string]interface{}{"a": 1, "b": []string{"x"}}
+	clean := map[string]any{"a": 1, "b": []string{"x"}}
 	stripUnserializablePayloads(clean)
 	assert.Equal(t, 1, clean["a"])
 	assert.Equal(t, []string{"x"}, clean["b"])
 }
 
 func TestStripUnserializablePayloadsMapLeaf(t *testing.T) {
-	m := map[string]interface{}{
+	m := map[string]any{
 		"good": "keep-me",
 		"bad":  make(chan int),
-		"nested": map[string]interface{}{
+		"nested": map[string]any{
 			"fn":   func() {},
 			"kept": 42,
 		},
@@ -47,7 +47,7 @@ func TestStripUnserializablePayloadsMapLeaf(t *testing.T) {
 
 	assert.Equal(t, "keep-me", m["good"])
 	assert.Nil(t, m["bad"])
-	nested, ok := m["nested"].(map[string]interface{})
+	nested, ok := m["nested"].(map[string]any)
 	require.True(t, ok)
 	assert.Nil(t, nested["fn"])
 	assert.Equal(t, 42, nested["kept"])
@@ -55,7 +55,7 @@ func TestStripUnserializablePayloadsMapLeaf(t *testing.T) {
 }
 
 func TestStripUnserializablePayloadsSliceElement(t *testing.T) {
-	s := []interface{}{"first", make(chan int), "third"}
+	s := []any{"first", make(chan int), "third"}
 	stripUnserializablePayloads(s)
 
 	assert.Equal(t, "first", s[0])
@@ -65,7 +65,7 @@ func TestStripUnserializablePayloadsSliceElement(t *testing.T) {
 }
 
 func TestStripUnserializablePayloadsNaNAndInf(t *testing.T) {
-	m := map[string]interface{}{
+	m := map[string]any{
 		"nan":  math.NaN(),
 		"inf":  math.Inf(1),
 		"cost": 1.25,
@@ -82,7 +82,7 @@ func TestStripUnserializablePayloadsNaNAndInf(t *testing.T) {
 }
 
 func TestStripUnserializablePayloadsFailingMarshaler(t *testing.T) {
-	m := map[string]interface{}{
+	m := map[string]any{
 		"broken": failingMarshaler{},
 		"kept":   "still-here",
 	}
@@ -108,12 +108,12 @@ func TestStripUnserializablePayloadsCycle(t *testing.T) {
 
 func TestStripUnserializablePayloadsStructField(t *testing.T) {
 	type payload struct {
-		Kept   string                 `json:"kept"`
-		Params map[string]interface{} `json:"params"`
+		Kept   string         `json:"kept"`
+		Params map[string]any `json:"params"`
 	}
 	p := &payload{
 		Kept:   "scalar",
-		Params: map[string]interface{}{"ch": make(chan int), "ok": true},
+		Params: map[string]any{"ch": make(chan int), "ok": true},
 	}
 	stripUnserializablePayloads(p)
 
@@ -128,7 +128,7 @@ func TestStripUnserializablePayloadsLogEntry(t *testing.T) {
 		ID:     "log-1",
 		Model:  "gpt-4o",
 		Status: "success",
-		ParamsParsed: map[string]interface{}{
+		ParamsParsed: map[string]any{
 			"temperature": 0.7,
 			"broken":      make(chan int),
 		},
@@ -140,7 +140,7 @@ func TestStripUnserializablePayloadsLogEntry(t *testing.T) {
 	assert.Equal(t, "gpt-4o", entry.Model)
 	assert.Equal(t, "success", entry.Status)
 	// Only the broken nested value is cleared; the rest of params survives.
-	params, ok := entry.ParamsParsed.(map[string]interface{})
+	params, ok := entry.ParamsParsed.(map[string]any)
 	require.True(t, ok)
 	assert.Equal(t, 0.7, params["temperature"])
 	assert.Nil(t, params["broken"])

@@ -45,14 +45,14 @@ Release on OSS `v2.0.0-prerelease1` (based on OSS v1.6.3). Introduces Bifrost Ed
 
 ## 📀 Base OSS version
 
-`github.com/maximhq/bifrost/transports v1.6.4-0.20260707051148-814c55d5f8a0`
+`github.com/grevinden/bifrost/transports v1.6.4-0.20260707051148-814c55d5f8a0`
 
 ## 🔌 If you are compiling plugin against this release - use following deps
 
-The enterprise repo is now a multi-module workspace; the `github.com/maximhq/bifrost-enterprise/*` modules at `v0.0.0` resolve via the `replace` directives to the release source checkout.
+The enterprise repo is now a multi-module workspace; the `github.com/grevinden/bifrost-enterprise/*` modules at `v0.0.0` resolve via the `replace` directives to the release source checkout.
 
 ```go
-module github.com/maximhq/bifrost-enterprise/transports
+module github.com/grevinden/bifrost-enterprise/transports
 
 go 1.26.4
 
@@ -62,15 +62,15 @@ require (
 	github.com/fasthttp/router v1.5.4
 	github.com/google/cel-go v0.28.1
 	github.com/google/uuid v1.6.0
-	github.com/maximhq/bifrost-enterprise/core v0.0.0
-	github.com/maximhq/bifrost-enterprise/framework v0.0.0
-	github.com/maximhq/bifrost-enterprise/plugins v0.0.0
-	github.com/maximhq/bifrost/core v1.7.0
-	github.com/maximhq/bifrost/framework v1.5.0
-	github.com/maximhq/bifrost/plugins/governance v1.6.4
-	github.com/maximhq/bifrost/plugins/logging v1.6.0
-	github.com/maximhq/bifrost/plugins/semanticcache v1.5.27
-	github.com/maximhq/bifrost/transports v1.6.4-0.20260707051148-814c55d5f8a0
+	github.com/grevinden/bifrost-enterprise/core v0.0.0
+	github.com/grevinden/bifrost-enterprise/framework v0.0.0
+	github.com/grevinden/bifrost-enterprise/plugins v0.0.0
+	github.com/grevinden/bifrost/core v1.7.0
+	github.com/grevinden/bifrost/framework v1.5.0
+	github.com/grevinden/bifrost/plugins/governance v1.6.4
+	github.com/grevinden/bifrost/plugins/logging v1.6.0
+	github.com/grevinden/bifrost/plugins/semanticcache v1.5.27
+	github.com/grevinden/bifrost/transports v1.6.4-0.20260707051148-814c55d5f8a0
 	github.com/stretchr/testify v1.11.1
 	github.com/valyala/fasthttp v1.71.0
 	gorm.io/driver/sqlite v1.6.0
@@ -288,13 +288,13 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.17 // indirect
 	github.com/mattn/go-sqlite3 v1.14.32 // indirect
-	github.com/maximhq/bifrost/plugins/compat v0.1.26 // indirect
-	github.com/maximhq/bifrost/plugins/maxim v1.6.27 // indirect
-	github.com/maximhq/bifrost/plugins/mocker v1.5.27 // indirect
-	github.com/maximhq/bifrost/plugins/modelcatalogresolver v1.0.8 // indirect
-	github.com/maximhq/bifrost/plugins/otel v1.3.4 // indirect
-	github.com/maximhq/bifrost/plugins/prompts v1.0.27 // indirect
-	github.com/maximhq/bifrost/plugins/telemetry v1.5.27 // indirect
+	github.com/grevinden/bifrost/plugins/compat v0.1.26 // indirect
+	github.com/grevinden/bifrost/plugins/maxim v1.6.27 // indirect
+	github.com/grevinden/bifrost/plugins/mocker v1.5.27 // indirect
+	github.com/grevinden/bifrost/plugins/modelcatalogresolver v1.0.8 // indirect
+	github.com/grevinden/bifrost/plugins/otel v1.3.4 // indirect
+	github.com/grevinden/bifrost/plugins/prompts v1.0.27 // indirect
+	github.com/grevinden/bifrost/plugins/telemetry v1.5.27 // indirect
 	github.com/maximhq/maxim-go v0.2.1 // indirect
 	github.com/mholt/archives v0.1.2 // indirect
 	github.com/miekg/dns v1.1.68 // indirect
@@ -467,11 +467,11 @@ require (
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )
 
-replace github.com/maximhq/bifrost-enterprise/core => ../core
+replace github.com/grevinden/bifrost-enterprise/core => ../core
 
-replace github.com/maximhq/bifrost-enterprise/framework => ../framework
+replace github.com/grevinden/bifrost-enterprise/framework => ../framework
 
-replace github.com/maximhq/bifrost-enterprise/plugins => ../plugins
+replace github.com/grevinden/bifrost-enterprise/plugins => ../plugins
 ```
 
 </Update>

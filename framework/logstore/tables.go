@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/bytedance/sonic"
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/configstore/tables"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/configstore/tables"
 
 	"gorm.io/gorm"
 )
@@ -235,7 +235,7 @@ type Log struct {
 	EmbeddingOutputParsed       []schemas.EmbeddingData                 `gorm:"-" json:"embedding_output,omitempty"`
 	RerankOutputParsed          []schemas.RerankResult                  `gorm:"-" json:"rerank_output,omitempty"`
 	OCROutputParsed             *schemas.BifrostOCRResponse             `gorm:"-" json:"ocr_output,omitempty"`
-	ParamsParsed                interface{}                             `gorm:"-" json:"params,omitempty"`
+	ParamsParsed                any                                     `gorm:"-" json:"params,omitempty"`
 	ToolsParsed                 []schemas.ChatTool                      `gorm:"-" json:"tools,omitempty"`
 	ToolCallsParsed             []schemas.ChatAssistantMessageToolCall  `gorm:"-" json:"tool_calls,omitempty"` // For backward compatibility, tool calls are now in the content
 	TokenUsageParsed            *schemas.BifrostLLMUsage                `gorm:"-" json:"token_usage,omitempty"`
@@ -251,7 +251,7 @@ type Log struct {
 	ImageGenerationOutputParsed *schemas.BifrostImageGenerationResponse `gorm:"-" json:"image_generation_output,omitempty"`
 	CacheDebugParsed            *schemas.BifrostCacheDebug              `gorm:"-" json:"cache_debug,omitempty"`
 	ListModelsOutputParsed      []schemas.Model                         `gorm:"-" json:"list_models_output,omitempty"`
-	MetadataParsed              map[string]interface{}                  `gorm:"-" json:"metadata,omitempty"`
+	MetadataParsed              map[string]any                          `gorm:"-" json:"metadata,omitempty"`
 	VideoGenerationInputParsed  *schemas.VideoGenerationInput           `gorm:"-" json:"video_generation_input,omitempty"`
 	VideoGenerationOutputParsed *schemas.BifrostVideoGenerationResponse `gorm:"-" json:"video_generation_output,omitempty"`
 	VideoRetrieveOutputParsed   *schemas.BifrostVideoGenerationResponse `gorm:"-" json:"video_retrieve_output,omitempty"`
@@ -275,7 +275,7 @@ type Log struct {
 }
 
 // NewLogEntryFromMap creates a new Log from a map[string]interface{}
-func NewLogEntryFromMap(entry map[string]interface{}) *Log {
+func NewLogEntryFromMap(entry map[string]any) *Log {
 	var log Log
 	data, err := sonic.Marshal(entry)
 	if err != nil {
@@ -967,10 +967,10 @@ type MCPToolLog struct {
 	CreatedAt      time.Time `gorm:"index;not null" json:"created_at"`
 
 	// Virtual fields for JSON output - populated when needed
-	ArgumentsParsed    interface{}             `gorm:"-" json:"arguments,omitempty"`
-	ResultParsed       interface{}             `gorm:"-" json:"result,omitempty"`
+	ArgumentsParsed    any                     `gorm:"-" json:"arguments,omitempty"`
+	ResultParsed       any                     `gorm:"-" json:"result,omitempty"`
 	ErrorDetailsParsed *schemas.BifrostError   `gorm:"-" json:"error_details,omitempty"`
-	MetadataParsed     map[string]interface{}  `gorm:"-" json:"metadata,omitempty"`
+	MetadataParsed     map[string]any          `gorm:"-" json:"metadata,omitempty"`
 	VirtualKey         *tables.TableVirtualKey `gorm:"-" json:"virtual_key,omitempty"`
 }
 
@@ -1150,14 +1150,14 @@ func (j *AsyncJob) ToResponse() *schemas.AsyncJobResponse {
 				resp.Result = &result
 			}
 		default:
-			var result interface{}
+			var result any
 			if err := sonic.Unmarshal([]byte(j.Response), &result); err == nil {
 				resp.Result = result
 			}
 		}
 		// Should never happen, but just in case
 		if resp.Result == nil {
-			var raw interface{}
+			var raw any
 			if err := sonic.Unmarshal([]byte(j.Response), &raw); err == nil {
 				resp.Result = raw
 			}

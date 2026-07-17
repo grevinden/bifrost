@@ -24,13 +24,13 @@ The system is built around a few key components:
 
 The log store is used to persist all request/response logs from your Bifrost proxy. This can be a lightweight SQLite database or a production-grade Postgres database. Bifrost exposes a single interface (`LogStore`) for all logging operations.
 
-Any custom backend for log store should implement the `LogStore` interface. The interface is defined in [logstore/store.go](https://github.com/maximhq/bifrost/blob/main/framework/logstore/store.go).
+Any custom backend for log store should implement the `LogStore` interface. The interface is defined in [logstore/store.go](https://github.com/grevinden/bifrost/blob/main/framework/logstore/store.go).
 
 ## Using GORM
 
 It is recommended to use GORM for the log store. GORM is a popular ORM (Object-Relational Mapping) library for Go. It provides a simple and efficient way to interact with databases.
 
-GORM provides implementations for the functions listed in the `LogStore` interface. This significantly simplifies the implementation of the log store (see [postgres.go](https://github.com/maximhq/bifrost/blob/main/framework/logstore/postgres.go) as an example).
+GORM provides implementations for the functions listed in the `LogStore` interface. This significantly simplifies the implementation of the log store (see [postgres.go](https://github.com/grevinden/bifrost/blob/main/framework/logstore/postgres.go) as an example).
 
 ## Conventions
 

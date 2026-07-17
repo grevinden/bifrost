@@ -3,7 +3,7 @@ package mcptests
 import (
 	"testing"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -46,7 +46,7 @@ func TestAgent_MultiConnection_AllTypes(t *testing.T) {
 		GetSampleEchoToolCall("call-1", "test message"),
 		GetSampleCalculatorToolCall("call-2", "add", 10, 5),
 		// STDIO tool
-		CreateSTDIOToolCall("call-3", "GoTestServer", "uuid_generate", map[string]interface{}{}),
+		CreateSTDIOToolCall("call-3", "GoTestServer", "uuid_generate", map[string]any{}),
 	))
 
 	// Turn 2: LLM responds with text (agent completes)
@@ -112,9 +112,9 @@ func TestAgent_MultiConnection_MixedPermissions(t *testing.T) {
 
 	// Turn 1: LLM calls mixed permission tools
 	mocker.AddChatResponse(CreateAgentTurnWithToolCalls(
-		GetSampleEchoToolCall("call-1", "test"), // Auto-execute
-		GetSampleCalculatorToolCall("call-2", "add", 5, 3),                                                // Needs approval
-		CreateSTDIOToolCall("call-3", "GoTestServer", "uuid_generate", map[string]interface{}{}), // Needs approval
+		GetSampleEchoToolCall("call-1", "test"),                                          // Auto-execute
+		GetSampleCalculatorToolCall("call-2", "add", 5, 3),                               // Needs approval
+		CreateSTDIOToolCall("call-3", "GoTestServer", "uuid_generate", map[string]any{}), // Needs approval
 	))
 
 	// Execute agent
@@ -187,7 +187,7 @@ func TestAgent_MultiConnection_SequentialAfterParallel(t *testing.T) {
 	// Turn 1: Parallel execution across connection types
 	mocker.AddChatResponse(CreateAgentTurnWithToolCalls(
 		GetSampleEchoToolCall("call-1", "first"),
-		CreateSTDIOToolCall("call-2", "GoTestServer", "uuid_generate", map[string]interface{}{}),
+		CreateSTDIOToolCall("call-2", "GoTestServer", "uuid_generate", map[string]any{}),
 	))
 
 	// Turn 2: Single tool execution (sequential)
@@ -244,7 +244,7 @@ func TestAgent_MultiConnection_ErrorInSTDIO(t *testing.T) {
 	// Turn 1: Call echo (success) and error tool (will error)
 	mocker.AddChatResponse(CreateAgentTurnWithToolCalls(
 		GetSampleEchoToolCall("call-1", "test"),
-		CreateSTDIOToolCall("call-2", "ErrorTestServer", "return_error", map[string]interface{}{
+		CreateSTDIOToolCall("call-2", "ErrorTestServer", "return_error", map[string]any{
 			"error_type": "standard",
 			"message":    "Test error from STDIO",
 		}),
@@ -324,15 +324,15 @@ func TestAgent_MultiConnection_LargeParallelBatch(t *testing.T) {
 		GetSampleEchoToolCall("call-1", "msg1"),
 		GetSampleCalculatorToolCall("call-2", "add", 1, 2),
 		GetSampleWeatherToolCall("call-3", "Tokyo", "celsius"),
-		CreateInProcessToolCall("call-4", "get_time", map[string]interface{}{"timezone": "UTC"}),
+		CreateInProcessToolCall("call-4", "get_time", map[string]any{"timezone": "UTC"}),
 		// STDIO tools
-		CreateSTDIOToolCall("call-5", "GoTestServer", "uuid_generate", map[string]interface{}{}),
-		CreateSTDIOToolCall("call-6", "GoTestServer", "string_transform", map[string]interface{}{
+		CreateSTDIOToolCall("call-5", "GoTestServer", "uuid_generate", map[string]any{}),
+		CreateSTDIOToolCall("call-6", "GoTestServer", "string_transform", map[string]any{
 			"input":     "test",
 			"operation": "uppercase",
 		}),
-		CreateSTDIOToolCall("call-7", "ParallelTestServer", "fast_operation", map[string]interface{}{}),
-		CreateSTDIOToolCall("call-8", "ParallelTestServer", "return_timestamp", map[string]interface{}{}),
+		CreateSTDIOToolCall("call-7", "ParallelTestServer", "fast_operation", map[string]any{}),
+		CreateSTDIOToolCall("call-8", "ParallelTestServer", "return_timestamp", map[string]any{}),
 	))
 
 	// Turn 2: Final text

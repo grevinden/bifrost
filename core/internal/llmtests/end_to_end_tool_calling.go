@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // RunEnd2EndToolCallingTest executes the end-to-end tool calling test scenario
@@ -38,11 +38,11 @@ func RunEnd2EndToolCallingTest(t *testing.T, client *bifrost.Bifrost, ctx contex
 		retryConfig := ToolCallRetryConfig(string(SampleToolTypeWeather))
 		retryContext := TestRetryContext{
 			ScenarioName: "End2EndToolCalling_Step1",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"expected_tool_name": string(SampleToolTypeWeather),
 				"location":           "san francisco",
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider": testConfig.Provider,
 				"model":    testConfig.ChatModel,
 				"step":     "tool_call_request",
@@ -65,7 +65,7 @@ func RunEnd2EndToolCallingTest(t *testing.T, client *bifrost.Bifrost, ctx contex
 				Input:    []schemas.ChatMessage{chatUserMessage},
 				Params: &schemas.ChatParameters{
 					Tools:               []schemas.ChatTool{*chatTool},
-					MaxCompletionTokens: bifrost.Ptr(500),
+					MaxCompletionTokens: new(500),
 				},
 				Fallbacks: testConfig.Fallbacks,
 			}
@@ -155,12 +155,12 @@ func RunEnd2EndToolCallingTest(t *testing.T, client *bifrost.Bifrost, ctx contex
 		retryConfig2 := GetTestRetryConfigForScenario("CompleteEnd2End_Chat", testConfig)
 		retryContext2 := TestRetryContext{
 			ScenarioName: "End2EndToolCalling_FinalResponse",
-			ExpectedBehavior: map[string]interface{}{
+			ExpectedBehavior: map[string]any{
 				"should_reference_weather": true,
 				"should_mention_location":  true,
 				"should_use_tool_result":   true,
 			},
-			TestMetadata: map[string]interface{}{
+			TestMetadata: map[string]any{
 				"provider":    testConfig.Provider,
 				"model":       testConfig.ChatModel,
 				"step":        "final_response",
@@ -182,7 +182,7 @@ func RunEnd2EndToolCallingTest(t *testing.T, client *bifrost.Bifrost, ctx contex
 				Model:    testConfig.ChatModel,
 				Input:    chatConversationMessages,
 				Params: &schemas.ChatParameters{
-					MaxCompletionTokens: bifrost.Ptr(500),
+					MaxCompletionTokens: new(500),
 				},
 				Fallbacks: testConfig.Fallbacks,
 			}
@@ -196,7 +196,7 @@ func RunEnd2EndToolCallingTest(t *testing.T, client *bifrost.Bifrost, ctx contex
 				Model:    testConfig.ChatModel,
 				Input:    responsesConversationMessages,
 				Params: &schemas.ResponsesParameters{
-					MaxOutputTokens: bifrost.Ptr(500),
+					MaxOutputTokens: new(500),
 				},
 			}
 			return client.ResponsesRequest(bfCtx, responsesReq)

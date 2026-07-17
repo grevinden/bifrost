@@ -135,7 +135,7 @@ func TestGeminiInlineResponseToBatchResultItem(t *testing.T) {
 		assert.Equal(t, "hi", item.Response.Body["text"])
 		assert.Equal(t, "STOP", item.Response.Body["finish_reason"])
 
-		usage, ok := item.Response.Body["usage"].(map[string]interface{})
+		usage, ok := item.Response.Body["usage"].(map[string]any)
 		require.True(t, ok)
 		assert.EqualValues(t, 2, usage["prompt_tokens"])
 		assert.EqualValues(t, 3, usage["completion_tokens"])
@@ -176,7 +176,7 @@ func TestGeminiGenerateContentToBatchResultBody(t *testing.T) {
 		body := geminiGenerateContentToBatchResultBody(resp)
 		assert.Equal(t, "foobar", body["text"])
 		assert.Equal(t, "STOP", body["finish_reason"])
-		_, ok := body["usage"].(map[string]interface{})
+		_, ok := body["usage"].(map[string]any)
 		assert.True(t, ok)
 	})
 

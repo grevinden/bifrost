@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/maximhq/bifrost/framework/temptoken"
+	"github.com/grevinden/bifrost/framework/temptoken"
 )
 
 // mcpAuthScope declares the routes the mcp_auth scope grants access to. The

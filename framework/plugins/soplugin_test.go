@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -33,7 +33,7 @@ func TestDynamicPluginLifecycle(t *testing.T) {
 				Path:    pluginPath,
 				Name:    "hello-world",
 				Enabled: true,
-				Config:  map[string]interface{}{"test": "config"},
+				Config:  map[string]any{"test": "config"},
 			},
 		},
 	}
@@ -128,7 +128,7 @@ func TestDynamicPluginLifecycle(t *testing.T) {
 					{
 						Role: schemas.ChatMessageRoleUser,
 						Content: &schemas.ChatMessageContent{
-							ContentStr: stringPtr("Hello"),
+							ContentStr: new("Hello"),
 						},
 					},
 				},
@@ -157,7 +157,7 @@ func TestDynamicPluginLifecycle(t *testing.T) {
 							Message: &schemas.ChatMessage{
 								Role: schemas.ChatMessageRoleAssistant,
 								Content: &schemas.ChatMessageContent{
-									ContentStr: stringPtr("Hello! How can I help you?"),
+									ContentStr: new("Hello! How can I help you?"),
 								},
 							},
 						},
@@ -239,7 +239,7 @@ func TestLoadPlugins_MultiplePlugins(t *testing.T) {
 				Path:    pluginPath,
 				Name:    "hello-world-2",
 				Enabled: true,
-				Config:  map[string]interface{}{"key": "value"},
+				Config:  map[string]any{"key": "value"},
 			},
 		},
 	}
@@ -341,7 +341,7 @@ func TestDynamicPlugin_ConcurrentCalls(t *testing.T) {
 	const numGoroutines = 10
 	done := make(chan bool, numGoroutines)
 
-	for i := 0; i < numGoroutines; i++ {
+	for i := range numGoroutines {
 		go func(id int) {
 			defer func() { done <- true }()
 
@@ -377,7 +377,7 @@ func TestDynamicPlugin_ConcurrentCalls(t *testing.T) {
 	}
 
 	// Wait for all goroutines to complete
-	for i := 0; i < numGoroutines; i++ {
+	for range numGoroutines {
 		<-done
 	}
 }
@@ -448,7 +448,7 @@ func TestLoadDynamicPlugin_DirectCall(t *testing.T) {
 	defer cleanupHelloWorldPlugin(t)
 
 	loader := &SharedObjectPluginLoader{}
-	plugin, err := loader.LoadPlugin(pluginPath, map[string]interface{}{
+	plugin, err := loader.LoadPlugin(pluginPath, map[string]any{
 		"test": "config",
 	})
 	require.NoError(t, err, "loadDynamicPlugin should succeed")
@@ -647,8 +647,10 @@ func TestDynamicPlugin_GetNameNotEmpty(t *testing.T) {
 }
 
 // Helper function to create a pointer to a string
+//
+//go:fix inline
 func stringPtr(s string) *string {
-	return &s
+	return new(s)
 }
 
 // TestLoadPlugins tests the new generic LoadPlugins function
@@ -664,7 +666,7 @@ func TestLoadPlugins(t *testing.T) {
 					Path:    pluginPath,
 					Name:    "hello-world",
 					Enabled: true,
-					Config:  map[string]interface{}{"test": "config"},
+					Config:  map[string]any{"test": "config"},
 				},
 			},
 		}
@@ -685,13 +687,13 @@ func TestLoadPlugins(t *testing.T) {
 					Path:    pluginPath,
 					Name:    "hello-world-1",
 					Enabled: true,
-					Config:  map[string]interface{}{"test": "config1"},
+					Config:  map[string]any{"test": "config1"},
 				},
 				{
 					Path:    pluginPath,
 					Name:    "hello-world-2",
 					Enabled: true,
-					Config:  map[string]interface{}{"test": "config2"},
+					Config:  map[string]any{"test": "config2"},
 				},
 			},
 		}
@@ -709,13 +711,13 @@ func TestLoadPlugins(t *testing.T) {
 					Path:    pluginPath,
 					Name:    "hello-world-enabled",
 					Enabled: true,
-					Config:  map[string]interface{}{"test": "config"},
+					Config:  map[string]any{"test": "config"},
 				},
 				{
 					Path:    pluginPath,
 					Name:    "hello-world-disabled",
 					Enabled: false,
-					Config:  map[string]interface{}{"test": "config"},
+					Config:  map[string]any{"test": "config"},
 				},
 			},
 		}

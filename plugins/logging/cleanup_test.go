@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/maximhq/bifrost/framework/logstore"
+	"github.com/grevinden/bifrost/framework/logstore"
 )
 
 // recordingStore wraps a LogStore and records every log ID that reaches
@@ -70,7 +70,7 @@ func TestCleanupDrainsRecoveredBatchNoDrops(t *testing.T) {
 	}
 
 	const N = 500 // well under maxBatchSize (1000); batchWriter will not auto-flush
-	for i := 0; i < N; i++ {
+	for i := range N {
 		plugin.enqueueLogEntry(makeTestLog(fmt.Sprintf("recovered-%d", i)), nil)
 	}
 
@@ -86,7 +86,7 @@ func TestCleanupDrainsRecoveredBatchNoDrops(t *testing.T) {
 	if len(got) != N {
 		t.Fatalf("expected %d unique entries persisted via recovered batch, got %d", N, len(got))
 	}
-	for i := 0; i < N; i++ {
+	for i := range N {
 		id := fmt.Sprintf("recovered-%d", i)
 		if _, ok := got[id]; !ok {
 			t.Fatalf("entry %s was dropped during Cleanup", id)
@@ -112,7 +112,7 @@ func TestCleanupDrainsCombinedQueueAndBatchNoDrops(t *testing.T) {
 	}
 
 	const N = 2500 // > maxBatchSize so batchWriter triggers at least two intermediate flushes
-	for i := 0; i < N; i++ {
+	for i := range N {
 		plugin.enqueueLogEntry(makeTestLog(fmt.Sprintf("combined-%d", i)), nil)
 	}
 
@@ -128,7 +128,7 @@ func TestCleanupDrainsCombinedQueueAndBatchNoDrops(t *testing.T) {
 		t.Fatalf("expected %d unique entries persisted (mix of batchWriter + drainPending), got %d; dropped=%d",
 			N, len(got), plugin.droppedRequests.Load())
 	}
-	for i := 0; i < N; i++ {
+	for i := range N {
 		id := fmt.Sprintf("combined-%d", i)
 		if _, ok := got[id]; !ok {
 			t.Fatalf("entry %s was dropped during Cleanup", id)

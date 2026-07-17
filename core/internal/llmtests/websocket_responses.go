@@ -9,8 +9,8 @@ import (
 	"time"
 
 	ws "github.com/fasthttp/websocket"
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // RunWebSocketResponsesTest dials the provider's native WebSocket Responses endpoint,
@@ -70,13 +70,13 @@ func RunWebSocketResponsesTest(t *testing.T, client *bifrost.Bifrost, ctx contex
 
 		t.Logf("connected to WebSocket Responses endpoint: %s", wsURL)
 
-		event := map[string]interface{}{
+		event := map[string]any{
 			"type":  "response.create",
 			"model": testConfig.ChatModel,
-			"input": []map[string]interface{}{
+			"input": []map[string]any{
 				{
 					"role": "user",
-					"content": []map[string]interface{}{
+					"content": []map[string]any{
 						{
 							"type": "input_text",
 							"text": "Say hello in exactly two words.",

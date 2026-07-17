@@ -1,13 +1,14 @@
 package anthropic
 
 import (
+	"context"
 	"strings"
 	"time"
 	"unicode/utf8"
 
 	"testing"
 
-	schemas "github.com/maximhq/bifrost/core/schemas"
+	schemas "github.com/grevinden/bifrost/core/schemas"
 
 	"github.com/bytedance/sonic"
 	"github.com/tidwall/gjson"
@@ -54,7 +55,7 @@ func TestCodeExecution_BashResponseRoundTrip(t *testing.T) {
 		t.Fatalf("unmarshal raw: %v", err)
 	}
 
-	ctx := schemas.NewBifrostContext(nil, time.Time{})
+	ctx := schemas.NewBifrostContext(context.TODO, time.Time{})
 
 	bifrostResp := resp.ToBifrostResponsesResponse(ctx)
 	if bifrostResp == nil {

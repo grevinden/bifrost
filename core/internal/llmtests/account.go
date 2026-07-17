@@ -9,8 +9,8 @@ import (
 	"os"
 	"time"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 const Concurrency = 4
@@ -132,9 +132,9 @@ type ComprehensiveTestConfig struct {
 	VideoGenerationModel     string                     // Model for video generation
 	ExternalTTSProvider      schemas.ModelProvider      // External TTS provider to use for testing
 	ExternalTTSModel         string                     // External TTS model to use for testing
-	BatchExtraParams         map[string]interface{}     // Extra params for batch operations (e.g., role_arn, output_s3_uri for Bedrock)
+	BatchExtraParams         map[string]any             // Extra params for batch operations (e.g., role_arn, output_s3_uri for Bedrock)
 	BatchOutputFolder        *schemas.BatchOutputFolder // Typed batch output location (e.g., GCS gs:// prefix for Vertex)
-	FileExtraParams          map[string]interface{}     // Extra params for file operations (e.g., s3_bucket for Bedrock)
+	FileExtraParams          map[string]any             // Extra params for file operations (e.g., s3_bucket for Bedrock)
 	FileStorageConfig        *schemas.FileStorageConfig // Typed storage config for file operations (e.g., GCS bucket for Vertex)
 	DisableParallelFor       []string                   // Test scenarios to disable parallel execution for (e.g., "Transcription" for rate-limited APIs)
 	ExpectRawRequestResponse bool                       // When true, validate rawRequest/rawResponse in ExtraFields
@@ -199,7 +199,7 @@ func replicateProviderTestKeys() []schemas.Key {
 			Value:              *schemas.NewSecretVar("env.REPLICATE_API_KEY"),
 			Models:             []string{"*"},
 			Weight:             0,
-			UseForBatchAPI:     bifrost.Ptr(false),
+			UseForBatchAPI:     new(false),
 			ReplicateKeyConfig: &schemas.ReplicateKeyConfig{UseDeploymentsEndpoint: true},
 		},
 		{
@@ -207,7 +207,7 @@ func replicateProviderTestKeys() []schemas.Key {
 			Value:              *schemas.NewSecretVar("env.REPLICATE_API_KEY"),
 			Models:             []string{"*"},
 			Weight:             1.0,
-			UseForBatchAPI:     bifrost.Ptr(true),
+			UseForBatchAPI:     new(true),
 			ReplicateKeyConfig: nil,
 		},
 	}
@@ -222,7 +222,7 @@ func (account *ComprehensiveTestAccount) GetKeysForProvider(ctx context.Context,
 				Value:          *schemas.NewSecretVar("env.OPENAI_API_KEY"),
 				Models:         []string{"*"},
 				Weight:         1.0,
-				UseForBatchAPI: bifrost.Ptr(true),
+				UseForBatchAPI: new(true),
 			},
 		}, nil
 	case ProviderOpenAICustom:
@@ -231,7 +231,7 @@ func (account *ComprehensiveTestAccount) GetKeysForProvider(ctx context.Context,
 				Value:          *schemas.NewSecretVar("env.OPENAI_API_KEY"), // Use GROQ API key for OpenAI-compatible endpoint
 				Models:         []string{"*"},
 				Weight:         1.0,
-				UseForBatchAPI: bifrost.Ptr(true),
+				UseForBatchAPI: new(true),
 			},
 		}, nil
 	case schemas.Anthropic:
@@ -240,7 +240,7 @@ func (account *ComprehensiveTestAccount) GetKeysForProvider(ctx context.Context,
 				Value:          *schemas.NewSecretVar("env.ANTHROPIC_API_KEY"),
 				Models:         []string{"*"},
 				Weight:         1.0,
-				UseForBatchAPI: bifrost.Ptr(true),
+				UseForBatchAPI: new(true),
 			},
 		}, nil
 	case schemas.Bedrock:
@@ -281,7 +281,7 @@ func (account *ComprehensiveTestAccount) GetKeysForProvider(ctx context.Context,
 					SessionToken: schemas.NewSecretVar("env.AWS_SESSION_TOKEN"),
 					Region:       schemas.NewSecretVar(getEnvWithDefault("AWS_REGION", "us-east-1")),
 				},
-				UseForBatchAPI: bifrost.Ptr(true),
+				UseForBatchAPI: new(true),
 			},
 			{
 				Models: []string{"cohere.embed-v4:0", "amazon.nova-canvas-v1:0", "anthropic.claude-sonnet-4-20250514-v1:0"},
@@ -313,7 +313,7 @@ func (account *ComprehensiveTestAccount) GetKeysForProvider(ctx context.Context,
 				// filter so those requests reach the provider's unsupported-operation stub
 				// (the BatchUnsupported/FileUnsupported harness checks), as other non-batch
 				// providers (e.g. Cohere) do.
-				UseForBatchAPI: bifrost.Ptr(true),
+				UseForBatchAPI: new(true),
 			},
 		}, nil
 	case schemas.Cohere:
@@ -322,7 +322,7 @@ func (account *ComprehensiveTestAccount) GetKeysForProvider(ctx context.Context,
 				Value:          *schemas.NewSecretVar("env.COHERE_API_KEY"),
 				Models:         []string{"*"},
 				Weight:         1.0,
-				UseForBatchAPI: bifrost.Ptr(true),
+				UseForBatchAPI: new(true),
 			},
 		}, nil
 	case schemas.Azure:
@@ -346,7 +346,7 @@ func (account *ComprehensiveTestAccount) GetKeysForProvider(ctx context.Context,
 					ClientSecret: schemas.NewSecretVar("env.AZURE_CLIENT_SECRET"),
 					TenantID:     schemas.NewSecretVar("env.AZURE_TENANT_ID"),
 				},
-				UseForBatchAPI: bifrost.Ptr(true),
+				UseForBatchAPI: new(true),
 			},
 			{
 				Value:  *schemas.NewSecretVar("env.AZURE_API_KEY"),
@@ -376,7 +376,7 @@ func (account *ComprehensiveTestAccount) GetKeysForProvider(ctx context.Context,
 					Region:          *schemas.NewSecretVar(getEnvWithDefault("VERTEX_REGION", "us-central1")),
 					AuthCredentials: *schemas.NewSecretVar("env.VERTEX_CREDENTIALS"),
 				},
-				UseForBatchAPI: bifrost.Ptr(true),
+				UseForBatchAPI: new(true),
 			},
 			{
 				Value:  *schemas.NewSecretVar("env.VERTEX_API_KEY"),
@@ -387,7 +387,7 @@ func (account *ComprehensiveTestAccount) GetKeysForProvider(ctx context.Context,
 					Region:          *schemas.NewSecretVar("global"),
 					AuthCredentials: *schemas.NewSecretVar("env.VERTEX_CREDENTIALS"),
 				},
-				UseForBatchAPI: bifrost.Ptr(true),
+				UseForBatchAPI: new(true),
 			},
 			{
 				Value:  *schemas.NewSecretVar("env.VERTEX_API_KEY"),
@@ -403,7 +403,7 @@ func (account *ComprehensiveTestAccount) GetKeysForProvider(ctx context.Context,
 					Region:          *schemas.NewSecretVar(getEnvWithDefault("VERTEX_REGION_ANTHROPIC", "us-east5")),
 					AuthCredentials: *schemas.NewSecretVar("env.VERTEX_CREDENTIALS"),
 				},
-				UseForBatchAPI: bifrost.Ptr(true),
+				UseForBatchAPI: new(true),
 			},
 		}, nil
 	case schemas.Mistral:
@@ -412,7 +412,7 @@ func (account *ComprehensiveTestAccount) GetKeysForProvider(ctx context.Context,
 				Value:          *schemas.NewSecretVar("env.MISTRAL_API_KEY"),
 				Models:         []string{"*"},
 				Weight:         1.0,
-				UseForBatchAPI: bifrost.Ptr(true),
+				UseForBatchAPI: new(true),
 			},
 		}, nil
 	case schemas.Groq:
@@ -421,7 +421,7 @@ func (account *ComprehensiveTestAccount) GetKeysForProvider(ctx context.Context,
 				Value:          *schemas.NewSecretVar("env.GROQ_API_KEY"),
 				Models:         []string{"*"},
 				Weight:         1.0,
-				UseForBatchAPI: bifrost.Ptr(true),
+				UseForBatchAPI: new(true),
 			},
 		}, nil
 	case schemas.Parasail:
@@ -430,7 +430,7 @@ func (account *ComprehensiveTestAccount) GetKeysForProvider(ctx context.Context,
 				Value:          *schemas.NewSecretVar("env.PARASAIL_API_KEY"),
 				Models:         []string{"*"},
 				Weight:         1.0,
-				UseForBatchAPI: bifrost.Ptr(true),
+				UseForBatchAPI: new(true),
 			},
 		}, nil
 	case schemas.Elevenlabs:
@@ -439,7 +439,7 @@ func (account *ComprehensiveTestAccount) GetKeysForProvider(ctx context.Context,
 				Value:          *schemas.NewSecretVar("env.ELEVENLABS_API_KEY"),
 				Models:         []string{"*"},
 				Weight:         1.0,
-				UseForBatchAPI: bifrost.Ptr(true),
+				UseForBatchAPI: new(true),
 			},
 		}, nil
 	case schemas.Perplexity:
@@ -448,7 +448,7 @@ func (account *ComprehensiveTestAccount) GetKeysForProvider(ctx context.Context,
 				Value:          *schemas.NewSecretVar("env.PERPLEXITY_API_KEY"),
 				Models:         []string{"*"},
 				Weight:         1.0,
-				UseForBatchAPI: bifrost.Ptr(true),
+				UseForBatchAPI: new(true),
 			},
 		}, nil
 	case schemas.Cerebras:
@@ -457,7 +457,7 @@ func (account *ComprehensiveTestAccount) GetKeysForProvider(ctx context.Context,
 				Value:          *schemas.NewSecretVar("env.CEREBRAS_API_KEY"),
 				Models:         []string{"*"},
 				Weight:         1.0,
-				UseForBatchAPI: bifrost.Ptr(true),
+				UseForBatchAPI: new(true),
 			},
 		}, nil
 	case schemas.Sarvam:
@@ -466,7 +466,7 @@ func (account *ComprehensiveTestAccount) GetKeysForProvider(ctx context.Context,
 				Value:          *schemas.NewSecretVar("env.SARVAM_API_KEY"),
 				Models:         []string{"*"},
 				Weight:         1.0,
-				UseForBatchAPI: bifrost.Ptr(true),
+				UseForBatchAPI: new(true),
 			},
 		}, nil
 	case schemas.DeepSeek:
@@ -475,7 +475,7 @@ func (account *ComprehensiveTestAccount) GetKeysForProvider(ctx context.Context,
 				Value:          *schemas.NewSecretVar("env.DEEPSEEK_API_KEY"),
 				Models:         []string{"*"},
 				Weight:         1.0,
-				UseForBatchAPI: bifrost.Ptr(true),
+				UseForBatchAPI: new(true),
 			},
 		}, nil
 	case schemas.Gemini:
@@ -484,7 +484,7 @@ func (account *ComprehensiveTestAccount) GetKeysForProvider(ctx context.Context,
 				Value:          *schemas.NewSecretVar("env.GEMINI_API_KEY"),
 				Models:         []string{"*"},
 				Weight:         1.0,
-				UseForBatchAPI: bifrost.Ptr(true),
+				UseForBatchAPI: new(true),
 			},
 		}, nil
 	case schemas.OpenRouter:
@@ -493,7 +493,7 @@ func (account *ComprehensiveTestAccount) GetKeysForProvider(ctx context.Context,
 				Value:          *schemas.NewSecretVar("env.OPENROUTER_API_KEY"),
 				Models:         []string{"*"},
 				Weight:         1.0,
-				UseForBatchAPI: bifrost.Ptr(true),
+				UseForBatchAPI: new(true),
 			},
 		}, nil
 	case schemas.HuggingFace:
@@ -502,7 +502,7 @@ func (account *ComprehensiveTestAccount) GetKeysForProvider(ctx context.Context,
 				Value:          *schemas.NewSecretVar("env.HUGGING_FACE_API_KEY"),
 				Models:         []string{"*"},
 				Weight:         1.0,
-				UseForBatchAPI: bifrost.Ptr(true),
+				UseForBatchAPI: new(true),
 			},
 		}, nil
 	case schemas.Nebius:
@@ -511,7 +511,7 @@ func (account *ComprehensiveTestAccount) GetKeysForProvider(ctx context.Context,
 				Value:          *schemas.NewSecretVar("env.NEBIUS_API_KEY"),
 				Models:         []string{"*"},
 				Weight:         1.0,
-				UseForBatchAPI: bifrost.Ptr(true),
+				UseForBatchAPI: new(true),
 			},
 		}, nil
 	case schemas.XAI:
@@ -520,7 +520,7 @@ func (account *ComprehensiveTestAccount) GetKeysForProvider(ctx context.Context,
 				Value:          *schemas.NewSecretVar("env.XAI_API_KEY"),
 				Models:         []string{"*"},
 				Weight:         1.0,
-				UseForBatchAPI: bifrost.Ptr(true),
+				UseForBatchAPI: new(true),
 			},
 		}, nil
 	case schemas.Replicate:
@@ -531,7 +531,7 @@ func (account *ComprehensiveTestAccount) GetKeysForProvider(ctx context.Context,
 				Value:          *schemas.NewSecretVar("env.RUNWAY_API_KEY"),
 				Models:         []string{"*"},
 				Weight:         1.0,
-				UseForBatchAPI: bifrost.Ptr(true),
+				UseForBatchAPI: new(true),
 			},
 		}, nil
 	case schemas.Runware:
@@ -540,7 +540,7 @@ func (account *ComprehensiveTestAccount) GetKeysForProvider(ctx context.Context,
 				Value:          *schemas.NewSecretVar("env.RUNWARE_API_KEY"),
 				Models:         []string{"*"},
 				Weight:         1.0,
-				UseForBatchAPI: bifrost.Ptr(true),
+				UseForBatchAPI: new(true),
 			},
 		}, nil
 	case schemas.Fireworks:
@@ -549,7 +549,7 @@ func (account *ComprehensiveTestAccount) GetKeysForProvider(ctx context.Context,
 				Value:          *schemas.NewSecretVar("env.FIREWORKS_API_KEY"),
 				Models:         []string{"accounts/fireworks/models/deepseek-v4-pro", "fireworks/qwen3-embedding-8b"},
 				Weight:         1.0,
-				UseForBatchAPI: bifrost.Ptr(true),
+				UseForBatchAPI: new(true),
 			},
 		}, nil
 	case schemas.Ollama:
@@ -557,7 +557,7 @@ func (account *ComprehensiveTestAccount) GetKeysForProvider(ctx context.Context,
 			{
 				Models:         []string{"*"},
 				Weight:         1.0,
-				UseForBatchAPI: bifrost.Ptr(true),
+				UseForBatchAPI: new(true),
 				OllamaKeyConfig: &schemas.OllamaKeyConfig{
 					URL: *schemas.NewSecretVar("env.OLLAMA_BASE_URL"),
 				},
@@ -568,7 +568,7 @@ func (account *ComprehensiveTestAccount) GetKeysForProvider(ctx context.Context,
 			{
 				Models:         []string{"*"},
 				Weight:         1.0,
-				UseForBatchAPI: bifrost.Ptr(true),
+				UseForBatchAPI: new(true),
 				VLLMKeyConfig: &schemas.VLLMKeyConfig{
 					URL: *schemas.NewSecretVar("env.VLLM_BASE_URL"),
 				},

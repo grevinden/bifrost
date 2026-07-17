@@ -3,7 +3,7 @@ package mcptests
 import (
 	"testing"
 
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/require"
 )
 
@@ -152,7 +152,7 @@ func TestAgent_ContextClientFilter_Whitelist(t *testing.T) {
 
 	// Turn 2: LLM tries to call temperature from STDIO client (blocked)
 	mocker.AddChatResponse(CreateAgentTurnWithToolCalls(
-		CreateSTDIOToolCall("call-2", "temperature-mcp-client", "get_temperature", map[string]interface{}{
+		CreateSTDIOToolCall("call-2", "temperature-mcp-client", "get_temperature", map[string]any{
 			"location": "Tokyo",
 		}),
 	))
@@ -369,14 +369,14 @@ func TestAgent_ContextClientFilter_MultipleClients(t *testing.T) {
 
 	// Turn 2: Call temperature from temperature client (allowed)
 	mocker.AddChatResponse(CreateAgentTurnWithToolCalls(
-		CreateSTDIOToolCall("call-2", "temperature-mcp-client", "get_temperature", map[string]interface{}{
+		CreateSTDIOToolCall("call-2", "temperature-mcp-client", "get_temperature", map[string]any{
 			"location": "Tokyo",
 		}),
 	))
 
 	// Turn 3: Call go-test-server tool (blocked - client not in whitelist)
 	mocker.AddChatResponse(CreateAgentTurnWithToolCalls(
-		CreateSTDIOToolCall("call-3", "go-test-server", "uuid_generate", map[string]interface{}{}),
+		CreateSTDIOToolCall("call-3", "go-test-server", "uuid_generate", map[string]any{}),
 	))
 
 	// Turn 4: Final text
@@ -426,7 +426,7 @@ func TestAgent_ContextToolFilter_ParallelMixed(t *testing.T) {
 		GetSampleEchoToolCall("call-1", "test"),
 		GetSampleCalculatorToolCall("call-2", "add", 10, 5),
 		GetSampleWeatherToolCall("call-3", "Paris", "celsius"),
-		CreateToolCall("call-4", "get_time", map[string]interface{}{"timezone": "UTC"}),
+		CreateToolCall("call-4", "get_time", map[string]any{"timezone": "UTC"}),
 	))
 
 	// Turn 2: LLM responds after seeing filtered tools failed

@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	schemas "github.com/maximhq/bifrost/core/schemas"
+	schemas "github.com/grevinden/bifrost/core/schemas"
 )
 
 func ToReplicateVideoGenerationInput(bifrostReq *schemas.BifrostVideoGenerationRequest) (*ReplicatePredictionRequest, error) {
@@ -25,9 +25,9 @@ func ToReplicateVideoGenerationInput(bifrostReq *schemas.BifrostVideoGenerationR
 			return nil, fmt.Errorf("invalid input reference: %w", err)
 		}
 		if strings.HasPrefix(bifrostReq.Model, string(schemas.OpenAI)) {
-			input.InputReference = schemas.Ptr(sanitizedURL)
+			input.InputReference = new(sanitizedURL)
 		} else {
-			input.Image = schemas.Ptr(sanitizedURL)
+			input.Image = new(sanitizedURL)
 		}
 	}
 
@@ -125,7 +125,7 @@ func ToBifrostVideoGenerationResponse(prediction *ReplicatePredictionResponse) (
 	}
 
 	if prediction.CompletedAt != nil {
-		response.CompletedAt = schemas.Ptr(ParseReplicateTimestamp(*prediction.CompletedAt))
+		response.CompletedAt = new(ParseReplicateTimestamp(*prediction.CompletedAt))
 	}
 
 	// Convert output to ImageData
@@ -134,14 +134,14 @@ func ToBifrostVideoGenerationResponse(prediction *ReplicatePredictionResponse) (
 		if prediction.Output.OutputStr != nil && *prediction.Output.OutputStr != "" {
 			response.Videos = append(response.Videos, schemas.VideoOutput{
 				Type:        schemas.VideoOutputTypeURL,
-				URL:         schemas.Ptr(*prediction.Output.OutputStr),
+				URL:         new(*prediction.Output.OutputStr),
 				ContentType: "video/mp4",
 			})
 		} else if len(prediction.Output.OutputArray) > 0 {
 			for _, url := range prediction.Output.OutputArray {
 				response.Videos = append(response.Videos, schemas.VideoOutput{
 					Type:        schemas.VideoOutputTypeURL,
-					URL:         schemas.Ptr(url),
+					URL:         new(url),
 					ContentType: "video/mp4",
 				})
 			}

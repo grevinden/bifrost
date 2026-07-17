@@ -80,7 +80,7 @@ func TestBuildStreamingClient_LongStreamSurvives(t *testing.T) {
 		w.Header().Set("Cache-Control", "no-cache")
 		w.WriteHeader(http.StatusOK)
 		flusher, _ := w.(http.Flusher)
-		for i := 0; i < totalChunks; i++ {
+		for i := range totalChunks {
 			fmt.Fprintf(w, "data: chunk-%d\n\n", i)
 			if flusher != nil {
 				flusher.Flush()
@@ -170,7 +170,7 @@ func TestBuildStreamingHTTPClient_LongStreamSurvives(t *testing.T) {
 		w.Header().Set("Content-Type", "text/event-stream")
 		w.WriteHeader(http.StatusOK)
 		flusher, _ := w.(http.Flusher)
-		for i := 0; i < 4; i++ {
+		for i := range 4 {
 			fmt.Fprintf(w, "data: chunk-%d\n\n", i)
 			if flusher != nil {
 				flusher.Flush()

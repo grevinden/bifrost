@@ -4,16 +4,16 @@ import (
 	"encoding/json"
 	"testing"
 
-	schemas "github.com/maximhq/bifrost/core/schemas"
+	schemas "github.com/grevinden/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestToHuggingFaceChatCompletionRequest_ResponseFormat(t *testing.T) {
-	makeReq := func(rf *interface{}) *schemas.BifrostChatRequest {
+	makeReq := func(rf *any) *schemas.BifrostChatRequest {
 		return &schemas.BifrostChatRequest{
 			Model: "test-model",
-			Input: []schemas.ChatMessage{{Role: schemas.ChatMessageRoleUser, Content: &schemas.ChatMessageContent{ContentStr: schemas.Ptr("hello")}}},
+			Input: []schemas.ChatMessage{{Role: schemas.ChatMessageRoleUser, Content: &schemas.ChatMessageContent{ContentStr: new("hello")}}},
 			Params: &schemas.ChatParameters{
 				ResponseFormat: rf,
 			},
@@ -22,7 +22,7 @@ func TestToHuggingFaceChatCompletionRequest_ResponseFormat(t *testing.T) {
 
 	tests := []struct {
 		name           string
-		responseFormat *interface{}
+		responseFormat *any
 		wantErr        bool
 		validate       func(t *testing.T, result *HuggingFaceChatRequest)
 	}{
@@ -35,8 +35,8 @@ func TestToHuggingFaceChatCompletionRequest_ResponseFormat(t *testing.T) {
 		},
 		{
 			name: "map_type_only",
-			responseFormat: func() *interface{} {
-				var rf interface{} = map[string]interface{}{"type": "json_object"}
+			responseFormat: func() *any {
+				var rf any = map[string]any{"type": "json_object"}
 				return &rf
 			}(),
 			validate: func(t *testing.T, result *HuggingFaceChatRequest) {
@@ -47,17 +47,17 @@ func TestToHuggingFaceChatCompletionRequest_ResponseFormat(t *testing.T) {
 		},
 		{
 			name: "map_with_json_schema",
-			responseFormat: func() *interface{} {
-				var rf interface{} = map[string]interface{}{
+			responseFormat: func() *any {
+				var rf any = map[string]any{
 					"type": "json_schema",
-					"json_schema": map[string]interface{}{
+					"json_schema": map[string]any{
 						"name":        "my_schema",
 						"description": "A test schema",
 						"strict":      true,
-						"schema": map[string]interface{}{
+						"schema": map[string]any{
 							"type": "object",
-							"properties": map[string]interface{}{
-								"answer": map[string]interface{}{"type": "string"},
+							"properties": map[string]any{
+								"answer": map[string]any{"type": "string"},
 							},
 						},
 					},
@@ -74,23 +74,23 @@ func TestToHuggingFaceChatCompletionRequest_ResponseFormat(t *testing.T) {
 				assert.True(t, *result.ResponseFormat.JSONSchema.Strict)
 				require.NotNil(t, result.ResponseFormat.JSONSchema.Schema)
 				// Verify schema content round-tripped correctly
-				var schemaMap map[string]interface{}
+				var schemaMap map[string]any
 				err := json.Unmarshal(result.ResponseFormat.JSONSchema.Schema, &schemaMap)
 				require.NoError(t, err)
 				assert.Equal(t, "object", schemaMap["type"])
-				props, ok := schemaMap["properties"].(map[string]interface{})
+				props, ok := schemaMap["properties"].(map[string]any)
 				require.True(t, ok)
 				assert.Contains(t, props, "answer")
 			},
 		},
 		{
 			name: "struct_fallback_via_convert",
-			responseFormat: func() *interface{} {
-				var rf interface{} = HuggingFaceResponseFormat{
+			responseFormat: func() *any {
+				var rf any = HuggingFaceResponseFormat{
 					Type: "json_schema",
 					JSONSchema: &HuggingFaceJSONSchema{
 						Name:   "fallback_schema",
-						Strict: schemas.Ptr(true),
+						Strict: new(true),
 					},
 				}
 				return &rf
@@ -106,8 +106,8 @@ func TestToHuggingFaceChatCompletionRequest_ResponseFormat(t *testing.T) {
 		},
 		{
 			name: "inconvertible_value_graceful_nil",
-			responseFormat: func() *interface{} {
-				var rf interface{} = 42
+			responseFormat: func() *any {
+				var rf any = 42
 				return &rf
 			}(),
 			validate: func(t *testing.T, result *HuggingFaceChatRequest) {

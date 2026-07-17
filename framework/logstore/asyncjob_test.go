@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/maximhq/bifrost/core/schemas"
-	configstoreTables "github.com/maximhq/bifrost/framework/configstore/tables"
+	"github.com/grevinden/bifrost/core/schemas"
+	configstoreTables "github.com/grevinden/bifrost/framework/configstore/tables"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/valyala/fasthttp"
@@ -92,7 +92,7 @@ func TestSubmitJob_PropagatesContextValues(t *testing.T) {
 	capturedCtx.SetValue(schemas.BifrostContextKey("x-bf-prom-env"), "production")
 	var done atomic.Bool
 
-	operation := func(bgCtx *schemas.BifrostContext) (interface{}, *schemas.BifrostError) {
+	operation := func(bgCtx *schemas.BifrostContext) (any, *schemas.BifrostError) {
 		capturedCtx = bgCtx
 		done.Store(true)
 		return map[string]string{"status": "ok"}, nil
@@ -116,7 +116,7 @@ func TestSubmitJob_NilContextValues(t *testing.T) {
 	var capturedCtx *schemas.BifrostContext
 	var done atomic.Bool
 
-	operation := func(bgCtx *schemas.BifrostContext) (interface{}, *schemas.BifrostError) {
+	operation := func(bgCtx *schemas.BifrostContext) (any, *schemas.BifrostError) {
 		capturedCtx = bgCtx
 		done.Store(true)
 		return map[string]string{"status": "ok"}, nil
@@ -138,7 +138,7 @@ func TestSubmitJob_EmptyContextValues(t *testing.T) {
 	var capturedCtx *schemas.BifrostContext
 	var done atomic.Bool
 
-	operation := func(bgCtx *schemas.BifrostContext) (interface{}, *schemas.BifrostError) {
+	operation := func(bgCtx *schemas.BifrostContext) (any, *schemas.BifrostError) {
 		capturedCtx = bgCtx
 		done.Store(true)
 		return map[string]string{"status": "ok"}, nil
@@ -162,7 +162,7 @@ func TestSubmitJob_AsyncFlagOverridesContextValues(t *testing.T) {
 
 	var capturedCtx *schemas.BifrostContext
 	var done atomic.Bool
-	operation := func(bgCtx *schemas.BifrostContext) (interface{}, *schemas.BifrostError) {
+	operation := func(bgCtx *schemas.BifrostContext) (any, *schemas.BifrostError) {
 		capturedCtx = bgCtx
 		done.Store(true)
 		return map[string]string{"status": "ok"}, nil
@@ -188,7 +188,7 @@ func TestSubmitJob_OperationFailure_PreservesContext(t *testing.T) {
 	var done atomic.Bool
 
 	statusCode := fasthttp.StatusBadRequest
-	operation := func(bgCtx *schemas.BifrostContext) (interface{}, *schemas.BifrostError) {
+	operation := func(bgCtx *schemas.BifrostContext) (any, *schemas.BifrostError) {
 		capturedCtx = bgCtx
 		done.Store(true)
 		return nil, &schemas.BifrostError{

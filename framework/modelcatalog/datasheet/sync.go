@@ -10,9 +10,9 @@ import (
 	"os"
 	"time"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	providerUtils "github.com/maximhq/bifrost/core/providers/utils"
-	configstoreTables "github.com/maximhq/bifrost/framework/configstore/tables"
+	bifrost "github.com/grevinden/bifrost/core"
+	providerUtils "github.com/grevinden/bifrost/core/providers/utils"
+	configstoreTables "github.com/grevinden/bifrost/framework/configstore/tables"
 )
 
 const (

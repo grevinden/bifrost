@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // RunFastModeTest tests that the fast-mode-2026-02-01 beta header is correctly
@@ -52,8 +52,8 @@ func RunFastModeTest(t *testing.T, client *bifrost.Bifrost, ctx context.Context,
 				Model:    model,
 				Input:    messages,
 				Params: &schemas.ResponsesParameters{
-					MaxOutputTokens: bifrost.Ptr(100),
-					ExtraParams: map[string]interface{}{
+					MaxOutputTokens: new(100),
+					ExtraParams: map[string]any{
 						"speed": "fast",
 					},
 				},
@@ -97,8 +97,8 @@ func RunFastModeTest(t *testing.T, client *bifrost.Bifrost, ctx context.Context,
 				Model:    model,
 				Input:    chatMessages,
 				Params: &schemas.ChatParameters{
-					MaxCompletionTokens: bifrost.Ptr(100),
-					ExtraParams: map[string]interface{}{
+					MaxCompletionTokens: new(100),
+					ExtraParams: map[string]any{
 						"speed": "fast",
 					},
 				},

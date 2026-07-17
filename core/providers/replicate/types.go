@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/bytedance/sonic"
-	providerUtils "github.com/maximhq/bifrost/core/providers/utils"
-	schemas "github.com/maximhq/bifrost/core/schemas"
+	providerUtils "github.com/grevinden/bifrost/core/providers/utils"
+	schemas "github.com/grevinden/bifrost/core/schemas"
 )
 
 // ==================== REQUEST TYPES ====================
@@ -22,11 +22,11 @@ type ReplicatePredictionRequest struct {
 	OutputFileURLPrefix *string                          `json:"output_file_url_prefix,omitempty"` // Custom prefix for output file URLs
 	PollTimeout         *int                             `json:"poll_timeout,omitempty"`           // Timeout in seconds for polling (used with Prefer: wait header)
 	UseFileOutput       *bool                            `json:"use_file_output,omitempty"`        // Output files as URLs instead of data URIs
-	ExtraParams         map[string]interface{}           `json:"-"`                                // Extra parameters to merge into the request
+	ExtraParams         map[string]any                   `json:"-"`                                // Extra parameters to merge into the request
 }
 
 // GetExtraParams implements the RequestBodyWithExtraParams interface
-func (req *ReplicatePredictionRequest) GetExtraParams() map[string]interface{} {
+func (req *ReplicatePredictionRequest) GetExtraParams() map[string]any {
 	return req.ExtraParams
 }
 
@@ -71,9 +71,9 @@ type ReplicatePredictionRequestInput struct {
 	InputImage   *string  `json:"input_image,omitempty"`  // Image input for image-to-image models
 
 	// video generation parameters
-	Duration       *int                   `json:"duration,omitempty"`
-	InputReference *string                `json:"input_reference,omitempty"`
-	ExtraParams    map[string]interface{} `json:"-"` // Additional model-specific parameters
+	Duration       *int           `json:"duration,omitempty"`
+	InputReference *string        `json:"input_reference,omitempty"`
+	ExtraParams    map[string]any `json:"-"` // Additional model-specific parameters
 }
 
 // MarshalJSON implements custom JSON marshalling for ReplicatePredictionRequestInput.
@@ -114,7 +114,7 @@ func (r *ReplicatePredictionRequestInput) UnmarshalJSON(data []byte) error {
 	}
 
 	// Unmarshal into a map to find extra fields
-	var rawMap map[string]interface{}
+	var rawMap map[string]any
 	if err := sonic.Unmarshal(data, &rawMap); err != nil {
 		return err
 	}
@@ -156,7 +156,7 @@ func (r *ReplicatePredictionRequestInput) UnmarshalJSON(data []byte) error {
 	}
 
 	// Collect extra fields
-	r.ExtraParams = make(map[string]interface{})
+	r.ExtraParams = make(map[string]any)
 	for key, value := range rawMap {
 		if !knownFields[key] {
 			r.ExtraParams[key] = value
@@ -266,7 +266,7 @@ func (mc *ReplicateOutput) UnmarshalJSON(data []byte) error {
 	// First, try to unmarshal as a direct string
 	var stringContent string
 	if err := sonic.Unmarshal(data, &stringContent); err == nil {
-		mc.OutputStr = schemas.Ptr(stringContent)
+		mc.OutputStr = new(stringContent)
 		return nil
 	}
 
@@ -398,9 +398,9 @@ type ReplicateError struct {
 
 // ReplicateStreamEvent represents a streaming event
 type ReplicateStreamEvent struct {
-	Event string      `json:"event,omitempty"` // Event type (output, logs, done, error)
-	Data  interface{} `json:"data,omitempty"`  // Event data
-	Error *string     `json:"error,omitempty"` // Error message if event is error
+	Event string  `json:"event,omitempty"` // Event type (output, logs, done, error)
+	Data  any     `json:"data,omitempty"`  // Event data
+	Error *string `json:"error,omitempty"` // Error message if event is error
 }
 
 // ==================== WEBHOOK TYPES ====================
@@ -411,7 +411,7 @@ type ReplicateWebhookPayload struct {
 	Model       string                    `json:"model"`
 	Version     string                    `json:"version"`
 	Input       json.RawMessage           `json:"input"`
-	Output      interface{}               `json:"output,omitempty"`
+	Output      any                       `json:"output,omitempty"`
 	Logs        *string                   `json:"logs,omitempty"`
 	Error       *string                   `json:"error,omitempty"`
 	Status      ReplicatePredictionStatus `json:"status"`
@@ -433,8 +433,8 @@ type ReplicateSSEEvent struct {
 
 // ReplicateDoneEvent represents the data payload of a "done" event
 type ReplicateDoneEvent struct {
-	Reason string      `json:"reason,omitempty"` // Reason for completion: "canceled", "error", or empty for success
-	Output interface{} `json:"output,omitempty"` // Output data if available (e.g., error message)
+	Reason string `json:"reason,omitempty"` // Reason for completion: "canceled", "error", or empty for success
+	Output any    `json:"output,omitempty"` // Output data if available (e.g., error message)
 }
 
 // ReplicateErrorEvent represents the data payload of an "error" event

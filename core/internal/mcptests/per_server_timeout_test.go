@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/grevinden/bifrost/core/schemas"
 	mcpgo "github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
-	"github.com/maximhq/bifrost/core/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -38,11 +38,11 @@ func buildPerServerDelayServer(t *testing.T) *server.MCPServer {
 
 // makeDelayToolCall builds a ChatAssistantMessageToolCall for the delay tool on the named client.
 func makeDelayToolCall(clientName string, seconds float64) schemas.ChatAssistantMessageToolCall {
-	args, _ := json.Marshal(map[string]interface{}{"seconds": seconds})
+	args, _ := json.Marshal(map[string]any{"seconds": seconds})
 	toolName := clientName + "-delay"
 	return schemas.ChatAssistantMessageToolCall{
-		ID:   schemas.Ptr("call-delay"),
-		Type: schemas.Ptr("function"),
+		ID:   new("call-delay"),
+		Type: new("function"),
 		Function: schemas.ChatAssistantMessageToolCallFunction{
 			Name:      &toolName,
 			Arguments: string(args),

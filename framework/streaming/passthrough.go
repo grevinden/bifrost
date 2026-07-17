@@ -5,8 +5,8 @@ import (
 	"maps"
 	"time"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // processPassthroughStreamingResponse handles accumulation of passthrough streaming responses.
@@ -125,7 +125,7 @@ func (a *Accumulator) processPassthroughStreamingResponse(ctx *schemas.BifrostCo
 		passthroughResp.ExtraFields = *extraFields
 	}
 
-	var rawRequest interface{}
+	var rawRequest any
 	if result != nil && result.PassthroughResponse != nil && result.PassthroughResponse.ExtraFields.RawRequest != nil {
 		rawRequest = result.PassthroughResponse.ExtraFields.RawRequest
 	}

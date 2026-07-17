@@ -7,11 +7,11 @@ import (
 	"testing"
 
 	"github.com/bytedance/sonic"
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/providers/anthropic"
-	"github.com/maximhq/bifrost/core/providers/gemini"
-	"github.com/maximhq/bifrost/core/providers/openai"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/providers/anthropic"
+	"github.com/grevinden/bifrost/core/providers/gemini"
+	"github.com/grevinden/bifrost/core/providers/openai"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // passthroughChatReq holds the provider-native path and JSON body for a
@@ -31,7 +31,7 @@ func basePassthroughChatRequest(model string) *schemas.BifrostChatRequest {
 			CreateBasicChatMessage("Say hello in one word"),
 		},
 		Params: &schemas.ChatParameters{
-			MaxCompletionTokens: bifrost.Ptr(300),
+			MaxCompletionTokens: new(300),
 		},
 	}
 }
@@ -49,7 +49,7 @@ func buildPassthroughChatReq(t *testing.T, provider schemas.ModelProvider, model
 	case schemas.OpenAI:
 		nativeReq := openai.ToOpenAIChatRequest(ctx, bfReq)
 		if stream {
-			nativeReq.Stream = bifrost.Ptr(true)
+			nativeReq.Stream = new(true)
 		}
 		body, err := sonic.Marshal(nativeReq)
 		if err != nil {
@@ -60,7 +60,7 @@ func buildPassthroughChatReq(t *testing.T, provider schemas.ModelProvider, model
 	case schemas.Azure:
 		nativeReq := openai.ToOpenAIChatRequest(ctx, bfReq)
 		if stream {
-			nativeReq.Stream = bifrost.Ptr(true)
+			nativeReq.Stream = new(true)
 		}
 		body, err := sonic.Marshal(nativeReq)
 		if err != nil {
@@ -78,7 +78,7 @@ func buildPassthroughChatReq(t *testing.T, provider schemas.ModelProvider, model
 			return passthroughChatReq{}, false
 		}
 		if stream {
-			nativeReq.Stream = bifrost.Ptr(true)
+			nativeReq.Stream = new(true)
 		}
 		body, err := sonic.Marshal(nativeReq)
 		if err != nil {

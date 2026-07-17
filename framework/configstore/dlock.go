@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/maximhq/bifrost/core/schemas"
-	"github.com/maximhq/bifrost/framework/configstore/tables"
+	"github.com/grevinden/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/framework/configstore/tables"
 )
 
 // Default lock configuration values
@@ -213,10 +213,7 @@ func (l *DistributedLock) LockWithRetry(ctx context.Context, maxRetries int) err
 		// Wait before retrying
 		if i < maxRetries {
 			// Exponential backoff capped to avoid overflow (max 32s).
-			exp := i
-			if exp > 5 {
-				exp = 5
-			}
+			exp := min(i, 5)
 			backoff := time.Duration(1<<uint(exp)) * time.Second
 			select {
 			case <-ctx.Done():

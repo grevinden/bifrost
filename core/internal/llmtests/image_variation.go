@@ -9,8 +9,8 @@ import (
 	"os"
 	"testing"
 
-	bifrost "github.com/maximhq/bifrost/core"
-	"github.com/maximhq/bifrost/core/schemas"
+	bifrost "github.com/grevinden/bifrost/core"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 // RunImageVariationTest executes the end-to-end image variation test (non-streaming)
@@ -33,14 +33,14 @@ func RunImageVariationTest(t *testing.T, client *bifrost.Bifrost, ctx context.Co
 		retryConfig := GetTestRetryConfigForScenario("ImageVariation", testConfig)
 		retryContext := TestRetryContext{
 			ScenarioName:     "ImageVariation",
-			ExpectedBehavior: map[string]interface{}{},
-			TestMetadata: map[string]interface{}{
+			ExpectedBehavior: map[string]any{},
+			TestMetadata: map[string]any{
 				"provider": testConfig.Provider,
 				"model":    testConfig.ImageVariationModel,
 			},
 		}
 
-		expectations := GetExpectationsForScenario("ImageVariation", testConfig, map[string]interface{}{
+		expectations := GetExpectationsForScenario("ImageVariation", testConfig, map[string]any{
 			"min_images":    1,
 			"expected_size": "1024x1024",
 		})
@@ -84,8 +84,8 @@ func RunImageVariationTest(t *testing.T, client *bifrost.Bifrost, ctx context.Co
 					},
 				},
 				Params: &schemas.ImageVariationParameters{
-					Size: bifrost.Ptr("1024x1024"),
-					N:    bifrost.Ptr(2), // Generate 2 variations
+					Size: new("1024x1024"),
+					N:    new(2), // Generate 2 variations
 				},
 				Fallbacks: testConfig.ImageVariationFallbacks,
 			}

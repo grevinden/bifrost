@@ -3,8 +3,8 @@ package anthropic_test
 import (
 	"testing"
 
-	"github.com/maximhq/bifrost/core/providers/anthropic"
-	"github.com/maximhq/bifrost/core/schemas"
+	"github.com/grevinden/bifrost/core/providers/anthropic"
+	"github.com/grevinden/bifrost/core/schemas"
 )
 
 func TestExtractAnthropicPassthroughUsage(t *testing.T) {
