@@ -230,7 +230,7 @@ func (p *Plugin) PreLLMHook(ctx *schemas.BifrostContext, req *schemas.BifrostReq
 	improved := p.boostMessage(ctx, req.ChatRequest.Provider, req.ChatRequest.Model, req.ChatRequest.Input)
 	if improved != "" {
 		req.ChatRequest.Input = append(req.ChatRequest.Input, schemas.ChatMessage{
-			Role:    schemas.ChatMessageRoleAssistant,
+			Role:    schemas.ChatMessageRoleUser,
 			Content: &schemas.ChatMessageContent{ContentStr: new(improved)},
 		})
 		p.logger.Info("llmboster: boost succeeded, model=%s provider=%s improved_len=%d", req.ChatRequest.Model, req.ChatRequest.Provider, len(improved))
@@ -263,24 +263,22 @@ func (p *Plugin) boostMessage(
 	// Формируем подзапрос для «улучшающего» вызова модели.
 	subRequest := make([]schemas.ChatMessage, 0, len(messages)+2)
 
-	// 1. Системное сообщение — копируем указатель, чтобы не разделять мутабельное состояние.
+	// 1. История чата без system-сообщений пользователя — только user/assistant/developer.
+	for _, msg := range messages {
+		subRequest = append(subRequest, msg)
+	}
+
+	// 2. Системное сообщение — копируем указатель, чтобы не разделять мутабельное состояние.
 	sysCopy := *p.sysContent
 	subRequest = append(subRequest, schemas.ChatMessage{
-		Role:    schemas.ChatMessageRoleSystem,
+		Role:    schemas.ChatMessageRoleUser,
 		Content: &sysCopy,
 	})
-
-	// 2. История чата без system-сообщений пользователя — только user/assistant/developer.
-	for _, msg := range messages {
-		if msg.Role != schemas.ChatMessageRoleSystem {
-			subRequest = append(subRequest, msg)
-		}
-	}
 
 	// 3. Developer-инструкция — копируем указатель.
 	devCopy := *p.devContent
 	subRequest = append(subRequest, schemas.ChatMessage{
-		Role:    schemas.ChatMessageRoleAssistant,
+		Role:    schemas.ChatMessageRoleUser,
 		Content: &devCopy,
 	})
 
