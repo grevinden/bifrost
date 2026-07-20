@@ -67,7 +67,7 @@ define EXPOSE_ENV
 	fi
 endef
 
-.PHONY: all help dev dev-pulse build-ui build build-cli run run-cli install-air install-pulse clean test test-cli install-ui setup-workspace work-init work-clean docs docker-image docker-run cleanup-enterprise mod-tidy test-integrations-py test-integrations-ts install-playwright run-e2e run-e2e-ui run-e2e-headed run-e2e-api format ui install-newman run-provider-harness-test run-cli-harness-test test-semantic-cache test-semantic-cache-complete _test-semantic-cache-complete-inner helm-index
+.PHONY: all help dev dev-pulse build-ui build build-cli run run-cli tag deb install-air install-pulse clean test test-cli install-ui setup-workspace work-init work-clean docs docker-image docker-run cleanup-enterprise mod-tidy test-integrations-py test-integrations-ts install-playwright run-e2e run-e2e-ui run-e2e-headed run-e2e-api format ui install-newman run-provider-harness-test run-cli-harness-test test-semantic-cache test-semantic-cache-complete _test-semantic-cache-complete-inner helm-index
 
 all: help
 
@@ -379,6 +379,21 @@ build: build-ui ## Build bifrost-http binary
 		$(ECHO) "$(YELLOW)Cross-compilation detected: $$HOST_OS/$$HOST_ARCH -> $$TARGET_OS/$$TARGET_ARCH$(NC)"; \
 		$(ECHO) "$(CYAN)Using Docker for cross-compilation...$(NC)"; \
 		$(MAKE) _build-with-docker TARGET_OS=$$TARGET_OS TARGET_ARCH=$$TARGET_ARCH $(if $(DYNAMIC),DYNAMIC=$(DYNAMIC)); \
+	fi
+
+tag: REMOTE ?= origin
+tag: ## Create and push new tag: v<upstream-version>.<hash> (Usage: make tag REMOTE=remote-name)
+	@$(ECHO) "$(CYAN)Auto-creating version tag...$(NC)"
+	@# Find latest upstream tag (transports/v*.*.*) for version number
+	UPSTREAM=$$(git describe --tags --match 'transports/v*.*.*' --abbrev=0 2>/dev/null || echo "v0.0.0"); \
+	VER=$$(echo "$$UPSTREAM" | sed 's/.*\(v[0-9]*\.[0-9]*\.[0-9]*\).*/\1/' | sed 's/v//'); \
+	HASH=$$(git rev-parse --short HEAD); \
+	TAG="v$${VER}.$${HASH}"; \
+	if git tag "$$TAG" && git push "$(REMOTE)" "$$TAG"; then \
+		$(ECHO) "$(GREEN)Tagged and pushed: $$TAG$(NC)"; \
+	else \
+		$(ECHO) "$(RED)Failed to create or push tag: $$TAG$(NC)"; \
+		exit 1; \
 	fi
 
 deb: ## Build .deb package (Usage: make deb VERSION=1.2.3)
