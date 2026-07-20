@@ -4,7 +4,6 @@ import (
 	"strconv"
 	"testing"
 
-	bifrost "github.com/grevinden/bifrost/core"
 	"github.com/grevinden/bifrost/core/schemas"
 )
 

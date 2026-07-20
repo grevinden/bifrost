@@ -264,9 +264,20 @@ type HTTPTransportPlugin interface {
 	HTTPTransportStreamChunkHook(ctx *BifrostContext, req *HTTPRequest, chunk *BifrostStreamChunk) (*BifrostStreamChunk, error)
 }
 
+// RetryRequest carries instructions for the HTTP handler to retry a streaming request
+// after a plugin detects a problem (e.g., loop detection). When RetryWith is non-nil
+// on a StreamInterceptionError, the handler should cancel the current stream and issue
+// a new ChatCompletionRequest with ExtraMessages injected into the conversation.
+type RetryRequest struct {
+	// ExtraMessages are appended to the original request's input before retrying.
+	// Typically a developer message with instructions like "stop looping".
+	ExtraMessages []ChatMessage
+}
+
 // StreamInterceptionError carries a structured client error when an HTTP stream plugin terminates a stream.
 type StreamInterceptionError struct {
 	BifrostError *BifrostError
+	RetryWith    *RetryRequest // If set, the handler should retry instead of terminating.
 }
 
 // Error returns the best available client message for callers that only understand Go errors.

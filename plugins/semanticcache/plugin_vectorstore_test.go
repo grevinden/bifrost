@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	bifrost "github.com/grevinden/bifrost/core"
+
 	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/grevinden/bifrost/framework/vectorstore"
 )

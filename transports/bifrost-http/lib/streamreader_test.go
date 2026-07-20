@@ -544,7 +544,7 @@ func TestSSEStreamReaderMidStreamDisconnect(t *testing.T) {
 	go func() {
 		sent := 0
 		for i := range 100 {
-			if !r.SendEvent("", []byte(fmt.Sprintf(`{"chunk":%d}`, i))) {
+			if !r.SendEvent("", fmt.Appendf([]byte(nil), `{"chunk":%d}`, i)) {
 				break
 			}
 			sent++
@@ -645,7 +645,7 @@ func TestSSEStreamReaderConcurrentSendEvent(t *testing.T) {
 		go func(id int) {
 			defer wg.Done()
 			for i := range eventsPerProducer {
-				if !r.SendEvent("", []byte(fmt.Sprintf(`{"p":%d,"i":%d}`, id, i))) {
+				if !r.SendEvent("", fmt.Appendf([]byte(nil), `{"p":%d,"i":%d}`, id, i)) {
 					return
 				}
 			}

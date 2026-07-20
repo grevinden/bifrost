@@ -366,7 +366,7 @@ func TestToAnthropicResponsesStreamResponse_RedactedThinkingEgress(t *testing.T)
 		t.Fatal("expected an output_item.added event to feed the egress converter")
 	}
 
-	ctx := schemas.NewBifrostContext(context.TODO, time.Time{})
+	ctx := schemas.NewBifrostContext(context.TODO(), time.Time{})
 	frames := ToAnthropicResponsesStreamResponse(ctx, addedEvent)
 
 	found := false

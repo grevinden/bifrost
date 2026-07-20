@@ -1088,3 +1088,199 @@ func TestHTTPTransportStreamChunkHook_Passthrough(t *testing.T) {
 		t.Error("expected same chunk back")
 	}
 }
+
+// ---------------------------------------------------------------------------
+// HTTPTransportStreamChunkHook — loop detection
+// ---------------------------------------------------------------------------
+
+func TestHTTPTransportStreamChunkHook_LoopDetected_ReturnsRetryWith(t *testing.T) {
+	// Явно включаем loop detection — newTestPlugin использует Config{} без LoopDetection,
+	// что даёт DefaultLoopDetectorConfig (Enabled: false).
+	p, err := Init(&Config{
+		LoopDetection: &LoopDetectorConfig{Enabled: true},
+	}, noopLogger{})
+	if err != nil {
+		t.Fatalf("Init: %v", err)
+	}
+	t.Cleanup(func() { _ = p.Cleanup() })
+
+	ctx := newBifrostContext()
+	ctx.SetValue(schemas.BifrostContextKeyRequestID, "test-req-1")
+
+	// Default config: MinTokensBefore=24, MaxNGramRepeats=5, NgramSizes=[3,5]
+	// With tail excluded, need 5 previous n-gram occurrences = 29 total identical tokens.
+	for i := 0; i < 40; i++ {
+		chunk := &schemas.BifrostStreamChunk{
+			BifrostChatResponse: &schemas.BifrostChatResponse{
+				Choices: []schemas.BifrostResponseChoice{{
+					ChatStreamResponseChoice: &schemas.ChatStreamResponseChoice{
+						Delta: &schemas.ChatStreamResponseChoiceDelta{
+							Content: ptr("hello"),
+						},
+					},
+				}},
+			},
+		}
+		out, err := p.HTTPTransportStreamChunkHook(ctx, nil, chunk)
+		if err == nil {
+			if out != chunk {
+				t.Error("expected same chunk back")
+			}
+			continue
+		}
+		// First error should be a StreamInterceptionError with RetryWith
+		siErr, ok := err.(*schemas.StreamInterceptionError)
+		if !ok {
+			t.Fatalf("chunk %d: expected StreamInterceptionError, got %T", i, err)
+		}
+		if siErr.RetryWith == nil {
+			t.Fatalf("chunk %d: expected RetryWith to be set", i)
+		}
+		if len(siErr.RetryWith.ExtraMessages) == 0 {
+			t.Fatalf("chunk %d: expected ExtraMessages to be non-empty", i)
+		}
+		// With the fix, ResetStream clears the triggered state for the requestID.
+		// This means in the real flow inference.go can start a clean retry stream
+		// with the same requestID after draining the old one.
+		return
+	}
+	t.Fatal("expected loop detection to trigger within 40 chunks")
+}
+
+func TestHTTPTransportStreamChunkHook_NoLoop_Passthrough(t *testing.T) {
+	p := newTestPlugin(t)
+	ctx := newBifrostContext()
+	ctx.SetValue(schemas.BifrostContextKeyRequestID, "test-req-2")
+
+	words := []string{"The ", "quick ", "brown ", "fox ", "jumps "}
+	for _, word := range words {
+		chunk := &schemas.BifrostStreamChunk{
+			BifrostChatResponse: &schemas.BifrostChatResponse{
+				Choices: []schemas.BifrostResponseChoice{{
+					ChatStreamResponseChoice: &schemas.ChatStreamResponseChoice{
+						Delta: &schemas.ChatStreamResponseChoiceDelta{
+							Content: ptr(word),
+						},
+					},
+				}},
+			},
+		}
+		out, err := p.HTTPTransportStreamChunkHook(ctx, nil, chunk)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if out != chunk {
+			t.Error("expected same chunk back")
+		}
+	}
+}
+
+func TestHTTPTransportStreamChunkHook_Disabled(t *testing.T) {
+	cfg := &Config{
+		LoopDetection: &LoopDetectorConfig{Enabled: false},
+	}
+	p2, _ := Init(cfg, noopLogger{})
+
+	ctx := newBifrostContext()
+	ctx.SetValue(schemas.BifrostContextKeyRequestID, "test-req-3")
+
+	for i := 0; i < 20; i++ {
+		chunk := &schemas.BifrostStreamChunk{
+			BifrostChatResponse: &schemas.BifrostChatResponse{
+				Choices: []schemas.BifrostResponseChoice{{
+					ChatStreamResponseChoice: &schemas.ChatStreamResponseChoice{
+						Delta: &schemas.ChatStreamResponseChoiceDelta{
+							Content: ptr("loop "),
+						},
+					},
+				}},
+			},
+		}
+		out, err := p2.HTTPTransportStreamChunkHook(ctx, nil, chunk)
+		if err != nil {
+			t.Fatalf("unexpected error when disabled: %v", err)
+		}
+		if out != chunk {
+			t.Error("expected same chunk back when disabled")
+		}
+	}
+}
+
+func TestHTTPTransportStreamChunkHook_NoRequestID_Passthrough(t *testing.T) {
+	p := newTestPlugin(t)
+	ctx := newBifrostContext()
+
+	chunk := &schemas.BifrostStreamChunk{
+		BifrostChatResponse: &schemas.BifrostChatResponse{
+			Choices: []schemas.BifrostResponseChoice{{
+				ChatStreamResponseChoice: &schemas.ChatStreamResponseChoice{
+					Delta: &schemas.ChatStreamResponseChoiceDelta{
+						Content: ptr("hello "),
+					},
+				},
+			}},
+		},
+	}
+	out, err := p.HTTPTransportStreamChunkHook(ctx, nil, chunk)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+	if out != chunk {
+		t.Error("expected same chunk back")
+	}
+}
+
+func TestHTTPTransportStreamChunkHook_ToolCallLoop(t *testing.T) {
+	// Явно включаем loop detection
+	p, err := Init(&Config{
+		LoopDetection: &LoopDetectorConfig{
+			Enabled:            true,
+			MaxToolCallRepeats: 5,
+		},
+	}, noopLogger{})
+	if err != nil {
+		t.Fatalf("Init: %v", err)
+	}
+	t.Cleanup(func() { _ = p.Cleanup() })
+
+	ctx := newBifrostContext()
+	ctx.SetValue(schemas.BifrostContextKeyRequestID, "test-req-tc")
+
+	for i := 0; i < 5; i++ {
+		chunk := &schemas.BifrostStreamChunk{
+			BifrostChatResponse: &schemas.BifrostChatResponse{
+				Choices: []schemas.BifrostResponseChoice{{
+					ChatStreamResponseChoice: &schemas.ChatStreamResponseChoice{
+						Delta: &schemas.ChatStreamResponseChoiceDelta{
+							ToolCalls: []schemas.ChatAssistantMessageToolCall{{
+								Function: schemas.ChatAssistantMessageToolCallFunction{
+									Name: ptr("search"),
+								},
+							}},
+						},
+					},
+				}},
+			},
+		}
+		out, err := p.HTTPTransportStreamChunkHook(ctx, nil, chunk)
+		if i < 4 {
+			if err != nil {
+				t.Fatalf("unexpected error at call %d: %v", i, err)
+			}
+			if out != chunk {
+				t.Error("expected same chunk back")
+			}
+		} else {
+			if err == nil {
+				t.Fatal("expected error on tool call loop")
+			}
+			siErr, ok := err.(*schemas.StreamInterceptionError)
+			if !ok {
+				t.Fatalf("expected StreamInterceptionError, got %T", err)
+			}
+			if siErr.RetryWith == nil {
+				t.Fatal("expected RetryWith")
+			}
+		}
+	}
+}

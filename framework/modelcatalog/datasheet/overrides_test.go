@@ -3,7 +3,6 @@ package datasheet
 import (
 	"testing"
 
-	bifrost "github.com/grevinden/bifrost/core"
 	"github.com/grevinden/bifrost/core/schemas"
 	configstoreTables "github.com/grevinden/bifrost/framework/configstore/tables"
 	"github.com/stretchr/testify/assert"

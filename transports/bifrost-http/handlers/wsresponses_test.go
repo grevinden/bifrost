@@ -221,7 +221,7 @@ func TestCreateBifrostContextFromAuth_BlocksWebSocketHandshakeForwardedHeaders(t
 }
 
 func TestMergeWebSocketHeaders_ForwardedHeadersOverrideProviderHeadersAndPreserveValues(t *testing.T) {
-	ctx := schemas.NewBifrostContext(context.TODO, time.Time{})
+	ctx := schemas.NewBifrostContext(context.TODO(), time.Time{})
 	ctx.SetValue(schemas.BifrostContextKeyExtraHeaders, map[string][]string{
 		"originator":    {"my-test-client"},
 		"authorization": {"Bearer malicious"},

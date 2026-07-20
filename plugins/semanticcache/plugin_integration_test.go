@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	bifrost "github.com/grevinden/bifrost/core"
+
 	"github.com/grevinden/bifrost/core/schemas"
 )
 

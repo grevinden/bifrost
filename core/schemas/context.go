@@ -79,10 +79,14 @@ func NewBifrostContext(parent context.Context, deadline time.Time) *BifrostConte
 	// ReleasePluginScope is called, which can happen before a derived context's
 	// watchCancellation goroutine has finished observing parent.Deadline()/Done().
 	// Pointing the derived parent at the long-lived root avoids that race.
+	var inheritedPluginScope *string
 	for {
 		bc, ok := parent.(*BifrostContext)
 		if !ok || bc.valueDelegate == nil {
 			break
+		}
+		if inheritedPluginScope == nil && bc.pluginScope != nil {
+			inheritedPluginScope = bc.pluginScope
 		}
 		parent = bc.valueDelegate
 	}
@@ -93,6 +97,7 @@ func NewBifrostContext(parent context.Context, deadline time.Time) *BifrostConte
 		done:                  make(chan struct{}),
 		userValues:            make(map[any]any),
 		blockRestrictedWrites: atomic.Bool{},
+		pluginScope:           inheritedPluginScope,
 	}
 	ctx.blockRestrictedWrites.Store(false)
 	// Only start goroutine if there's something to watch:
@@ -676,6 +681,7 @@ func (bc *BifrostContext) ReleasePluginScope() {
 	if bc.valueDelegate == nil {
 		return // not a scoped context
 	}
+	bc.pluginScope = nil
 	bc.pluginLogs.Store(nil)
 }
 

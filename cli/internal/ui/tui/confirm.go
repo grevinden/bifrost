@@ -163,7 +163,7 @@ func (m confirmModel) View() string {
 		b.WriteString("\n")
 	}
 	b.WriteString("\n")
-	b.WriteString(yes + "  " + no)
+	fmt.Fprintf(&b, "%s  %s", yes, no)
 	b.WriteString("\n")
 	b.WriteString("enter: confirm, y/n quick choice, q: cancel")
 	return b.String()
@@ -205,8 +205,7 @@ func (m confirmModel) homeStyleView(yes, no string) string {
 	content.WriteString("\n\n")
 	content.WriteString(m.prompt)
 	content.WriteString("\n\n")
-	content.WriteString(yes + "  " + no)
-	content.WriteString("\n")
+	fmt.Fprintf(&content, "%s  %s\n", yes, no)
 	content.WriteString(hint.Render("enter: confirm  y/n: quick choice  q: cancel"))
 
 	popup := box.Render(content.String())

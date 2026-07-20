@@ -69,7 +69,7 @@ func BenchmarkSingleRequestTimeRateLimitResetDoesNotRefreshReferences(b *testing
 	ctx := context.Background()
 
 	b.ReportAllocs()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		store := newStandaloneStoreForResetBenchmark()
 		rateLimitID := seedResetBenchmarkVirtualKeys(ctx, store, resetBenchmarkVirtualKeys)
 		markRequestRateLimitExpired(store, rateLimitID)

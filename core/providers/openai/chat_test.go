@@ -98,7 +98,7 @@ func TestToOpenAIChatRequest_PreservesN(t *testing.T) {
 		},
 	}
 
-	out := ToOpenAIChatRequest(schemas.NewBifrostContext(context.TODO, schemas.NoDeadline), req)
+	out := ToOpenAIChatRequest(schemas.NewBifrostContext(context.TODO(), schemas.NoDeadline), req)
 	if out == nil {
 		t.Fatal("expected request")
 	}

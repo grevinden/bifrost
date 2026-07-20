@@ -427,7 +427,7 @@ func TestResolveVertexProjectID_AliasOverride(t *testing.T) {
 		t.Errorf("nil ctx: got %q, want key-level %q", got, keyProject)
 	}
 
-	ctx := schemas.NewBifrostContext(context.TODO, schemas.NoDeadline)
+	ctx := schemas.NewBifrostContext(context.TODO(), schemas.NoDeadline)
 	if got := resolveVertexProjectID(ctx, key); got != keyProject {
 		t.Errorf("empty ctx: got %q, want key-level %q", got, keyProject)
 	}

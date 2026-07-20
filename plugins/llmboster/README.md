@@ -1,6 +1,8 @@
-# llmboster — Плагин для пошагового мышления
+# llmboster — Плагин улучшения запросов (Query Booster + Loop Detection)
 
-Заставляет LLM думать шаг за шагом перед ответом. Превращает одиночный chat completion в **двухраундовый tool-calling loop**: модель сначала генерирует reasoning как вызов функции `think()`, затем получает свои собственные размышления обратно как `tool_result` и выдаёт финальный ответ, видя весь процесс своего мышления.
+Улучшает запросы пользователя перед отправкой LLM: автоматически нормализует контекст, отправляет sub-запрос к той же модели для «полировки» последнего сообщения (prompt refinement) и добавляет результат как developer message. Исходное сообщение пользователя всегда сохраняется (Option A).
+
+Дополнительно: обнаруживает зацикливание модели в стриминговых ответах по трём сигналам (n-gram, diversity, long suffix) + tool call loop и инициирует повтор с инструкцией «break loop».
 
 ---
 
@@ -13,317 +15,230 @@
       "enabled": true,
       "name": "llmboster",
       "config": {
-        "prompt": "Думай шаг за шагом, запиши свои рассуждения, затем дай окончательный ответ."
+        "max_completion_tokens": 1024,
+        "temperature": 0.3,
+        "frequency_penalty": 0.5,
+        "presence_penalty": 0.3,
+        "reasoning_effort": "none",
+        "loop_detection": {
+          "enabled": true,
+          "window_size": 96,
+          "ngram_sizes": [3, 5],
+          "max_ngram_repeats": 5,
+          "min_unique_ratio": 0.25,
+          "diversity_min_window": 40,
+          "long_match_len": 16,
+          "min_tokens_before": 24,
+          "max_tool_call_repeats": 5
+        }
       }
     }
   ]
 }
 ```
 
-| Поле | Значение по умолчанию | Описание |
-|------|----------------------|----------|
-| `prompt` | `"Думай шаг за шагом, запиши свои рассуждения, затем дай окончательный ответ."` | Промпт для пошагового мышления, добавляемый к system message. Можно задать любой текст — указывает LLM, как именно вести рассуждение. |
+### Параметры бустинга
+
+| Поле | По умолчанию | Описание |
+|------|-------------|----------|
+| `max_completion_tokens` | `1024` | Максимум токенов для sub-запроса |
+| `temperature` | `0.3` | Температура (низкая — более детерминированное улучшение) |
+| `frequency_penalty` | `0.5` | Штраф за частотность (чтобы не повторяться) |
+| `presence_penalty` | `0.3` | Штраф за присутствие тем |
+| `reasoning_effort` | `"none"` | Режим рассуждения (`"none"`, `"low"`, `"medium"`, `"high"`) |
+
+### Параметры loop detection
+
+| Поле | По умолчанию | Описание |
+|------|-------------|----------|
+| `enabled` | `false` | Включить детектор зацикливания |
+| `window_size` | `96` | Размер скользящего окна токенов (ring buffer) |
+| `ngram_sizes` | `[3, 5]` | Какие n-gram проверять на повторение |
+| `max_ngram_repeats` | `5` | Максимум повторов tail n-gram в окне |
+| `min_unique_ratio` | `0.25` | Минимальная доля уникальных токенов |
+| `diversity_min_window` | `40` | Минимум токенов до проверки diversity |
+| `long_match_len` | `16` | Длина суффикса для long suffix match |
+| `min_tokens_before` | `24` | Минимум токенов до начала проверок |
+| `max_tool_call_repeats` | `5` | Максимум повторений одного tool call подряд |
 
 ---
 
 ## Как это работает
 
-### Обзор: два раунда вместо одного
-
-Обычно: **ты спрашиваешь → модель отвечает**. llmboster превращает это в диалог с самим собой:
+### Две фазы
 
 ```
-Round 1: ты спрашиваешь → модель думает → клиент получает tool_calls(think)
-Round 2: клиент отправляет thought обратно как tool_result → модель отвечает, видя свои размышления
+        ╔═══════════════════════════════════════════════╗
+        ║           Клиент (HTTP / SDK)                  ║
+        ╚═══════════════════════════════════════════════╝
+                          │
+                          ▼
+        ╔═══════════════════════════════════════════════╗
+        ║         PreLLMHook (peред LLM call)            ║
+        ║                                                ║
+        ║  Phase 1: normalizeInput()                     ║
+        ║  ├── Объединить system-сообщения               ║
+        ║  └── Удалить пустые сообщения                  ║
+        ║                                                ║
+        ║  Phase 2: boostMessage()                       ║
+        ║  ├── Если последнее сообщение от user           ║
+        ║  ├── Отправить sub-запрос LLM:                 ║
+        ║  │   [system] Universal Prompt Architect       ║
+        ║  │   [user] original message                   ║
+        ║  │   [dev]   Refine this instruction...        ║
+        ║  └── Добавить результат как developer message   ║
+        ╚═══════════════════════════════════════════════╝
+                          │
+                          ▼
+        ┌─────────────────────────────────────────────────┐
+        │         Provider (OpenAI, Anthropic, ...)        │
+        │         LLM генерирует финальный ответ           │
+        └─────────────────────────────────────────────────┘
+                          │
+                          ▼ (SSE stream)
+        ╔═══════════════════════════════════════════════╗
+        ║   HTTPTransportStreamChunkHook (loop detect)   ║
+        ║                                                ║
+        ║  Для каждого чанка:                            ║
+        ║  ├── Signal 1: n-gram repetition              ║
+        ║  ├── Signal 2: diversity collapse             ║
+        ║  ├── Signal 3: long suffix match              ║
+        ║  └── Tool call loop detection                  ║
+        ║                                                ║
+        ║  Если loop → StreamInterceptionError           ║
+        ║               └── RetryWith: "break loop"      ║
+        ╚═══════════════════════════════════════════════╝
+                          │
+                          ▼
+                   Клиент (SSE)
 ```
 
-### Pipeline — шаг за шагом
+### PreLLMHook — пошагово
 
-#### Шаг 1: PreLLMHook — внедрение промпта для мышления (перед вызовом LLM)
+1. **Recursion guard**: если контекст уже содержит флаг `llmbosterRecursionGuard` (установлен при sub-запросе), возвращаем запрос без изменений — предотвращает бесконечную рекурсию.
 
-Хук перехватывает запрос **до того**, как он дойдёт до провайдера. Находит system message (или создаёт новый при отсутствии) и добавляет промпт для мышления вместе с уникальным маркером `<!-- llmboster:activated -->`. Маркер предотвращает двойное добавление при повторных попытках через fallback.
+2. **Phase 1 — normalizeInput**: 
+   - Все system-сообщения объединяются в одно в начале диалога
+   - Developer-сообщения остаются на своих позициях
+   - Пустые сообщения (nil/whitespace) удаляются
 
-Флаги контекста в BifrostContext:
-- `thinkMode = true` — "thinking phase is active"
-- `requestID` — tracks per-request state
-- `requestType` — streaming или non-streaming
+3. **Phase 2 — boost** (только если последнее сообщение от user):
+   - Собирается sub-запрос: `[system prompt] + [история чата без system] + [developer instruction]`
+   - **System prompt**: плагин встраивает промпт «Universal Context Architect & Prompt Synthesizer», который динамически адаптируется к любой теме
+   - **Developer instruction**: чёткая инструкция «Refine the user's raw input into a single cleaned English instruction»
+   - Вызывается `ChatCompletionRequest` (синхронно) к той же модели
+   - Извлечение ответа с fallback:
+     1. `Content.ContentStr` — обычный текст
+     2. `ChatAssistantMessage.Reasoning` — для DeepSeek, OpenAI o-series, xAI Grok
+   - Результат добавляется в конец Input как `developer`-сообщение
 
-**Проверки защиты (Guard checks):**
-- Требуется корректный `RequestID` — отказ от активации при его отсутствии
-- Пропускает многооборотные запросы (сообщения tool уже есть в истории) — это Round 2, плагин должен быть выключен
-- Удаляет пустые сообщения из входных данных
-- Обрабатывает только запросы chat completion (streaming или non-streaming)
+**Важно**: исходное сообщение пользователя **всегда сохраняется** — улучшенная версия только дополняет его.
 
-#### Шаг 2: LLM генерирует ответ с рассуждением
+### HTTPTransportStreamChunkHook — Loop Detection
 
-Модель получает измененный системный промпт и генерирует рассуждение + ответ в виде обычного текста. Пример вывода:
+Детектор анализирует каждый чанк SSE-стрима. Используется per-stream состояние (ключ — `requestID`), которое автоматически чистится при повторном запросе.
 
-> «Сначала нужно посчитать X... потом Y... значит ответ Z»
+#### Сигнал 1: N-gram Loop
+Хвостовые n токенов (по умолчанию n=3 и n=5) сравниваются со всеми предыдущими n-gram в окне. Если хвост повторился ≥ `max_ngram_repeats` раз (не считая текущего) — loop.
 
-#### Шаг 3: Перехват ответа — маскировка под вызов функции (tool call)
+**Пример детекции:**
+```
+Токены: "a", "b", "c", "a", "b", "c", "a", "b", "c", ...
+n=3, tail=["a","b","c"], repeats=2 → trigger
+```
 
-Плагин **не передаёт** этот текст клиенту напрямую. Он заменяет ответ структурой `tool_calls`.
+#### Сигнал 2: Diversity Collapse
+Считается `len(unique_tokens) / window_size`. Если отношение падает ниже `min_unique_ratio` — модель зациклилась на одних и тех же токенах.
 
-**Поток streaming:** `HTTPTransportStreamChunkHook` действует как аккумулятор. Каждый chunk — это часть текста. Плагин собирает их в буфер (`strings.Builder`, макс. 100 КБ). Когда приходит последний chunk с `finish_reason = "stop"`, он формирует заменяющий chunk:
+**Пример:** 40 токенов, из них только 4 уникальных → ratio = 0.10 < 0.25 → trigger.
+
+#### Сигнал 3: Long Suffix Match
+Хвостовые `long_match_len` токенов сравниваются со всеми более ранними позициями в окне. Если идентичный суффикс найден — модель повторяет блок текста.
+
+#### Tool Call Loop
+Отслеживаются повторяющиеся вызовы одного и того же инструмента подряд. Если один tool вызван ≥ `max_tool_call_repeats` раз последовательно — loop.
+
+**Обработка code blocks:** контент внутри ``` игнорируется детектором (не добавляется в окно), чтобы повторяющийся код не вызывал ложных срабатываний. SSE может отправлять ` ``` ` как три отдельных символа — это корректно обрабатывается.
+
+#### Retry механизм
+При детекции зацикливания:
+1. Текущий стрим отменяется и дренируется
+2. В `inference.go` создаётся новый стрим с тем же `requestID`
+3. К исходным сообщениям добавляется developer-сообщение: *«The previous response was repetitive... Please provide a concise, non-repetitive answer»*
+4. Новый стрим проходит те же plugin-хуки
+5. **Вторичное зацикливание** не retry-ится — ошибка возвращается клиенту
+
+---
+
+## Пример: полный цикл запроса
+
+**Исходный запрос:**
+```
+[
+  {role: "system", content: "You are a helpful assistant"},
+  {role: "user",   content: "make it scale"}
+]
+```
+
+**После `normalizeInput`:** без изменений (уже канонический).
+
+**Sub-запрос `boostMessage`:**
+```
+[
+  {role: "system",   content: "You are the Universal Context Architect..."},
+  {role: "user",     content: "make it scale"},
+  {role: "developer", content: "Refine the user's raw input into..."}
+]
+```
+
+**Ответ LLM на sub-запрос:**
+> Act as a Principal Cloud Architect. Analyze the system architecture... provide a scalable, cloud-native refactoring strategy...
+
+**Итоговый запрос к провайдеру:**
+```
+[
+  {role: "system",   content: "You are a helpful assistant"},
+  {role: "user",     content: "make it scale"},
+  {role: "developer", content: "Act as a Principal Cloud Architect..."}
+]
+```
+
+Модель получает исходный запрос + улучшенную версию как developer message.
+
+---
+
+## Сценарии пропуска (No-Op)
+
+| Условие | Поведение |
+|---------|-----------|
+| Recursion guard в контексте | Пропуск — предотвращает бесконечную рекурсию sub-запроса |
+| `req == nil` или `ChatRequest == nil` | Пропуск |
+| Пустой `Input` | Пропуск |
+| Последнее сообщение не от user | Пропуск (например, assistant отвечает на предыдущий) |
+| `client == nil` (нет BifrostClient) | Бустинг не выполняется |
+| Ошибка sub-запроса | Логируется, исходный запрос без изменений |
+| Пустой ответ от бустера | Исходный запрос без изменений |
+
+---
+
+## Пример: минимальная конфигурация
 
 ```json
 {
-  "object": "chat.completion.chunk",
-  "choices": [
+  "plugins": [
     {
-      "index": 0,
-      "finish_reason": "tool_calls",
-      "delta": {
-        "role": "assistant",
-        "tool_calls": [{
-          "index": 0,
-          "id": "think_req-abc123",
-          "type": "function",
-          "function": {
-            "name": "think",
-            "arguments": "{\"thought\": \"Сначала нужно посчитать X... потом Y...\"}"
-          }
-        }]
-      }
+      "enabled": true,
+      "name": "llmboster"
     }
-  ],
-  "usage": null
+  ]
 }
 ```
 
-**Нестримовый путь (non-streaming):** `PostLLMHook` выполняет ту же задачу один раз — берёт полный ответ и заменяет его:
-
-```json
-{
-  "id": "chatcmpl-abc123",
-  "object": "chat.completion",
-  "choices": [{
-    "index": 0,
-    "finish_reason": "tool_calls",
-    "message": {
-      "role": "assistant",
-      "tool_calls": [{
-        "id": "think_req-abc123",
-        "type": "function",
-        "function": {
-          "name": "think",
-          "arguments": "{\"thought\": \"Сначала нужно посчитать X... потом Y...\"}"
-        }
-      }]
-    }
-  }],
-  "usage": {"prompt_tokens": 50, "completion_tokens": 120}
-}
-```
-
-Клиентский SDK (OpenAI, Anthropic и т.д.) видит `tool_calls` и думает: «модель вызвала функцию think». SDK автоматически извлекает `thought` из аргументов.
-
-#### Шаг 4: Клиент отправляет размышление обратно как tool_result
-
-SDK берёт извлечённое размышление и отправляет его обратно как **сообщение результата функции (tool result)**:
-
-```json
-{
-  "model": "gpt-4o",
-  "messages": [
-    {"role": "user", "content": "Сколько будет 2 + 2?"},
-    {
-      "role": "assistant",
-      "tool_calls": [{
-        "id": "think_req-abc123",
-        "type": "function",
-        "function": {"name": "think"}
-      }]
-    },
-    {
-      "role": "tool",
-      "tool_call_id": "think_req-abc123",
-      "content": "Сначала нужно посчитать X... потом Y... значит ответ Z"
-    }
-  ],
-  "stream": true
-}
-```
-
-#### Шаг 5: PreLLMHook — пропуск (защита от многооборотных запросов)
-
-Хук проверяет историю диалога. Обнаружив сообщение с `role = "tool"`, `isMultiturnRequest()` возвращает `true`. Плагин **пропускается** — промпт не модифицируется, флаг thinkMode не устанавливается. Размышление уже присутствует в истории диалога и доступно LLM.
-
-#### Шаг 6: LLM формирует окончательный ответ
-
-Модель получает запрос с размышлениями в контексте (в виде результата функции). Она читает свои же мысли и формирует чистый, обоснованный ответ: «4».
-
-Хуки проходят транзитом без изменений — `thinkMode` не установлен. Клиент получает обычный ответ с `finish_reason = "stop"` и контентом «4».
+Без явной конфигурации используются все defaults. Loop detection выключен (`loop_detection.enabled: false`).
 
 ---
 
-## Полная трассировка запроса
-
-### Round 1 — Thinking Phase (Streaming)
-
-```
-Client POST /v1/chat/completions
-{
-  "model": "lmstudio-local",
-  "messages": [{"role": "user", "content": "Сколько будет 2 + 2?"}],
-  "stream": true
-}
-
-  → PreLLMHook: modifies system prompt
-    input becomes:
-    [
-      {"role": "system", "content": "You are a helpful assistant\n\nThink step by step, write down your reasoning, then give a final answer.\n\n<!-- llmboster:activated -->"},
-      {"role": "user", "content": "Сколько будет 2 + 2?"}
-    ]
-
-  → OpenAI API call (LMStudio at http://127.0.0.1:1234)
-    → LLM generates streaming chunks:
-       chunk 1: {"delta": {"content": "Сначала"}}
-       chunk 2: {"delta": {"content": " нужно посчитать"}}
-       chunk 3: {"delta": {"content": " X... потом Y..."}}
-       chunk N: {"finish_reason": "stop", "delta": {"content": " значит ответ Z"}}
-
-    → HTTPTransportStreamChunkHook(chunk 1): accumulate "Сначала" в buffer
-    → HTTPTransportStreamChunkHook(chunk 2): accumulate " нужно посчитать" в buffer
-    → HTTPTransportStreamChunkHook(chunk N, finish_reason="stop"):
-      → read thought из buffer: "Сначала нужно посчитать X... потом Y... значит ответ Z"
-      → truncate to 4KB max (if needed)
-      → build replacement chunk с tool_calls(think):
-
-        {
-          "object": "chat.completion.chunk",
-          "choices": [{
-            "finish_reason": "tool_calls",
-            "delta": {
-              "tool_calls": [{
-                "id": "think_req-abc123",
-                "function": {"name": "think", "arguments": "{\"thought\": \"Сначала нужно посчитать X...\"}"}
-              }]
-            }
-          }]
-        }
-
-      → delete buffer из thinkTracker
-
-Client receives: tool_calls(think) с accumulated thought
-```
-
-### Round 2 — Final Answer Phase
-
-```
-Client POST /v1/chat/completions (auto-sent by SDK)
-{
-  "model": "lmstudio-local",
-  "messages": [
-    {"role": "user", "content": "Сколько будет 2 + 2?"},
-    {
-      "role": "assistant",
-      "tool_calls": [{
-        "id": "think_req-abc123",
-        "type": "function",
-        "function": {"name": "think"}
-      }]
-    },
-    {
-      "role": "tool",
-      "tool_call_id": "think_req-abc123",
-      "content": "Сначала нужно посчитать X... потом Y... значит ответ Z"
-    }
-  ],
-  "stream": true
-}
-
-  → PreLLMHook: SKIP (tool message detected в history)
-    input unchanged — reasoning already visible to LLM
-
-  → OpenAI API call (LMStudio)
-    → LLM видит размышления в контексте → генерирует окончательный ответ:
-       chunk 1: {"delta": {"content": "4"}}
-       chunk N: {"finish_reason": "stop"}
-
-    → HTTPTransportStreamChunkHook: thinkMode=false → passthrough unchanged
-
-Client receives: {finish_reason: "stop", content: "4"} ✓
-```
-
----
-
-## Управление состоянием — thinkTracker
-
-Плагин отслеживает буферы для каждого запроса в `sync.Map`:
-
-```go
-thinkTracker sync.Map // key: RequestID (string), value: *chunkBuffer
-
-type chunkBuffer struct {
-    mu        sync.Mutex       // thread-safe access
-    content   strings.Builder  // accumulated thought text
-    closed    bool             // true after consumed — prevents double-processing
-    createdAt time.Time      // for TTL cleanup
-}
-```
-
-**Механизмы очистки:**
-- **Фоновая горутина**: запускается каждые 30 секунд, очищает устаревшие буферы (TTL > 5 минут)
-- **HTTPTransportPostHook**: очищает сиротские буферы, когда поток прерван без корректного `finish_reason` (например, обрыв соединения до получения первого чанка)
-
----
-
-## Проверки защиты (Guard Checks) — предотвращение ошибок
-
-| Guard | Purpose | Code Location |
-|-------|---------|---------------|
-| **Проверка RequestID** | Без валидного `RequestID` плагин отказывается активироваться. Как «нет билета — нет входа» | `PreLLMHook` → `extractRequestID()` |
-| **Обнаружение многооборотности** | Round 2 — плагин автоматически отключается при обнаружении tool-сообщений в истории | `PreLLMHook` → `isMultiturnRequest()` |
-| **thinkPromptMarker** | Предотвращает двойное добавление при повторных попытках через fallback. Маркер `<!-- llmboster:activated -->` — если уже присутствует, модификация пропускается | `modifySystemPrompt()` → `containsThinkingPrompt()` |
-| **buffer.closed** | Последний чанк обрабатывается ровно один раз. Если буфер уже потреблён (путь retry), пропуск | `HTTPTransportStreamChunkHook` |
-| **maxThoughtLength = 4 КБ** | Размышление обрезается, если слишком длинное. Предотвращает избыточный размер аргументов tool_call | `truncateThought()` |
-| **maxBufferSize = 100 КБ** | Ограничивает накопленный буфер streaming на один запрос. Профилактика утечек памяти | Структура `chunkBuffer` |
-
----
-
-## Сценарии пропуска плагина (No-Op Cases)
-
-Плагин ничего не делает в этих сценариях:
-
-1. **Не чат-запросы** — embeddings, изображения, текстовые completions
-2. **Отсутствует RequestID** — невозможно отслеживать состояние без него
-3. **Многооборотные диалоги** — сообщения инструментов уже есть в истории (Round 2)
-4. **Пустой ввод** — нет сообщений для обработки
-5. **Последнее сообщение не от пользователя** — сообщения assistant/tool в конце
-6. **finish_reason ≠ "stop"** — модель уже создала tool_calls или достигнут лимит длины
-7. **Ответ уже содержит tool_calls** — нечего заменять
-8. **Ошибка в ответе** — пропуск без изменений
-
----
-
-## Сводка по хукам плагина
-
-| Hook | Interface | When Called | What It Does |
-|------|-----------|-------------|--------------|
-| `PreLLMHook` | `LLMPlugin` | Перед вызовом провайдера LLM | Внедряет промпт для мышления в system message, устанавливает флаги контекста |
-| `PostLLMHook` | `LLMPlugin` | После нестримового ответа | Заменяет текстовый ответ структурой `tool_calls(think)` |
-| `HTTPTransportStreamChunkHook` | `HTTPTransportPlugin` | На каждый чанк потока | Накопление чанков в буфер, замена последнего чанка на `tool_calls(think)` |
-| `HTTPTransportPostHook` | `HTTPTransportPlugin` | После HTTP-ответа (stream или нет) | Очистка сиротских буферов от прерванных потоков |
-
----
-
-## Параметры ограничений и настройки
-
-Эти константы захардкожены в плагине:
-
-| Constant | Value | Description |
-|----------|-------|-------------|
-| `maxBufferSize` | 100 КБ | Максимальный накопленный объём размышлений для одного streaming-запроса |
-| `maxThoughtLength` | 4 КБ | Максимальная длина размышления в аргументах tool_call (обрезается после этого предела) |
-| `bufferTTL` | 5 минут | Порог устаревания буфера для очистки |
-| `cleanupInterval` | 30 секунд | Частота работы фоновой горутины по очистке |
-
----
-
-## Пример: Пользовательский промпт (Custom Prompt)
-
-Вы можете изменить промпт для размышлений, чтобы он соответствовал вашему сценарию использования:
+## Пример: бустинг + loop detection
 
 ```json
 {
@@ -332,222 +247,39 @@ type chunkBuffer struct {
       "enabled": true,
       "name": "llmboster",
       "config": {
-        "prompt": "Please reason carefully before answering. Show your step-by-step thinking, then provide a concise final answer."
+        "temperature": 0.2,
+        "reasoning_effort": "low",
+        "loop_detection": {
+          "enabled": true,
+          "max_ngram_repeats": 8,
+          "max_tool_call_repeats": 10
+        }
       }
     }
   ]
 }
 ```
 
-Модель будет следовать вашей пользовательской инструкции вместо стандартной. Маркер `<!-- llmboster:activated -->` всегда добавляется **после** вашего промпта — включать его вручную не нужно.
+---
+
+## Сводка по хукам
+
+| Хук | Назначение |
+|-----|-----------|
+| `PreRequestHook` | No-op (не участвует в маршрутизации) |
+| `PreLLMHook` | Нормализация + бустинг запроса |
+| `PostLLMHook` | No-op (ответ не модифицируется) |
+| `HTTPTransportPreHook` | No-op |
+| `HTTPTransportPostHook` | No-op |
+| `HTTPTransportStreamChunkHook` | Loop detection + RetryWith |
 
 ---
 
-## Пример: Нестримовый запрос (Non-Streaming)
+## Защита от рекурсии
 
-Для нестримовых запросов процесс проще — один ответ, одна замена:
+`boostMessage` перед sub-запросом устанавливает в `BifrostContext` кастомный ключ `llmbusterRecursionGuard{}`. Когда sub-запрос проходит через тот же пайплайн, `PreLLMHook` видит этот ключ и возвращает запрос без изменений, не пытаясь бустить его снова.
 
-```
-Client POST /v1/chat/completions (stream: false)
-{
-  "model": "lmstudio-local",
-  "messages": [{"role": "user", "content": "Explain quantum entanglement"}]
-}
-
-  → PreLLMHook: inject thinking prompt
-  → LLM generates full response: "Quantum entanglement is a phenomenon where..."
-
-  → PostLLMHook: replaces с tool_calls(think):
-    {
-      "finish_reason": "tool_calls",
-      "message": {
-        "role": "assistant",
-        "tool_calls": [{
-          "function": {"name": "think", "arguments": "{\"thought\": \"Quantum entanglement is...\"}"}
-        }]
-      }
-    }
-
-Client receives tool_calls → SDK sends tool_result → Round 2 → final answer
-```
-
----
-
-## Пример: Защита при повторных попытках через fallback
-
-Если primary provider fails и Bifrost retries с fallback, marker prevents double prompt injection:
-
-```
-Round 1 attempt 1 (provider A):
-  PreLLMHook: appends prompt + <!-- llmboster:activated -->
-  Провайдер A не отвечает → ошибка
-
-Round 1 attempt 2 (provider B — fallback):
-  PreLLMHook: checks containsThinkingPrompt() → marker found → SKIP modification
-  Prompt unchanged, thinkMode уже установлен от первого запроса
-  Provider B succeeds → response processed normally
-```
-
----
-
-## Пример: Диалог без системного сообщения
-
-Если клиент не отправляет системное сообщение, llmboster создаёт его в начале:
-
-```
-Client input (no system message):
-[{"role": "user", "content": "What is the capital of France?"}]
-
-  → PreLLMHook: modifySystemPrompt() — systemIdx = -1 (not found)
-    Creates new system message и prepends it:
-    [
-      {"role": "system", "content": "Think step by step, write down your reasoning, then give a final answer.\n\n<!-- llmboster:activated -->"},
-      {"role": "user", "content": "What is the capital of France?"}
-    ]
-```
-
----
-
-## Пример: Диалог с блоками контента (Content Blocks)
-
-Если системное сообщение использует блоки контента (текст + изображения), llmboster находит первый текстовый блок и добавляет промпт в него:
-
-```
-Client input с content blocks:
-[
-  {"role": "system", "content": {
-    "content_blocks": [
-      {"type": "image", ...},
-      {"type": "text", "text": "Вы — полезный ассистент"}
-    ]
-  }},
-  {"role": "user", "content": "..."}
-]
-
-  → PreLLMHook: finds text block at index 1, appends prompt to it:
-    content_blocks[1].text = "Вы — полезный ассистент\n\nДумай шаг за шагом..."
-```
-
----
-
-## Пример: Модель естественно генерирует Tool Calls
-
-Если модель естественно генерирует вызовы функций (не от llmboster), плагин пропускает обработку:
-
-```
-LLM response с natural tool_calls:
-{
-  "finish_reason": "tool_calls",
-  "message": {
-    "role": "assistant",
-    "tool_calls": [{
-      "function": {"name": "search"},
-      ...
-    }]
-  }
-}
-
-  → PostLLMHook: checks len(tool_calls) > 0 → SKIP (already has tool calls)
-  → Response passthrough unchanged
-```
-
----
-
-## Пример: Прерывание потока без корректного завершения (Clean Finish)
-
-Если соединение прерывается до завершения потока, буфер становится сиротским:
-
-```
-Streaming chunks received:
-chunk 1: {"delta": {"content": "Let me"}}
-chunk 2: {"delta": {"content": " think"}}
-→ Connection dropped (no finish_reason chunk)
-
-  → HTTPTransportPostHook: checks thinkTracker для reqID
-    buf.closed = false → isOrphan = true
-    → thinkTracker.Delete(reqID) — cleans up orphaned buffer
-```
-
----
-
-## Схема архитектуры
-
-```
-┌───────────┐     ┌──────────────┐     ┌─────────┐     ┌──────────┐
-│  Client   │────▶│   Bifrost    │────▶│   LLM   │────▶│ Provider │
-│           │◀────│              │◀────│         │◀────│          │
-└───────────┘     └──────────────┘     └─────────┘     └──────────┘
-                    │                  │
-                    │ PreLLMHook       │ HTTPTransportStreamChunkHook / PostLLMHook (маскировка под tool_calls)
-                    │ ▼                │ ▼
-                    │ внедрение промпта | маскировка под tool_calls(think)
-                    │ set thinkMode    │ accumulate chunks → replace last
-                    └──────────────────┘
-
-Round 2:
-┌───────────┐     ┌──────────────┐     ┌─────────┐
-│  Client   │────▶│   Bifrost    │────▶│   LLM   │
-│           │◀────│              │◀────│         │
-└───────────┘     └──────────────┘     └─────────┘
-                    │ PreLLMHook SKIP (multi-turn guard)
-                    │ PostLLMHook/StreamChunkHook passthrough (thinkMode=false)
-```
-
----
-
-## Ключевые архитектурные решения
-
-1. **Использование tool_calls в качестве транспорта** — llmboster использует стандартный механизм вызова функций, поддерживаемый всеми современными LLM. Специальные возможности модели не требуются. Функция `think()` чисто синтетическая — она существует только для передачи текста рассуждения от Round 1 к Round 2.
-
-2. **Замена ответа, а не мутация** — `PostLLMHook` создаёт полностью новый объект ответа вместо изменения исходного. Это предотвращает побочные эффекты в других хуках (логирование, управление доступом), которые могли уже обработать оригинальный ответ.
-
-3. **Флаги контекста для хранения состояния** — `thinkMode` хранится в `BifrostContext` как пользовательский ключ (`llmboster-think-mode`). В отличие от стандартных Go-контекстов, BifrostContext поддерживает потокобезопасные изменяемые значения, устанавливаемые после создания. Это позволяет хукам на разных этапах (PreLLMHook → StreamChunkHook → PostLLMHook) обмениваться состоянием без передачи объектов между ними.
-
-4. **Двухраундовый цикл, управляемый клиентом** — llmboster не управляет многооборотным диалогом самостоятельно. Он преобразует вывод Round 1 в формат, который клиентский SDK автоматически конвертирует во входные данные для Round 2. Плагин пассивен на Round 2 — он лишь обнаруживает и отключается.
-
-5. **Не требует файла `.so`** — llmboster является встроенным (статическим) плагином, загружаемым напрямую из Go-кода через `loadBuiltinPlugin`. Распространяется вместе с бинарником Bifrost. Динамическая загрузка и разделяемые объекты не используются.
-
----
-
-## Устранение неполадок (Troubleshooting)
-
-### Модель не генерирует рассуждения
-
-| Symptom | Cause | Fix |
-|---------|-------|-----|
-| Round 1 возвращает обычный ответ без `tool_calls` | Модель игнорирует промпт для мышления (слабые модели) | Попробуйте более мощную модель — GPT-4o, Claude Sonnet и т.д. Слабые модели пропускают синтетические инструкции. |
-| Код завершения равен `"length"` вместо `"stop"` | Ответ достиг лимита токенов до завершения размышления | Увеличьте `max_tokens` в конфигурации запроса. Длинные рассуждения требуют больше бюджета токенов. |
-| Размышление состоит из одного слова | Модель едва пытается рассуждать | Проверьте system message — llmboster добавляет промпт после существующего контента. Если система пуста, создаётся новый (см. «Диалог без системного сообщения»). |
-
-### Client SDK не отправляет Round 2
-
-| Symptom | Cause | Fix |
-|---------|-------|-----|
-| К Bifrost отправляется только один запрос, второй не приходит | SDK не поддерживает вызовы функций (устаревшая версия) | Обновите SDK до версии с поддержкой tool-calling. OpenAI ≥ 1.0.0, Anthropic ≥ 0.7.0. |
-| Round 2 отправляется без сообщения `tool` в истории | SDK извлекает размышление, но не отправляет его обратно | Проверьте конфигурацию SDK — некоторые требуют явного указания `tool_choice: "auto"` или `"required"`. |
-| Round 2 приходит, но llmboster всё ещё модифицирует промпт | Защита от многооборотности не сработала | Убедитесь, что сообщение `role: "tool"` присутствует. Некоторые SDK отправляют `role: "function"` вместо этого — проверьте сырой запрос в логах. |
-
-### Проблемы с памятью / производительностью
-
-| Symptom | Cause | Fix |
-|---------|-------|-----|
-| Высокое потребление памяти при множественных streaming-запросах | Сиротские буферы от обрывов соединений | Фоновая горутина очищает каждые 30 секунд (TTL = 5 мин). Если скачки сохраняются, проверьте стабильность соединения. |
-| Размышление обрезается до 4 КБ | Предел `maxThoughtLength` | В настоящее время захардкожено. При обрезке сохраняется первые 4 КБ — рассуждение обычно завершается раньше этого предела. |
-
-### Советы по отладке
-
-**Включите отладочное логирование Bifrost**, чтобы увидеть активность llmboster:
-```bash
-export LOG_LEVEL=debug
-# or in config.json:
-{ "log_level": "debug" }
-```
-
-Ищите следующие паттерны в логах:
-- `llmboster: thinking prompt injected` — Round 1 активирован
-- `llmboster: multi-turn detected, skipping` — сработала защита от многооборотности (Round 2)
-- `llmboster: thought accumulated (${len} bytes), replacing with tool_calls` — произошла маскировка под tool_calls
-- `llmboster: orphaned buffer cleaned for reqID=${id}` — запущена очистка сиротского буфера
+**Почему не используется штатный plugin scope:** Bifrost оборачивает контекст в plugin scope при каждом вызове плагина — это происходит для всех плагинов, не только при рекурсии. Свой ключ позволяет точно отличить рекурсивный вызов от обычного.
 
 ---
 
@@ -555,55 +287,100 @@ export LOG_LEVEL=debug
 
 ### Юнит-тесты
 
+`main_test.go` (28 тестов):
+
+| Группа | Тесты |
+|--------|-------|
+| Init / Cleanup | `TestInit`, `TestCleanupIdempotent` |
+| Embedded prompt | `TestEmbeddedPromptNotEmpty` |
+| isEmptyMessage | 5 кейсов (nil, empty, whitespace, non-empty, content blocks) |
+| PreLLMHook | nil request, no chat, empty input, all empty, last not user, preserves, no system, multiple systems, empty filtering |
+| normalizeInput | systems in middle, at end, empty skipped, whitespace-only |
+| Multimodal | no client, with text boost |
+| boostMessage | reasoning fallback, text preferred, empty response |
+| System filtering | user system excluded, multiple systems filtered |
+| Recursion guard | `TestPreLLMHook_RecursiveSubRequest_ReturnsUnchanged` |
+| Interface compliance | 3 интерфейса |
+| Stream chunk hook | loop detected (RetryWith), no loop, disabled, no requestID, tool call loop |
+
+`loopdetector_test.go` (15 тестов):
+
+| Группа | Тесты |
+|--------|-------|
+| Core signals | disabled, min tokens, n-gram loop, diversity collapse, long suffix |
+| False positives | normal text |
+| Code blocks | ` ``` ` in one chunk, per-character ` `` ` across chunks |
+| Tool calls | repeated same tool, alternating tools |
+| Config | defaults, partial config, all-zero disabled |
+| Cleanup | Reset, ResetStream |
+
+### Интеграционные тесты
+
+Полноценное тестирование с живой LLM:
 ```bash
-# Run all llmboster tests
-cd plugins/llmboster && go test ./... -v
-
-# Run specific test
-go test -run TestPreLLMHookInjectPrompt -v
-
-# With coverage
-go test -cover -v ./...
-```
-
-### Интеграционные тесты (с живой LLM)
-
-```bash
-# Via Makefile — tests against real provider
-make test-core PROVIDER=openai TESTCASE=TestLlmbosterStreaming
-
-# Debug mode with Delve
-make test-core PROVIDER=openai TESTCASE=TestLlmbosterNonStreaming DEBUG=1
+make test-core PROVIDER=openai TESTCASE=TestLlmboster
 ```
 
 ### Ручное тестирование
 
-**Шаг 1:** Включите плагин в config.json:
-```json
-{
-  "plugins": [
-    {
-      "enabled": true,
-      "name": "llmboster",
-      "config": {
-        "prompt": "Думай шаг за шагом перед ответом."
-      }
-    }
-  ]
-}
-```
+Через HTTP (cURL):
 
-**Шаг 2:** Отправьте стриминговый запрос:
 ```bash
 curl -X POST http://localhost:8080/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -d '{"model": "gpt-4o", "messages": [{"role": "user", "content": "What is 15 * 23 + 7?"}], "stream": true}'
+  -H "x-bf-api-key: <key>" \
+  -d '{
+    "model": "gpt-4o",
+    "messages": [
+      {"role": "system", "content": "You are a helpful assistant."},
+      {"role": "user", "content": "make it scale"}
+    ],
+    "stream": true
+  }'
 ```
 
-**Ожидаемый вывод (Раунд 1):** Вы должны увидеть один чанк с finish_reason: "tool_calls" и вызов функции think(), содержащий рассуждения модели.
+Для проверки loop detection можно смоделировать зацикливание (в тестах).
 
-**Шаг 3:** SDK должен автоматически отправить Раунд 2. Убедитесь, что финальный ответ приходит с finish_reason: "stop".
-```
+---
 
-I've translated all the English parts into Russian and reconstructed the file content. I will now write it back to `plugins/llmboster/README.md`.
-<channel|><|tool_call>call:create_new_file{overwrite:true,pathInProject:
+## Устранение неполадок
+
+### Бустер не срабатывает
+- Проверьте, что последнее сообщение — от user (не assistant)
+- Проверьте, что клиент Bifrost передаётся через `SetBifrostClient`
+- Проверьте логи: `llmboster: boost returned empty` / `llmboster: boost sub-request failed`
+- Если контекст содержит `llmbosterRecursionGuard` — это нормально, это sub-запрос
+
+### Loop detection не срабатывает
+- Убедитесь, что `loop_detection.enabled: true` (по умолчанию false)
+- Проверьте, что в контексте есть `requestID`
+- Для коротких ответов уменьшите `min_tokens_before`
+- Для редких повторений уменьшите `max_ngram_repeats` или увеличьте `window_size`
+
+### Ложные срабатывания loop detection
+- Увеличьте `max_ngram_repeats` (реальные повторения — редко > 10)
+- Увеличьте `min_unique_ratio` (0.30-0.35)
+- Проверьте, не открыт ли code block (` ``` `) — детектор должен его игнорировать
+- Добавьте `ngram_sizes: [4, 6]` — большие n-gram меньше подвержены ложным совпадениям
+
+### Производительность
+- Loop detection работает O(n*m) где n — window_size, m — число ngram_sizes, обычно < 500 операций на чанк
+- Ring buffer pre-allocated, без аллокаций в hot path (кроме первой аллокации на поток)
+- Per-stream состояние автоматически чистится через `ResetStream` при retry
+- При отключённом детекторе (`enabled: false`) оверхэда нет
+
+---
+
+## Ключевые архитектурные решения
+
+1. **Sub-запрос через тот же BifrostClient** — бустер использует тот же экземпляр клиента, что и основной запрос, поэтому проходит через те же плагины, fallback-логику и governance. Recursion guard предотвращает повторную обработку.
+
+2. **Original user message всегда сохраняется** — улучшенная версия добавляется как developer message, не заменяя исходную. LLM видит обе и может выбрать лучшую.
+
+3. **Ring buffer для токенов** — O(1) добавление, pre-allocated буфер, zero-alloc в hot path после первой инициализации.
+
+4. **Code block awareness** — контент внутри ``` не попадает в детектор, предотвращая ложные срабатывания на повторяющемся коде. Поддержка SSE (по символам) реализована через character-by-character подсчёт backtickRun.
+
+5. **Latching trigger** — после первого срабатывания детектор всегда возвращает triggered=true для этого requestID, пока не будет вызван ResetStream.
+
+6. **Retry с тем же requestID** — после loop stream отменяется, но новый стрим использует тот же requestID. ResetStream гарантирует, что детектор начнёт с чистого листа.

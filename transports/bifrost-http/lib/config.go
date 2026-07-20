@@ -3596,7 +3596,11 @@ func mergePlugins(ctx context.Context, config *Config, configData *ConfigData) {
 					existingVersion = *existingPlugin.Version
 				}
 				placementChanged := !placementEqual(existingPlugin.Placement, plugin.Placement) || !orderEqual(existingPlugin.Order, plugin.Order)
-				if *plugin.Version > existingVersion || placementChanged {
+				// config.json always takes precedence over DB for plugin configuration.
+				// When versions are equal (or file version is higher), file wins.
+				// This ensures that editing config.json always takes effect on restart,
+				// regardless of any cached state in the config store.
+				if *plugin.Version >= existingVersion || placementChanged {
 					logger.Debug("replacing plugin %s (version %d→%d, placementChanged=%v)", plugin.Name, existingVersion, *plugin.Version, placementChanged)
 					config.PluginConfigs[existingIdx] = plugin
 				}

@@ -828,7 +828,7 @@ func (m chooserModel) View() string {
 				nameStyle = lipgloss.NewStyle().Bold(true)
 				valueStyle = lipgloss.NewStyle().Bold(true)
 			}
-			body.WriteString(cursor + nameStyle.Render(fmt.Sprintf("%-12s", name)) + " " + valueStyle.Render(value) + "\n")
+			fmt.Fprintf(&body, "%s%s %s\n", cursor, nameStyle.Render(fmt.Sprintf("%-12s", name)), valueStyle.Render(value))
 		}
 		baseURLValue := baseURL
 		if m.summaryEditing && m.currentSummaryAction() == summaryActionBaseURL {
@@ -847,8 +847,8 @@ func (m chooserModel) View() string {
 		}
 		if ho.ID == "claude" && strings.Contains(strings.ToLower(model), "gemini") {
 			warnStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("208"))
-			body.WriteString(label.Render("               ") + " " + warnStyle.Render("⚠ Gemini function calling is not compatible with") + "\n")
-			body.WriteString(label.Render("               ") + " " + warnStyle.Render("  Claude Code and may not work as intended") + "\n")
+			fmt.Fprintf(&body, "%s %s\n", label.Render("               "), warnStyle.Render("\u26a0 Gemini function calling is not compatible with"))
+			fmt.Fprintf(&body, "%s %s\n", label.Render("               "), warnStyle.Render("  Claude Code and may not work as intended"))
 		}
 		vkValue := maskVirtualKey(strings.TrimSpace(m.vkInput.Value()))
 		if m.summaryEditing && m.currentSummaryAction() == summaryActionVirtualKey {
@@ -1190,7 +1190,7 @@ func (m chooserModel) renderModelPicker(accent, label, hint lipgloss.Style) stri
 			if i == m.modelIdx && !m.modelManualSelected {
 				content.WriteString(accent.Render("> " + visible[i]))
 			} else {
-				content.WriteString("  " + visible[i])
+				fmt.Fprintf(&content, "  %s", visible[i])
 			}
 			content.WriteString("\n")
 		}

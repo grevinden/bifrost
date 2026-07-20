@@ -130,7 +130,7 @@ func TestToElevenlabsSoundGenerationRequest_Clamping(t *testing.T) {
 }
 
 func TestToElevenlabsSoundGenerationRequest_ResolvesAliasModelName(t *testing.T) {
-	ctx := schemas.NewBifrostContext(context.TODO, schemas.NoDeadline)
+	ctx := schemas.NewBifrostContext(context.TODO(), schemas.NoDeadline)
 	ctx.SetValue(schemas.BifrostContextKeyResolvedAlias, &schemas.ResolvedAlias{
 		Key: "best-sfx",
 		Config: &schemas.AliasConfig{

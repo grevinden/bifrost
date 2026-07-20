@@ -1862,7 +1862,7 @@ func (h *CompletionHandler) handleStreamingTextCompletion(ctx *fasthttp.RequestC
 		return h.client.TextCompletionStreamRequest(bifrostCtx, req)
 	}
 
-	h.handleStreamingResponse(ctx, bifrostCtx, getStream, cancel)
+	h.handleStreamingResponse(ctx, bifrostCtx, getStream, cancel, nil)
 }
 
 // handleStreamingChatCompletion handles streaming chat completion requests using Server-Sent Events (SSE)
@@ -1874,7 +1874,7 @@ func (h *CompletionHandler) handleStreamingChatCompletion(ctx *fasthttp.RequestC
 		return h.client.ChatCompletionStreamRequest(bifrostCtx, req)
 	}
 
-	h.handleStreamingResponse(ctx, bifrostCtx, getStream, cancel)
+	h.handleStreamingResponse(ctx, bifrostCtx, getStream, cancel, req)
 }
 
 // handleStreamingResponses handles streaming responses requests using Server-Sent Events (SSE)
@@ -1886,7 +1886,7 @@ func (h *CompletionHandler) handleStreamingResponses(ctx *fasthttp.RequestCtx, r
 		return h.client.ResponsesStreamRequest(bifrostCtx, req)
 	}
 
-	h.handleStreamingResponse(ctx, bifrostCtx, getStream, cancel)
+	h.handleStreamingResponse(ctx, bifrostCtx, getStream, cancel, nil)
 }
 
 // handleStreamingSpeech handles streaming speech requests using Server-Sent Events (SSE)
@@ -1898,7 +1898,7 @@ func (h *CompletionHandler) handleStreamingSpeech(ctx *fasthttp.RequestCtx, req 
 		return h.client.SpeechStreamRequest(bifrostCtx, req)
 	}
 
-	h.handleStreamingResponse(ctx, bifrostCtx, getStream, cancel)
+	h.handleStreamingResponse(ctx, bifrostCtx, getStream, cancel, nil)
 }
 
 // handleStreamingTranscriptionRequest handles streaming transcription requests using Server-Sent Events (SSE)
@@ -1910,14 +1910,17 @@ func (h *CompletionHandler) handleStreamingTranscriptionRequest(ctx *fasthttp.Re
 		return h.client.TranscriptionStreamRequest(bifrostCtx, req)
 	}
 
-	h.handleStreamingResponse(ctx, bifrostCtx, getStream, cancel)
+	h.handleStreamingResponse(ctx, bifrostCtx, getStream, cancel, nil)
 }
 
 // handleStreamingResponse is a generic function to handle streaming responses using Server-Sent Events (SSE)
 // The cancel function is called ONLY when client disconnects are detected via write errors.
 // Bifrost handles cleanup internally for normal completion and errors, so we only cancel
 // upstream streams when write errors indicate the client has disconnected.
-func (h *CompletionHandler) handleStreamingResponse(ctx *fasthttp.RequestCtx, bifrostCtx *schemas.BifrostContext, getStream func() (chan *schemas.BifrostStreamChunk, *schemas.BifrostError), cancel context.CancelFunc) {
+// retryChatReq, if non-nil, carries the original chat completion request for plugin-triggered retries
+// (e.g., loop detection). When a StreamInterceptionError with RetryWith is returned by a plugin,
+// the handler cancels the current stream and issues a new ChatCompletionRequest with extra messages.
+func (h *CompletionHandler) handleStreamingResponse(ctx *fasthttp.RequestCtx, bifrostCtx *schemas.BifrostContext, getStream func() (chan *schemas.BifrostStreamChunk, *schemas.BifrostError), cancel context.CancelFunc, retryChatReq *schemas.BifrostChatRequest) {
 	// Get the streaming channel — called BEFORE setting SSE headers so that
 	// provider errors return proper HTTP status codes + JSON content type.
 	stream, bifrostErr := getStream()
@@ -2056,9 +2059,109 @@ func (h *CompletionHandler) handleStreamingResponse(ctx *fasthttp.RequestCtx, bi
 				chunk, err = interceptor.InterceptChunk(bifrostCtx, httpReq, chunk)
 				if err != nil {
 					if chunk == nil {
-						var errorPayload interface{} = map[string]string{"error": err.Error()}
 						var structuredErr *schemas.StreamInterceptionError
-						if errors.As(err, &structuredErr) && structuredErr != nil {
+						if errors.As(err, &structuredErr) && structuredErr != nil && structuredErr.RetryWith != nil && retryChatReq != nil {
+							logger.Warn("stream interception: retry requested, reason=%s", err.Error())
+
+							cancel()
+							for range stream {
+							}
+
+							retryInput := make([]schemas.ChatMessage, 0, len(retryChatReq.Input)+len(structuredErr.RetryWith.ExtraMessages))
+							retryInput = append(retryInput, retryChatReq.Input...)
+							retryInput = append(retryInput, structuredErr.RetryWith.ExtraMessages...)
+
+							retryReq := &schemas.BifrostChatRequest{
+								Provider: retryChatReq.Provider,
+								Model:    retryChatReq.Model,
+								Input:    retryInput,
+								Params:   retryChatReq.Params,
+							}
+
+							retryCtx, retryCancel := schemas.NewBifrostContextWithCancel(context.Background())
+							// Copy requestID from original context for traceability and loop detection.
+							// This ensures the loop detector (HTTPTransportStreamChunkHook) can
+							// track retry chunks with the same requestID after ResetStream cleared it.
+							if v := bifrostCtx.Value(schemas.BifrostContextKeyRequestID); v != nil {
+								retryCtx.SetValue(schemas.BifrostContextKeyRequestID, v)
+							}
+							defer retryCancel()
+
+							retryStream, retryErr := h.client.ChatCompletionStreamRequest(retryCtx, retryReq)
+							if retryErr != nil {
+								var errorPayload interface{} = map[string]string{"error": "retry failed"}
+								if sanitized := lib.SanitizeBifrostErrorForClient(retryErr); sanitized != nil {
+									errorPayload = sanitized
+								}
+								errorJSON, marshalErr := sonic.Marshal(errorPayload)
+								if marshalErr == nil {
+									reader.SendError(errorJSON)
+								}
+								return
+							}
+
+							for retryChunk := range retryStream {
+								if retryChunk == nil {
+									continue
+								}
+								if retryChunk.BifrostError != nil {
+									sanitized := lib.SanitizeBifrostErrorForClient(retryChunk.BifrostError)
+									if sanitized != nil {
+										errJSON, _ := sonic.Marshal(sanitized)
+										reader.SendError(errJSON)
+									}
+									return
+								}
+
+								// Apply HTTP transport plugin hooks to retry chunks.
+								// This ensures loop detection (and other HTTP transport plugins) also
+								// process retry chunks, preventing undetected loops in retry responses.
+								// Secondary loops are NOT retried again — we abort and send error to client.
+								if interceptor != nil {
+									var interceptErr error
+									retryChunk, interceptErr = interceptor.InterceptChunk(bifrostCtx, httpReq, retryChunk)
+									if interceptErr != nil {
+										if retryChunk == nil {
+											logger.Warn("retry: chunk interception failed, aborting retry, reason=%s", interceptErr.Error())
+											var structuredErr *schemas.StreamInterceptionError
+											var sanitized *schemas.BifrostError
+											if errors.As(interceptErr, &structuredErr) && structuredErr != nil && structuredErr.BifrostError != nil {
+												sanitized = lib.SanitizeBifrostErrorForClient(structuredErr.BifrostError)
+											}
+											if sanitized == nil {
+												sanitized = &schemas.BifrostError{
+													IsBifrostError: true,
+													Error:          &schemas.ErrorField{Message: interceptErr.Error()},
+												}
+											}
+											errJSON, _ := sonic.Marshal(sanitized)
+											reader.SendError(errJSON)
+											retryCancel()
+											for range retryStream {
+											}
+											return
+										}
+										// chunk was modified by plugin but not nil — use the modified version
+									}
+								}
+
+								chunkJSON, marshalErr := sonic.Marshal(retryChunk)
+								if marshalErr != nil {
+									logger.Warn("retry: failed to marshal chunk: %v", marshalErr)
+									continue
+								}
+								if !reader.SendEvent("", chunkJSON) {
+									retryCancel()
+									for range retryStream {
+									}
+									return
+								}
+							}
+							return
+						}
+
+						var errorPayload interface{} = map[string]string{"error": err.Error()}
+						if structuredErr != nil {
 							if sanitized := lib.SanitizeBifrostErrorForClient(structuredErr.BifrostError); sanitized != nil {
 								errorPayload = sanitized
 							}
@@ -2286,7 +2389,7 @@ func (h *CompletionHandler) handleStreamingImageGeneration(ctx *fasthttp.Request
 		return h.client.ImageGenerationStreamRequest(bifrostCtx, req)
 	}
 
-	h.handleStreamingResponse(ctx, bifrostCtx, getStream, cancel)
+	h.handleStreamingResponse(ctx, bifrostCtx, getStream, cancel, nil)
 }
 
 // prepareImageEditRequest prepares a BifrostImageEditRequest from a multipart form
@@ -2492,7 +2595,7 @@ func (h *CompletionHandler) handleStreamingImageEditRequest(ctx *fasthttp.Reques
 		return h.client.ImageEditStreamRequest(bifrostCtx, req)
 	}
 
-	h.handleStreamingResponse(ctx, bifrostCtx, getStream, cancel)
+	h.handleStreamingResponse(ctx, bifrostCtx, getStream, cancel, nil)
 }
 
 // prepareImageVariationRequest prepares a BifrostImageVariationRequest from a multipart form

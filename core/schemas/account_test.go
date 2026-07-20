@@ -408,7 +408,7 @@ func TestResolveFamilyPrecedence(t *testing.T) {
 
 	// Helper to build a BifrostContext carrying a ResolvedAlias.
 	withAlias := func(ra *ResolvedAlias) *BifrostContext {
-		bc := NewBifrostContext(context.TODO, NoDeadline)
+		bc := NewBifrostContext(context.TODO(), NoDeadline)
 		if ra != nil {
 			bc.SetValue(BifrostContextKeyResolvedAlias, ra)
 		}
@@ -562,7 +562,7 @@ func TestIsOpenAIModel(t *testing.T) {
 func TestResolveCanonicalModelPrecedence(t *testing.T) {
 	// Helper to build a BifrostContext carrying a ResolvedAlias.
 	withAlias := func(ra *ResolvedAlias) *BifrostContext {
-		bc := NewBifrostContext(context.TODO, NoDeadline)
+		bc := NewBifrostContext(context.TODO(), NoDeadline)
 		if ra != nil {
 			bc.SetValue(BifrostContextKeyResolvedAlias, ra)
 		}

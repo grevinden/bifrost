@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	providerUtils "github.com/grevinden/bifrost/core/providers/utils"
-	schemas "github.com/grevinden/bifrost/core/schemas"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

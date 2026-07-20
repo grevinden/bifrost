@@ -72,7 +72,7 @@ func TestRequestWithSettableExtraParams_OpenAIChatRequest(t *testing.T) {
 		rws := interface{}(req).(RequestWithSettableExtraParams)
 		rws.SetExtraParams(extra)
 
-		ctx := schemas.NewBifrostContext(context.TODO, schemas.NoDeadline)
+		ctx := schemas.NewBifrostContext(context.TODO(), schemas.NoDeadline)
 		bifrostReq := req.ToBifrostChatRequest(ctx)
 
 		require.NotNil(t, bifrostReq)

@@ -192,9 +192,9 @@ func TestChooserModelLoadingRendersInsidePopupWhenOpenedFromSummary(t *testing.T
 
 	view := m.View()
 	found := strings.Contains(view, "loading models from /v1/models...")
-	found := strings.Contains(view, "Model")
+	found = strings.Contains(view, "Model")
 
-	if !found || !found {
+	if !found {
 		t.Fatalf("expected loading message inside model popup, got %q", view)
 	}
 	if strings.Count(view, "┌") > 1 {

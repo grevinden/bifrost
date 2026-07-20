@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	bifrost "github.com/grevinden/bifrost/core"
 	"github.com/grevinden/bifrost/core/schemas"
 	"github.com/grevinden/bifrost/framework/configstore"
 	configstoreTables "github.com/grevinden/bifrost/framework/configstore/tables"

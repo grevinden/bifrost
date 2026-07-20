@@ -432,7 +432,7 @@ func BenchmarkMarshalPluginConfig_WithPointerType(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, _ = MarshalPluginConfig[TestConfig](config)
 	}
 }
@@ -445,7 +445,7 @@ func BenchmarkMarshalPluginConfig_WithMap(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, _ = MarshalPluginConfig[TestConfig](configMap)
 	}
 }
@@ -454,7 +454,7 @@ func BenchmarkMarshalPluginConfig_WithString(b *testing.B) {
 	configStr := `{"name":"test-plugin","enabled":true,"count":42}`
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, _ = MarshalPluginConfig[TestConfig](configStr)
 	}
 }

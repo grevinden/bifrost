@@ -1052,7 +1052,7 @@ func TestAddMissingBetaHeadersToContext_PerProvider(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctx := schemas.NewBifrostContext(context.TODO, time.Time{})
+			ctx := schemas.NewBifrostContext(context.TODO(), time.Time{})
 			AddMissingBetaHeadersToContext(ctx, tt.req, tt.provider)
 
 			var headers []string

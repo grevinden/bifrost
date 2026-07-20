@@ -5,7 +5,6 @@ import (
 	"strconv"
 	"testing"
 
-	bifrost "github.com/grevinden/bifrost/core"
 	"github.com/grevinden/bifrost/core/schemas"
 )
 
@@ -61,7 +60,7 @@ func BenchmarkMockerPlugin_PreHook_SimpleRule(b *testing.B) {
 		ChatRequest: req,
 	}
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, _, _ = plugin.PreLLMHook(ctx, bifrostReq)
 	}
 }
@@ -118,7 +117,7 @@ func BenchmarkMockerPlugin_PreHook_RegexRule(b *testing.B) {
 		ChatRequest: req,
 	}
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, _, _ = plugin.PreLLMHook(ctx, bifrostReq)
 	}
 }
@@ -197,7 +196,7 @@ func BenchmarkMockerPlugin_PreHook_MultipleRules(b *testing.B) {
 		ChatRequest: req,
 	}
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, _, _ = plugin.PreLLMHook(ctx, bifrostReq)
 	}
 }
@@ -255,7 +254,7 @@ func BenchmarkMockerPlugin_PreHook_NoMatch(b *testing.B) {
 		ChatRequest: req,
 	}
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, _, _ = plugin.PreLLMHook(ctx, bifrostReq)
 	}
 }
@@ -310,7 +309,7 @@ func BenchmarkMockerPlugin_PreHook_Template(b *testing.B) {
 		ChatRequest: req,
 	}
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, _, _ = plugin.PreLLMHook(ctx, bifrostReq)
 	}
 }

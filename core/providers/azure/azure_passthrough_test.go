@@ -147,7 +147,7 @@ func TestBuildPassthroughURL_AliasAPIVersionOverride(t *testing.T) {
 
 	// Build a ctx carrying an alias with APIVersion override.
 	overrideVer := "2024-10-21"
-	ctx := schemas.NewBifrostContext(context.TODO, schemas.NoDeadline)
+	ctx := schemas.NewBifrostContext(context.TODO(), schemas.NoDeadline)
 	ctx.SetValue(schemas.BifrostContextKeyResolvedAlias, &schemas.ResolvedAlias{
 		Key: "best-model",
 		Config: &schemas.AliasConfig{

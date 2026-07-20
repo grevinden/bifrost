@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"testing"
 	"time"
-
-	bifrost "github.com/grevinden/bifrost/core"
 )
 
 func TestUnmarshalJSON_DefaultCacheKey(t *testing.T) {

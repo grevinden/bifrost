@@ -45,6 +45,8 @@ type Config struct {
 	FrequencyPenalty    *float64 `json:"frequency_penalty,omitempty"`
 	PresencePenalty     *float64 `json:"presence_penalty,omitempty"`
 	ReasoningEffort     *string  `json:"reasoning_effort,omitempty"`
+
+	LoopDetection *LoopDetectorConfig `json:"loop_detection,omitempty"`
 }
 
 // chatCompleter is the minimal interface for making chat completion requests.
@@ -54,12 +56,13 @@ type chatCompleter interface {
 }
 
 type Plugin struct {
-	logger     schemas.Logger
-	client     chatCompleter
-	cfg        *Config
-	params     *schemas.ChatParameters
-	sysContent *schemas.ChatMessageContent
-	devContent *schemas.ChatMessageContent
+	logger       schemas.Logger
+	client       chatCompleter
+	cfg          *Config
+	params       *schemas.ChatParameters
+	sysContent   *schemas.ChatMessageContent
+	devContent   *schemas.ChatMessageContent
+	loopDetector *LoopDetector
 }
 
 var (
@@ -80,12 +83,22 @@ func Init(config *Config, logger schemas.Logger) (*Plugin, error) {
 		PresencePenalty:     cfg.PresencePenalty,
 		Reasoning:           &schemas.ChatReasoning{Effort: cfg.ReasoningEffort},
 	}
+
+	var loopDetector *LoopDetector
+	if cfg.LoopDetection != nil {
+		applyLoopDetectionDefaults(cfg.LoopDetection)
+		loopDetector = NewLoopDetector(*cfg.LoopDetection)
+	} else {
+		loopDetector = NewLoopDetector(DefaultLoopDetectorConfig())
+	}
+
 	return &Plugin{
-		logger:     logger,
-		cfg:        cfg,
-		params:     params,
-		sysContent: &schemas.ChatMessageContent{ContentStr: new(strings.TrimSpace(embeddedSystemPrompt))},
-		devContent: &schemas.ChatMessageContent{ContentStr: new(embeddedDeveloperPrompt)},
+		logger:       logger,
+		cfg:          cfg,
+		params:       params,
+		sysContent:   &schemas.ChatMessageContent{ContentStr: new(strings.TrimSpace(embeddedSystemPrompt))},
+		devContent:   &schemas.ChatMessageContent{ContentStr: new(embeddedDeveloperPrompt)},
+		loopDetector: loopDetector,
 	}, nil
 }
 
@@ -108,6 +121,36 @@ func applyDefaults(c *Config) *Config {
 	return c
 }
 
+// applyLoopDetectionDefaults заполняет default-значения для LoopDetectorConfig,
+// если пользователь указал только часть полей.
+func applyLoopDetectionDefaults(cfg *LoopDetectorConfig) {
+	if cfg.WindowSize == 0 {
+		cfg.WindowSize = 96
+	}
+	if cfg.NgramSizes == nil {
+		cfg.NgramSizes = []int{3, 5}
+	}
+	if cfg.MaxNGramRepeats == 0 {
+		cfg.MaxNGramRepeats = 5
+	}
+	if cfg.MinUniqueRatio == 0.0 {
+		cfg.MinUniqueRatio = 0.25
+	}
+	if cfg.DiversityMinWindow == 0 {
+		cfg.DiversityMinWindow = 40
+	}
+	if cfg.LongMatchLen == 0 {
+		cfg.LongMatchLen = 16
+	}
+	if cfg.MinTokensBefore == 0 {
+		cfg.MinTokensBefore = 24
+	}
+	if cfg.MaxToolCallRepeats == 0 {
+		cfg.MaxToolCallRepeats = 5
+	}
+	// Enabled не трогаем — пользователь явно указал true/false.
+}
+
 func (p *Plugin) SetBifrostClient(client any) {
 	if c, ok := client.(chatCompleter); ok {
 		p.client = c
@@ -119,6 +162,9 @@ func (p *Plugin) GetName() string {
 }
 
 func (p *Plugin) Cleanup() error {
+	if p.loopDetector != nil {
+		p.loopDetector.Reset()
+	}
 	return nil
 }
 
@@ -300,8 +346,86 @@ func (p *Plugin) HTTPTransportPostHook(ctx *schemas.BifrostContext, req *schemas
 }
 
 // HTTPTransportStreamChunkHook вызывается для каждого чанка при потоковой передаче ответа.
-// В этом плагине ничего не меняем — возвращаем чанк без изменений.
+// Обнаруживает зацикливание модели и инициирует повторный запрос с инструкцией "break loop".
 func (p *Plugin) HTTPTransportStreamChunkHook(ctx *schemas.BifrostContext, req *schemas.HTTPRequest, chunk *schemas.BifrostStreamChunk) (*schemas.BifrostStreamChunk, error) {
+	if p.loopDetector == nil || !p.loopDetector.cfg.Enabled {
+		return chunk, nil
+	}
+
+	requestID := ""
+	if v := ctx.Value(schemas.BifrostContextKeyRequestID); v != nil {
+		if id, ok := v.(string); ok {
+			requestID = id
+		}
+	}
+	if requestID == "" {
+		return chunk, nil
+	}
+
+	if triggered, reason := p.loopDetector.Feed(requestID, chunk); triggered {
+		p.logger.Warn("llmboster: loop detected, requestID=%s reason=%s", requestID, reason)
+		p.loopDetector.ResetStream(requestID)
+		return nil, &schemas.StreamInterceptionError{
+			BifrostError: &schemas.BifrostError{
+				IsBifrostError: true,
+				Error: &schemas.ErrorField{
+					Message: "loop detected: " + reason,
+				},
+			},
+			RetryWith: &schemas.RetryRequest{
+				ExtraMessages: []schemas.ChatMessage{
+					{
+						Role: schemas.ChatMessageRoleDeveloper,
+						Content: &schemas.ChatMessageContent{
+							ContentStr: ptr(
+								"The previous response was repetitive and contained loops. " +
+									"Please provide a concise, non-repetitive answer. " +
+									"Do not repeat phrases, sentences, or paragraphs. " +
+									"If you cannot answer concisely, say so briefly.",
+							),
+						},
+					},
+				},
+			},
+		}
+	}
+
+	if chunk.BifrostChatResponse != nil && len(chunk.BifrostChatResponse.Choices) > 0 {
+		choice := chunk.BifrostChatResponse.Choices[0]
+		if choice.ChatStreamResponseChoice != nil && choice.ChatStreamResponseChoice.Delta != nil {
+			for _, tc := range choice.ChatStreamResponseChoice.Delta.ToolCalls {
+				if tc.Function.Name != nil && *tc.Function.Name != "" {
+					if triggered, reason := p.loopDetector.FeedToolCall(requestID, *tc.Function.Name); triggered {
+						p.logger.Warn("llmboster: tool call loop detected, requestID=%s reason=%s", requestID, reason)
+						p.loopDetector.ResetStream(requestID)
+						return nil, &schemas.StreamInterceptionError{
+							BifrostError: &schemas.BifrostError{
+								IsBifrostError: true,
+								Error: &schemas.ErrorField{
+									Message: "loop detected: " + reason,
+								},
+							},
+							RetryWith: &schemas.RetryRequest{
+								ExtraMessages: []schemas.ChatMessage{
+									{
+										Role: schemas.ChatMessageRoleDeveloper,
+										Content: &schemas.ChatMessageContent{
+											ContentStr: ptr(
+												"You have been calling the same tool repeatedly. " +
+													"Stop calling tools and provide a text response instead. " +
+													"If you cannot complete the task without tools, explain what went wrong.",
+											),
+										},
+									},
+								},
+							},
+						}
+					}
+				}
+			}
+		}
+	}
+
 	return chunk, nil
 }
 

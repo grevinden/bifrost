@@ -111,7 +111,7 @@ func TestResolveBedrockRegion_AliasOverride(t *testing.T) {
 	}
 
 	// Build ctx carrying an alias with Region override.
-	ctx := schemas.NewBifrostContext(context.TODO, schemas.NoDeadline)
+	ctx := schemas.NewBifrostContext(context.TODO(), schemas.NoDeadline)
 	ctx.SetValue(schemas.BifrostContextKeyResolvedAlias, &schemas.ResolvedAlias{
 		Key: "best-claude",
 		Config: &schemas.AliasConfig{

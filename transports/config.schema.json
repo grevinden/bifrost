@@ -2823,6 +2823,67 @@
                       "type": "string",
                       "description": "Thinking prompt appended to the system message. Default: 'Think step by step, write down your reasoning, then give a final answer.'",
                       "default": "Think step by step, write down your reasoning, then give a final answer."
+                    },
+                    "loop_detection": {
+                      "type": "object",
+                      "description": "Configuration for the streaming loop detector that prevents infinite loops and repetitive output",
+                      "properties": {
+                        "window_size": {
+                          "type": "integer",
+                          "description": "Sliding window size for token tracking",
+                          "minimum": 1,
+                          "default": 96
+                        },
+                        "ngram_sizes": {
+                          "type": "array",
+                          "items": { "type": "integer", "minimum": 1 },
+                          "description": "N-gram sizes to check for repetition",
+                          "default": [3, 5]
+                        },
+                        "max_ngram_repeats": {
+                          "type": "integer",
+                          "description": "Maximum n-gram repetitions in window before triggering",
+                          "minimum": 1,
+                          "default": 5
+                        },
+                        "min_unique_ratio": {
+                          "type": "number",
+                          "description": "Minimum unique token ratio in window (0.0-1.0)",
+                          "minimum": 0,
+                          "maximum": 1,
+                          "default": 0.25
+                        },
+                        "diversity_min_window": {
+                          "type": "integer",
+                          "description": "Minimum number of tokens before diversity check activates",
+                          "minimum": 1,
+                          "default": 40
+                        },
+                        "long_match_len": {
+                          "type": "integer",
+                          "description": "Suffix length for long suffix match check. Set to 0 to disable",
+                          "minimum": 0,
+                          "default": 16
+                        },
+                        "min_tokens_before": {
+                          "type": "integer",
+                          "description": "Minimum tokens before any loop checks begin",
+                          "minimum": 1,
+                          "default": 24
+                        },
+                        "max_tool_call_repeats": {
+                          "type": "integer",
+                          "description": "Maximum consecutive identical tool calls before triggering",
+                          "minimum": 1,
+                          "default": 5
+                        },
+                        "enabled": {
+                          "type": "boolean",
+                          "description": "Enable or disable the loop detector entirely",
+                          "default": true
+                        }
+                      },
+                      "additionalProperties": false
                     }
                   },
                   "additionalProperties": false

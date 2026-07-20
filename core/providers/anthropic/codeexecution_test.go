@@ -55,7 +55,7 @@ func TestCodeExecution_BashResponseRoundTrip(t *testing.T) {
 		t.Fatalf("unmarshal raw: %v", err)
 	}
 
-	ctx := schemas.NewBifrostContext(context.TODO, time.Time{})
+	ctx := schemas.NewBifrostContext(context.TODO(), time.Time{})
 
 	bifrostResp := resp.ToBifrostResponsesResponse(ctx)
 	if bifrostResp == nil {
