@@ -81,7 +81,7 @@ func Init(config *Config, logger schemas.Logger) (*Plugin, error) {
 		Temperature:         cfg.Temperature,
 		FrequencyPenalty:    cfg.FrequencyPenalty,
 		PresencePenalty:     cfg.PresencePenalty,
-		Reasoning:           &schemas.ChatReasoning{Effort: cfg.ReasoningEffort},
+		//Reasoning:           &schemas.ChatReasoning{Effort: cfg.ReasoningEffort},
 	}
 
 	var loopDetector *LoopDetector
@@ -230,7 +230,7 @@ func (p *Plugin) PreLLMHook(ctx *schemas.BifrostContext, req *schemas.BifrostReq
 	improved := p.boostMessage(ctx, req.ChatRequest.Provider, req.ChatRequest.Model, req.ChatRequest.Input)
 	if improved != "" {
 		req.ChatRequest.Input = append(req.ChatRequest.Input, schemas.ChatMessage{
-			Role:    schemas.ChatMessageRoleDeveloper,
+			Role:    schemas.ChatMessageRoleAssistant,
 			Content: &schemas.ChatMessageContent{ContentStr: new(improved)},
 		})
 		p.logger.Info("llmboster: boost succeeded, model=%s provider=%s improved_len=%d", req.ChatRequest.Model, req.ChatRequest.Provider, len(improved))
@@ -280,7 +280,7 @@ func (p *Plugin) boostMessage(
 	// 3. Developer-инструкция — копируем указатель.
 	devCopy := *p.devContent
 	subRequest = append(subRequest, schemas.ChatMessage{
-		Role:    schemas.ChatMessageRoleDeveloper,
+		Role:    schemas.ChatMessageRoleAssistant,
 		Content: &devCopy,
 	})
 
@@ -375,7 +375,7 @@ func (p *Plugin) HTTPTransportStreamChunkHook(ctx *schemas.BifrostContext, req *
 			RetryWith: &schemas.RetryRequest{
 				ExtraMessages: []schemas.ChatMessage{
 					{
-						Role: schemas.ChatMessageRoleDeveloper,
+						Role: schemas.ChatMessageRoleAssistant,
 						Content: &schemas.ChatMessageContent{
 							ContentStr: ptr(
 								"The previous response was repetitive and contained loops. " +
@@ -408,7 +408,7 @@ func (p *Plugin) HTTPTransportStreamChunkHook(ctx *schemas.BifrostContext, req *
 							RetryWith: &schemas.RetryRequest{
 								ExtraMessages: []schemas.ChatMessage{
 									{
-										Role: schemas.ChatMessageRoleDeveloper,
+										Role: schemas.ChatMessageRoleAssistant,
 										Content: &schemas.ChatMessageContent{
 											ContentStr: ptr(
 												"You have been calling the same tool repeatedly. " +
