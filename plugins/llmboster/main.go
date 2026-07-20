@@ -107,13 +107,13 @@ func applyDefaults(c *Config) *Config {
 		c.MaxCompletionTokens = new(1024)
 	}
 	if c.Temperature == nil {
-		c.Temperature = new(0.3)
+		c.Temperature = new(0.8)
 	}
 	if c.FrequencyPenalty == nil {
-		c.FrequencyPenalty = new(0.5)
+		c.FrequencyPenalty = new(0.1)
 	}
 	if c.PresencePenalty == nil {
-		c.PresencePenalty = new(0.3)
+		c.PresencePenalty = new(0.1)
 	}
 	if c.ReasoningEffort == nil {
 		c.ReasoningEffort = new("none")
