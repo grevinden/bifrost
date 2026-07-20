@@ -1,0 +1,19 @@
+{
+  "providers": {
+    "openai": {
+      "apiKeyEnvVar": "OPENAI_API_KEY",
+      "enabled": true,
+      "models": ["gpt-4o", "gpt-4o-mini"]
+    },
+    "anthropic": {
+      "apiKeyEnvVar": "ANTHROPIC_API_KEY",
+      "enabled": true,
+      "models": ["claude-sonnet-4-20250514"]
+    }
+  },
+  "server": {
+    "readTimeout": "30s",
+    "writeTimeout": "60s",
+    "maxConnsPerHost": 5000
+  }
+}

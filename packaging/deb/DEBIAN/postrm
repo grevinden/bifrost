@@ -1,0 +1,30 @@
+#!/bin/sh
+set -e
+
+case "$1" in
+    remove)
+        # Remove symlink on remove so a reinstall recreates it fresh
+        if [ -L /var/lib/bifrost/config.json ]; then
+            rm -f /var/lib/bifrost/config.json
+        fi
+        systemctl daemon-reload
+        ;;
+    purge)
+        # Remove everything on purge
+        rm -rf /var/lib/bifrost
+        rm -f /etc/bifrost/config.json
+
+        if getent passwd bifrost > /dev/null 2>&1; then
+            userdel bifrost || true
+        fi
+        systemctl daemon-reload
+        ;;
+    upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
+        ;;
+    *)
+        echo "postrm called with unknown argument: $1" >&2
+        exit 1
+        ;;
+esac
+
+exit 0

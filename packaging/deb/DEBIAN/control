@@ -1,0 +1,19 @@
+Package: bifrost-http
+Version: __VERSION__
+Section: net
+Priority: optional
+Architecture: amd64
+Depends: libc6 (>= 2.31)
+Maintainer: Bifrost Team <team@bifrost.dev>
+Description: Bifrost AI Gateway — high-performance LLM gateway
+ Bifrost is a high-performance AI gateway that unifies 20+ LLM providers
+ behind a single OpenAI-compatible API with ~11µs overhead at 5,000 RPS.
+ .
+ Features:
+  - 20+ LLM providers: OpenAI, Anthropic, Bedrock, Gemini, Groq, and more
+  - MCP (Model Context Protocol) gateway — turns static chat models into agents
+  - Streaming SSE with per-chunk hooks
+  - Plugin pipeline (auth, rate-limit, caching, telemetry, governance)
+  - Embedding, image generation, speech, batch operations
+  - OpenAI/Anthropic/Bedrock SDK drop-in compatibility
+  - Built-in web UI for management and monitoring

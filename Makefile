@@ -381,6 +381,11 @@ build: build-ui ## Build bifrost-http binary
 		$(MAKE) _build-with-docker TARGET_OS=$$TARGET_OS TARGET_ARCH=$$TARGET_ARCH $(if $(DYNAMIC),DYNAMIC=$(DYNAMIC)); \
 	fi
 
+deb: ## Build .deb package (Usage: make deb VERSION=1.2.3)
+	@$(ECHO) "$(GREEN)Building .deb package...$(NC)"
+	@cd packaging/deb && bash build-deb.sh "$(VERSION)"
+	@$(ECHO) "$(GREEN).deb package built: tmp/$(NC)"
+
 build-cli: ## Build bifrost CLI binary
 	@$(ECHO) "$(GREEN)Building bifrost CLI...$(NC)"
 	@mkdir -p ./tmp

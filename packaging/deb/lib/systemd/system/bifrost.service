@@ -1,0 +1,45 @@
+[Unit]
+Description=Bifrost AI Gateway
+Documentation=https://github.com/grevinden/bifrost
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+
+# System user
+User=bifrost
+Group=bifrost
+
+# Executable
+ExecStart=/usr/local/bin/bifrost-http \
+  -host 0.0.0.0 \
+  -port 8080 \
+  -app-dir /var/lib/bifrost \
+  -log-level info \
+  -log-style json
+
+# Restart policy
+Restart=always
+RestartSec=10
+
+# File descriptor limits
+LimitNOFILE=65536
+LimitNPROC=65536
+
+# Security hardening
+NoNewPrivileges=true
+ProtectHome=true
+ProtectSystem=full
+PrivateTmp=true
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+
+# Graceful shutdown
+KillSignal=SIGTERM
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target

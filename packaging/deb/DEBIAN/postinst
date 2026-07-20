@@ -1,0 +1,53 @@
+#!/bin/sh
+set -e
+
+case "$1" in
+    configure)
+        # Create data directory
+        mkdir -p /var/lib/bifrost
+
+        # Create bifrost user if not exists
+        if ! getent passwd bifrost > /dev/null 2>&1; then
+            useradd --system --no-create-home --home-dir /var/lib/bifrost --shell /usr/sbin/nologin bifrost
+        fi
+
+        # Symlink config so bifrost finds it in -app-dir:
+        #   Bifrost reads:      <app-dir>/config.json  → /var/lib/bifrost/config.json
+        #   Actual conffile:    /etc/bifrost/config.json
+        #   Solution:           symlink /var/lib/bifrost/config.json → /etc/bifrost/config.json
+        if [ ! -L /var/lib/bifrost/config.json ] && [ ! -f /var/lib/bifrost/config.json ]; then
+            # Fresh install — create symlink to the conffile
+            ln -sf /etc/bifrost/config.json /var/lib/bifrost/config.json
+        elif [ -f /var/lib/bifrost/config.json ] && [ ! -L /var/lib/bifrost/config.json ]; then
+            # Upgrade from old version: config.json was a real file in /var/lib/bifrost/
+            # If it differs from the conffile, keep it; otherwise replace with symlink
+            if ! diff -q /var/lib/bifrost/config.json /etc/bifrost/config.json >/dev/null 2>&1; then
+                echo "Preserving existing /var/lib/bifrost/config.json (differs from /etc/bifrost/config.json)"
+            else
+                ln -sf /etc/bifrost/config.json /var/lib/bifrost/config.json
+            fi
+        fi
+
+        # Set ownership
+        chown -R bifrost:bifrost /var/lib/bifrost
+        chown -R bifrost:bifrost /etc/bifrost
+
+        # Set binary permissions
+        chmod 755 /usr/local/bin/bifrost-http
+
+        # Enable and start service
+        systemctl daemon-reload
+        systemctl enable bifrost.service
+        systemctl start bifrost.service || echo "Warning: bifrost.service failed to start, check config"
+        ;;
+
+    abort-upgrade|abort-remove|abort-deconfigure)
+        ;;
+
+    *)
+        echo "postinst called with unknown argument: $1" >&2
+        exit 1
+        ;;
+esac
+
+exit 0
